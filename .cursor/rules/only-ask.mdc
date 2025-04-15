@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+Keep the work simple. Don't overcomplicate.
+Only add options like an option on wp admin if I ask for it.
+Use this for the options that I want to control on the admin page [settings.php](mdc:includes/admin/settings.php)

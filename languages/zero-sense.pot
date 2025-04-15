@@ -1,0 +1,101 @@
+# Copyright (C) 2023 zero sense
+# This file is distributed under the same license as the Zero Sense package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Zero Sense 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/zero-sense\n"
+"POT-Creation-Date: 2023-01-01T12:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2023-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#. Plugin Name of the plugin
+msgid "Zero Sense"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://paellasencasa.com"
+msgstr ""
+
+#. Description of the plugin
+msgid "A multi-purpose WordPress plugin for Paellas en Casa website"
+msgstr ""
+
+#. Author of the plugin
+msgid "zero sense"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://zerosense.blue"
+msgstr ""
+
+#: includes/admin.php:14
+msgid "Paellas en Casa Settings"
+msgstr ""
+
+#: includes/admin.php:15
+msgid "Paellas en Casa"
+msgstr ""
+
+#: includes/admin.php:26
+msgid "Welcome to the Paellas en Casa settings page!"
+msgstr ""
+
+#: includes/admin.php:27
+msgid "Developed by %s"
+msgstr ""
+
+#: includes/admin.php:33
+msgid "Save Settings"
+msgstr ""
+
+#: includes/admin.php:49
+msgid "Main Settings"
+msgstr ""
+
+#: includes/admin.php:56
+msgid "Example Field"
+msgstr ""
+
+#: includes/admin.php:64
+msgid "WooCommerce Settings"
+msgstr ""
+
+#: includes/admin.php:71
+msgid "Enable Empty Cart Button"
+msgstr ""
+
+#: includes/admin.php:81
+msgid "Configure the main settings for Paellas en Casa plugin."
+msgstr ""
+
+#: includes/admin.php:93
+msgid "Configure WooCommerce settings for Paellas en Casa."
+msgstr ""
+
+#: includes/admin.php:105
+msgid "Add an \"Empty Cart\" button to the cart page"
+msgstr ""
+
+#: includes/admin.php:107
+msgid "When enabled, an \"Empty Cart\" button will be added to the WooCommerce cart page."
+msgstr ""
+
+#: includes/features/woocommerce/cart.php:29
+msgid "Vaciar Carrito"
+msgstr ""
+
+#: includes/features/woocommerce/cart.php:71
+msgid "¿Está seguro de que desea vaciar el carrito?"
+msgstr ""
+
+#: includes/shortcodes.php:26
+msgid "Paellas en Casa"
+msgstr ""
+
+#: includes/shortcodes.php:27
+msgid "Ver Paellas"
+msgstr "" 
