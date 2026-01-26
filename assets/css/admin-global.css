@@ -1,0 +1,39 @@
+/* Zerø Sense: Neutralize red admin left menu to WordPress defaults (minimal override) */
+/* Keep overrides scoped and simple; rely on WP default palette */
+#adminmenu, 
+#adminmenu .wp-submenu, 
+#adminmenu .wp-submenu-head {
+  background: #1d2327 !important; /* WP default dark */
+}
+
+#adminmenu a {
+  color: #c3c4c7 !important; /* WP default muted */
+}
+
+#adminmenu .wp-submenu a,
+#adminmenu .wp-submenu a:link,
+#adminmenu .wp-submenu a:visited {
+  color: #c3c4c7 !important;
+}
+
+#adminmenu .wp-submenu a:hover,
+#adminmenu a:hover,
+#adminmenu li.menu-top:hover > a.menu-top {
+  color: #ffffff !important;
+}
+
+#adminmenu .wp-has-current-submenu > a.menu-top,
+#adminmenu .current a.menu-top,
+#adminmenu li.opensub > a.menu-top,
+#adminmenu li.menu-top:focus > a.menu-top {
+  background: #2c3338 !important; /* WP default hover/current */
+  color: #ffffff !important;
+}
+
+#adminmenu .wp-submenu {
+  background: #2c3338 !important;
+}
+
+#adminmenu div.wp-menu-image:before {
+  color: #c3c4c7 !important;
+}

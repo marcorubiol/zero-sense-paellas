@@ -1,0 +1,26 @@
+/* ====== CART FLOW LOADING UI (Pedido) ====== */
+
+/* Duplicated disabled button styles and global progress bar moved to shared/common.css */
+
+/* Mini-cart shimmer while rows are locked */
+.zs_minicart .zs_loading {
+  position: relative;
+  opacity: 0.6;
+}
+
+.zs_minicart .zs_loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+  animation: loading-shimmer 1.5s infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Reduced motion support: keep only mini-cart shimmer override here */
+@media (prefers-reduced-motion: reduce) {
+  .zs_minicart .zs_loading::after {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,35 @@
+/* WooCommerce payment methods styling (Zero Sense)
+   Scope: checkout and order-pay pages
+   Keep minimal; override Woo defaults gently. */
+
+/* Container list */
+ul.wc_payment_methods.payment_methods.methods {
+  list-style: none;
+  margin: 0 0 1em 0;
+  padding: .5rem 0;
+}
+
+/* Each method item */
+ul.wc_payment_methods.payment_methods.methods > li.wc_payment_method {
+  margin: .5rem 0;
+}
+
+/* Radio + label alignment */
+ul.wc_payment_methods.payment_methods.methods > li.wc_payment_method input.input-radio {
+  margin-right: .5em;
+}
+
+ul.wc_payment_methods.payment_methods.methods > li.wc_payment_method label {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+/* Payment box description */
+ul.wc_payment_methods.payment_methods.methods > li.wc_payment_method .payment_box {
+  margin: .35rem 0 0 .1rem;
+}
+
+/* Optional: soften paragraph inside description */
+ul.wc_payment_methods.payment_methods.methods > li.wc_payment_method .payment_box p {
+  margin: .35rem 0 0;
+}

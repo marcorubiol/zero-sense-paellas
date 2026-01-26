@@ -1,0 +1,26 @@
+{
+  "name": "paellasencasa/zero-sense-v3",
+  "description": "Zero Sense v3.0 - Modern PSR-4 WordPress plugin for Paellas en Casa",
+  "type": "wordpress-plugin",
+  "version": "3.0.0",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Zero Sense",
+      "homepage": "https://zerosense.studio"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "ZeroSense\\": "src/ZeroSense/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.5",
+    "brain/monkey": "^2.6",
+    "mockery/mockery": "^1.6"
+  }
+}

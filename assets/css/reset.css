@@ -1,0 +1,29 @@
+/* Zerø Sense Admin Reset */
+
+:where(*, *::before, *::after) {
+    box-sizing: border-box;
+}
+
+:where(body) {
+    margin: 0;
+}
+
+:where(h1, h2, h3, h4, h5, h6, p, figure) {
+    margin: 0;
+}
+
+:where(ul, ol) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+:where(button, input, select, textarea) {
+    font: inherit;
+    color: inherit;
+}
+
+:where(img, svg, video) {
+    display: block;
+    max-width: 100%;
+}

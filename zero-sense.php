@@ -1,15 +1,18 @@
 <?php
 /**
- * Plugin Name: Zero Sense
+ * Plugin Name: Zerø Sense
  * Plugin URI: https://paellasencasa.com
- * Description: A multi-purpose WordPress plugin for Paellas en Casa website
- * Version: 1.0.0
- * Author: zero sense
- * Author URI: https://zerosense.blue
+ * Description: Modern PSR-4 WordPress plugin for Paellas en Casa website - Complete rewrite with clean architecture
+ * Version: 3.1.9
+ * Author: Zero Sense
+ * Author URI: https://zerosense.studio
  * Text Domain: zero-sense
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
  */
 
 // Exit if accessed directly
@@ -18,46 +21,102 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('ZERO_SENSE_VERSION', '1.0.0');
+define('ZERO_SENSE_VERSION', '3.1.9');
+define('ZERO_SENSE_FILE', __FILE__);
 define('ZERO_SENSE_PATH', plugin_dir_path(__FILE__));
 define('ZERO_SENSE_URL', plugin_dir_url(__FILE__));
-define('ZERO_SENSE_SITE_NAME', 'Paellas en Casa');
-define('ZERO_SENSE_SITE_URL', 'https://paellasencasa.com');
-define('ZERO_SENSE_DEV_NAME', 'zero sense');
-define('ZERO_SENSE_DEV_URL', 'https://zerosense.blue');
+define('ZERO_SENSE_BASENAME', plugin_basename(__FILE__));
 
-// Plugin initialization
-function zero_sense_init() {
-    // Load plugin text domain
-    load_plugin_textdomain('zero-sense', false, dirname(plugin_basename(__FILE__)) . '/languages');
-    
-    // Include admin settings if in admin area
-    if (is_admin()) {
-        require_once ZERO_SENSE_PATH . 'includes/admin/settings.php';
-    }
-    
-    // Include required core files
-    require_once ZERO_SENSE_PATH . 'includes/shortcodes.php';
-    
-    // Include features initialization
-    require_once ZERO_SENSE_PATH . 'includes/features/init.php';
+// Load Composer autoloader
+$autoloader = ZERO_SENSE_PATH . 'vendor/autoload.php';
+if (file_exists($autoloader)) {
+    require_once $autoloader;
+} else {
+    // Fallback error if Composer autoloader is missing
+    add_action('admin_notices', 'zero_sense_autoloader_error');
+    return;
 }
+
+if (!function_exists('br_tag_accepted')) {
+    function br_tag_accepted($value)
+    {
+        $allowed_tags = ['br' => []];
+        return wp_kses($value, $allowed_tags);
+    }
+}
+
+// Load checkout debug logger only when WordPress debug logging is enabled - REMOVED
+
+
+/**
+ * Show autoloader error notice
+ */
+function zero_sense_autoloader_error()
+{
+    if (current_user_can('manage_options')) {
+        echo '<div class="notice notice-error"><p>';
+        echo '<strong>Zerø Sense:</strong> ';
+        echo __('Composer autoloader not found. Please run "composer install" in the plugin directory.', 'zero-sense');
+        echo '</p></div>';
+    }
+}
+
+// Initialize plugin
 add_action('plugins_loaded', 'zero_sense_init');
 
-// Register activation hook
-function zero_sense_activate() {
-    // Nothing to do on activation
+/**
+ * Initialize the plugin
+ */
+function zero_sense_init()
+{
+    // Load text domain
+    load_plugin_textdomain('zero-sense', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
+    // Initialize main plugin class
+    if (class_exists('ZeroSense\Core\Plugin')) {
+        ZeroSense\Core\Plugin::getInstance();
+    }
 }
+
+/**
+ * Plugin activation callback
+ */
+function zero_sense_activate()
+{
+    if (class_exists('ZeroSense\Core\Plugin')) {
+        ZeroSense\Core\Plugin::activate();
+    }
+    // Auto-deactivate Zerø Sense (Legacy) if active
+    if (!function_exists('is_plugin_active')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    $other = 'zero-sense-legacy/zero-sense.php';
+    if (function_exists('is_plugin_active') && is_plugin_active($other)) {
+        deactivate_plugins($other, false);
+    }
+}
+
+/**
+ * Plugin deactivation callback
+ */
+function zero_sense_deactivate()
+{
+    if (class_exists('ZeroSense\Core\Plugin')) {
+        ZeroSense\Core\Plugin::deactivate();
+    }
+}
+
+/**
+ * Plugin uninstall callback
+ */
+function zero_sense_uninstall()
+{
+    if (class_exists('ZeroSense\Core\Plugin')) {
+        ZeroSense\Core\Plugin::uninstall();
+    }
+}
+
+// Plugin hooks
 register_activation_hook(__FILE__, 'zero_sense_activate');
-
-// Register deactivation hook
-function zero_sense_deactivate() {
-    // Nothing to do on deactivation
-}
 register_deactivation_hook(__FILE__, 'zero_sense_deactivate');
-
-// Register uninstall hook
-function zero_sense_uninstall() {
-    // Nothing to do on uninstall
-}
-register_uninstall_hook(__FILE__, 'zero_sense_uninstall'); 
+register_uninstall_hook(__FILE__, 'zero_sense_uninstall');

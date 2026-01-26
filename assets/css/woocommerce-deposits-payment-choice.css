@@ -1,0 +1,71 @@
+/* Payment options container */
+#zs-deposits-payment-options.payment-options,
+#zs-wd-payment-options.payment-options {
+    padding-block-start: var(--zs-spacing-s);
+}
+
+#zs-deposits-payment-options .payment-options__title,
+#zs-wd-payment-options .payment-options__title {
+    padding-block-end: var(--zs-spacing-xs);
+    margin-block-end: var(--zs-spacing-s);
+    font-size: var(--zs-font-size-l);
+    color: var(--zs-color-primary);
+    border-bottom: 1px dashed var(--zs-color-border);
+}
+
+#zs-deposits-payment-options .payment-options__description,
+#zs-wd-payment-options .payment-options__description {
+    margin: 0;
+    color: var(--zs-color-secondary);
+}
+
+#zs-deposits-payment-options .payment-options__list,
+#zs-wd-payment-options .payment-options__list {
+    list-style: none;
+    padding: var(--zs-spacing-s) 0;
+    margin: 0;
+}
+
+#zs-deposits-payment-options .payment-options__list-item:not(:first-of-type),
+#zs-wd-payment-options .payment-options__list-item:not(:first-of-type) {
+    margin-block-start: calc(var(--zs-spacing-xs) * .75);
+}
+
+#zs-deposits-payment-options .payment-options__list-item input,
+#zs-wd-payment-options .payment-options__list-item input {
+    margin-inline-end: .5em;
+}
+
+#zs-deposits-payment-options .payment-options__list-item label,
+#zs-wd-payment-options .payment-options__list-item label {
+    font-size: calc(var(--zs-font-size-m) * .9);
+    font-weight: 600;
+    color: var(--zs-color-primary);
+}
+
+#zs-deposits-payment-options .payment-summary__text,
+#zs-wd-payment-options .payment-summary__text {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--zs-color-primary);
+    padding: var(--zs-spacing-xs) var(--zs-spacing-s);
+    border-radius: var(--zs-border-radius-s);
+    margin: 0 0 var(--zs-spacing-xs) 0;
+    display: block;
+}
+
+#zs-deposits-payment-options .payment-summary__amount,
+#zs-wd-payment-options .payment-summary__amount {
+    font-weight: 600;
+    margin-inline-start: var(--zs-spacing-xs);
+}
+
+#zs-deposits-payment-options .wd-price-amount,
+#zs-wd-payment-options .wd-price-amount {
+    font-weight: 600;
+}
+
+#zs-deposits-payment-options .payment-options__feedback,
+#zs-wd-payment-options .payment-options__feedback {
+    font-weight: 500;
+    color: var(--zs-color-secondary);
+}

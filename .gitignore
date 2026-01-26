@@ -1,0 +1,19 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# PHPUnit
+.phpunit.result.cache
+
+# Logs
+*.log
+
+# Node / build artifacts (if any)
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# Temporary
+*.tmp

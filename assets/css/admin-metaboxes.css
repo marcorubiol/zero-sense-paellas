@@ -1,0 +1,358 @@
+/* Zero Sense - Admin Metaboxes Shared Styles */
+
+/* Show More/Less Button */
+.zs-show-more {
+    margin-top: 12px;
+    text-align: center;
+}
+
+.zs-show-more button,
+.zs-toggle-logs,
+#zs-deposits-logs-toggle,
+#zs-status-logs-toggle {
+    background: none;
+    border: none;
+    color: #2271b1;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 12px;
+    padding: 0;
+}
+
+.zs-show-more button:hover,
+.zs-toggle-logs:hover,
+#zs-deposits-logs-toggle:hover,
+#zs-status-logs-toggle:hover {
+    color: #135e96;
+}
+
+/* Hidden Logs */
+.zs-hidden-logs {
+    display: none;
+}
+
+/* =================================================================
+   UNIFIED LOG STYLES - All logs use identical styling
+   ================================================================= */
+
+/* Base styling for ALL log types - completely unified */
+.zs-log-item {
+    position: relative;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-left: 3px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Log titles - identical for all */
+.zs-log-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.zs-log-title strong {
+    font-size: 13px;
+}
+
+/* Log timestamps - identical for all */
+.zs-log-time {
+    font-size: 11px;
+    color: #646970;
+    margin-bottom: 6px;
+}
+
+/* Log details - identical for all */
+.zs-log-details {
+    font-size: 11px;
+    color: #444;
+    line-height: 1.6;
+}
+
+/* Color styling - applied to ALL logs equally */
+.zs-log-item.zs-auto,
+.zs-log-item.zs-automatic,
+.zs-log-item.zs-type-auto {
+    border-left-color: var(--zs-color-auto);
+    background: color-mix(in srgb, var(--zs-bg-auto) 40%, white 60%);
+}
+
+.zs-log-item.zs-manual,
+.zs-log-item.zs-type-manual,
+.zs-log-item.zs-type-admin {
+    border-left-color: var(--zs-color-manual);
+    background: color-mix(in srgb, var(--zs-bg-manual) 40%, white 60%);
+}
+
+.zs-log-item.zs-error,
+.zs-log-item.zs-type-error {
+    border-left-color: var(--zs-color-error);
+    background: color-mix(in srgb, var(--zs-bg-error) 40%, white 60%);
+}
+
+.zs-log-item.zs-status,
+.zs-log-item.zs-flowmattic,
+.zs-log-item.zs-type-status,
+.zs-log-item.zs-type-flowmattic {
+    border-left-color: var(--zs-color-status);
+    background: color-mix(in srgb, var(--zs-bg-status) 40%, white 60%);
+}
+
+.zs-log-item.zs-gateway,
+.zs-log-item.zs-type-gateway {
+    border-left-color: var(--zs-color-gateway);
+    background: color-mix(in srgb, var(--zs-bg-gateway) 40%, white 60%);
+}
+
+.zs-log-item.zs-skipped,
+.zs-log-item.zs-unknown,
+.zs-type-skipped,
+.zs-log-item.zs-type-unknown {
+    border-left-color: var(--zs-color-skip);
+    background: color-mix(in srgb, var(--zs-bg-skip) 40%, white 60%);
+}
+
+.zs-log-item.zs-cancelled,
+.zs-type-cancelled {
+    border-left-color: var(--zs-color-error);
+    background: color-mix(in srgb, var(--zs-bg-error) 40%, white 60%);
+}
+
+/* =================================================================
+   METABOX CONTAINERS - only essential structure
+   ================================================================= */
+
+.zs-deposits-logs-metabox,
+.zs-email-logs-metabox,
+.zs-status-logs-metabox {
+    max-width: 100%;
+}
+
+/* Email Logs - specific error/note styling only */
+.zs-email-logs-metabox .zs-log-error {
+    color: #DC2626;
+    font-weight: 600;
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+.zs-email-logs-metabox .zs-log-note {
+    color: #6B7280;
+    font-weight: 600;
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+/* =================================================================
+   FLOWMATTIC EMAIL ACTIONS - Automatic Email Actions containers
+   ================================================================= */
+
+/* Base styling for email action items */
+.zs-manual-email-actions .zs-email-item {
+    border-left-width: 3px;
+    border-left-style: solid;
+    transition: all 0.2s ease;
+}
+
+/* Color styling based on email status */
+.zs-manual-email-actions .zs-email-item.zs-email-auto {
+    border-left-color: var(--zs-color-auto);
+    background: color-mix(in srgb, var(--zs-bg-auto) 40%, white 60%);
+}
+
+.zs-manual-email-actions .zs-email-item.zs-email-manual {
+    border-left-color: var(--zs-color-manual);
+    background: color-mix(in srgb, var(--zs-bg-manual) 40%, white 60%);
+}
+
+.zs-manual-email-actions .zs-email-item.zs-email-error {
+    border-left-color: var(--zs-color-error);
+    background: color-mix(in srgb, var(--zs-bg-error) 40%, white 60%);
+}
+
+.zs-manual-email-actions .zs-email-item.zs-email-skipped {
+    border-left-color: var(--zs-color-skip);
+    background: color-mix(in srgb, var(--zs-bg-skip) 40%, white 60%);
+}
+
+:root {
+    /* Zero Sense Primary Colors */
+    --zs-color-auto: #2271b1;
+    --zs-color-manual: #d67136;
+    --zs-color-status: #7C3AED;
+    --zs-color-error: #DC2626;
+    --zs-color-gateway: #166534;
+    --zs-color-skip: #374151;
+
+    /* Zero Sense Background Colors - lighter 15/85 mix for badges */
+    --zs-bg-auto: color-mix(in srgb, var(--zs-color-auto) 15%, white 85%);
+    --zs-bg-manual: color-mix(in srgb, var(--zs-color-manual) 15%, white 85%);
+    --zs-bg-status: color-mix(in srgb, var(--zs-color-status) 15%, white 85%);
+    --zs-bg-error: color-mix(in srgb, var(--zs-color-error) 15%, white 85%);
+    --zs-bg-gateway: color-mix(in srgb, var(--zs-color-gateway) 15%, white 85%);
+    --zs-bg-skip: color-mix(in srgb, var(--zs-color-skip) 15%, white 85%);
+}
+
+/* Badge colors - shared across all metaboxes */
+
+/* Badge base styling for metaboxes */
+.zs-deposits-logs-metabox .zs-badge,
+.zs-email-logs-metabox .zs-badge,
+.zs-email-logs-metabox .zs-badge-type,
+.zs-status-logs-metabox .zs-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 3px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+/* Blue - Auto/Automatic */
+.zs-badge-auto,
+.zs-badge-automatic {
+    background: var(--zs-bg-auto);
+    color: var(--zs-color-auto);
+}
+
+/* Orange - Manual */
+.zs-badge-manual {
+    background: var(--zs-bg-manual);
+    color: var(--zs-color-manual);
+}
+
+/* Purple - Status/Flowmattic */
+.zs-badge-status,
+.zs-badge-flowmattic {
+    background: var(--zs-bg-status);
+    color: var(--zs-color-status);
+}
+
+/* Red - Error/Cancelled */
+.zs-badge-error,
+.zs-badge-cancelled {
+    background: var(--zs-bg-error);
+    color: var(--zs-color-error);
+}
+
+/* Green - Gateway */
+.zs-badge-gateway {
+    background: var(--zs-bg-gateway);
+    color: var(--zs-color-gateway);
+}
+
+/* Gray - Skipped/Unknown */
+.zs-badge-skipped,
+.zs-badge-unknown {
+    background: var(--zs-bg-skip);
+    color: var(--zs-color-skip);
+}
+
+/* Hover effects using color-mix - slightly darker on hover */
+.zs-badge-auto:hover {
+    background: color-mix(in srgb, var(--zs-color-auto) 25%, white 75%);
+}
+
+.zs-badge-manual:hover {
+    background: color-mix(in srgb, var(--zs-color-manual) 25%, white 75%);
+}
+
+.zs-badge-status:hover,
+.zs-badge-flowmattic:hover {
+    background: color-mix(in srgb, var(--zs-color-status) 25%, white 75%);
+}
+
+.zs-badge-error:hover,
+.zs-badge-cancelled:hover {
+    background: color-mix(in srgb, var(--zs-color-error) 25%, white 75%);
+}
+
+.zs-badge-gateway:hover {
+    background: color-mix(in srgb, var(--zs-color-gateway) 25%, white 75%);
+}
+
+.zs-badge-skipped:hover,
+.zs-badge-unknown:hover {
+    background: color-mix(in srgb, var(--zs-color-skip) 25%, white 75%);
+}
+
+/* =================================================================
+   COLUMN STYLES (Orders list badges)
+   ================================================================= */
+
+/* Email Logs Column (Orders list) */
+.column-zs_email_logs .zs-badge-type {
+    display: inline-block;
+    margin-left: 0;
+    padding: 2px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 3px;
+    line-height: 1;
+}
+/* Position badge at the end of truncated titles and list items */
+.column-zs_email_logs .zs-title > .zs-badge-type,
+.column-zs_email_logs .zs-list li > .zs-badge-type {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    box-shadow: -8px 0 8px rgba(255,255,255,0.96);
+}
+
+/* Email Logs Column layout/text */
+.column-zs_email_logs {
+    text-align: left;
+    vertical-align: middle;
+}
+.column-zs_email_logs .zs-cell { max-width: 170px; }
+.column-zs_email_logs .zs-title {
+    position: relative;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1;
+    color: #3c434a;
+}
+.column-zs_email_logs .zs-time {
+    display: block;
+    font-size: 11px;
+    color: #646970;
+    margin-top: 2px;
+    line-height: 1;
+}
+.column-zs_email_logs .zs-list { margin: 6px 0 0 0; padding-left: 0; display: none; }
+.column-zs_email_logs .zs-list li { position: relative; line-height: 1; margin: 4px 0; }
+.column-zs_email_logs .zs-list li strong { display: block; font-weight: 600; font-size: 13px; color: #3c434a; }
+.column-zs_email_logs .zs-list li small { font-size: 11px; color: #646970; }
+.column-zs_email_logs .zs-toggle-btn { padding: 0; margin-left: 0; display: inline; cursor: pointer; text-decoration: none; font-size: 11px; color: #2271b1; }
+.column-zs_email_logs .zs-toggle-btn:hover { color: #135e96; text-decoration: underline; }
+
+/* Flowmattic: Last Sent Column (Orders list) */
+.column-zs_last_sent { text-align: left; vertical-align: middle; }
+.column-zs_last_sent .zs-cell { max-width: 170px; }
+.column-zs_last_sent .zs-last-sent { position: relative; }
+.column-zs_last_sent .zs-time { display: block; font-size: 11px; color: #646970; margin-top: 2px; line-height: 1; }
+.column-zs_last_sent .zs-badge-type { display: inline-block; margin-left: 0; padding: 2px 4px; font-size: 10px; font-weight: 600; border-radius: 3px; }
+.column-zs_last_sent .zs-badge-man { background: var(--zs-bg-manual); color: var(--zs-color-manual); }
+.column-zs_last_sent .zs-badge-auto { background: var(--zs-bg-auto); color: var(--zs-color-auto); }
+.column-zs_last_sent .zs-badge-skipped { background: var(--zs-bg-skip); color: var(--zs-color-skip); }
+.column-zs_last_sent .zs-list { margin: 6px 0 0 0; padding-left: 0; display: none; list-style: none; }
+.column-zs_last_sent .zs-list li { position: relative; line-height: 1; margin: 4px 0; }
+.column-zs_last_sent .zs-list li strong { display: block; font-weight: 600; font-size: 13px; color: #3c434a; }
+.column-zs_last_sent .zs-list li small { font-size: 11px; color: #646970; }
+.column-zs_last_sent .zs-toggle-btn { padding: 0; margin-left: 0; display: inline; cursor: pointer; text-decoration: none; font-size: 11px; color: #2271b1; }
+.column-zs_last_sent .zs-title > .zs-badge-type,
+.column-zs_last_sent .zs-list li > .zs-badge-type { position: absolute; top: 0; right: 0; z-index: 2; box-shadow: -8px 0 8px rgba(255,255,255,0.96); }

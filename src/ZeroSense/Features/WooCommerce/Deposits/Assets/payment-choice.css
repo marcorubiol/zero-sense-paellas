@@ -1,0 +1,118 @@
+/* Payment options */
+
+.payment-options {
+    padding-block-start: var(--space-s);
+    margin-block-end: var(--space-m);
+    width: 100%;
+}
+
+.payment-options__title {
+  padding-block-end: var(--space-xs);
+  margin-block-end: var(--space-s);
+  font-size: var(--text-l);
+  color: var(--text-dark-muted);
+  border-bottom: 1px dashed var(--base-semi-light);
+}
+
+.payment-options__description {
+  margin-inline-end: .5em;
+}
+
+.payment-options__list {
+  list-style-type: none;
+  padding: var(--space-s) 0;
+}
+
+.payment-options__list-item:not(:first-of-type) {
+  margin-block-start: calc(var(--space-xs) * .75);
+}
+
+.payment-options__list-item input {
+  margin-inline-end: .5em;
+}
+
+.payment-options__list-item label {
+  font-size: calc(var(--text-m) * .75);
+  font-weight: 700;
+}
+
+.payment-options__feedback {
+  font-weight: 500;
+}
+
+.payment-options__summary {
+    margin-block-end: var(--space-s);
+}
+
+/* Payment summary styling */
+.payment-summary {
+  display: block;
+  width: 100%;
+}
+
+.payment-summary__text {
+    background-color: var(--info-light-trans-40);
+    color: var(--info);
+    padding: calc(var(--space-xs) * .75) var(--space-xs);
+    border-radius: var(--radius-m);
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.payment-summary__amount {
+    font-weight: 600;
+    display: inline-block;
+    margin-left: var(--space-xs);
+}
+
+/* Payment arrow indicator */
+.payment-total-indicator {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.payment-total-indicator p {
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-dark-muted);
+}
+
+.payment-arrow-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.payment-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #10B981;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    position: relative;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.payment-arrow:after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    margin-left: -8px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #10B981;
+}
+
+.payment-arrow-amount {
+    font-size: 1.2em;
+    transition: all 0.3s ease;
+}

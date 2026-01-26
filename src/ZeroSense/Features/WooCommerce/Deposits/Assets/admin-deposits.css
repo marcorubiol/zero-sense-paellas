@@ -1,0 +1,142 @@
+
+.zs-deposits-deposit-container {
+    margin-top: 10px;
+}
+
+.zs-deposits-deposit-container .zs-deposits-deposit-display {
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.zs-deposits-deposit-container.is-editing .zs-deposits-deposit-display,
+.zs-deposits-deposit-container:not(.is-editing) .zs-deposits-deposit-edit {
+    display: none;
+}
+
+.zs-deposits-deposit-container .zs-deposits-deposit-edit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zs-deposits-remaining-amount {
+    font-weight: 600;
+}
+
+.zs-deposit-mode-indicator {
+    display: inline-block;
+    line-height: 1;
+    margin-left: 8px;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 3px;
+    vertical-align: text-bottom;
+}
+
+.zs-deposit-mode-indicator.is-auto {
+    background-color: #e8f4fd;
+    color: #0073aa;
+}
+
+.zs-deposit-mode-indicator.is-manual {
+    background-color: #fef7e6;
+    color: #d67136;
+}
+
+.zs-deposits-reset-to-auto {
+    display: inline-block;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 4px;
+    cursor: pointer;
+    color: #2271b1;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.zs-deposits-reset-to-auto:hover {
+    color: #135e96;
+}
+
+.zs-deposits-reset-to-auto .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+
+.zs-deposits-reset-to-auto:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.deposit-amount-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.deposit-amount-display .edit-deposit {
+    display: inline-flex;
+    align-items: center;
+    color: #6c7781;
+    text-decoration: none;
+}
+
+.deposit-amount-edit {
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+
+.deposit-amount-edit .deposit-amount-input {
+    width: 90px;
+}
+
+.deposit-amount-edit .spinner {
+    margin: 0 6px 0 0;
+}
+
+.deposit-amount-edit.is-saving .save-deposit,
+.deposit-amount-edit.is-saving .cancel-deposit,
+.deposit-amount-edit.is-saving .deposit-amount-input {
+    display: none;
+}
+
+.zs-deposits-meta-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.zs-deposits-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.zs-deposits-meta-table th,
+.zs-deposits-meta-table td {
+    text-align: left;
+    padding: 4px 6px;
+    border-bottom: 1px solid #e5e7ea;
+    white-space: nowrap;
+}
+
+.zs-deposits-meta-table th code,
+.zs-deposits-meta-table td code {
+    white-space: nowrap;
+}
+
+.zs-deposits-meta-table .zs-deposits-meta-legacy-label {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #6c7781;
+}
+
+.zs-deposits-meta-table tr.is-mismatch {
+    background: #fff2f2;
+}

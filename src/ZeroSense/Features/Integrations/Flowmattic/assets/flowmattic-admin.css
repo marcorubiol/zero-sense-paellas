@@ -1,0 +1,184 @@
+.zero-sense-flowmattic-metabox{
+    margin:0;
+}
+.zero-sense-flowmattic-metabox .zs-group-title{
+    margin:6px 0 4px;
+    font-weight:600;
+}
+.zero-sense-flowmattic-metabox .zs-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+    margin-bottom:6px;
+}
+.zero-sense-flowmattic-metabox .zs-grid .button{
+    width:100%;
+    white-space:normal;
+    line-height:1.25;
+    padding:4px 6px;
+    font-size:12px;
+}
+.zero-sense-flowmattic-metabox .zs-grid .button[disabled]{
+    opacity:0.55;
+    cursor:not-allowed;
+}
+.zero-sense-flowmattic-metabox .zs-footnote{
+    font-size:11px;
+    color:#646970;
+    margin-top:4px;
+    display:block;
+}
+.zero-sense-flowmattic-metabox .zs-email-status,
+.zs-manual-email-actions .zs-email-status{
+    font-size:11px;
+    font-weight:600;
+    display:inline-block;
+    margin-top:3px;
+}
+.zero-sense-flowmattic-metabox .zs-email-status-auto,
+.zs-manual-email-actions .zs-email-status-auto{
+    color:#2271b1;
+}
+.zero-sense-flowmattic-metabox .zs-email-status-man,
+.zs-manual-email-actions .zs-email-status-man{
+    color:#d67136;
+}
+.zero-sense-flowmattic-metabox .zs-email-status-error,
+.zs-manual-email-actions .zs-email-status-error{
+    color:#dc3232;
+}
+.zero-sense-flowmattic-metabox .zs-email-status-skipped,
+.zs-manual-email-actions .zs-email-status-skipped{
+    color:#5E6A72;
+}
+.zero-sense-flowmattic-metabox .zs-toggle{
+    font-size:11px;
+    color:#2271b1;
+    cursor:pointer;
+    text-decoration:none;
+}
+.zero-sense-flowmattic-metabox .zs-toggle:hover{
+    color:#135e96;
+    text-decoration:underline;
+}
+.zero-sense-flowmattic-metabox .zs-history{
+    list-style:none;
+    margin:6px 0 0;
+    padding-left:0;
+}
+.zero-sense-flowmattic-metabox .zs-history li{
+    margin:6px 0;
+    border-left:2px solid #e1e1e1;
+    padding-left:8px;
+}
+.zero-sense-flowmattic-metabox .zs-email-title{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:#3c434a;
+}
+.zero-sense-flowmattic-metabox .zs-email-time{
+    display:block;
+    font-size:11px;
+    color:#646970;
+    margin-top:1px;
+}
+.zero-sense-flowmattic-metabox .zs-badge-type{
+    display:inline-block;
+    margin-left:6px;
+    padding:3px 6px;
+    font-size:10px;
+    font-weight:bold;
+    border-radius:3px;
+    line-height:1;
+    vertical-align:text-bottom;
+}
+.zero-sense-flowmattic-metabox .zs-badge-auto{
+    background:#E8F4FD;
+    color:#2271b1;
+}
+.zero-sense-flowmattic-metabox .zs-badge-man{
+    background:#FEF7E6;
+    color:#d67136;
+}
+.zero-sense-flowmattic-metabox .zs-badge-skipped{
+    background:#F3F4F6;
+    color:#5E6A72;
+}
+.column-zs_last_sent{
+    text-align:left;
+    vertical-align:middle;
+}
+.column-zs_last_sent .zs-cell{max-width:170px;}
+.column-zs_last_sent .zs-title{
+    position:relative;
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-weight:600;
+    font-size:13px;
+    line-height:1;
+    color:#3c434a;
+}
+.column-zs_last_sent .zs-time{
+    display:block;
+    font-size:11px;
+    color:#646970;
+    margin-top:2px;
+    line-height:1;
+}
+.column-zs_last_sent .zs-badge-type{
+    display:inline-block;
+    margin-left:0;
+    padding:2px 4px;
+    font-size:10px;
+    font-weight:600;
+    border-radius:3px;
+    line-height:1;
+}
+.column-zs_last_sent .zs-badge-auto{
+    background:#E8F4FD;
+    color:#2271b1;
+}
+.column-zs_last_sent .zs-badge-man{
+    background:#FEF7E6;
+    color:#d67136;
+}
+.column-zs_last_sent .zs-badge-skipped{
+    background:#F3F4F6;
+    color:#5E6A72;
+}
+.column-zs_last_sent .zs-list{
+    margin:6px 0 0 0;
+    padding-left:0;
+    display:none;
+}
+.column-zs_last_sent .zs-list li{
+    position:relative;
+    line-height:1.25;
+    margin:4px 0;
+}
+.column-zs_last_sent .zs-list li strong{
+    display:block;
+    font-weight:600;
+    font-size:13px;
+    color:#3c434a;
+}
+.column-zs_last_sent .zs-list li small{
+    font-size:11px;
+    color:#646970;
+}
+.column-zs_last_sent .zs-toggle-btn{
+    padding:0;
+    margin-left:0;
+    display:inline;
+    cursor:pointer;
+    text-decoration:none;
+    font-size:11px;
+    color:#2271b1;
+}
+.column-zs_last_sent .zs-toggle-btn:hover{
+    color:#135e96;
+    text-decoration:underline;
+}
