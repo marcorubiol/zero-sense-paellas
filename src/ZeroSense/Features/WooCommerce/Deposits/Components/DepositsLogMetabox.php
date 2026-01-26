@@ -28,19 +28,6 @@ class DepositsLogMetabox
                 'normal',
                 'default'
             );
-            
-            // Add Raw Meta debug metabox (only if debug is enabled)
-            $isDebug = (bool) apply_filters('zs_deposits_show_raw_meta', defined('WP_DEBUG') && WP_DEBUG);
-            if ($isDebug) {
-                add_meta_box(
-                    'zs_deposits_raw_meta',
-                    __('Deposits Raw Meta (Debug)', 'zero-sense'),
-                    [$this, 'renderRawMetaMetabox'],
-                    $screen_id,
-                    'normal',
-                    'low'
-                );
-            }
         }
     }
 
@@ -319,73 +306,6 @@ class DepositsLogMetabox
             }
         }
 
-        echo '</div>';
-    }
-
-    public function renderRawMetaMetabox($postOrOrder): void
-    {
-        $orderId = 0;
-        if ($postOrOrder instanceof \WP_Post) {
-            $orderId = $postOrOrder->ID;
-        } elseif ($postOrOrder instanceof WC_Order) {
-            $orderId = $postOrOrder->get_id();
-        }
-        
-        $order = wc_get_order($orderId);
-        if (!$order instanceof WC_Order) {
-            echo '<p>' . esc_html__('Invalid order.', 'zero-sense') . '</p>';
-            return;
-        }
-
-        $v3Keys = [
-            MetaKeys::HAS_DEPOSIT,
-            MetaKeys::DEPOSIT_AMOUNT,
-            MetaKeys::REMAINING_AMOUNT,
-            MetaKeys::BALANCE_AMOUNT,
-            MetaKeys::IS_MANUAL_OVERRIDE,
-            MetaKeys::DEPOSIT_PERCENTAGE,
-            MetaKeys::IS_DEPOSIT_PAID,
-            MetaKeys::DEPOSIT_PAYMENT_DATE,
-            MetaKeys::IS_BALANCE_PAID,
-            MetaKeys::BALANCE_PAYMENT_DATE,
-            MetaKeys::PAYMENT_FLOW,
-            MetaKeys::IS_CANCELLED,
-            MetaKeys::CANCELLED_DATE,
-            MetaKeys::IS_FAILED,
-            MetaKeys::FAILED_CODE,
-            MetaKeys::FAILED_DATE,
-        ];
-
-        $rows = [];
-        $v3Count = 0;
-        foreach ($v3Keys as $k) {
-            $v = $order->get_meta($k, true);
-            if ($v !== '' && $v !== null) { $v3Count++; }
-            $rows[] = [
-                'v3_key' => $k,
-                'v3_val' => $v,
-            ];
-        }
-
-        echo '<div class="zs-deposits-debug">';
-        echo '<div class="zs-deposits-debug-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
-        echo '<div style="font-size:11px;color:#666;">' . esc_html(sprintf(__('V3 present: %d', 'zero-sense'), $v3Count)) . '</div>';
-        echo '</div>';
-
-        // V3 block (stacked)
-        echo '<div class="zs-meta-block" style="margin-bottom:16px;">';
-        echo '<div style="font-weight:600;color:#444;margin-bottom:6px;">' . esc_html__('V3 Meta', 'zero-sense') . '</div>';
-        echo '<div class="zs-meta-box" style="font-family:monospace;font-size:12px;line-height:1.6;color:#333;background:#f9f9f9;border:1px solid #ddd;border-radius:3px;padding:8px;">';
-        foreach ($rows as $r) {
-            $val = $r['v3_val'];
-            $display = is_scalar($val) || $val === null ? (string) $val : wp_json_encode($val);
-            $muted = ($display === '' ? ' style="color:#9CA3AF;"' : '');
-            echo '<div class="zs-debug-meta-row" style="margin-bottom:6px;">';
-            echo '<code>' . esc_html($r['v3_key']) . '</code>: <span' . $muted . '>' . ($display !== '' ? esc_html($display) : '—') . '</span>';
-            echo '</div>';
-        }
-        echo '</div>';
-        echo '</div>'; // V3 block
         echo '</div>';
     }
 }

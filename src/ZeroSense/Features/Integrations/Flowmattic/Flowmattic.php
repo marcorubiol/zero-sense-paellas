@@ -1418,7 +1418,9 @@ class Flowmattic implements FeatureInterface
         $debugData['flowmattic_active'] = $flowmatticActive;
         
         // Log the trigger attempt
-        error_log('Zero Sense: Triggering Flowmattic workflow ' . $wid . ' with order ID ' . $orderId . ' (Flowmattic active: ' . ($flowmatticActive ? 'yes' : 'no') . ')');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Zero Sense: Triggering Flowmattic workflow ' . $wid . ' with order ID ' . $orderId . ' (Flowmattic active: ' . ($flowmatticActive ? 'yes' : 'no') . ')');
+        }
         
         if (!$flowmatticActive) {
             wp_send_json_error('Flowmattic plugin is not active or not found');
@@ -1427,9 +1429,13 @@ class Flowmattic implements FeatureInterface
         /**
          * Trigger Flowmattic using the correct hook (flowmattic_trigger_workflow)
          */
-        error_log('Zero Sense: Triggering Flowmattic workflow ' . $wid . ' using flowmattic_trigger_workflow');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Zero Sense: Triggering Flowmattic workflow ' . $wid . ' using flowmattic_trigger_workflow');
+        }
         do_action('flowmattic_trigger_workflow', $wid, $debugData);
-        error_log('Zero Sense: Flowmattic workflow triggered successfully');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Zero Sense: Flowmattic workflow triggered successfully');
+        }
         
         wp_send_json_success([
             'workflow_id' => $wid,

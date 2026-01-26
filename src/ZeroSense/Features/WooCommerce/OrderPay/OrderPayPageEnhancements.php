@@ -150,7 +150,6 @@ class OrderPayPageEnhancements implements FeatureInterface
                     __('Components/MarketingConsent.php', 'zero-sense'),
                     __('Components/CancelOrderButton.php', 'zero-sense'),
                     __('Components/EmailVerificationText.php', 'zero-sense'),
-                    __('Components/AdminBarDebug.php', 'zero-sense'),
                 ],
             ],
             [

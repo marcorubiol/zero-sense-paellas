@@ -42,7 +42,9 @@ class FeatureManager
                     try {
                         $this->features[] = new $className();
                     } catch (\Exception $e) {
-                        error_log("Zero Sense: Failed to instantiate cached feature {$className}: " . $e->getMessage());
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log("Zero Sense: Failed to instantiate cached feature {$className}: " . $e->getMessage());
+                        }
                     }
                 }
             }
@@ -123,7 +125,9 @@ class FeatureManager
                     $feature = new $fullClassName();
                     $this->features[] = $feature;
                 } catch (\Exception $e) {
-                    error_log("Zero Sense: Failed to instantiate feature {$fullClassName}: " . $e->getMessage());
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Zero Sense: Failed to instantiate feature {$fullClassName}: " . $e->getMessage());
+                    }
                 }
             }
         }
@@ -139,7 +143,9 @@ class FeatureManager
                 try {
                     $feature->init();
                 } catch (\Exception $e) {
-                    error_log("Zero Sense: Failed to initialize feature {$feature->getName()}: " . $e->getMessage());
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Zero Sense: Failed to initialize feature {$feature->getName()}: " . $e->getMessage());
+                    }
                 }
             }
         }
@@ -202,7 +208,9 @@ class FeatureManager
         }
 
         // Unknown condition, log warning and return false for safety
-        error_log("Zero Sense: Unknown condition '{$condition}' in feature evaluation");
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Zero Sense: Unknown condition '{$condition}' in feature evaluation");
+        }
         return false;
     }
 

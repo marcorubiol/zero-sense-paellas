@@ -42,18 +42,6 @@ class AdminDashboard
             'zero-sense-settings',
             [$this, 'renderDashboard']
         );
-
-        // Add debug submenu (only in debug mode)
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            add_submenu_page(
-                'options-general.php',
-                __('Zerø Sense Debug', 'zero-sense'),
-                __('Zerø Sense Debug', 'zero-sense'),
-                'manage_options',
-                'zero-sense-debug',
-                [$this, 'renderDebugPage']
-            );
-        }
     }
 
     /**
@@ -111,8 +99,7 @@ class AdminDashboard
      */
     public function enqueueAdminAssets($hook): void
     {
-        // Load assets on both main dashboard and debug page
-        if ($hook !== 'settings_page_zero-sense-settings' && $hook !== 'settings_page_zero-sense-debug') {
+        if ($hook !== 'settings_page_zero-sense-settings') {
             return;
         }
 
@@ -651,7 +638,9 @@ class AdminDashboard
                 try {
                     $feature->init();
                 } catch (\Exception $e) {
-                    error_log("Zero Sense: Error re-initializing feature {$feature->getName()}: " . $e->getMessage());
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Zero Sense: Error re-initializing feature {$feature->getName()}: " . $e->getMessage());
+                    }
                 }
                 break;
             }
@@ -722,238 +711,14 @@ class AdminDashboard
         try {
             $targetFeature->init();
         } catch (\Exception $e) {
-            error_log("Zero Sense: Error re-initializing feature {$targetFeature->getName()}: " . $e->getMessage());
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("Zero Sense: Error re-initializing feature {$targetFeature->getName()}: " . $e->getMessage());
+            }
         }
 
         wp_send_json_success([
             'feature' => $featureName,
             'saved_fields' => $savedFields
         ]);
-    }
-
-    /**
-     * Render debug page
-     */
-    public function renderDebugPage(): void
-    {
-        if (!current_user_can('manage_options')) {
-            return;
-        }
-
-        // Handle manual toggle actions
-        if (isset($_GET['debug_action']) && isset($_GET['feature_option'])) {
-            $action = sanitize_text_field(wp_unslash($_GET['debug_action']));
-            $featureOption = sanitize_text_field(wp_unslash($_GET['feature_option']));
-            
-            if ($action === 'enable') {
-                update_option($featureOption, true);
-                echo '<div class="updated notice is-dismissible"><p>✅ Enabled: ' . esc_html($featureOption) . '</p></div>';
-            } elseif ($action === 'disable') {
-                update_option($featureOption, false);
-                echo '<div class="updated notice is-dismissible"><p>❌ Disabled: ' . esc_html($featureOption) . '</p></div>';
-            }
-        }
-
-        $features = $this->featureManager->getFeatures();
-        ?>
-        <div class="wrap">
-            <h1>🧪 Zerø Sense Debug Tool</h1>
-            
-            <details class="zs-collapsible" id="zs-feature-status">
-                <summary><h2 style="display:inline">📊 Feature Status Overview</h2></summary>
-                <div class="zs-collapsible-content">
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr>
-                                <th>Feature</th>
-                                <th>Category</th>
-                                <th>Toggleable</th>
-                                <th>Enabled</th>
-                                <th>Option Name</th>
-                                <th>Option Value</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($features as $feature): ?>
-                                <?php
-                                $optionName = $this->getFeatureOptionName($feature);
-                                $optionValue = get_option($optionName, 'not set');
-                                $isEnabled = $feature->isEnabled();
-                                $isToggleable = $feature->isToggleable();
-                                ?>
-                                <tr>
-                                    <td><strong><?php echo esc_html($feature->getName()); ?></strong></td>
-                                    <td><?php echo esc_html($feature->getCategory()); ?></td>
-                                    <td><?php echo $isToggleable ? '✅ Yes' : '❌ No'; ?></td>
-                                    <td><?php echo $isEnabled ? '🟢 Enabled' : '🔴 Disabled'; ?></td>
-                                    <td><code><?php echo esc_html($optionName); ?></code></td>
-                                    <td><code><?php echo esc_html(var_export($optionValue, true)); ?></code></td>
-                                    <td>
-                                        <?php if ($isToggleable): ?>
-                                            <em>Use main dashboard toggles</em>
-                                        <?php else: ?>
-                                            N/A
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </details>
-            
- <h2>🔧 AJAX Test</h2>
-            <div class="card">
-                <p>Test the AJAX toggle functionality:</p>
-                <button id="test-ajax" class="button button-primary">Test AJAX Toggle</button>
-                <div id="ajax-result" style="margin-top: 10px;"></div>
-            </div>
-
-            <h2>🔍 Live Toggle Debug</h2>
-            <div class="card">
-                <p>Real-time monitoring of toggle events and state changes:</p>
-                <div id="toggle-debug-log" style="background: #f1f1f1; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #ddd;"></div>
-                <button id="clear-debug" class="button button-secondary" style="margin-top: 10px;">Clear Log</button>
-                <button id="refresh-states" class="button button-secondary" style="margin-top: 10px;">Refresh States</button>
-            </div>
-
-            <h2>🎣 WordPress Hooks Status</h2>
-            <div class="card">
-                <p><strong>Current Filter:</strong> <?php echo current_filter(); ?></p>
-                <p><strong>Current Hook:</strong> <?php echo esc_html(isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : 'unknown'); ?></p>
-                <p><strong>Is Admin:</strong> <?php echo is_admin() ? 'Yes' : 'No'; ?></p>
-                <p><strong>AJAX Action Registered:</strong> <?php echo has_action('wp_ajax_zs_toggle_feature') ? 'Yes' : 'No'; ?></p>
-                <p><strong>Admin CSS Enqueued:</strong> <?php echo wp_style_is('zero-sense-admin', 'enqueued') ? 'Yes' : 'No'; ?></p>
-                <p><strong>Admin JS Enqueued:</strong> <?php echo wp_script_is('zero-sense-admin', 'enqueued') ? 'Yes' : 'No'; ?></p>
-                <p><strong>zsAdmin Object Available:</strong> <span id="zsadmin-status">Checking...</span></p>
-            </div>
-            <script>
-            // Create zsAdmin object for debug page
-            window.zsAdmin = {
-                ajaxUrl: '<?php echo admin_url('admin-ajax.php'); ?>',
-                nonce: '<?php echo wp_create_nonce('zs_admin_nonce'); ?>'
-            };
-            // Simple debug logger for this page
-            function debugLog(msg, level) {
-                try {
-                    var box = document.getElementById('toggle-debug-log');
-                    if (!box) { return; }
-                    var color = '#333';
-                    if (level === 'success') color = 'green';
-                    else if (level === 'warning') color = '#b58900';
-                    else if (level === 'error') color = 'red';
-                    var line = document.createElement('div');
-                    line.style.color = color;
-                    line.textContent = new Date().toISOString() + ' ' + String(msg);
-                    box.appendChild(line);
-                    box.scrollTop = box.scrollHeight;
-                } catch (e) { /* no-op */ }
-            }
-            
-            document.addEventListener('DOMContentLoaded', function() {
-                // Update zsAdmin status
-                var statusEl = document.getElementById('zsadmin-status');
-                if (statusEl) {
-                    statusEl.textContent = typeof zsAdmin !== 'undefined' ? 'Yes' : 'No';
-                    statusEl.style.color = typeof zsAdmin !== 'undefined' ? 'green' : 'red';
-                }
-
-                // AJAX test functionality
-                document.getElementById('test-ajax').addEventListener('click', function() {
-                    var resultDiv = document.getElementById('ajax-result');
-                    resultDiv.innerHTML = '<p>Testing AJAX...</p>';
-                    
-                    if (typeof zsAdmin === 'undefined') {
-                        resultDiv.innerHTML = '<div class="notice notice-error"><p>❌ zsAdmin object not found!</p></div>';
-                        return;
-                    }
-                    
-                    // Find first toggleable feature option name dynamically
-                    var firstToggle = document.querySelector('.zs-toggle-switch input');
-                    if (!firstToggle) {
-                        resultDiv.innerHTML = '<div class="notice notice-error"><p>❌ No toggleable features found on this page to test.</p></div>';
-                        return;
-                    }
-
-                    var optionName = firstToggle.getAttribute('name');
-                    var formData = new FormData();
-                    formData.append('action', 'zs_toggle_feature');
-                    formData.append('feature', optionName);
-                    formData.append('enabled', firstToggle.checked ? '0' : '1');
-                    formData.append('nonce', zsAdmin.nonce);
-                    
-                    fetch(zsAdmin.ajaxUrl, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            resultDiv.innerHTML = '<div class="notice notice-success"><p>✅ AJAX Success: ' + JSON.stringify(data.data) + '</p></div>';
-                        } else {
-                            resultDiv.innerHTML = '<div class="notice notice-error"><p>❌ AJAX Error: ' + JSON.stringify(data.data) + '</p></div>';
-                        }
-                    })
-                    .catch(error => {
-                        resultDiv.innerHTML = '<div class="notice notice-error"><p>❌ Network Error: ' + error.message + '</p></div>';
-                    });
-                });
-
-                // Clear debug log button
-                document.getElementById('clear-debug').addEventListener('click', function() {
-                    document.getElementById('toggle-debug-log').innerHTML = '';
-                    debugLog('Debug log cleared', 'info');
-                });
-
-                // Refresh states button
-                document.getElementById('refresh-states').addEventListener('click', function() {
-                    logCurrentStates();
-                });
-
-                // Monitor ALL toggle changes
-                var toggles = document.querySelectorAll('.zs-toggle-switch input');
-                toggles.forEach(function(toggle, index) {
-                    debugLog('Found toggle ' + (index + 1) + ': ' + toggle.name + ' (initially ' + (toggle.checked ? 'checked' : 'unchecked') + ')', 'info');
-                    
-                    toggle.addEventListener('change', function(event) {
-                        debugLog('=== TOGGLE CHANGE EVENT ===', 'warning');
-                        debugLog('Toggle: ' + this.name, 'info');
-                        debugLog('New state: ' + (this.checked ? 'CHECKED' : 'UNCHECKED'), this.checked ? 'success' : 'warning');
-                        debugLog('Event triggered by: ' + event.type, 'info');
-                        
-                        // Log states of ALL toggles after this change
-                        setTimeout(function() {
-                            debugLog('States after change:', 'info');
-                            logCurrentStates();
-                        }, 100);
-                    });
-
-                    // Also monitor for programmatic changes
-                    var observer = new MutationObserver(function(mutations) {
-                        mutations.forEach(function(mutation) {
-                            if (mutation.type === 'attributes' && mutation.attributeName === 'checked') {
-                                debugLog('PROGRAMMATIC change detected on ' + toggle.name + ': ' + (toggle.checked ? 'CHECKED' : 'UNCHECKED'), 'error');
-                            }
-                        });
-                    });
-                    observer.observe(toggle, { attributes: true });
-                });
-
-                // Monitor for any AJAX requests
-                var originalFetch = window.fetch;
-                window.fetch = function() {
-                    debugLog('AJAX request initiated: ' + arguments[0], 'warning');
-                    return originalFetch.apply(this, arguments)
-                        .then(function(response) {
-                            debugLog('AJAX response received: ' + response.status, response.ok ? 'success' : 'error');
-                            return response;
-                        });
-                };
-            });
-            </script>
-            
-        </div>
-        <?php
     }
 }

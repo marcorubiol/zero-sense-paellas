@@ -509,6 +509,15 @@ class BricksDynamicTags implements FeatureInterface
             return;
         }
 
+        if (!defined('WP_DEBUG') || !WP_DEBUG) {
+            return;
+        }
+
+        $nonce = isset($_GET['nonce']) ? sanitize_text_field(wp_unslash($_GET['nonce'])) : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_reset_metabox_translations')) {
+            return;
+        }
+
         global $wpdb;
         $fieldsToReset = ['event_type'];
         $stringsTable = $wpdb->prefix . 'icl_strings';
