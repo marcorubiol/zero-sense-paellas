@@ -17,3 +17,6 @@ node_modules/
 
 # Temporary
 *.tmp
+
+# Dev-only
+bricks-templates/
