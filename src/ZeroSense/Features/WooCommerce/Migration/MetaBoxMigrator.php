@@ -55,74 +55,74 @@ class MetaBoxMigrator
 
     private function getTotalOrdersWithMetaBoxHpos(): int
     {
-        $meta_query = [
-            'relation' => 'OR',
-            ...array_map(function ($field) {
-                return [
-                    'key' => $field,
-                    'compare' => 'EXISTS',
-                ];
-            }, array_keys(self::FIELD_MAPPING)),
-        ];
+        global $wpdb;
 
-        $query = wc_get_orders([
-            'status' => 'any',
-            'limit' => 1,
-            'return' => 'ids',
-            'paginate' => true,
-            'meta_query' => $meta_query,
-        ]);
+        $tables = $this->getHposTables();
+        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $statuses = $this->getOrderStatuses();
 
-        return isset($query->total) ? (int) $query->total : 0;
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+        $sql = "SELECT COUNT(DISTINCT m.order_id)
+            FROM {$tables['meta']} m
+            INNER JOIN {$tables['orders']} o ON o.id = m.order_id
+            WHERE o.type = 'shop_order'
+              AND o.status IN ({$status_placeholders})
+              AND m.meta_key IN ({$meta_placeholders})";
+
+        $params = array_merge($statuses, $meta_keys);
+        return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
     private function getMigratedOrdersCountHpos(): int
     {
-        $query = wc_get_orders([
-            'status' => 'any',
-            'limit' => 1,
-            'return' => 'ids',
-            'paginate' => true,
-            'meta_query' => [
-                [
-                    'key' => 'zs_metabox_migrated',
-                    'compare' => 'EXISTS',
-                ],
-            ],
-        ]);
+        global $wpdb;
 
-        return isset($query->total) ? (int) $query->total : 0;
+        $tables = $this->getHposTables();
+        $statuses = $this->getOrderStatuses();
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+
+        $sql = "SELECT COUNT(DISTINCT m.order_id)
+            FROM {$tables['meta']} m
+            INNER JOIN {$tables['orders']} o ON o.id = m.order_id
+            WHERE o.type = 'shop_order'
+              AND o.status IN ({$status_placeholders})
+              AND m.meta_key = %s";
+
+        $params = array_merge($statuses, ['zs_metabox_migrated']);
+        return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
     private function getSampleOrdersHpos(int $limit): array
     {
-        $meta_query = [
-            'relation' => 'AND',
-            [
-                'key' => 'zs_metabox_migrated',
-                'compare' => 'NOT EXISTS',
-            ],
-            [
-                'relation' => 'OR',
-                ...array_map(function ($field) {
-                    return [
-                        'key' => $field,
-                        'compare' => 'EXISTS',
-                    ];
-                }, array_keys(self::FIELD_MAPPING)),
-            ],
-        ];
+        global $wpdb;
 
-        $orders = wc_get_orders([
-            'status' => 'any',
-            'limit' => $limit,
-            'return' => 'objects',
-            'meta_query' => $meta_query,
-        ]);
+        $tables = $this->getHposTables();
+        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $statuses = $this->getOrderStatuses();
+
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+        $sql = "SELECT DISTINCT o.id
+            FROM {$tables['orders']} o
+            INNER JOIN {$tables['meta']} m ON m.order_id = o.id
+            LEFT JOIN {$tables['meta']} migrated ON migrated.order_id = o.id AND migrated.meta_key = %s
+            WHERE o.type = 'shop_order'
+              AND o.status IN ({$status_placeholders})
+              AND m.meta_key IN ({$meta_placeholders})
+              AND migrated.order_id IS NULL
+            ORDER BY o.id DESC
+            LIMIT %d";
+
+        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, [(int) $limit]);
+        $order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
 
         $output = [];
 
-        foreach ($orders as $order) {
+        foreach ($order_ids as $order_id) {
+            $order = wc_get_order((int) $order_id);
             if (!$order instanceof WC_Order) {
                 continue;
             }
@@ -154,6 +154,16 @@ class MetaBoxMigrator
         }
 
         return $output;
+    }
+
+    private function getHposTables(): array
+    {
+        global $wpdb;
+
+        return [
+            'orders' => $wpdb->prefix . 'wc_orders',
+            'meta' => $wpdb->prefix . 'wc_order_meta',
+        ];
     }
 
     private function getTotalOrdersWithMetaBox(): int
