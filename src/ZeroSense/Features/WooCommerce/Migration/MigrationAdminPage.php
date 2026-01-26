@@ -77,6 +77,7 @@ class MigrationAdminPage implements FeatureInterface
         self::$hooksRegistered = true;
 
         add_action('admin_menu', [$this, 'addAdminMenu']);
+        add_action('admin_menu', [$this, 'dedupeAdminMenu'], 999);
         add_action('admin_post_zs_metabox_migrate', [$this, 'handleMigration']);
         add_action('admin_post_zs_metabox_rollback', [$this, 'handleRollback']);
         add_action('admin_post_zs_metabox_preview', [$this, 'handlePreview']);
@@ -103,6 +104,32 @@ class MigrationAdminPage implements FeatureInterface
             'zs_metabox_migration',
             [$this, 'renderAdminPage']
         );
+    }
+
+    public function dedupeAdminMenu(): void
+    {
+        global $submenu;
+
+        if (!isset($submenu['woocommerce'])) {
+            return;
+        }
+
+        $unique = [];
+        $filtered = [];
+
+        foreach ($submenu['woocommerce'] as $menu_item) {
+            $slug = $menu_item[2] ?? '';
+            if ($slug === 'zs_metabox_migration') {
+                if (isset($unique[$slug])) {
+                    continue;
+                }
+                $unique[$slug] = true;
+            }
+
+            $filtered[] = $menu_item;
+        }
+
+        $submenu['woocommerce'] = $filtered;
     }
 
     public function renderAdminPage(): void
