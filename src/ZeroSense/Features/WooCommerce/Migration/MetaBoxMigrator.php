@@ -47,8 +47,121 @@ class MetaBoxMigrator
         ];
     }
 
+    private function isHposEnabled(): bool
+    {
+        return class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class)
+            && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+    }
+
+    private function getTotalOrdersWithMetaBoxHpos(): int
+    {
+        $meta_query = [
+            'relation' => 'OR',
+            ...array_map(function ($field) {
+                return [
+                    'key' => $field,
+                    'compare' => 'EXISTS',
+                ];
+            }, array_keys(self::FIELD_MAPPING)),
+        ];
+
+        $query = wc_get_orders([
+            'status' => 'any',
+            'limit' => 1,
+            'return' => 'ids',
+            'paginate' => true,
+            'meta_query' => $meta_query,
+        ]);
+
+        return isset($query->total) ? (int) $query->total : 0;
+    }
+
+    private function getMigratedOrdersCountHpos(): int
+    {
+        $query = wc_get_orders([
+            'status' => 'any',
+            'limit' => 1,
+            'return' => 'ids',
+            'paginate' => true,
+            'meta_query' => [
+                [
+                    'key' => 'zs_metabox_migrated',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ]);
+
+        return isset($query->total) ? (int) $query->total : 0;
+    }
+
+    private function getSampleOrdersHpos(int $limit): array
+    {
+        $meta_query = [
+            'relation' => 'AND',
+            [
+                'key' => 'zs_metabox_migrated',
+                'compare' => 'NOT EXISTS',
+            ],
+            [
+                'relation' => 'OR',
+                ...array_map(function ($field) {
+                    return [
+                        'key' => $field,
+                        'compare' => 'EXISTS',
+                    ];
+                }, array_keys(self::FIELD_MAPPING)),
+            ],
+        ];
+
+        $orders = wc_get_orders([
+            'status' => 'any',
+            'limit' => $limit,
+            'return' => 'objects',
+            'meta_query' => $meta_query,
+        ]);
+
+        $output = [];
+
+        foreach ($orders as $order) {
+            if (!$order instanceof WC_Order) {
+                continue;
+            }
+
+            $sample_data = [
+                'order_id' => $order->get_id(),
+                'order_number' => $order->get_order_number(),
+                'status' => $order->get_status(),
+                'date' => $order->get_date_created()->format('Y-m-d H:i:s'),
+                'metabox_fields' => [],
+                'zerosense_fields' => [],
+            ];
+
+            foreach (array_keys(self::FIELD_MAPPING) as $metabox_key) {
+                $value = $order->get_meta($metabox_key, true);
+                if ($value !== '' && $value !== null) {
+                    $sample_data['metabox_fields'][$metabox_key] = $value;
+                }
+            }
+
+            foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
+                $value = $order->get_meta($zerosense_key, true);
+                if ($value !== '' && $value !== null) {
+                    $sample_data['zerosense_fields'][$zerosense_key] = $value;
+                }
+            }
+
+            $output[] = $sample_data;
+        }
+
+        return $output;
+    }
+
     private function getTotalOrdersWithMetaBox(): int
     {
+        if ($this->isHposEnabled()) {
+            return $this->getTotalOrdersWithMetaBoxHpos();
+        }
+
         global $wpdb;
 
         $meta_keys = array_keys(self::FIELD_MAPPING);
@@ -70,6 +183,10 @@ class MetaBoxMigrator
 
     private function getMigratedOrdersCount(): int
     {
+        if ($this->isHposEnabled()) {
+            return $this->getMigratedOrdersCountHpos();
+        }
+
         global $wpdb;
 
         $statuses = $this->getOrderStatuses();
@@ -229,6 +346,10 @@ class MetaBoxMigrator
 
     public function getSampleOrders(int $limit = 5): array
     {
+        if ($this->isHposEnabled()) {
+            return $this->getSampleOrdersHpos($limit);
+        }
+
         global $wpdb;
 
         $meta_keys = array_keys(self::FIELD_MAPPING);
