@@ -33,13 +33,48 @@ class MetaBoxMigrator
 
     public function getMigrationStatus(): array
     {
-        $totalOrders = $this->getTotalOrdersWithMetaBox();
-        $migratedOrders = $this->getMigratedOrdersCount();
-        $pendingOrders = $totalOrders - $migratedOrders;
+        error_log('[ZS Migration] getMigrationStatus() called');
+        $start_time = microtime(true);
+        
+        $total_orders = 0;
+        $migrated_orders = 0;
+
+        if ($this->isHposEnabled()) {
+            error_log('[ZS Migration] HPOS is enabled');
+            
+            $hpos_start = microtime(true);
+            $total_orders = $this->getTotalOrdersWithMetaBoxHpos();
+            error_log('[ZS Migration] HPOS total orders: ' . $total_orders . ' (took ' . round(microtime(true) - $hpos_start, 2) . 's)');
+            
+            $migrated_start = microtime(true);
+            $migrated_orders = $this->getMigratedOrdersCountHpos();
+            error_log('[ZS Migration] HPOS migrated orders: ' . $migrated_orders . ' (took ' . round(microtime(true) - $migrated_start, 2) . 's)');
+
+            if ($total_orders === 0) {
+                error_log('[ZS Migration] HPOS returned 0, falling back to legacy');
+                $legacy_start = microtime(true);
+                $total_orders = $this->getTotalOrdersWithMetaBoxLegacy();
+                error_log('[ZS Migration] Legacy total orders: ' . $total_orders . ' (took ' . round(microtime(true) - $legacy_start, 2) . 's)');
+                
+                $migrated_legacy_start = microtime(true);
+                $migrated_orders = $this->getMigratedOrdersCountLegacy();
+                error_log('[ZS Migration] Legacy migrated orders: ' . $migrated_orders . ' (took ' . round(microtime(true) - $migrated_legacy_start, 2) . 's)');
+            }
+        } else {
+            error_log('[ZS Migration] HPOS is disabled, using legacy');
+            $total_orders = $this->getTotalOrdersWithMetaBoxLegacy();
+            error_log('[ZS Migration] Legacy total orders: ' . $total_orders);
+            $migrated_orders = $this->getMigratedOrdersCountLegacy();
+            error_log('[ZS Migration] Legacy migrated orders: ' . $migrated_orders);
+        }
+
+        $pendingOrders = $total_orders - $migrated_orders;
+
+        error_log('[ZS Migration] getMigrationStatus() finished (took ' . round(microtime(true) - $start_time, 2) . 's)');
 
         return [
-            'total_orders' => $totalOrders,
-            'migrated_orders' => $migratedOrders,
+            'total_orders' => $total_orders,
+            'migrated_orders' => $migrated_orders,
             'pending_orders' => $pendingOrders,
             'migration_complete' => $pendingOrders === 0,
             'last_migration' => get_option('zs_metabox_migration_last_run', null),
@@ -61,6 +96,10 @@ class MetaBoxMigrator
         $meta_keys = array_keys(self::FIELD_MAPPING);
         $statuses = $this->getOrderStatuses();
 
+        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Statuses: ' . implode(', ', $statuses));
+        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Meta keys: ' . implode(', ', $meta_keys));
+        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Tables: ' . json_encode($tables));
+
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
         $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
 
@@ -72,7 +111,17 @@ class MetaBoxMigrator
               AND m.meta_key IN ({$meta_placeholders})";
 
         $params = array_merge($statuses, $meta_keys);
-        return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
+        $prepared_sql = $wpdb->prepare($sql, $params);
+        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - SQL: ' . $prepared_sql);
+        
+        $result = (int) $wpdb->get_var($prepared_sql);
+        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Result: ' . $result);
+        
+        if ($wpdb->last_error) {
+            error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - SQL Error: ' . $wpdb->last_error);
+        }
+        
+        return $result;
     }
 
     private function getMigratedOrdersCountHpos(): int
@@ -223,29 +272,24 @@ class MetaBoxMigrator
     {
         global $wpdb;
 
-        $statuses = $wpdb->get_col(
-            "SELECT DISTINCT post_status FROM {$wpdb->posts} WHERE post_type = 'shop_order'"
-        );
-
-        if (empty($statuses)) {
-            return [
-                'wc-pending',
-                'wc-processing',
-                'wc-on-hold',
-                'wc-completed',
-                'wc-cancelled',
-                'wc-refunded',
-                'wc-failed',
-            ];
+        if ($this->isHposEnabled()) {
+            $tables = $this->getHposTables();
+            $sql = "SELECT DISTINCT status FROM {$tables['orders']} WHERE type = 'shop_order'";
+            $statuses = $wpdb->get_col($sql);
+            error_log('[ZS Migration] getOrderStatuses() - HPOS raw statuses: ' . implode(', ', $statuses));
+        } else {
+            $sql = "SELECT DISTINCT post_status FROM {$wpdb->posts} WHERE post_type = 'shop_order'";
+            $statuses = $wpdb->get_col($sql);
+            error_log('[ZS Migration] getOrderStatuses() - Legacy raw statuses: ' . implode(', ', $statuses));
         }
 
-        return array_values(array_filter(array_unique(array_map(function ($status) {
-            if ($status === 'trash' || $status === 'auto-draft') {
-                return null;
-            }
-
-            return str_starts_with($status, 'wc-') ? $status : 'wc-' . $status;
-        }, $statuses))));
+        $filtered = array_filter($statuses, function($status) {
+            return !in_array($status, ['trash', 'auto-draft'], true);
+        });
+        
+        error_log('[ZS Migration] getOrderStatuses() - Filtered statuses: ' . implode(', ', $filtered));
+        
+        return $filtered;
     }
 
     public function migrateAll(): array
