@@ -30,15 +30,19 @@ class MigrationAdminPage implements FeatureInterface
 
     public function getCategory(): string
     {
-        return __('WooCommerce', 'zero-sense');
+        return 'WooCommerce';
     }
 
     public function isEnabled(): bool
     {
-        return get_option('zs_metabox_migration_enabled', true);
+        if (!defined('ZERO_SENSE_VERSION') || strpos((string) ZERO_SENSE_VERSION, '-dev') === false) {
+            return false;
+        }
+
+        return (bool) get_option($this->getOptionName(), true);
     }
 
-    public function getOptionKey(): string
+    public function getOptionName(): string
     {
         return 'zs_metabox_migration_enabled';
     }

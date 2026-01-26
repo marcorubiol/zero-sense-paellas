@@ -47,13 +47,6 @@ class Plugin
      */
     private function init(): void
     {
-        // Declare HPOS compatibility
-        add_action('before_woocommerce_init', function() {
-            if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
-                \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', ZERO_SENSE_FILE, true);
-            }
-        });
-
         // Initialize feature manager
         $this->featureManager = new FeatureManager();
         $this->featureManager->discoverFeatures();
@@ -62,27 +55,6 @@ class Plugin
         // Initialize admin dashboard
         if (is_admin()) {
             $this->adminDashboard = new AdminDashboard($this->featureManager);
-        }
-
-        // DEV: Initialize migration features
-        if (defined('ZERO_SENSE_VERSION') && strpos(ZERO_SENSE_VERSION, '-dev') !== false) {
-            $this->initMigrationFeatures();
-        }
-    }
-
-    /**
-     * Initialize migration features for DEV version
-     */
-    private function initMigrationFeatures(): void
-    {
-        // Load migration classes
-        require_once ZERO_SENSE_PATH . 'src/ZeroSense/Features/WooCommerce/Migration/MetaBoxMigrator.php';
-        require_once ZERO_SENSE_PATH . 'src/ZeroSense/Features/WooCommerce/Migration/MigrationAdminPage.php';
-
-        // Initialize migration admin page
-        if (is_admin()) {
-            $migrationPage = new \ZeroSense\Features\WooCommerce\Migration\MigrationAdminPage();
-            $migrationPage->init();
         }
     }
 
