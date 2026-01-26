@@ -151,7 +151,7 @@ class MigrationAdminPage implements FeatureInterface
                         </p>
                     </div>
                     <p>
-                        <a class="button" href="<?php echo esc_url(add_query_arg('zs_migration_load', '1')); ?>">
+                        <a class="button" href="<?php echo esc_url(admin_url('admin.php?page=zs_metabox_migration&zs_migration_load=1')); ?>">
                             <?php esc_html_e('Load migration status', 'zero-sense'); ?>
                         </a>
                     </p>
