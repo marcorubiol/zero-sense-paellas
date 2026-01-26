@@ -63,6 +63,27 @@ class Plugin
         if (is_admin()) {
             $this->adminDashboard = new AdminDashboard($this->featureManager);
         }
+
+        // DEV: Initialize migration features
+        if (defined('ZERO_SENSE_VERSION') && strpos(ZERO_SENSE_VERSION, '-dev') !== false) {
+            $this->initMigrationFeatures();
+        }
+    }
+
+    /**
+     * Initialize migration features for DEV version
+     */
+    private function initMigrationFeatures(): void
+    {
+        // Load migration classes
+        require_once ZERO_SENSE_PATH . 'src/ZeroSense/Features/WooCommerce/Migration/MetaBoxMigrator.php';
+        require_once ZERO_SENSE_PATH . 'src/ZeroSense/Features/WooCommerce/Migration/MigrationAdminPage.php';
+
+        // Initialize migration admin page
+        if (is_admin()) {
+            $migrationPage = new \ZeroSense\Features\WooCommerce\Migration\MigrationAdminPage();
+            $migrationPage->init();
+        }
     }
 
     /**
