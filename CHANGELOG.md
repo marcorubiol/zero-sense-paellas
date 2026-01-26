@@ -5,6 +5,36 @@ All notable changes to Zero Sense plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-01-26
+
+### Added
+- **Core Runtime dashboard card**:
+  - Added an always-on feature card (`Core Runtime`) visible in `Settings → Zerø Sense`.
+  - Exposes runtime information (version, WP_DEBUG, dev build) and documents core wiring.
+
+### Changed
+- **HPOS compatibility wiring**:
+  - HPOS compatibility declaration moved into the `Core Runtime` feature (still always-on).
+- **MetaBox Migration feature integration**:
+  - The migration feature now exposes a stable option name via `getOptionName()` for proper dashboard toggle integration.
+  - Migration feature is now gated to `-dev` builds via `isEnabled()`.
+
+### Removed
+- **Debug pages & debug UI**:
+  - Removed the `zero-sense-debug` settings page.
+  - Removed the Deposits server log viewer debug page.
+  - Removed Order Pay debug badge/tooling.
+- **Order admin debug output**:
+  - Removed the "V3 Meta" raw meta debug block from the Deposits order metabox.
+
+### Fixed
+- **Admin menu duplication**:
+  - Prevented duplicate registration of the "MetaBox Migration" submenu when features are re-initialized.
+- **Production log noise**:
+  - Reduced noisy `error_log()` calls by gating them behind `WP_DEBUG`.
+- **Maintenance endpoint hardening**:
+  - Restricted the `reset_metabox_translations` maintenance action to `WP_DEBUG` and a valid nonce.
+
 ## [3.1.9] - 2026-01-26
 
 ### Added
