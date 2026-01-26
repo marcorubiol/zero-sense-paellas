@@ -131,8 +131,25 @@ class MetaBoxMigrator
 
     private function isHposEnabled(): bool
     {
-        return class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class)
-            && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+        if (!class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class)) {
+            return false;
+        }
+        
+        if (!\Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+            return false;
+        }
+        
+        global $wpdb;
+        $tables = $this->getHposTables();
+        
+        $meta_table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $tables['meta']));
+        
+        if (!$meta_table_exists) {
+            error_log('[ZS Migration] HPOS enabled in settings but table ' . $tables['meta'] . ' does not exist');
+            return false;
+        }
+        
+        return true;
     }
 
     private function getTotalOrdersWithMetaBoxHpos(): int
