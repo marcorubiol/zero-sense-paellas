@@ -7,7 +7,7 @@ use ZeroSense\Core\FeatureInterface;
  * Migration Admin Page
  * 
  * Provides admin interface for MetaBox to ZeroSense migration
- * Last webhook test: 2026-01-26 08:00 - FINAL DEPLOYMENT TEST
+ * Last webhook test: 2026-01-26 08:06 - Payload debug fix applied
  */
 class MigrationAdminPage implements FeatureInterface
 {
