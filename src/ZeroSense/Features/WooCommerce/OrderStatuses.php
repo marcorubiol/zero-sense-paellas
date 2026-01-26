@@ -144,8 +144,14 @@ class OrderStatuses implements FeatureInterface
     public function injectStatuses(array $statuses): array
     {
         $inserted = [];
+        $moveToEnd = [];
 
         foreach ($statuses as $key => $label) {
+            if ($key === 'wc-processing' || $key === 'wc-on-hold') {
+                $moveToEnd[$key] = $label;
+                continue;
+            }
+
             if ($key === 'wc-pending') {
                 $inserted['wc-budget-requested'] = __('Budget Requested', 'zero-sense');
             }
@@ -184,7 +190,7 @@ class OrderStatuses implements FeatureInterface
             }
         }
 
-        return $inserted;
+        return array_merge($inserted, $moveToEnd);
     }
 
     /**
