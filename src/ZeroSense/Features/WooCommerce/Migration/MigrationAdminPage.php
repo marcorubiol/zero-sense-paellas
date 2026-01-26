@@ -128,8 +128,9 @@ class MigrationAdminPage implements FeatureInterface
             wp_die(__('You do not have sufficient permissions to access this page.', 'zero-sense'));
         }
 
-        $status = $this->migrator->getMigrationStatus();
-        $sample_orders = $this->migrator->getSampleOrders(3);
+        $load_data = isset($_GET['zs_migration_load']) && sanitize_text_field(wp_unslash($_GET['zs_migration_load'])) === '1';
+        $status = $load_data ? $this->migrator->getMigrationStatus() : null;
+        $sample_orders = $load_data ? $this->migrator->getSampleOrders(3) : [];
 
         ?>
         <div class="wrap">
@@ -143,32 +144,45 @@ class MigrationAdminPage implements FeatureInterface
             </div>
 
             <div class="zs-migration-dashboard">
+                <?php if (!$load_data): ?>
+                    <div class="notice notice-warning">
+                        <p>
+                            <?php esc_html_e('Migration data is loaded on demand to avoid timeouts. Click to load current status.', 'zero-sense'); ?>
+                        </p>
+                    </div>
+                    <p>
+                        <a class="button" href="<?php echo esc_url(add_query_arg('zs_migration_load', '1')); ?>">
+                            <?php esc_html_e('Load migration status', 'zero-sense'); ?>
+                        </a>
+                    </p>
+                <?php endif; ?>
+
                 <div class="zs-migration-status-card">
                     <h2><?php esc_html_e('Migration Status', 'zero-sense'); ?></h2>
                     <div class="zs-status-grid">
                         <div class="zs-status-item">
                             <span class="zs-status-label"><?php esc_html_e('Total Orders:', 'zero-sense'); ?></span>
-                            <span class="zs-status-value"><?php echo esc_html($status['total_orders']); ?></span>
+                            <span class="zs-status-value"><?php echo $status ? esc_html($status['total_orders']) : '-'; ?></span>
                         </div>
                         <div class="zs-status-item">
                             <span class="zs-status-label"><?php esc_html_e('Migrated:', 'zero-sense'); ?></span>
-                            <span class="zs-status-value zs-success"><?php echo esc_html($status['migrated_orders']); ?></span>
+                            <span class="zs-status-value zs-success"><?php echo $status ? esc_html($status['migrated_orders']) : '-'; ?></span>
                         </div>
                         <div class="zs-status-item">
                             <span class="zs-status-label"><?php esc_html_e('Pending:', 'zero-sense'); ?></span>
-                            <span class="zs-status-value <?php echo $status['pending_orders'] > 0 ? 'zs-warning' : 'zs-success'; ?>">
-                                <?php echo esc_html($status['pending_orders']); ?>
+                            <span class="zs-status-value <?php echo $status && $status['pending_orders'] > 0 ? 'zs-warning' : 'zs-success'; ?>">
+                                <?php echo $status ? esc_html($status['pending_orders']) : '-'; ?>
                             </span>
                         </div>
                     </div>
 
-                    <?php if ($status['migration_complete']): ?>
+                    <?php if ($status && $status['migration_complete']): ?>
                         <div class="notice notice-success">
                             <p><?php esc_html_e('✅ Migration complete! All orders have been migrated.', 'zero-sense'); ?></p>
                         </div>
                     <?php endif; ?>
 
-                    <?php if ($status['last_migration']): ?>
+                    <?php if ($status && $status['last_migration']): ?>
                         <p class="zs-last-migration">
                             <strong><?php esc_html_e('Last migration:', 'zero-sense'); ?></strong>
                             <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($status['last_migration']))); ?>
