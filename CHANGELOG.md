@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **HPOS compatibility wiring**:
   - HPOS compatibility declaration moved into the `Core Runtime` feature (still always-on).
+- **MetaBox Migration feature integration**:
+  - Added MetaBox Migration tooling back for HPOS migration support.
+  - Feature remains gated to `-dev` builds via `isEnabled()`.
 
 ### Removed
 - **Debug pages & debug UI**:
@@ -25,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed the "V3 Meta" raw meta debug block from the Deposits order metabox.
 
 ### Fixed
+- **Admin menu duplication**:
+  - Added submenu de-duplication guard for the "MetaBox Migration" menu.
 - **Production log noise**:
   - Reduced noisy `error_log()` calls by gating them behind `WP_DEBUG`.
 - **Maintenance endpoint hardening**:

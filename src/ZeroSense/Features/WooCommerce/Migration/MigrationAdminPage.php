@@ -1,0 +1,342 @@
+<?php
+namespace ZeroSense\Features\WooCommerce\Migration;
+
+use ZeroSense\Core\FeatureInterface;
+
+class MigrationAdminPage implements FeatureInterface
+{
+    private MetaBoxMigrator $migrator;
+
+    private static bool $hooksRegistered = false;
+
+    public function __construct()
+    {
+        $this->migrator = new MetaBoxMigrator();
+    }
+
+    public function getName(): string
+    {
+        return __('MetaBox Migration', 'zero-sense');
+    }
+
+    public function getDescription(): string
+    {
+        return __('Migrate custom fields from MetaBox to ZeroSense plugin for HPOS compatibility.', 'zero-sense');
+    }
+
+    public function getCategory(): string
+    {
+        return 'WooCommerce';
+    }
+
+    public function isEnabled(): bool
+    {
+        if (!defined('ZERO_SENSE_VERSION') || strpos((string) ZERO_SENSE_VERSION, '-dev') === false) {
+            return false;
+        }
+
+        return (bool) get_option($this->getOptionName(), true);
+    }
+
+    public function getOptionName(): string
+    {
+        return 'zs_metabox_migration_enabled';
+    }
+
+    public function isToggleable(): bool
+    {
+        return true;
+    }
+
+    public function getPriority(): int
+    {
+        return 5;
+    }
+
+    public function getConditions(): array
+    {
+        return ['class_exists:WooCommerce'];
+    }
+
+    public function init(): void
+    {
+        if (!$this->isEnabled()) {
+            return;
+        }
+
+        if (self::$hooksRegistered) {
+            return;
+        }
+
+        self::$hooksRegistered = true;
+
+        add_action('admin_menu', [$this, 'addAdminMenu']);
+        add_action('admin_menu', [$this, 'dedupeAdminMenu'], 999);
+        add_action('admin_post_zs_metabox_migrate', [$this, 'handleMigration']);
+        add_action('admin_post_zs_metabox_rollback', [$this, 'handleRollback']);
+        add_action('admin_post_zs_metabox_preview', [$this, 'handlePreview']);
+        add_action('wp_ajax_zs_metabox_status', [$this, 'ajaxGetStatus']);
+    }
+
+    public function addAdminMenu(): void
+    {
+        global $submenu;
+
+        if (isset($submenu['woocommerce'])) {
+            foreach ($submenu['woocommerce'] as $menu_item) {
+                if (isset($menu_item[2]) && $menu_item[2] === 'zs_metabox_migration') {
+                    return;
+                }
+            }
+        }
+
+        add_submenu_page(
+            'woocommerce',
+            __('MetaBox Migration', 'zero-sense'),
+            __('MetaBox Migration', 'zero-sense'),
+            'manage_options',
+            'zs_metabox_migration',
+            [$this, 'renderAdminPage']
+        );
+    }
+
+    public function dedupeAdminMenu(): void
+    {
+        global $submenu;
+
+        if (!isset($submenu['woocommerce'])) {
+            return;
+        }
+
+        $unique = [];
+        $filtered = [];
+
+        foreach ($submenu['woocommerce'] as $menu_item) {
+            $slug = $menu_item[2] ?? '';
+            if ($slug === 'zs_metabox_migration') {
+                if (isset($unique[$slug])) {
+                    continue;
+                }
+                $unique[$slug] = true;
+            }
+
+            $filtered[] = $menu_item;
+        }
+
+        $submenu['woocommerce'] = $filtered;
+    }
+
+    public function renderAdminPage(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'zero-sense'));
+        }
+
+        $status = $this->migrator->getMigrationStatus();
+        $sample_orders = $this->migrator->getSampleOrders(3);
+
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(__('MetaBox to ZeroSense Migration', 'zero-sense')); ?></h1>
+
+            <div class="notice notice-info">
+                <p>
+                    <strong><?php esc_html_e('Important:', 'zero-sense'); ?></strong>
+                    <?php esc_html_e('This tool migrates custom fields from MetaBox to ZeroSense plugin fields for HPOS compatibility. Always backup your database before proceeding.', 'zero-sense'); ?>
+                </p>
+            </div>
+
+            <div class="zs-migration-dashboard">
+                <div class="zs-migration-status-card">
+                    <h2><?php esc_html_e('Migration Status', 'zero-sense'); ?></h2>
+                    <div class="zs-status-grid">
+                        <div class="zs-status-item">
+                            <span class="zs-status-label"><?php esc_html_e('Total Orders:', 'zero-sense'); ?></span>
+                            <span class="zs-status-value"><?php echo esc_html($status['total_orders']); ?></span>
+                        </div>
+                        <div class="zs-status-item">
+                            <span class="zs-status-label"><?php esc_html_e('Migrated:', 'zero-sense'); ?></span>
+                            <span class="zs-status-value zs-success"><?php echo esc_html($status['migrated_orders']); ?></span>
+                        </div>
+                        <div class="zs-status-item">
+                            <span class="zs-status-label"><?php esc_html_e('Pending:', 'zero-sense'); ?></span>
+                            <span class="zs-status-value <?php echo $status['pending_orders'] > 0 ? 'zs-warning' : 'zs-success'; ?>">
+                                <?php echo esc_html($status['pending_orders']); ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <?php if ($status['migration_complete']): ?>
+                        <div class="notice notice-success">
+                            <p><?php esc_html_e('✅ Migration complete! All orders have been migrated.', 'zero-sense'); ?></p>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($status['last_migration']): ?>
+                        <p class="zs-last-migration">
+                            <strong><?php esc_html_e('Last migration:', 'zero-sense'); ?></strong>
+                            <?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($status['last_migration']))); ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (!empty($sample_orders)): ?>
+                <div class="zs-migration-preview-card">
+                    <h2><?php esc_html_e('Sample Orders (Preview)', 'zero-sense'); ?></h2>
+                    <div class="zs-preview-table">
+                        <table class="wp-list-table widefat fixed striped">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Order', 'zero-sense'); ?></th>
+                                    <th><?php esc_html_e('Status', 'zero-sense'); ?></th>
+                                    <th><?php esc_html_e('MetaBox Fields', 'zero-sense'); ?></th>
+                                    <th><?php esc_html_e('ZeroSense Fields', 'zero-sense'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($sample_orders as $order): ?>
+                                <tr>
+                                    <td>
+                                        <a href="<?php echo esc_url(get_edit_post_link($order['order_id'])); ?>">
+                                            #<?php echo esc_html($order['order_number']); ?>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <mark class="order-status status-<?php echo esc_attr($order['status']); ?>">
+                                            <?php echo esc_html(ucfirst($order['status'])); ?>
+                                        </mark>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($order['metabox_fields'])): ?>
+                                            <ul class="zs-field-list">
+                                                <?php foreach ($order['metabox_fields'] as $key => $value): ?>
+                                                    <li><strong><?php echo esc_html($key); ?>:</strong> <?php echo esc_html(is_array($value) ? print_r($value, true) : $value); ?></li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php else: ?>
+                                            <em><?php esc_html_e('None', 'zero-sense'); ?></em>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($order['zerosense_fields'])): ?>
+                                            <ul class="zs-field-list">
+                                                <?php foreach ($order['zerosense_fields'] as $key => $value): ?>
+                                                    <li><strong><?php echo esc_html($key); ?>:</strong> <?php echo esc_html(is_array($value) ? print_r($value, true) : $value); ?></li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php else: ?>
+                                            <em><?php esc_html_e('None', 'zero-sense'); ?></em>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class="zs-migration-actions">
+                    <h2><?php esc_html_e('Actions', 'zero-sense'); ?></h2>
+
+                    <?php settings_errors('zs_metabox_migration'); ?>
+
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('zs_metabox_migrate'); ?>
+                        <input type="hidden" name="action" value="zs_metabox_migrate">
+                        <p>
+                            <button type="submit" class="button button-primary" onclick="return confirm('<?php esc_attr_e('This will migrate all pending orders. Continue?', 'zero-sense'); ?>');">
+                                <?php esc_html_e('Migrate All Pending Orders', 'zero-sense'); ?>
+                            </button>
+                        </p>
+                    </form>
+
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('zs_metabox_preview'); ?>
+                        <input type="hidden" name="action" value="zs_metabox_preview">
+                        <p>
+                            <button type="submit" class="button">
+                                <?php esc_html_e('Refresh Preview', 'zero-sense'); ?>
+                            </button>
+                        </p>
+                    </form>
+
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('zs_metabox_rollback'); ?>
+                        <input type="hidden" name="action" value="zs_metabox_rollback">
+                        <p>
+                            <button type="submit" class="button" onclick="return confirm('<?php esc_attr_e('Rollback is not fully implemented. Continue?', 'zero-sense'); ?>');">
+                                <?php esc_html_e('Rollback (Partial)', 'zero-sense'); ?>
+                            </button>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function handleMigration(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
+        }
+
+        check_admin_referer('zs_metabox_migrate');
+
+        $results = $this->migrator->migrateAll();
+        $message = sprintf(
+            __('Migration complete. %1$d orders migrated, %2$d errors, %3$d skipped.', 'zero-sense'),
+            $results['success'],
+            $results['errors'],
+            $results['skipped']
+        );
+
+        if ($results['errors'] > 0) {
+            add_settings_error('zs_metabox_migration', 'migration_error', $message, 'error');
+        } else {
+            add_settings_error('zs_metabox_migration', 'migration_success', $message, 'success');
+        }
+
+        set_transient('zs_metabox_migration_results', $results, 300);
+
+        wp_safe_redirect(wp_get_referer());
+        exit;
+    }
+
+    public function handleRollback(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
+        }
+
+        check_admin_referer('zs_metabox_rollback');
+
+        add_settings_error('zs_metabox_migration', 'rollback_info', __('Rollback functionality not yet implemented.', 'info'), 'info');
+
+        wp_safe_redirect(wp_get_referer());
+        exit;
+    }
+
+    public function handlePreview(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
+        }
+
+        check_admin_referer('zs_metabox_preview');
+
+        wp_safe_redirect(wp_get_referer());
+        exit;
+    }
+
+    public function ajaxGetStatus(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized', 'zero-sense')], 403);
+        }
+
+        $status = $this->migrator->getMigrationStatus();
+        wp_send_json_success($status);
+    }
+}
