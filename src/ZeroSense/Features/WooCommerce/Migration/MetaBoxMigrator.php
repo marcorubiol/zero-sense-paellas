@@ -88,19 +88,31 @@ class MetaBoxMigrator
 
     private function getOrderStatuses(): array
     {
-        if (function_exists('wc_get_order_statuses')) {
-            return array_keys(wc_get_order_statuses());
+        global $wpdb;
+
+        $statuses = $wpdb->get_col(
+            "SELECT DISTINCT post_status FROM {$wpdb->posts} WHERE post_type = 'shop_order'"
+        );
+
+        if (empty($statuses)) {
+            return [
+                'wc-pending',
+                'wc-processing',
+                'wc-on-hold',
+                'wc-completed',
+                'wc-cancelled',
+                'wc-refunded',
+                'wc-failed',
+            ];
         }
 
-        return [
-            'wc-pending',
-            'wc-processing',
-            'wc-on-hold',
-            'wc-completed',
-            'wc-cancelled',
-            'wc-refunded',
-            'wc-failed',
-        ];
+        return array_values(array_filter(array_unique(array_map(function ($status) {
+            if ($status === 'trash' || $status === 'auto-draft') {
+                return null;
+            }
+
+            return str_starts_with($status, 'wc-') ? $status : 'wc-' . $status;
+        }, $statuses))));
     }
 
     public function migrateAll(): array
