@@ -229,67 +229,61 @@ class MetaBoxMigrator
 
     public function getSampleOrders(int $limit = 5): array
     {
-        $args = [
-            'post_type' => 'shop_order',
-            'post_status' => 'any',
-            'posts_per_page' => $limit,
-            'meta_query' => [
-                'relation' => 'AND',
-                [
-                    'key' => 'zs_metabox_migrated',
-                    'compare' => 'NOT EXISTS',
-                ],
-                [
-                    'relation' => 'OR',
-                    ...array_map(function ($field) {
-                        return [
-                            'key' => $field,
-                            'compare' => 'EXISTS',
-                        ];
-                    }, array_keys(self::FIELD_MAPPING)),
-                ],
-            ],
-        ];
+        global $wpdb;
 
-        $query = new WP_Query($args);
+        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $statuses = $this->getOrderStatuses();
+
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+        $sql = "SELECT DISTINCT p.ID
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
+            LEFT JOIN {$wpdb->postmeta} migrated ON migrated.post_id = p.ID AND migrated.meta_key = %s
+            WHERE p.post_type = 'shop_order'
+              AND p.post_status IN ({$status_placeholders})
+              AND pm.meta_key IN ({$meta_placeholders})
+              AND migrated.post_id IS NULL
+            ORDER BY p.ID DESC
+            LIMIT %d";
+
+        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, [(int) $limit]);
+        $order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+
         $orders = [];
 
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $order_id = get_the_ID();
-                $order = wc_get_order($order_id);
+        foreach ($order_ids as $order_id) {
+            $order = wc_get_order((int) $order_id);
 
-                if ($order instanceof WC_Order) {
-                    $sample_data = [
-                        'order_id' => $order_id,
-                        'order_number' => $order->get_order_number(),
-                        'status' => $order->get_status(),
-                        'date' => $order->get_date_created()->format('Y-m-d H:i:s'),
-                        'metabox_fields' => [],
-                        'zerosense_fields' => [],
-                    ];
+            if ($order instanceof WC_Order) {
+                $sample_data = [
+                    'order_id' => (int) $order_id,
+                    'order_number' => $order->get_order_number(),
+                    'status' => $order->get_status(),
+                    'date' => $order->get_date_created()->format('Y-m-d H:i:s'),
+                    'metabox_fields' => [],
+                    'zerosense_fields' => [],
+                ];
 
-                    foreach (array_keys(self::FIELD_MAPPING) as $metabox_key) {
-                        $value = get_post_meta($order_id, $metabox_key, true);
-                        if ($value !== '' && $value !== null) {
-                            $sample_data['metabox_fields'][$metabox_key] = $value;
-                        }
+                foreach (array_keys(self::FIELD_MAPPING) as $metabox_key) {
+                    $value = get_post_meta($order_id, $metabox_key, true);
+                    if ($value !== '' && $value !== null) {
+                        $sample_data['metabox_fields'][$metabox_key] = $value;
                     }
-
-                    foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-                        $value = $order->get_meta($zerosense_key, true);
-                        if ($value !== '' && $value !== null) {
-                            $sample_data['zerosense_fields'][$zerosense_key] = $value;
-                        }
-                    }
-
-                    $orders[] = $sample_data;
                 }
+
+                foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
+                    $value = $order->get_meta($zerosense_key, true);
+                    if ($value !== '' && $value !== null) {
+                        $sample_data['zerosense_fields'][$zerosense_key] = $value;
+                    }
+                }
+
+                $orders[] = $sample_data;
             }
         }
 
-        wp_reset_postdata();
         return $orders;
     }
 
