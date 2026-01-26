@@ -31,10 +31,6 @@ class MigrationAdminPage implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        if (!defined('ZERO_SENSE_VERSION') || strpos((string) ZERO_SENSE_VERSION, '-dev') === false) {
-            return false;
-        }
-
         return (bool) get_option($this->getOptionName(), true);
     }
 
