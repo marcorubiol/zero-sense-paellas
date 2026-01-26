@@ -49,43 +49,58 @@ class MetaBoxMigrator
 
     private function getTotalOrdersWithMetaBox(): int
     {
-        $args = [
-            'post_type' => 'shop_order',
-            'post_status' => 'any',
-            'posts_per_page' => -1,
-            'meta_query' => [
-                'relation' => 'OR',
-                ...array_map(function ($field) {
-                    return [
-                        'key' => $field,
-                        'compare' => 'EXISTS',
-                    ];
-                }, array_keys(self::FIELD_MAPPING)),
-            ],
-            'fields' => 'ids',
-        ];
+        global $wpdb;
 
-        $query = new WP_Query($args);
-        return (int) $query->found_posts;
+        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $statuses = $this->getOrderStatuses();
+
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+        $sql = "SELECT COUNT(DISTINCT pm.post_id)
+            FROM {$wpdb->postmeta} pm
+            INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+            WHERE p.post_type = 'shop_order'
+              AND p.post_status IN ({$status_placeholders})
+              AND pm.meta_key IN ({$meta_placeholders})";
+
+        $params = array_merge($statuses, $meta_keys);
+        return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
     private function getMigratedOrdersCount(): int
     {
-        $args = [
-            'post_type' => 'shop_order',
-            'post_status' => 'any',
-            'posts_per_page' => -1,
-            'meta_query' => [
-                [
-                    'key' => 'zs_metabox_migrated',
-                    'compare' => 'EXISTS',
-                ],
-            ],
-            'fields' => 'ids',
-        ];
+        global $wpdb;
 
-        $query = new WP_Query($args);
-        return (int) $query->found_posts;
+        $statuses = $this->getOrderStatuses();
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+
+        $sql = "SELECT COUNT(DISTINCT pm.post_id)
+            FROM {$wpdb->postmeta} pm
+            INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+            WHERE p.post_type = 'shop_order'
+              AND p.post_status IN ({$status_placeholders})
+              AND pm.meta_key = %s";
+
+        $params = array_merge($statuses, ['zs_metabox_migrated']);
+        return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
+    }
+
+    private function getOrderStatuses(): array
+    {
+        if (function_exists('wc_get_order_statuses')) {
+            return array_keys(wc_get_order_statuses());
+        }
+
+        return [
+            'wc-pending',
+            'wc-processing',
+            'wc-on-hold',
+            'wc-completed',
+            'wc-cancelled',
+            'wc-refunded',
+            'wc-failed',
+        ];
     }
 
     public function migrateAll(): array
