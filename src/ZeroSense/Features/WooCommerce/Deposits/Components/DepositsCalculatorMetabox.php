@@ -72,10 +72,8 @@ class DepositsCalculatorMetabox
         $orderTotal = $order->get_total();
         ?>
         <div class="zs-deposits-calculator-wrapper">
+            <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
             <div class="zs-deposits-header">
-                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>">
-                    <?php echo esc_html($modeBadgeText); ?>
-                </span>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-deposits-reset-btn" 
