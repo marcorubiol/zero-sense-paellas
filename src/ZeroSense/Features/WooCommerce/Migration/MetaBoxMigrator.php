@@ -169,7 +169,10 @@ class MetaBoxMigrator
     private function getTotalOrdersWithMetaBox(): int
     {
         if ($this->isHposEnabled()) {
-            return $this->getTotalOrdersWithMetaBoxHpos();
+            $count = $this->getTotalOrdersWithMetaBoxHpos();
+            if ($count > 0) {
+                return $count;
+            }
         }
 
         global $wpdb;
@@ -194,7 +197,10 @@ class MetaBoxMigrator
     private function getMigratedOrdersCount(): int
     {
         if ($this->isHposEnabled()) {
-            return $this->getMigratedOrdersCountHpos();
+            $count = $this->getMigratedOrdersCountHpos();
+            if ($count > 0) {
+                return $count;
+            }
         }
 
         global $wpdb;
@@ -357,7 +363,10 @@ class MetaBoxMigrator
     public function getSampleOrders(int $limit = 5): array
     {
         if ($this->isHposEnabled()) {
-            return $this->getSampleOrdersHpos($limit);
+            $orders = $this->getSampleOrdersHpos($limit);
+            if (!empty($orders)) {
+                return $orders;
+            }
         }
 
         global $wpdb;
