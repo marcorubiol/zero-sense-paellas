@@ -85,6 +85,16 @@ class MigrationAdminPage implements FeatureInterface
 
     public function addAdminMenu(): void
     {
+        global $submenu;
+
+        if (isset($submenu['woocommerce'])) {
+            foreach ($submenu['woocommerce'] as $menu_item) {
+                if (isset($menu_item[2]) && $menu_item[2] === 'zs_metabox_migration') {
+                    return;
+                }
+            }
+        }
+
         add_submenu_page(
             'woocommerce',
             __('MetaBox Migration', 'zero-sense'),
