@@ -51,20 +51,67 @@ class MetaBoxMigrator
             error_log('[ZS Migration] HPOS migrated orders: ' . $migrated_orders . ' (took ' . round(microtime(true) - $migrated_start, 2) . 's)');
 
             if ($total_orders === 0) {
-                error_log('[ZS Migration] HPOS returned 0, falling back to legacy');
+                error_log('[ZS Migration] HPOS returned 0, falling back to legacy postmeta');
                 $legacy_start = microtime(true);
-                $total_orders = $this->getTotalOrdersWithMetaBoxLegacy();
+                
+                global $wpdb;
+                $meta_keys = array_keys(self::FIELD_MAPPING);
+                $statuses = $this->getOrderStatuses();
+                $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+                $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+                
+                $sql = "SELECT COUNT(DISTINCT pm.post_id)
+                    FROM {$wpdb->postmeta} pm
+                    INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                    WHERE p.post_type = 'shop_order'
+                      AND p.post_status IN ({$status_placeholders})
+                      AND pm.meta_key IN ({$meta_placeholders})";
+                
+                $params = array_merge($statuses, $meta_keys);
+                $total_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
                 error_log('[ZS Migration] Legacy total orders: ' . $total_orders . ' (took ' . round(microtime(true) - $legacy_start, 2) . 's)');
                 
                 $migrated_legacy_start = microtime(true);
-                $migrated_orders = $this->getMigratedOrdersCountLegacy();
+                $sql = "SELECT COUNT(DISTINCT pm.post_id)
+                    FROM {$wpdb->postmeta} pm
+                    INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                    WHERE p.post_type = 'shop_order'
+                      AND p.post_status IN ({$status_placeholders})
+                      AND pm.meta_key = %s";
+                
+                $params = array_merge($statuses, ['zs_metabox_migrated']);
+                $migrated_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
                 error_log('[ZS Migration] Legacy migrated orders: ' . $migrated_orders . ' (took ' . round(microtime(true) - $migrated_legacy_start, 2) . 's)');
             }
         } else {
-            error_log('[ZS Migration] HPOS is disabled, using legacy');
-            $total_orders = $this->getTotalOrdersWithMetaBoxLegacy();
+            error_log('[ZS Migration] HPOS is disabled, using legacy postmeta');
+            
+            global $wpdb;
+            $meta_keys = array_keys(self::FIELD_MAPPING);
+            $statuses = $this->getOrderStatuses();
+            $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+            $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+            
+            $sql = "SELECT COUNT(DISTINCT pm.post_id)
+                FROM {$wpdb->postmeta} pm
+                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                  AND p.post_status IN ({$status_placeholders})
+                  AND pm.meta_key IN ({$meta_placeholders})";
+            
+            $params = array_merge($statuses, $meta_keys);
+            $total_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
             error_log('[ZS Migration] Legacy total orders: ' . $total_orders);
-            $migrated_orders = $this->getMigratedOrdersCountLegacy();
+            
+            $sql = "SELECT COUNT(DISTINCT pm.post_id)
+                FROM {$wpdb->postmeta} pm
+                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                  AND p.post_status IN ({$status_placeholders})
+                  AND pm.meta_key = %s";
+            
+            $params = array_merge($statuses, ['zs_metabox_migrated']);
+            $migrated_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
             error_log('[ZS Migration] Legacy migrated orders: ' . $migrated_orders);
         }
 
