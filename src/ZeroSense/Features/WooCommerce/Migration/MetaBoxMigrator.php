@@ -10,7 +10,7 @@ use WP_Query;
  * Migrates custom fields from MetaBox to ZeroSense plugin fields
  * for HPOS compatibility and better data management.
  * 
- * Last tested: 2026-01-26 via webhook deploy - Force script update
+ * Last tested: 2026-01-26 via webhook deploy - getallheaders() fix
  */
 class MetaBoxMigrator
 {
