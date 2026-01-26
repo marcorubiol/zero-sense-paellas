@@ -13,6 +13,8 @@ class MigrationAdminPage implements FeatureInterface
 {
     private MetaBoxMigrator $migrator;
 
+    private static bool $hooksRegistered = false;
+
     public function __construct()
     {
         $this->migrator = new MetaBoxMigrator();
@@ -67,6 +69,12 @@ class MigrationAdminPage implements FeatureInterface
         if (!$this->isEnabled()) {
             return;
         }
+
+        if (self::$hooksRegistered) {
+            return;
+        }
+
+        self::$hooksRegistered = true;
 
         add_action('admin_menu', [$this, 'addAdminMenu']);
         add_action('admin_post_zs_metabox_migrate', [$this, 'handleMigration']);
