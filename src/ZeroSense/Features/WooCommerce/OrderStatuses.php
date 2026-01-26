@@ -146,6 +146,10 @@ class OrderStatuses implements FeatureInterface
         $inserted = [];
 
         foreach ($statuses as $key => $label) {
+            if ($key === 'wc-processing' || $key === 'wc-on-hold') {
+                continue;
+            }
+
             if ($key === 'wc-pending') {
                 $inserted['wc-budget-requested'] = __('Budget Requested', 'zero-sense');
             }
