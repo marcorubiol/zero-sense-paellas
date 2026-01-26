@@ -73,9 +73,7 @@ class DepositsCalculatorMetabox
         ?>
         <div class="zs-deposits-calculator-wrapper">
             <div class="zs-deposits-header">
-                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>">
-                    <?php echo esc_html($modeBadgeText); ?>
-                </span>
+                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-deposits-reset-btn" 
@@ -135,128 +133,12 @@ class DepositsCalculatorMetabox
 
             <?php if ($statusAllowsAuto) : ?>
                 <div class="zs-recalculate-wrapper">
-                    <button type="button" class="button button-primary zs-deposits-recalculate" data-order-id="<?php echo esc_attr($orderId); ?>" style="width:100%;">
+                    <button type="button" class="button button-primary zs-deposits-recalculate" data-order-id="<?php echo esc_attr($orderId); ?>">
                         <?php esc_html_e('Recalculate', 'zero-sense'); ?>
                     </button>
                 </div>
             <?php endif; ?>
         </div>
-
-        <style>
-            .zs-deposits-calculator-wrapper {
-                margin: -12px -12px 0;
-            }
-            .zs-deposits-header {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 6px;
-                padding: 8px 12px;
-                border-bottom: 1px solid #f0f0f1;
-            }
-            .zs-deposits-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .zs-deposits-table tr {
-                border-bottom: 1px solid #f0f0f1;
-            }
-            .zs-deposits-table tr:last-child {
-                border-bottom: none;
-            }
-            .zs-deposits-table td {
-                padding: 12px;
-                font-size: 13px;
-            }
-            .zs-deposits-table td.label {
-                font-weight: 600;
-                color: #50575e;
-                width: 50%;
-            }
-            .zs-deposits-table td.total {
-                text-align: right;
-                font-weight: 600;
-                color: #2c3338;
-            }
-            .zs-order-total-row {
-                border-top: 1px solid #ddd !important;
-            }
-            .zs-order-total-row td.total {
-                color: #2271b1;
-            }
-            .zs-deposits-reset-btn {
-                background: none;
-                border: none;
-                padding: 0;
-                cursor: pointer;
-                color: #2271b1;
-            }
-            .zs-deposits-reset-btn:hover {
-                color: #135e96;
-            }
-            .zs-deposits-reset-btn .dashicons {
-                font-size: 14px;
-                width: 14px;
-                height: 14px;
-            }
-            .zs-deposit-display {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 6px;
-            }
-            .zs-amount-text {
-                color: #2271b1;
-            }
-            .zs-edit-link {
-                text-decoration: none;
-                color: #2271b1;
-                display: inline-flex;
-                align-items: center;
-            }
-            .zs-edit-link:hover {
-                color: #135e96;
-            }
-            .zs-edit-link .dashicons {
-                font-size: 16px;
-                width: 16px;
-                height: 16px;
-            }
-            .zs-deposit-input {
-                padding: 4px 8px;
-                border: 1px solid #8c8f94;
-                border-radius: 2px;
-                font-size: 13px;
-            }
-            .zs-edit-buttons {
-                display: flex;
-                gap: 6px;
-                justify-content: flex-end;
-            }
-            .zs-save-btn,
-            .zs-cancel-btn {
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                cursor: pointer;
-            }
-            .zs-save-btn .dashicons {
-                color: #00a32a;
-                font-size: 20px;
-                width: 20px;
-                height: 20px;
-            }
-            .zs-cancel-btn .dashicons {
-                color: #d63638;
-                font-size: 20px;
-                width: 20px;
-                height: 20px;
-            }
-            .zs-recalculate-wrapper {
-                padding: 12px;
-                border-top: 1px solid #f0f0f1;
-            }
-        </style>
 
         <script>
         jQuery(document).ready(function($) {
