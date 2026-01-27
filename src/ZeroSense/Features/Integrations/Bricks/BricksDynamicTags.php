@@ -405,15 +405,25 @@ class BricksDynamicTags implements FeatureInterface
         
         error_log('[ZS Bricks] getTranslatedMetaValue() - field: ' . $field . ' -> metaKey: ' . $metaKey . ', orderId: ' . $orderId);
 
-        // Get value using HPOS-compatible method
+        // Always use HPOS order->get_meta() for consistency
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
             $raw = $order->get_meta($metaKey, true);
             error_log('[ZS Bricks] Using HPOS order->get_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
+            
+            // Also check if old MetaBox data exists for debugging
+            $oldMetaKey = str_replace('_event_', '', $metaKey);
+            $oldRaw = $order->get_meta($oldMetaKey, true);
+            error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
         } else {
             // Fallback to post meta for non-HPOS orders
             $raw = get_post_meta($orderId, $metaKey, true);
             error_log('[ZS Bricks] Using get_post_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
+            
+            // Also check old MetaBox data
+            $oldMetaKey = str_replace('_event_', '', $metaKey);
+            $oldRaw = get_post_meta($orderId, $oldMetaKey, true);
+            error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
         }
         
         if (is_scalar($raw)) {
