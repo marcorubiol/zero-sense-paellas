@@ -312,35 +312,50 @@ class BricksDynamicTags implements FeatureInterface
     private function getMetaBoxFieldValue(string $field, $post): string
     {
         $orderId = $this->resolveOrderId($post);
+        
+        // Debug logging
+        error_log('[ZS Bricks] getMetaBoxFieldValue() - field: ' . $field . ', orderId: ' . ($orderId ?: 'null'));
+        
         if (!$orderId) {
+            error_log('[ZS Bricks] No order ID resolved, returning placeholder');
             return $this->builderPlaceholder($field);
         }
 
-        return $this->getTranslatedMetaValue($orderId, $field);
+        $value = $this->getTranslatedMetaValue($orderId, $field);
+        error_log('[ZS Bricks] getMetaBoxFieldValue() - field: ' . $field . ', value: ' . var_export($value, true));
+        
+        return $value;
     }
 
     private function resolveOrderId($contextPost = null): ?int
     {
+        error_log('[ZS Bricks] resolveOrderId() called');
+        
         if ($contextPost instanceof WP_Post && get_post_type($contextPost->ID) === 'shop_order') {
+            error_log('[ZS Bricks] Found order in contextPost: ' . $contextPost->ID);
             return (int) $contextPost->ID;
         }
 
         global $post;
         if ($post instanceof WP_Post && get_post_type($post->ID) === 'shop_order') {
+            error_log('[ZS Bricks] Found order in global post: ' . $post->ID);
             return (int) $post->ID;
         }
 
         if (isset($_GET['order']) && is_numeric($_GET['order'])) {
+            error_log('[ZS Bricks] Found order in GET: ' . $_GET['order']);
             return (int) $_GET['order'];
         }
 
         if (function_exists('is_checkout_pay_page') && is_checkout_pay_page()) {
             global $wp;
             if (isset($wp->query_vars['order-pay'])) {
+                error_log('[ZS Bricks] Found order in checkout pay page: ' . $wp->query_vars['order-pay']);
                 return absint($wp->query_vars['order-pay']);
             }
         }
 
+        error_log('[ZS Bricks] No order ID found in any context');
         return null;
     }
 
@@ -387,14 +402,18 @@ class BricksDynamicTags implements FeatureInterface
 
         // Map MetaBox field name to ZeroSense meta key
         $metaKey = self::FIELD_MAPPING[$field] ?? $field;
+        
+        error_log('[ZS Bricks] getTranslatedMetaValue() - field: ' . $field . ' -> metaKey: ' . $metaKey . ', orderId: ' . $orderId);
 
         // Get value using HPOS-compatible method
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
             $raw = $order->get_meta($metaKey, true);
+            error_log('[ZS Bricks] Using HPOS order->get_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
         } else {
             // Fallback to post meta for non-HPOS orders
             $raw = get_post_meta($orderId, $metaKey, true);
+            error_log('[ZS Bricks] Using get_post_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
         }
         
         if (is_scalar($raw)) {
