@@ -419,28 +419,14 @@ class BricksDynamicTags implements FeatureInterface
         
         error_log('[ZS Bricks] getTranslatedMetaValue() - field: ' . $field . ' -> metaKey: ' . $metaKey . ', orderId: ' . $orderId);
 
-        // Always use HPOS order->get_meta() for consistency
-        $order = wc_get_order($orderId);
-        error_log('[ZS Bricks] wc_get_order(' . $orderId . ') returned: ' . ($order instanceof WC_Order ? 'WC_Order' : 'false/' . gettype($order)));
+        // Use get_post_meta() directly since wc_get_order() is failing
+        error_log('[ZS Bricks] Using get_post_meta() for orderId: ' . $orderId . ', metaKey: ' . $metaKey);
+        $raw = get_post_meta($orderId, $metaKey, true);
         
-        if ($order instanceof WC_Order) {
-            $raw = $order->get_meta($metaKey, true);
-            error_log('[ZS Bricks] Using HPOS order->get_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
-            
-            // Also check if old MetaBox data exists for debugging
-            $oldMetaKey = str_replace('_event_', '', $metaKey);
-            $oldRaw = $order->get_meta($oldMetaKey, true);
-            error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
-        } else {
-            // Fallback to post meta for non-HPOS orders
-            $raw = get_post_meta($orderId, $metaKey, true);
-            error_log('[ZS Bricks] Using get_post_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
-            
-            // Also check old MetaBox data
-            $oldMetaKey = str_replace('_event_', '', $metaKey);
-            $oldRaw = get_post_meta($orderId, $oldMetaKey, true);
-            error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
-        }
+        // Also check old MetaBox data for debugging
+        $oldMetaKey = str_replace('_event_', '', $metaKey);
+        $oldRaw = get_post_meta($orderId, $oldMetaKey, true);
+        error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
         
         if (is_scalar($raw)) {
             $value = (string) $raw;
