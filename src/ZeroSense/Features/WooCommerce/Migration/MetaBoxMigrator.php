@@ -262,7 +262,7 @@ class MetaBoxMigrator
 
         return [
             'orders' => $wpdb->prefix . 'wc_orders',
-            'meta' => $wpdb->prefix . 'wc_order_meta',
+            'meta' => $wpdb->prefix . 'wc_orders_meta',
         ];
     }
 
