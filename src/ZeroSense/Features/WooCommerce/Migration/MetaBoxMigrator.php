@@ -183,14 +183,16 @@ class MetaBoxMigrator
         $statuses = $this->getOrderStatuses();
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
 
+        // Only count orders where zs_metabox_migrated = true (actually migrated, not just processed)
         $sql = "SELECT COUNT(DISTINCT m.order_id)
             FROM {$tables['meta']} m
             INNER JOIN {$tables['orders']} o ON o.id = m.order_id
             WHERE o.type = 'shop_order'
               AND o.status IN ({$status_placeholders})
-              AND m.meta_key = %s";
+              AND m.meta_key = %s
+              AND m.meta_value = %s";
 
-        $params = array_merge($statuses, ['zs_metabox_migrated']);
+        $params = array_merge($statuses, ['zs_metabox_migrated', 'true']);
         return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
@@ -313,9 +315,10 @@ class MetaBoxMigrator
             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
             WHERE p.post_type = 'shop_order'
               AND p.post_status IN ({$status_placeholders})
-              AND pm.meta_key = %s";
+              AND pm.meta_key = %s
+              AND pm.meta_value = %s";
 
-        $params = array_merge($statuses, ['zs_metabox_migrated']);
+        $params = array_merge($statuses, ['zs_metabox_migrated', 'true']);
         return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
