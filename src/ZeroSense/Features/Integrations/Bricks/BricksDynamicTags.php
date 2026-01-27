@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroSense\Features\Integrations\Bricks;
 
 use ZeroSense\Core\FeatureInterface;
+use WC_Order;
 use WP_Post;
 
 class BricksDynamicTags implements FeatureInterface
@@ -253,18 +254,42 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Billing ' . $field);
         }
 
-        $value = get_post_meta($orderId, '_billing_' . $field, true);
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            $value = get_post_meta($orderId, '_billing_' . $field, true);
+
+            if ($field === 'country') {
+                return $this->formatCountry($value);
+            }
+
+            if ($field === 'state') {
+                $country = get_post_meta($orderId, '_billing_country', true);
+                return $this->formatState($value, $country);
+            }
+
+            return is_string($value) ? $value : '';
+        }
+
+        $method = 'get_billing_' . $field;
+        $value = '';
+
+        if (is_callable([$order, $method])) {
+            $raw = $order->{$method}();
+            if (is_string($raw)) {
+                $value = $raw;
+            }
+        }
 
         if ($field === 'country') {
             return $this->formatCountry($value);
         }
 
         if ($field === 'state') {
-            $country = get_post_meta($orderId, '_billing_country', true);
+            $country = $order->get_billing_country();
             return $this->formatState($value, $country);
         }
 
-        return is_string($value) ? $value : '';
+        return $value;
     }
 
     private function getShippingFieldValue(string $field, $post): string
@@ -274,23 +299,52 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Shipping ' . $field);
         }
 
-        if ($field === 'phone') {
-            $value = get_post_meta($orderId, '_shipping_phone', true);
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            if ($field === 'phone') {
+                $value = get_post_meta($orderId, '_shipping_phone', true);
+                return is_string($value) ? $value : '';
+            }
+
+            $value = get_post_meta($orderId, '_shipping_' . $field, true);
+
+            if ($field === 'country') {
+                return $this->formatCountry($value);
+            }
+
+            if ($field === 'state') {
+                $country = get_post_meta($orderId, '_shipping_country', true);
+                return $this->formatState($value, $country);
+            }
+
             return is_string($value) ? $value : '';
         }
 
-        $value = get_post_meta($orderId, '_shipping_' . $field, true);
+        if ($field === 'phone') {
+            $value = $order->get_meta('_shipping_phone', true);
+            return is_string($value) ? $value : '';
+        }
+
+        $method = 'get_shipping_' . $field;
+        $value = '';
+
+        if (is_callable([$order, $method])) {
+            $raw = $order->{$method}();
+            if (is_string($raw)) {
+                $value = $raw;
+            }
+        }
 
         if ($field === 'country') {
             return $this->formatCountry($value);
         }
 
         if ($field === 'state') {
-            $country = get_post_meta($orderId, '_shipping_country', true);
+            $country = $order->get_shipping_country();
             return $this->formatState($value, $country);
         }
 
-        return is_string($value) ? $value : '';
+        return $value;
     }
 
     private function getOrderNote($post): string
@@ -312,51 +366,43 @@ class BricksDynamicTags implements FeatureInterface
     private function getMetaBoxFieldValue(string $field, $post): string
     {
         $orderId = $this->resolveOrderId($post);
-        
-        // Debug logging
-        error_log('[ZS Bricks] getMetaBoxFieldValue() - field: ' . $field . ', orderId: ' . ($orderId ?: 'null'));
-        
+
         if (!$orderId) {
-            error_log('[ZS Bricks] No order ID resolved, returning placeholder');
             return $this->builderPlaceholder($field);
         }
 
-        $value = $this->getTranslatedMetaValue($orderId, $field);
-        error_log('[ZS Bricks] getMetaBoxFieldValue() - field: ' . $field . ', value: ' . var_export($value, true));
-        
-        return $value;
+        return $this->getTranslatedMetaValue($orderId, $field);
     }
 
     private function resolveOrderId($contextPost = null): ?int
     {
-        error_log('[ZS Bricks] resolveOrderId() called');
-        
         if ($contextPost instanceof WP_Post && get_post_type($contextPost->ID) === 'shop_order') {
-            error_log('[ZS Bricks] Found order in contextPost: ' . $contextPost->ID);
             return (int) $contextPost->ID;
         }
 
         global $post;
         if ($post instanceof WP_Post && get_post_type($post->ID) === 'shop_order') {
-            error_log('[ZS Bricks] Found order in global post: ' . $post->ID);
             return (int) $post->ID;
         }
 
         if (isset($_GET['order']) && is_numeric($_GET['order'])) {
-            error_log('[ZS Bricks] Found order in GET: ' . $_GET['order']);
             return (int) $_GET['order'];
         }
 
         if (function_exists('is_checkout_pay_page') && is_checkout_pay_page()) {
             global $wp;
+            if (isset($_GET['key']) && is_string($_GET['key']) && function_exists('wc_get_order_id_by_order_key')) {
+                $id = absint(wc_get_order_id_by_order_key(wp_unslash($_GET['key'])));
+                if ($id > 0) {
+                    return $id;
+                }
+            }
             if (isset($wp->query_vars['order-pay'])) {
                 $orderId = absint($wp->query_vars['order-pay']);
-                error_log('[ZS Bricks] Found order in checkout pay page: ' . $orderId);
                 return $orderId;
             }
         }
 
-        error_log('[ZS Bricks] No order ID found in any context');
         return null;
     }
 
@@ -403,26 +449,14 @@ class BricksDynamicTags implements FeatureInterface
 
         // Map MetaBox field name to ZeroSense meta key
         $metaKey = self::FIELD_MAPPING[$field] ?? $field;
-        
-        error_log('[ZS Bricks] getTranslatedMetaValue() - field: ' . $field . ' -> metaKey: ' . $metaKey . ', orderId: ' . $orderId);
 
-        // Use get_post_meta() directly since wc_get_order() is failing
-        error_log('[ZS Bricks] Using get_post_meta() for orderId: ' . $orderId . ', metaKey: ' . $metaKey);
-        $raw = get_post_meta($orderId, $metaKey, true);
-        
-        // Also check old MetaBox data for debugging
-        $oldMetaKey = str_replace('_event_', '', $metaKey);
-        $oldRaw = get_post_meta($orderId, $oldMetaKey, true);
-        error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
-        
-        // Debug: Check all meta keys for this order (only for first field to avoid spam)
-        if ($field === 'total_guests') {
-            global $wpdb;
-            $allMeta = $wpdb->get_results($wpdb->prepare(
-                "SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key LIKE '%event%' OR meta_key LIKE '%total%' OR meta_key LIKE '%guest%'",
-                $orderId
-            ));
-            error_log('[ZS Bricks] All event-related meta for order ' . $orderId . ': ' . json_encode($allMeta));
+        $raw = '';
+        $order = wc_get_order($orderId);
+        if ($order instanceof WC_Order) {
+            $raw = $order->get_meta($metaKey, true);
+        } else {
+            // Fallback for environments where wc_get_order is unavailable
+            $raw = get_post_meta($orderId, $metaKey, true);
         }
         
         if (is_scalar($raw)) {
