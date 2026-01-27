@@ -201,28 +201,12 @@ class MetaBoxMigrator
 
     private function getSampleOrdersHpos(int $limit): array
     {
-        global $wpdb;
-
-        $tables = $this->getHposTables();
-        $meta_keys = array_keys(self::FIELD_MAPPING);
-        $statuses = $this->getOrderStatuses();
-
-        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
-        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
-
-        $sql = "SELECT DISTINCT o.id
-            FROM {$tables['orders']} o
-            INNER JOIN {$tables['meta']} m ON m.order_id = o.id
-            LEFT JOIN {$tables['meta']} migrated ON migrated.order_id = o.id AND migrated.meta_key = %s
-            WHERE o.type = 'shop_order'
-              AND o.status IN ({$status_placeholders})
-              AND m.meta_key IN ({$meta_placeholders})
-              AND migrated.order_id IS NULL
-            ORDER BY o.id DESC
-            LIMIT %d";
-
-        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, [(int) $limit]);
-        $order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+        // Use the same logic as getPendingOrdersHpos to get only pending orders
+        $pending_order_ids = $this->getPendingOrdersHpos($limit);
+        
+        error_log('[ZS Migration] getSampleOrdersHpos() - Found ' . count($pending_order_ids) . ' pending orders to display');
+        
+        $order_ids = $pending_order_ids;
 
         $output = [];
 
@@ -640,27 +624,67 @@ class MetaBoxMigrator
             }
         }
 
+        // For legacy mode, get all orders with MetaBox data and filter in PHP
         global $wpdb;
-
+        
         $meta_keys = array_keys(self::FIELD_MAPPING);
         $statuses = $this->getOrderStatuses();
-
+        
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
         $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
-
+        
+        // Get all orders with MetaBox data
         $sql = "SELECT DISTINCT p.ID
             FROM {$wpdb->posts} p
             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
-            LEFT JOIN {$wpdb->postmeta} migrated ON migrated.post_id = p.ID AND migrated.meta_key = %s
             WHERE p.post_type = 'shop_order'
               AND p.post_status IN ({$status_placeholders})
               AND pm.meta_key IN ({$meta_placeholders})
-              AND migrated.post_id IS NULL
-            ORDER BY p.ID DESC
-            LIMIT %d";
-
-        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, [(int) $limit]);
-        $order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+              AND pm.meta_value != ''
+              AND pm.meta_value IS NOT NULL
+            ORDER BY p.ID DESC";
+            
+        $params = array_merge($statuses, $meta_keys);
+        $all_order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+        
+        error_log('[ZS Migration] Legacy getSampleOrders - Found ' . count($all_order_ids) . ' orders with MetaBox data');
+        
+        // Filter to only pending orders
+        $pending_order_ids = [];
+        $checked = 0;
+        
+        foreach ($all_order_ids as $order_id) {
+            if ($limit > 0 && count($pending_order_ids) >= $limit) {
+                break;
+            }
+            
+            $order = wc_get_order($order_id);
+            if (!$order instanceof WC_Order) {
+                continue;
+            }
+            
+            $needs_migration = false;
+            foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
+                $metabox_value = $order->get_meta($metabox_key, true);
+                $zerosense_value = $order->get_meta($zerosense_key, true);
+                
+                if (($metabox_value !== '' && $metabox_value !== null) && 
+                    ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
+                    $needs_migration = true;
+                    break;
+                }
+            }
+            
+            if ($needs_migration) {
+                $pending_order_ids[] = $order_id;
+            }
+            
+            $checked++;
+        }
+        
+        error_log('[ZS Migration] Legacy getSampleOrders - Filtered to ' . count($pending_order_ids) . ' pending orders (checked ' . $checked . ' orders)');
+        
+        $order_ids = $pending_order_ids;
 
         $orders = [];
 
