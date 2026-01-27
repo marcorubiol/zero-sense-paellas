@@ -472,16 +472,18 @@ class MetaBoxMigrator
             if ($metabox_value !== '' && $metabox_value !== null) {
                 $existing_value = $order->get_meta($zerosense_key, true);
 
-                if ($existing_value === '' || $existing_value === null) {
+                // Force migration if values are different or if ZeroSense field is empty
+                if ($existing_value === '' || $existing_value === null || $existing_value !== $metabox_value) {
                     $order->update_meta_data($zerosense_key, $metabox_value);
                     $migrated_fields[] = [
                         'field' => $zerosense_key,
                         'from' => $metabox_key,
                         'value' => $metabox_value,
+                        'old_value' => $existing_value,
                     ];
-                    error_log('[ZS Migration] Migrated field: ' . $metabox_key . ' -> ' . $zerosense_key);
+                    error_log('[ZS Migration] Migrated field: ' . $metabox_key . ' -> ' . $zerosense_key . ' (was: ' . var_export($existing_value, true) . ')');
                 } else {
-                    error_log('[ZS Migration] Field ' . $zerosense_key . ' already has value, skipping');
+                    error_log('[ZS Migration] Field ' . $zerosense_key . ' already has same value, skipping');
                 }
             } else {
                 error_log('[ZS Migration] Field ' . $metabox_key . ' is empty, skipping');
