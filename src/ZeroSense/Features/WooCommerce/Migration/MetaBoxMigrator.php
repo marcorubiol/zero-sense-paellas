@@ -451,8 +451,17 @@ class MetaBoxMigrator
         $migrated_fields = [];
         $errors = [];
 
+        error_log('[ZS Migration] migrateOrder() called for order ' . $order_id);
+
         foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-            $metabox_value = get_post_meta($order_id, $metabox_key, true);
+            // Read MetaBox data from the correct location (HPOS or legacy)
+            if ($this->isHposEnabled()) {
+                $metabox_value = $order->get_meta($metabox_key, true);
+                error_log('[ZS Migration] HPOS read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
+            } else {
+                $metabox_value = get_post_meta($order_id, $metabox_key, true);
+                error_log('[ZS Migration] Legacy read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
+            }
 
             if ($metabox_value !== '' && $metabox_value !== null) {
                 $existing_value = $order->get_meta($zerosense_key, true);
@@ -464,7 +473,12 @@ class MetaBoxMigrator
                         'from' => $metabox_key,
                         'value' => $metabox_value,
                     ];
+                    error_log('[ZS Migration] Migrated field: ' . $metabox_key . ' -> ' . $zerosense_key);
+                } else {
+                    error_log('[ZS Migration] Field ' . $zerosense_key . ' already has value, skipping');
                 }
+            } else {
+                error_log('[ZS Migration] Field ' . $metabox_key . ' is empty, skipping');
             }
         }
 
