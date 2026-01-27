@@ -69,6 +69,7 @@ class MigrationAdminPage implements FeatureInterface
         add_action('admin_menu', [$this, 'addAdminMenu']);
         add_action('admin_menu', [$this, 'dedupeAdminMenu'], 999);
         add_action('admin_post_zs_metabox_migrate', [$this, 'handleMigration']);
+        add_action('admin_post_zs_metabox_reset', [$this, 'handleReset']);
         add_action('admin_post_zs_metabox_rollback', [$this, 'handleRollback']);
         add_action('admin_post_zs_metabox_preview', [$this, 'handlePreview']);
         add_action('wp_ajax_zs_metabox_status', [$this, 'ajaxGetStatus']);
@@ -272,6 +273,16 @@ class MigrationAdminPage implements FeatureInterface
                     </form>
 
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <?php wp_nonce_field('zs_metabox_reset'); ?>
+                        <input type="hidden" name="action" value="zs_metabox_reset">
+                        <p>
+                            <button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e('This will reset migration status for all orders. Use this after changing field mappings. Continue?', 'zero-sense'); ?>');">
+                                <?php esc_html_e('Reset Migration Status', 'zero-sense'); ?>
+                            </button>
+                        </p>
+                    </form>
+
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                         <?php wp_nonce_field('zs_metabox_rollback'); ?>
                         <input type="hidden" name="action" value="zs_metabox_rollback">
                         <p>
@@ -318,6 +329,34 @@ class MigrationAdminPage implements FeatureInterface
         }
 
         set_transient('zs_metabox_migration_results', $results, 300);
+
+        error_log('[ZS Migration] Redirecting back to referrer...');
+        wp_safe_redirect(wp_get_referer());
+        exit;
+    }
+
+    public function handleReset(): void
+    {
+        error_log('[ZS Migration] handleReset() called');
+        
+        if (!current_user_can('manage_options')) {
+            error_log('[ZS Migration] User lacks manage_options permission');
+            wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
+        }
+
+        error_log('[ZS Migration] Checking nonce...');
+        check_admin_referer('zs_metabox_reset');
+        error_log('[ZS Migration] Nonce verified, resetting migration status...');
+
+        $results = $this->migrator->resetMigrationStatus();
+        $message = sprintf(
+            __('Migration status reset. %1$d orders marked as pending for migration.', 'zero-sense'),
+            $results['reset_count']
+        );
+
+        error_log('[ZS Migration] Reset results: ' . json_encode($results));
+        
+        add_settings_error('zs_metabox_migration', 'reset_success', $message, 'success');
 
         error_log('[ZS Migration] Redirecting back to referrer...');
         wp_safe_redirect(wp_get_referer());

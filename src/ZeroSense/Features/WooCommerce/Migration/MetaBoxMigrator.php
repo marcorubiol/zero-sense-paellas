@@ -451,6 +451,71 @@ class MetaBoxMigrator
         return $results;
     }
 
+    /**
+     * Reset migration status for all orders with MetaBox data
+     * This forces all orders to be considered pending for migration again
+     */
+    public function resetMigrationStatus(): array
+    {
+        error_log('[ZS Migration] resetMigrationStatus() called');
+        $start_time = microtime(true);
+        
+        $results = [
+            'reset_count' => 0,
+            'errors' => 0,
+        ];
+
+        if ($this->isHposEnabled()) {
+            error_log('[ZS Migration] Resetting HPOS migration status');
+            global $wpdb;
+            
+            $tables = $this->getHposTables();
+            $meta_keys = array_keys(self::FIELD_MAPPING);
+            $placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+            
+            // Delete migration flags from orders that have MetaBox data
+            $sql = "DELETE m FROM {$tables['meta']} m
+                INNER JOIN {$tables['orders']} o ON o.id = m.order_id
+                WHERE o.type = 'shop_order'
+                  AND m.meta_key = %s
+                  AND o.id IN (
+                      SELECT DISTINCT order_id FROM {$tables['meta']}
+                      WHERE meta_key IN ({$placeholders})
+                  )";
+            
+            $params = array_merge(['zs_metabox_migrated'], $meta_keys);
+            $deleted = $wpdb->query($wpdb->prepare($sql, $params));
+            
+            $results['reset_count'] = $deleted ? $deleted : 0;
+            error_log('[ZS Migration] Reset ' . $results['reset_count'] . ' migration flags');
+        } else {
+            error_log('[ZS Migration] Resetting legacy migration status');
+            global $wpdb;
+            
+            $meta_keys = array_keys(self::FIELD_MAPPING);
+            $placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+            
+            // Delete migration flags from orders that have MetaBox data
+            $sql = "DELETE pm FROM {$wpdb->postmeta} pm
+                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                  AND pm.meta_key = %s
+                  AND p.ID IN (
+                      SELECT DISTINCT post_id FROM {$wpdb->postmeta}
+                      WHERE meta_key IN ({$placeholders})
+                  )";
+            
+            $params = array_merge(['zs_metabox_migrated'], $meta_keys);
+            $deleted = $wpdb->query($wpdb->prepare($sql, $params));
+            
+            $results['reset_count'] = $deleted ? $deleted : 0;
+            error_log('[ZS Migration] Reset ' . $results['reset_count'] . ' migration flags');
+        }
+
+        error_log('[ZS Migration] Migration status reset completed in ' . (microtime(true) - $start_time) . 's');
+        return $results;
+    }
+
     public function migrateOrder(WC_Order $order): array
     {
         $order_id = $order->get_id();
