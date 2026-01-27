@@ -350,8 +350,22 @@ class BricksDynamicTags implements FeatureInterface
         if (function_exists('is_checkout_pay_page') && is_checkout_pay_page()) {
             global $wp;
             if (isset($wp->query_vars['order-pay'])) {
-                error_log('[ZS Bricks] Found order in checkout pay page: ' . $wp->query_vars['order-pay']);
-                return absint($wp->query_vars['order-pay']);
+                $orderId = absint($wp->query_vars['order-pay']);
+                error_log('[ZS Bricks] Found order in checkout pay page: ' . $orderId);
+                
+                // Try to get the order
+                $order = wc_get_order($orderId);
+                if ($order instanceof WC_Order) {
+                    error_log('[ZS Bricks] wc_get_order() succeeded for checkout pay page: ' . $orderId);
+                    return $orderId;
+                } else {
+                    // Try using the post ID instead
+                    error_log('[ZS Bricks] wc_get_order() failed, trying post ID for checkout pay page');
+                    if ($post instanceof WP_Post) {
+                        error_log('[ZS Bricks] Using post ID: ' . $post->ID);
+                        return (int) $post->ID;
+                    }
+                }
             }
         }
 
