@@ -428,6 +428,16 @@ class BricksDynamicTags implements FeatureInterface
         $oldRaw = get_post_meta($orderId, $oldMetaKey, true);
         error_log('[ZS Bricks] Old MetaBox data for ' . $oldMetaKey . ': ' . var_export($oldRaw, true));
         
+        // Debug: Check all meta keys for this order (only for first field to avoid spam)
+        if ($field === 'total_guests') {
+            global $wpdb;
+            $allMeta = $wpdb->get_results($wpdb->prepare(
+                "SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key LIKE '%event%' OR meta_key LIKE '%total%' OR meta_key LIKE '%guest%'",
+                $orderId
+            ));
+            error_log('[ZS Bricks] All event-related meta for order ' . $orderId . ': ' . json_encode($allMeta));
+        }
+        
         if (is_scalar($raw)) {
             $value = (string) $raw;
         }
