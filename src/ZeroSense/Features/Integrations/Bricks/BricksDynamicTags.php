@@ -407,6 +407,8 @@ class BricksDynamicTags implements FeatureInterface
 
         // Always use HPOS order->get_meta() for consistency
         $order = wc_get_order($orderId);
+        error_log('[ZS Bricks] wc_get_order(' . $orderId . ') returned: ' . ($order instanceof WC_Order ? 'WC_Order' : 'false/' . gettype($order)));
+        
         if ($order instanceof WC_Order) {
             $raw = $order->get_meta($metaKey, true);
             error_log('[ZS Bricks] Using HPOS order->get_meta() for metaKey: ' . $metaKey . ', raw: ' . var_export($raw, true));
