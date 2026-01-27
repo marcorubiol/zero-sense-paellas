@@ -288,11 +288,16 @@ class MigrationAdminPage implements FeatureInterface
 
     public function handleMigration(): void
     {
+        error_log('[ZS Migration] handleMigration() called');
+        
         if (!current_user_can('manage_options')) {
+            error_log('[ZS Migration] User lacks manage_options permission');
             wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
         }
 
+        error_log('[ZS Migration] Checking nonce...');
         check_admin_referer('zs_metabox_migrate');
+        error_log('[ZS Migration] Nonce verified, starting migration...');
 
         $results = $this->migrator->migrateAll();
         $message = sprintf(
@@ -302,14 +307,19 @@ class MigrationAdminPage implements FeatureInterface
             $results['skipped']
         );
 
+        error_log('[ZS Migration] Migration results: ' . json_encode($results));
+        
         if ($results['errors'] > 0) {
+            error_log('[ZS Migration] Migration completed with errors');
             add_settings_error('zs_metabox_migration', 'migration_error', $message, 'error');
         } else {
+            error_log('[ZS Migration] Migration completed successfully');
             add_settings_error('zs_metabox_migration', 'migration_success', $message, 'success');
         }
 
         set_transient('zs_metabox_migration_results', $results, 300);
 
+        error_log('[ZS Migration] Redirecting back to referrer...');
         wp_safe_redirect(wp_get_referer());
         exit;
     }

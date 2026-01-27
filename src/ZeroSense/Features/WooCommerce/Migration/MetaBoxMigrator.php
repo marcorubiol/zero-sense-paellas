@@ -343,8 +343,37 @@ class MetaBoxMigrator
         return $filtered;
     }
 
+    private function getPendingOrdersHpos(int $limit): array
+    {
+        global $wpdb;
+
+        $tables = $this->getHposTables();
+        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $statuses = $this->getOrderStatuses();
+
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+        $sql = "SELECT DISTINCT o.id
+            FROM {$tables['orders']} o
+            INNER JOIN {$tables['meta']} m ON m.order_id = o.id
+            LEFT JOIN {$tables['meta']} migrated ON migrated.order_id = o.id AND migrated.meta_key = %s
+            WHERE o.type = 'shop_order'
+              AND o.status IN ({$status_placeholders})
+              AND m.meta_key IN ({$meta_placeholders})
+              AND migrated.order_id IS NULL
+            ORDER BY o.id DESC
+            LIMIT %d";
+
+        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, [(int) $limit]);
+        return $wpdb->get_col($wpdb->prepare($sql, $params));
+    }
+
     public function migrateAll(): array
     {
+        error_log('[ZS Migration] migrateAll() called');
+        $start_time = microtime(true);
+        
         $results = [
             'success' => 0,
             'errors' => 0,
@@ -352,59 +381,63 @@ class MetaBoxMigrator
             'details' => [],
         ];
 
-        $args = [
-            'post_type' => 'shop_order',
-            'post_status' => 'any',
-            'posts_per_page' => 50,
-            'meta_query' => [
-                'relation' => 'AND',
-                [
-                    'key' => 'zs_metabox_migrated',
-                    'compare' => 'NOT EXISTS',
+        if ($this->isHposEnabled()) {
+            error_log('[ZS Migration] Using HPOS query for migration');
+            $order_ids = $this->getPendingOrdersHpos(50);
+            error_log('[ZS Migration] HPOS found ' . count($order_ids) . ' orders to migrate');
+        } else {
+            error_log('[ZS Migration] Using legacy WP_Query for migration');
+            $args = [
+                'post_type' => 'shop_order',
+                'post_status' => 'any',
+                'posts_per_page' => 50,
+                'meta_query' => [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'zs_metabox_migrated',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'relation' => 'OR',
+                        ...array_map(function ($field) {
+                            return [
+                                'key' => $field,
+                                'compare' => 'EXISTS',
+                            ];
+                        }, array_keys(self::FIELD_MAPPING)),
+                    ],
                 ],
-                [
-                    'relation' => 'OR',
-                    ...array_map(function ($field) {
-                        return [
-                            'key' => $field,
-                            'compare' => 'EXISTS',
-                        ];
-                    }, array_keys(self::FIELD_MAPPING)),
-                ],
-            ],
-        ];
+            ];
 
-        $query = new WP_Query($args);
-
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $order_id = get_the_ID();
-                $order = wc_get_order($order_id);
-
-                if (!$order instanceof WC_Order) {
-                    $results['skipped']++;
-                    $results['details'][] = [
-                        'order_id' => $order_id,
-                        'status' => 'skipped',
-                        'message' => 'Invalid order object',
-                    ];
-                    continue;
-                }
-
-                $migration_result = $this->migrateOrder($order);
-
-                if ($migration_result['success']) {
-                    $results['success']++;
-                } else {
-                    $results['errors']++;
-                }
-
-                $results['details'][] = $migration_result;
-            }
+            $query = new WP_Query($args);
+            $order_ids = $query->posts;
+            error_log('[ZS Migration] Legacy found ' . count($order_ids) . ' orders to migrate');
         }
 
-        wp_reset_postdata();
+        foreach ($order_ids as $order_id) {
+            error_log('[ZS Migration] Processing order ID: ' . $order_id);
+            $order = wc_get_order($order_id);
+
+                if (!$order instanceof WC_Order) {
+                $results['skipped']++;
+                $results['details'][] = [
+                    'order_id' => $order_id,
+                    'status' => 'skipped',
+                    'message' => 'Invalid order object',
+                ];
+                continue;
+            }
+
+            $migration_result = $this->migrateOrder($order);
+
+            if ($migration_result['success']) {
+                $results['success']++;
+            } else {
+                $results['errors']++;
+            }
+
+            $results['details'][] = $migration_result;
+        }
 
         update_option('zs_metabox_migration_last_run', current_time('mysql'));
         update_option('zs_metabox_migration_version', ZERO_SENSE_VERSION);
