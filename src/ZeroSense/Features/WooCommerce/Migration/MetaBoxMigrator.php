@@ -358,28 +358,66 @@ class MetaBoxMigrator
         global $wpdb;
 
         $tables = $this->getHposTables();
-        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $metabox_keys = array_keys(self::FIELD_MAPPING);
+        $zerosense_keys = array_values(self::FIELD_MAPPING);
         $statuses = $this->getOrderStatuses();
 
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
-        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+        $metabox_placeholders = implode(',', array_fill(0, count($metabox_keys), '%s'));
 
-        // Only get orders that have MetaBox data AND haven't been successfully migrated
+        // Get all orders that have MetaBox data
         $sql = "SELECT DISTINCT o.id
             FROM {$tables['orders']} o
             INNER JOIN {$tables['meta']} m ON m.order_id = o.id
-            LEFT JOIN {$tables['meta']} migrated ON migrated.order_id = o.id AND migrated.meta_key = %s
             WHERE o.type = 'shop_order'
               AND o.status IN ({$status_placeholders})
-              AND m.meta_key IN ({$meta_placeholders})
+              AND m.meta_key IN ({$metabox_placeholders})
               AND m.meta_value != ''
               AND m.meta_value IS NOT NULL
-              AND (migrated.order_id IS NULL OR migrated.meta_value != %s)
-            ORDER BY o.id DESC
-            LIMIT %d";
+            ORDER BY o.id DESC";
 
-        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, ['true'], [(int) $limit]);
-        return $wpdb->get_col($wpdb->prepare($sql, $params));
+        $params = array_merge($statuses, $metabox_keys);
+        $all_order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+
+        error_log('[ZS Migration] Found ' . count($all_order_ids) . ' orders with MetaBox data');
+
+        // Filter orders that actually need migration
+        $pending_order_ids = [];
+        $checked = 0;
+        
+        foreach ($all_order_ids as $order_id) {
+            if ($limit > 0 && count($pending_order_ids) >= $limit) {
+                break;
+            }
+            
+            $order = wc_get_order($order_id);
+            if (!$order instanceof WC_Order) {
+                continue;
+            }
+            
+            $needs_migration = false;
+            foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
+                $metabox_value = $order->get_meta($metabox_key, true);
+                $zerosense_value = $order->get_meta($zerosense_key, true);
+                
+                // Needs migration if MetaBox has data but ZeroSense doesn't, or values differ
+                if (($metabox_value !== '' && $metabox_value !== null) && 
+                    ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
+                    $needs_migration = true;
+                    break;
+                }
+            }
+            
+            if ($needs_migration) {
+                $pending_order_ids[] = $order_id;
+            }
+            
+            $checked++;
+        }
+        
+        error_log('[ZS Migration] Filtered to ' . count($pending_order_ids) . ' orders that need migration (checked ' . $checked . ' orders)');
+        
+        return $pending_order_ids;
     }
 
     public function migrateAll(): array
@@ -396,14 +434,14 @@ class MetaBoxMigrator
 
         if ($this->isHposEnabled()) {
             error_log('[ZS Migration] Using HPOS query for migration');
-            $order_ids = $this->getPendingOrdersHpos(50);
+            $order_ids = $this->getPendingOrdersHpos(0); // 0 = no limit
             error_log('[ZS Migration] HPOS found ' . count($order_ids) . ' orders to migrate');
         } else {
             error_log('[ZS Migration] Using legacy WP_Query for migration');
             $args = [
                 'post_type' => 'shop_order',
                 'post_status' => 'any',
-                'posts_per_page' => 50,
+                'posts_per_page' => -1, // -1 = all posts
                 'meta_query' => [
                     'relation' => 'AND',
                     [
