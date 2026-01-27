@@ -33,33 +33,21 @@ class MetaBoxMigrator
 
     public function getMigrationStatus(): array
     {
-        error_log('[ZS Migration] getMigrationStatus() called');
-        $start_time = microtime(true);
-        
         $total_orders = 0;
         $migrated_orders = 0;
+        $pending_orders = 0;
 
         if ($this->isHposEnabled()) {
-            error_log('[ZS Migration] HPOS is enabled');
-            
-            $hpos_start = microtime(true);
             $total_orders = $this->getTotalOrdersWithMetaBoxHpos();
-            error_log('[ZS Migration] HPOS total orders: ' . $total_orders . ' (took ' . round(microtime(true) - $hpos_start, 2) . 's)');
-            
-            $migrated_start = microtime(true);
             $migrated_orders = $this->getMigratedOrdersCountHpos();
-            error_log('[ZS Migration] HPOS migrated orders: ' . $migrated_orders . ' (took ' . round(microtime(true) - $migrated_start, 2) . 's)');
 
             if ($total_orders === 0) {
-                error_log('[ZS Migration] HPOS returned 0, falling back to legacy postmeta');
-                $legacy_start = microtime(true);
-                
+                // Fallback to legacy
                 global $wpdb;
                 $meta_keys = array_keys(self::FIELD_MAPPING);
                 $statuses = $this->getOrderStatuses();
                 $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
                 $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
-                
                 $sql = "SELECT COUNT(DISTINCT pm.post_id)
                     FROM {$wpdb->postmeta} pm
                     INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
@@ -69,61 +57,21 @@ class MetaBoxMigrator
                 
                 $params = array_merge($statuses, $meta_keys);
                 $total_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
-                error_log('[ZS Migration] Legacy total orders: ' . $total_orders . ' (took ' . round(microtime(true) - $legacy_start, 2) . 's)');
-                
-                $migrated_legacy_start = microtime(true);
-                $sql = "SELECT COUNT(DISTINCT pm.post_id)
-                    FROM {$wpdb->postmeta} pm
-                    INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                    WHERE p.post_type = 'shop_order'
-                      AND p.post_status IN ({$status_placeholders})
-                      AND pm.meta_key = %s";
-                
-                $params = array_merge($statuses, ['zs_metabox_migrated']);
-                $migrated_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
-                error_log('[ZS Migration] Legacy migrated orders: ' . $migrated_orders . ' (took ' . round(microtime(true) - $migrated_legacy_start, 2) . 's)');
+                $migrated_orders = $this->getMigratedOrdersCount();
             }
         } else {
-            error_log('[ZS Migration] HPOS is disabled, using legacy postmeta');
-            
-            global $wpdb;
-            $meta_keys = array_keys(self::FIELD_MAPPING);
-            $statuses = $this->getOrderStatuses();
-            $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
-            $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
-            
-            $sql = "SELECT COUNT(DISTINCT pm.post_id)
-                FROM {$wpdb->postmeta} pm
-                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                WHERE p.post_type = 'shop_order'
-                  AND p.post_status IN ({$status_placeholders})
-                  AND pm.meta_key IN ({$meta_placeholders})";
-            
-            $params = array_merge($statuses, $meta_keys);
-            $total_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
-            error_log('[ZS Migration] Legacy total orders: ' . $total_orders);
-            
-            $sql = "SELECT COUNT(DISTINCT pm.post_id)
-                FROM {$wpdb->postmeta} pm
-                INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
-                WHERE p.post_type = 'shop_order'
-                  AND p.post_status IN ({$status_placeholders})
-                  AND pm.meta_key = %s";
-            
-            $params = array_merge($statuses, ['zs_metabox_migrated']);
-            $migrated_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
-            error_log('[ZS Migration] Legacy migrated orders: ' . $migrated_orders);
+            $total_orders = $this->getTotalOrdersWithMetaBox();
+            $migrated_orders = $this->getMigratedOrdersCount();
         }
 
-        $pendingOrders = $total_orders - $migrated_orders;
-
-        error_log('[ZS Migration] getMigrationStatus() finished (took ' . round(microtime(true) - $start_time, 2) . 's)');
+        // Use the same logic as the list to count pending orders
+        $pending_orders = $this->getPendingOrdersCount();
 
         return [
             'total_orders' => $total_orders,
             'migrated_orders' => $migrated_orders,
-            'pending_orders' => $pendingOrders,
-            'migration_complete' => $pendingOrders === 0,
+            'pending_orders' => $pending_orders,
+            'migration_complete' => $pending_orders === 0,
             'last_migration' => get_option('zs_metabox_migration_last_run', null),
             'migration_version' => get_option('zs_metabox_migration_version', null),
         ];
@@ -131,12 +79,8 @@ class MetaBoxMigrator
 
     private function isHposEnabled(): bool
     {
-        $enabled = class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class)
+        return class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class)
             && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
-        
-        error_log('[ZS Migration] isHposEnabled() check: ' . ($enabled ? 'true' : 'false'));
-        
-        return $enabled;
     }
 
     private function getTotalOrdersWithMetaBoxHpos(): int
@@ -147,10 +91,7 @@ class MetaBoxMigrator
         $meta_keys = array_keys(self::FIELD_MAPPING);
         $statuses = $this->getOrderStatuses();
 
-        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Statuses: ' . implode(', ', $statuses));
-        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Meta keys: ' . implode(', ', $meta_keys));
-        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Tables: ' . json_encode($tables));
-
+        
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
         $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
 
@@ -162,15 +103,7 @@ class MetaBoxMigrator
               AND m.meta_key IN ({$meta_placeholders})";
 
         $params = array_merge($statuses, $meta_keys);
-        $prepared_sql = $wpdb->prepare($sql, $params);
-        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - SQL: ' . $prepared_sql);
-        
-        $result = (int) $wpdb->get_var($prepared_sql);
-        error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - Result: ' . $result);
-        
-        if ($wpdb->last_error) {
-            error_log('[ZS Migration] getTotalOrdersWithMetaBoxHpos() - SQL Error: ' . $wpdb->last_error);
-        }
+        $result = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
         
         return $result;
     }
@@ -203,8 +136,6 @@ class MetaBoxMigrator
     {
         // Use the same logic as getPendingOrdersHpos to get only pending orders
         $pending_order_ids = $this->getPendingOrdersHpos($limit);
-        
-        error_log('[ZS Migration] getSampleOrdersHpos() - Found ' . count($pending_order_ids) . ' pending orders to display');
         
         $order_ids = $pending_order_ids;
 
@@ -402,6 +333,66 @@ class MetaBoxMigrator
         error_log('[ZS Migration] Filtered to ' . count($pending_order_ids) . ' orders that need migration (checked ' . $checked . ' orders)');
         
         return $pending_order_ids;
+    }
+
+    /**
+     * Count orders that need migration using same logic as getPendingOrdersHpos
+     */
+    public function getPendingOrdersCount(): int
+    {
+        if ($this->isHposEnabled()) {
+            return count($this->getPendingOrdersHpos(0)); // 0 = no limit
+        } else {
+            // For legacy mode, use same logic as getSampleOrders
+            global $wpdb;
+            
+            $meta_keys = array_keys(self::FIELD_MAPPING);
+            $statuses = $this->getOrderStatuses();
+            
+            $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+            $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+            
+            // Get all orders with MetaBox data
+            $sql = "SELECT DISTINCT p.ID
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
+                WHERE p.post_type = 'shop_order'
+                  AND p.post_status IN ({$status_placeholders})
+                  AND pm.meta_key IN ({$meta_placeholders})
+                  AND pm.meta_value != ''
+                  AND pm.meta_value IS NOT NULL";
+                
+            $params = array_merge($statuses, $meta_keys);
+            $all_order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+            
+            // Filter to only pending orders
+            $pending_count = 0;
+            
+            foreach ($all_order_ids as $order_id) {
+                $order = wc_get_order($order_id);
+                if (!$order instanceof WC_Order) {
+                    continue;
+                }
+                
+                $needs_migration = false;
+                foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
+                    $metabox_value = $order->get_meta($metabox_key, true);
+                    $zerosense_value = $order->get_meta($zerosense_key, true);
+                    
+                    if (($metabox_value !== '' && $metabox_value !== null) && 
+                        ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
+                        $needs_migration = true;
+                        break;
+                    }
+                }
+                
+                if ($needs_migration) {
+                    $pending_count++;
+                }
+            }
+            
+            return $pending_count;
+        }
     }
 
     public function migrateAll(): array
