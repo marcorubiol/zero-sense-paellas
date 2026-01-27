@@ -357,7 +357,7 @@ class MetaBoxMigrator
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
         $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
 
-        // Only get orders that have MetaBox data AND haven't been migrated
+        // Only get orders that have MetaBox data AND haven't been successfully migrated
         $sql = "SELECT DISTINCT o.id
             FROM {$tables['orders']} o
             INNER JOIN {$tables['meta']} m ON m.order_id = o.id
@@ -367,11 +367,11 @@ class MetaBoxMigrator
               AND m.meta_key IN ({$meta_placeholders})
               AND m.meta_value != ''
               AND m.meta_value IS NOT NULL
-              AND migrated.order_id IS NULL
+              AND (migrated.order_id IS NULL OR migrated.meta_value != %s)
             ORDER BY o.id DESC
             LIMIT %d";
 
-        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, [(int) $limit]);
+        $params = array_merge(['zs_metabox_migrated'], $statuses, $meta_keys, ['true'], [(int) $limit]);
         return $wpdb->get_col($wpdb->prepare($sql, $params));
     }
 
