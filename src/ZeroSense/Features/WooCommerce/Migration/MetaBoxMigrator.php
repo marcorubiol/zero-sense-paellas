@@ -181,18 +181,21 @@ class MetaBoxMigrator
 
         $tables = $this->getHposTables();
         $statuses = $this->getOrderStatuses();
+        $zerosense_keys = array_values(self::FIELD_MAPPING);
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($zerosense_keys), '%s'));
 
-        // Only count orders where zs_metabox_migrated = true (actually migrated, not just processed)
+        // Count orders that have actual ZeroSense data (not just migration flags)
         $sql = "SELECT COUNT(DISTINCT m.order_id)
             FROM {$tables['meta']} m
             INNER JOIN {$tables['orders']} o ON o.id = m.order_id
             WHERE o.type = 'shop_order'
               AND o.status IN ({$status_placeholders})
-              AND m.meta_key = %s
-              AND m.meta_value = %s";
+              AND m.meta_key IN ({$meta_placeholders})
+              AND m.meta_value != ''
+              AND m.meta_value IS NOT NULL";
 
-        $params = array_merge($statuses, ['zs_metabox_migrated', 'true']);
+        $params = array_merge($statuses, $zerosense_keys);
         return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
@@ -308,17 +311,21 @@ class MetaBoxMigrator
         global $wpdb;
 
         $statuses = $this->getOrderStatuses();
+        $zerosense_keys = array_values(self::FIELD_MAPPING);
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($zerosense_keys), '%s'));
 
+        // Count orders that have actual ZeroSense data (not just migration flags)
         $sql = "SELECT COUNT(DISTINCT pm.post_id)
             FROM {$wpdb->postmeta} pm
             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
             WHERE p.post_type = 'shop_order'
               AND p.post_status IN ({$status_placeholders})
-              AND pm.meta_key = %s
-              AND pm.meta_value = %s";
+              AND pm.meta_key IN ({$meta_placeholders})
+              AND pm.meta_value != ''
+              AND pm.meta_value IS NOT NULL";
 
-        $params = array_merge($statuses, ['zs_metabox_migrated', 'true']);
+        $params = array_merge($statuses, $zerosense_keys);
         return (int) $wpdb->get_var($wpdb->prepare($sql, $params));
     }
 
