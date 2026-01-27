@@ -354,6 +354,7 @@ class MetaBoxMigrator
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
         $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
 
+        // Only get orders that have MetaBox data AND haven't been migrated
         $sql = "SELECT DISTINCT o.id
             FROM {$tables['orders']} o
             INNER JOIN {$tables['meta']} m ON m.order_id = o.id
@@ -361,6 +362,8 @@ class MetaBoxMigrator
             WHERE o.type = 'shop_order'
               AND o.status IN ({$status_placeholders})
               AND m.meta_key IN ({$meta_placeholders})
+              AND m.meta_value != ''
+              AND m.meta_value IS NOT NULL
               AND migrated.order_id IS NULL
             ORDER BY o.id DESC
             LIMIT %d";
@@ -482,9 +485,20 @@ class MetaBoxMigrator
             }
         }
 
-        $order->update_meta_data('zs_metabox_migrated', true);
-        $order->update_meta_data('zs_metabox_migration_date', current_time('mysql'));
-        $order->update_meta_data('zs_metabox_migration_version', ZERO_SENSE_VERSION);
+        // Only mark as migrated if we actually migrated data
+        if (!empty($migrated_fields)) {
+            $order->update_meta_data('zs_metabox_migrated', true);
+            $order->update_meta_data('zs_metabox_migration_date', current_time('mysql'));
+            $order->update_meta_data('zs_metabox_migration_version', ZERO_SENSE_VERSION);
+            
+            error_log('[ZS Migration] Order ' . $order_id . ' marked as migrated with ' . count($migrated_fields) . ' fields');
+        } else {
+            // Mark as skipped if no data was found to migrate
+            $order->update_meta_data('zs_metabox_migrated', false);
+            $order->update_meta_data('zs_metabox_migration_status', 'no_data_found');
+            
+            error_log('[ZS Migration] Order ' . $order_id . ' has no MetaBox data to migrate, marking as skipped');
+        }
 
         $order->update_meta_data('zs_metabox_migration_log', [
             'migrated_fields' => $migrated_fields,
@@ -495,7 +509,7 @@ class MetaBoxMigrator
         $order->save();
 
         return [
-            'success' => empty($errors),
+            'success' => !empty($migrated_fields), // Success only if we actually migrated something
             'order_id' => $order_id,
             'migrated_fields' => $migrated_fields,
             'errors' => $errors,
