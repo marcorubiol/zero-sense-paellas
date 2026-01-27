@@ -59,6 +59,26 @@ class BricksDynamicTags implements FeatureInterface
         'how_found_us',
     ];
 
+    // Map MetaBox field names to ZeroSense meta keys (same as in MetaBoxMigrator)
+    private const FIELD_MAPPING = [
+        'total_guests' => '_event_total_guests',
+        'adults' => '_event_adults',
+        'children_5_to_8' => '_event_children_5_to_8',
+        'children_0_to_4' => '_event_children_0_to_4',
+        'event_service_location' => '_event_service_location',
+        'event_address' => '_event_address',
+        'event_city' => '_event_city',
+        'location_link' => '_event_location_link',
+        'event_date' => '_event_date',
+        'serving_time' => '_event_serving_time',
+        'event_start_time' => '_event_start_time',
+        'event_type' => '_event_type',
+        'how_found_us' => '_event_how_found_us',
+        'promo_code' => '_event_promo_code',
+        'intolerances' => '_event_intolerances',
+        'location' => '_event_location',
+    ];
+
     public function getName(): string
     {
         return __('Bricks Dynamic Tags', 'zero-sense');
@@ -365,8 +385,18 @@ class BricksDynamicTags implements FeatureInterface
     {
         $value = '';
 
-        // Get raw value from post meta
-        $raw = get_post_meta($orderId, $field, true);
+        // Map MetaBox field name to ZeroSense meta key
+        $metaKey = self::FIELD_MAPPING[$field] ?? $field;
+
+        // Get value using HPOS-compatible method
+        $order = wc_get_order($orderId);
+        if ($order instanceof WC_Order) {
+            $raw = $order->get_meta($metaKey, true);
+        } else {
+            // Fallback to post meta for non-HPOS orders
+            $raw = get_post_meta($orderId, $metaKey, true);
+        }
+        
         if (is_scalar($raw)) {
             $value = (string) $raw;
         }
@@ -394,6 +424,8 @@ class BricksDynamicTags implements FeatureInterface
             'meta-box-field-group-sobre-el-evento',
             'admin_texts_plugin_metabox',
             'Meta Box',
+            'zero-sense-event-fields',
+            'zero-sense',
         ];
 
         foreach ($contexts as $context) {
