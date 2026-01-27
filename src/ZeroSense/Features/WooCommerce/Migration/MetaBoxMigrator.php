@@ -13,22 +13,22 @@ use WP_Query;
 class MetaBoxMigrator
 {
     private const FIELD_MAPPING = [
-        'total_guests' => 'total_guests',
-        'adults' => 'adults',
-        'children_5_to_8' => 'children_5_to_8',
-        'children_0_to_4' => 'children_0_to_4',
-        'event_service_location' => 'event_service_location',
-        'event_address' => 'event_address',
-        'event_city' => 'event_city',
-        'location_link' => 'location_link',
-        'event_date' => 'event_date',
-        'serving_time' => 'serving_time',
-        'event_start_time' => 'event_start_time',
-        'event_type' => 'event_type',
-        'how_found_us' => 'how_found_us',
-        'promo_code' => 'promo_code',
-        'intolerances' => 'intolerances',
-        'location' => 'location',
+        'total_guests' => '_event_total_guests',
+        'adults' => '_event_adults',
+        'children_5_to_8' => '_event_children_5_to_8',
+        'children_0_to_4' => '_event_children_0_to_4',
+        'event_service_location' => '_event_service_location',
+        'event_address' => '_event_address',
+        'event_city' => '_event_city',
+        'location_link' => '_event_location_link',
+        'event_date' => '_event_date',
+        'serving_time' => '_event_serving_time',
+        'event_start_time' => '_event_start_time',
+        'event_type' => '_event_type',
+        'how_found_us' => '_event_how_found_us',
+        'promo_code' => '_event_promo_code',
+        'intolerances' => '_event_intolerances',
+        'location' => '_event_location',
     ];
 
     public function getMigrationStatus(): array
