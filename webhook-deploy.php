@@ -4,6 +4,9 @@ header('X-Webhook-Version: 2.0-UPDATED-' . date('Y-m-d-H-i-s'));
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
+// FORCE LOG AT THE VERY BEGINNING
+file_put_contents('/tmp/webhook-deploy.log', date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
+
 // Config
 $secret = 'zerosense-deploy-secret-2026';
 $staging_path = '/home/OeTjuWhiCsmAoG0K/STGpaellasEnCasa/public_html/wp-content/plugins/zero-sense';
