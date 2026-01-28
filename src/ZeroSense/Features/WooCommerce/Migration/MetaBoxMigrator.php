@@ -31,6 +31,28 @@ class MetaBoxMigrator
         'location' => '_event_location',
     ];
 
+    private const META_SHIPPING_EMAIL = 'zs_shipping_email';
+    private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
+    private const META_OPS_MATERIAL = 'zs_ops_material';
+
+    private const OPS_MATERIAL_LEGACY_KEY_MAP = [
+        'teles_negres' => 'black_tablecloths',
+        'carreto' => 'cart',
+        'taules_treball' => 'work_tables',
+        'paelles' => 'paella_pans',
+        'cremadors' => 'burners',
+        'potes_tripodes' => 'tripods_legs',
+        'buta' => 'butane',
+        'manguera' => 'hose',
+        'para_sols' => 'parasols',
+        'carpa' => 'tent',
+        'llum' => 'lighting',
+        'font_aigua_8l' => 'water_fountain_8l',
+        'poals_fems' => 'trash_buckets',
+        'neveres' => 'coolers',
+        'altres' => 'other',
+    ];
+
     public function getMigrationStatus(): array
     {
         $total_orders = 0;
@@ -60,6 +82,16 @@ class MetaBoxMigrator
                 $total_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
                 $migrated_orders = $this->getMigratedOrdersCountCorrect();
             }
+
+        $shipping_migrated = $this->migrateShippingEmail($order);
+        if ($shipping_migrated !== null) {
+            $migrated_fields[] = $shipping_migrated;
+        }
+
+        $material_migrated = $this->migrateOpsMaterial($order);
+        if ($material_migrated !== null) {
+            $migrated_fields[] = $material_migrated;
+        }
         } else {
             $total_orders = $this->getTotalOrdersWithMetaBox();
             $migrated_orders = $this->getMigratedOrdersCountCorrect();
@@ -89,7 +121,7 @@ class MetaBoxMigrator
         global $wpdb;
 
         $tables = $this->getHposTables();
-        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $meta_keys = $this->getWatchedMetaKeys();
         $statuses = $this->getOrderStatuses();
 
         
@@ -270,8 +302,7 @@ class MetaBoxMigrator
         global $wpdb;
 
         $tables = $this->getHposTables();
-        $metabox_keys = array_keys(self::FIELD_MAPPING);
-        $zerosense_keys = array_values(self::FIELD_MAPPING);
+        $metabox_keys = $this->getWatchedMetaKeys();
         $statuses = $this->getOrderStatuses();
 
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
@@ -305,18 +336,7 @@ class MetaBoxMigrator
                 continue;
             }
             
-            $needs_migration = false;
-            foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-                $metabox_value = $order->get_meta($metabox_key, true);
-                $zerosense_value = $order->get_meta($zerosense_key, true);
-                
-                // Needs migration if MetaBox has data but ZeroSense doesn't, or values differ
-                if (($metabox_value !== '' && $metabox_value !== null) && 
-                    ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
-                    $needs_migration = true;
-                    break;
-                }
-            }
+            $needs_migration = $this->needsMigrationForOrder($order);
             
             if ($needs_migration) {
                 $pending_order_ids[] = $order_id;
@@ -328,6 +348,48 @@ class MetaBoxMigrator
         return $pending_order_ids;
     }
 
+    private function getPendingOrdersLegacy(int $limit): array
+    {
+        global $wpdb;
+
+        $meta_keys = $this->getWatchedMetaKeys();
+        $statuses = $this->getOrderStatuses();
+
+        $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+        $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+        $sql = "SELECT DISTINCT p.ID
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
+            WHERE p.post_type = 'shop_order'
+              AND p.post_status IN ({$status_placeholders})
+              AND pm.meta_key IN ({$meta_placeholders})
+              AND pm.meta_value != ''
+              AND pm.meta_value IS NOT NULL
+            ORDER BY p.ID DESC";
+
+        $params = array_merge($statuses, $meta_keys);
+        $all_order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+
+        $pending_order_ids = [];
+        foreach ($all_order_ids as $order_id) {
+            if ($limit > 0 && count($pending_order_ids) >= $limit) {
+                break;
+            }
+
+            $order = wc_get_order($order_id);
+            if (!$order instanceof WC_Order) {
+                continue;
+            }
+
+            if ($this->needsMigrationForOrder($order)) {
+                $pending_order_ids[] = (int) $order_id;
+            }
+        }
+
+        return $pending_order_ids;
+    }
+
     /**
      * Count orders that need migration using same logic as getPendingOrdersHpos
      */
@@ -336,55 +398,7 @@ class MetaBoxMigrator
         if ($this->isHposEnabled()) {
             return count($this->getPendingOrdersHpos(0)); // 0 = no limit
         } else {
-            // For legacy mode, use same logic as getSampleOrders
-            global $wpdb;
-            
-            $meta_keys = array_keys(self::FIELD_MAPPING);
-            $statuses = $this->getOrderStatuses();
-            
-            $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
-            $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
-            
-            // Get all orders with MetaBox data
-            $sql = "SELECT DISTINCT p.ID
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
-                WHERE p.post_type = 'shop_order'
-                  AND p.post_status IN ({$status_placeholders})
-                  AND pm.meta_key IN ({$meta_placeholders})
-                  AND pm.meta_value != ''
-                  AND pm.meta_value IS NOT NULL";
-                
-            $params = array_merge($statuses, $meta_keys);
-            $all_order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
-            
-            // Filter to only pending orders
-            $pending_count = 0;
-            
-            foreach ($all_order_ids as $order_id) {
-                $order = wc_get_order($order_id);
-                if (!$order instanceof WC_Order) {
-                    continue;
-                }
-                
-                $needs_migration = false;
-                foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-                    $metabox_value = $order->get_meta($metabox_key, true);
-                    $zerosense_value = $order->get_meta($zerosense_key, true);
-                    
-                    if (($metabox_value !== '' && $metabox_value !== null) && 
-                        ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
-                        $needs_migration = true;
-                        break;
-                    }
-                }
-                
-                if ($needs_migration) {
-                    $pending_count++;
-                }
-            }
-            
-            return $pending_count;
+            return count($this->getPendingOrdersLegacy(0));
         }
     }
 
@@ -423,31 +437,8 @@ class MetaBoxMigrator
             $order_ids = $this->getPendingOrdersHpos(0); // 0 = no limit
             error_log('[ZS Migration] HPOS found ' . count($order_ids) . ' orders to migrate');
         } else {
-            error_log('[ZS Migration] Using legacy WP_Query for migration');
-            $args = [
-                'post_type' => 'shop_order',
-                'post_status' => 'any',
-                'posts_per_page' => -1, // -1 = all posts
-                'meta_query' => [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'zs_metabox_migrated',
-                        'compare' => 'NOT EXISTS',
-                    ],
-                    [
-                        'relation' => 'OR',
-                        ...array_map(function ($field) {
-                            return [
-                                'key' => $field,
-                                'compare' => 'EXISTS',
-                            ];
-                        }, array_keys(self::FIELD_MAPPING)),
-                    ],
-                ],
-            ];
-
-            $query = new WP_Query($args);
-            $order_ids = $query->posts;
+            error_log('[ZS Migration] Using legacy query for migration');
+            $order_ids = $this->getPendingOrdersLegacy(0);
             error_log('[ZS Migration] Legacy found ' . count($order_ids) . ' orders to migrate');
         }
 
@@ -617,6 +608,133 @@ class MetaBoxMigrator
         ];
     }
 
+    private function migrateShippingEmail(WC_Order $order): ?array
+    {
+        $zs = $order->get_meta(self::META_SHIPPING_EMAIL, true);
+        $woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
+
+        $zs = is_string($zs) ? $zs : '';
+        $woo = is_string($woo) ? $woo : '';
+
+        $final = $zs !== '' ? $zs : $woo;
+        if ($final === '') {
+            return null;
+        }
+
+        if ($zs === $final && $woo === $final) {
+            return null;
+        }
+
+        $old_value = $zs !== '' ? $zs : $woo;
+
+        $order->update_meta_data(self::META_SHIPPING_EMAIL, $final);
+        $order->update_meta_data(self::META_SHIPPING_EMAIL_WOO, $final);
+
+        return [
+            'field' => self::META_SHIPPING_EMAIL,
+            'from' => self::META_SHIPPING_EMAIL_WOO,
+            'value' => $final,
+            'old_value' => $old_value,
+        ];
+    }
+
+    private function migrateOpsMaterial(WC_Order $order): ?array
+    {
+        $raw = $order->get_meta(self::META_OPS_MATERIAL, true);
+        if (!is_array($raw)) {
+            return null;
+        }
+
+        $normalized = $raw;
+        $changed = false;
+
+        foreach (self::OPS_MATERIAL_LEGACY_KEY_MAP as $legacyKey => $canonicalKey) {
+            if (!array_key_exists($legacyKey, $normalized)) {
+                continue;
+            }
+
+            if (!array_key_exists($canonicalKey, $normalized)) {
+                $normalized[$canonicalKey] = $normalized[$legacyKey];
+                $changed = true;
+            }
+
+            unset($normalized[$legacyKey]);
+            $changed = true;
+        }
+
+        foreach ($normalized as $k => $v) {
+            if (is_array($v)) {
+                continue;
+            }
+            if (is_scalar($v)) {
+                $normalized[$k] = ['value' => (string) $v];
+                $changed = true;
+            }
+        }
+
+        if (!$changed) {
+            return null;
+        }
+
+        $order->update_meta_data(self::META_OPS_MATERIAL, $normalized);
+
+        return [
+            'field' => self::META_OPS_MATERIAL,
+            'from' => self::META_OPS_MATERIAL,
+            'value' => $normalized,
+            'old_value' => $raw,
+        ];
+    }
+
+    private function needsMigrationForOrder(WC_Order $order): bool
+    {
+        foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
+            $metabox_value = $order->get_meta($metabox_key, true);
+            $zerosense_value = $order->get_meta($zerosense_key, true);
+
+            if (($metabox_value !== '' && $metabox_value !== null) &&
+                ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
+                return true;
+            }
+        }
+
+        $zs = $order->get_meta(self::META_SHIPPING_EMAIL, true);
+        $woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
+
+        $zs = is_string($zs) ? $zs : '';
+        $woo = is_string($woo) ? $woo : '';
+        $final = $zs !== '' ? $zs : $woo;
+        if ($final !== '' && ($zs !== $final || $woo !== $final)) {
+            return true;
+        }
+
+        $material = $order->get_meta(self::META_OPS_MATERIAL, true);
+        if (is_array($material)) {
+            foreach (array_keys(self::OPS_MATERIAL_LEGACY_KEY_MAP) as $legacyKey) {
+                if (array_key_exists($legacyKey, $material)) {
+                    return true;
+                }
+            }
+
+            foreach ($material as $v) {
+                if (!is_array($v) && is_scalar($v)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function getWatchedMetaKeys(): array
+    {
+        return array_values(array_unique(array_merge(
+            array_keys(self::FIELD_MAPPING),
+            array_values(self::FIELD_MAPPING),
+            [self::META_SHIPPING_EMAIL, self::META_SHIPPING_EMAIL_WOO, self::META_OPS_MATERIAL]
+        )));
+    }
+
     public function getSampleOrders(int $limit = 5): array
     {
         if ($this->isHposEnabled()) {
@@ -651,36 +769,23 @@ class MetaBoxMigrator
         
         error_log('[ZS Migration] Legacy getSampleOrders - Found ' . count($all_order_ids) . ' orders with MetaBox data');
         
-        // Filter to only pending orders
         $pending_order_ids = [];
         $checked = 0;
-        
+
         foreach ($all_order_ids as $order_id) {
             if ($limit > 0 && count($pending_order_ids) >= $limit) {
                 break;
             }
-            
+
             $order = wc_get_order($order_id);
             if (!$order instanceof WC_Order) {
                 continue;
             }
-            
-            $needs_migration = false;
-            foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-                $metabox_value = $order->get_meta($metabox_key, true);
-                $zerosense_value = $order->get_meta($zerosense_key, true);
-                
-                if (($metabox_value !== '' && $metabox_value !== null) && 
-                    ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
-                    $needs_migration = true;
-                    break;
-                }
-            }
-            
-            if ($needs_migration) {
+
+            if ($this->needsMigrationForOrder($order)) {
                 $pending_order_ids[] = $order_id;
             }
-            
+
             $checked++;
         }
         
@@ -715,6 +820,21 @@ class MetaBoxMigrator
                     if ($value !== '' && $value !== null) {
                         $sample_data['zerosense_fields'][$zerosense_key] = $value;
                     }
+                }
+
+                $shipping_email = $order->get_meta(self::META_SHIPPING_EMAIL, true);
+                if ($shipping_email !== '' && $shipping_email !== null) {
+                    $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL] = $shipping_email;
+                }
+
+                $shipping_email_woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
+                if ($shipping_email_woo !== '' && $shipping_email_woo !== null) {
+                    $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL_WOO] = $shipping_email_woo;
+                }
+
+                $ops_material = $order->get_meta(self::META_OPS_MATERIAL, true);
+                if ($ops_material !== '' && $ops_material !== null) {
+                    $sample_data['zerosense_fields'][self::META_OPS_MATERIAL] = $ops_material;
                 }
 
                 $orders[] = $sample_data;

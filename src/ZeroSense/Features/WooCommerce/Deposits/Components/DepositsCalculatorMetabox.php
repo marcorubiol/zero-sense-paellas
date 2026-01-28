@@ -72,14 +72,15 @@ class DepositsCalculatorMetabox
         $orderTotal = $order->get_total();
         ?>
         <div class="zs-deposits-calculator-wrapper">
-            <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
             <div class="zs-deposits-header">
+                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-deposits-reset-btn" 
                             data-order-id="<?php echo esc_attr($orderId); ?>"
-                            title="<?php esc_attr_e('Reset to automatic', 'zero-sense'); ?>">
+                            title="<?php esc_attr_e('Reset to automatic calculation', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Reset to Auto', 'zero-sense'); ?>
                     </button>
                 <?php endif; ?>
             </div>
@@ -147,8 +148,8 @@ class DepositsCalculatorMetabox
             .zs-deposits-header {
                 display: flex;
                 align-items: center;
-                justify-content: flex-end;
-                gap: 6px;
+                justify-content: space-between;
+                gap: 8px;
                 padding: 8px 12px;
                 border-bottom: 1px solid #f0f0f1;
             }
@@ -185,12 +186,19 @@ class DepositsCalculatorMetabox
             .zs-deposits-reset-btn {
                 background: none;
                 border: none;
-                padding: 0;
+                padding: 4px 8px;
                 cursor: pointer;
                 color: #2271b1;
+                font-size: 11px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                border-radius: 3px;
+                transition: all 0.2s ease;
             }
             .zs-deposits-reset-btn:hover {
                 color: #135e96;
+                background: rgba(34, 113, 177, 0.1);
             }
             .zs-deposits-reset-btn .dashicons {
                 font-size: 14px;

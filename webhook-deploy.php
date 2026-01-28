@@ -6,8 +6,24 @@ ini_set('display_errors', 0);
 
 // Log (versioned to avoid mixing with older runs)
 $log_file = '/tmp/webhook-deploy-v21.log';
+$max_log_bytes = 2097152;
+
+function rotate_log_if_needed(): void {
+    global $log_file, $max_log_bytes;
+    if (!file_exists($log_file)) {
+        return;
+    }
+    $size = @filesize($log_file);
+    if ($size === false || $size <= $max_log_bytes) {
+        return;
+    }
+    $rotated = $log_file . '.1';
+    @unlink($rotated);
+    @rename($log_file, $rotated);
+}
 
 // FORCE LOG AT THE VERY BEGINNING
+rotate_log_if_needed();
 file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
 
 // Config
@@ -17,6 +33,7 @@ $log_token = 'zerosense-log-2026';
 
 function log_msg($msg) {
     global $log_file;
+    rotate_log_if_needed();
     file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
 }
 
