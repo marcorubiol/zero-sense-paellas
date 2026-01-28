@@ -27,12 +27,10 @@ jobs:
           # - Key auth: set STG_SFTP_KEY (private key)
           password: ${{ secrets.STG_SFTP_PASSWORD }}
           key: ${{ secrets.STG_SFTP_KEY }}
+          # NOTE: scp-action does not support rsync-style exclude patterns.
+          # Keep this simple to avoid 'tar: empty archive'.
           source: |
-            *
-            !.git/**
-            !.github/**
-            !tests/**
-            !.phpunit.result.cache
+            ./*
           target: ${{ secrets.STG_PLUGIN_TARGET_DIR }}
           overwrite: true
 

@@ -277,6 +277,8 @@ if (!is_dir($staging_path)) {
 log_msg("🚀 Starting deploy...");
 
 $deploy_ok = false;
+$deploy_status = 'error';
+$deploy_message = '';
 $deployed_head = '';
 
 if (!chdir($staging_path)) {
@@ -293,15 +295,11 @@ if (!chdir($staging_path)) {
         log_msg("Dir entries (first 30): " . implode(', ', $entries));
         log_msg(".git exists: " . (file_exists('.git') ? 'YES' : 'NO'));
 
-        http_response_code(500);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'not_a_git_repository',
-            'path' => $staging_path,
-            'hint' => 'This folder must be a git checkout. Clone your repo here (one-time) or point $staging_path to the folder that contains .git.',
-            'suggested_command' => 'git clone --branch develop --single-branch <REPO_URL> ' . $staging_path,
-        ]);
-        exit;
+        // No SSH on server: deployments are expected via SFTP (GitHub Actions).
+        // Do not fail the GitHub webhook with 500; just report skipped.
+        $deploy_ok = true;
+        $deploy_status = 'skipped_no_git';
+        $deploy_message = 'No .git found at staging path. If you deploy via SFTP/GitHub Actions, this is expected. Use ?sync=1&token=... after upload to activate/sync the plugin.';
     } else {
         $commands = [
             'git status --porcelain',
@@ -337,13 +335,19 @@ if (!chdir($staging_path)) {
             if ($sync_result['status'] === 'error') {
                 log_msg("❌ Plugin sync failed: " . $sync_result['message']);
                 $deploy_ok = false;
+                $deploy_status = 'error';
+                $deploy_message = $sync_result['message'];
             } else {
                 log_msg("✅ Plugin sync: " . $sync_result['message']);
                 $deploy_ok = true;
+                $deploy_status = 'success';
+                $deploy_message = $sync_result['message'];
             }
             log_msg("🎉 Deploy success! HEAD: $deployed_head");
         } else {
             log_msg("❌ Deploy failed");
+            $deploy_status = 'error';
+            $deploy_message = 'Git commands failed';
         }
     }
 }
@@ -374,9 +378,20 @@ function handlePluginInstallOrSync(): array {
     
     // Load WordPress
     if (!defined('ABSPATH')) {
-        $wp_load_path = dirname($staging_path, 4) . '/wp-load.php';
-        if (!file_exists($wp_load_path)) {
-            return ['status' => 'error', 'message' => 'WordPress not found at expected path'];
+        $wp_load_path = '';
+        for ($i = 0; $i <= 6; $i++) {
+            $candidate_dir = $i === 0 ? $staging_path : dirname($staging_path, $i);
+            if (!$candidate_dir || $candidate_dir === '.' || $candidate_dir === '/') {
+                break;
+            }
+            $candidate = rtrim($candidate_dir, '/') . '/wp-load.php';
+            if (file_exists($candidate)) {
+                $wp_load_path = $candidate;
+                break;
+            }
+        }
+        if (!$wp_load_path) {
+            return ['status' => 'error', 'message' => 'WordPress not found (wp-load.php not found by upward search)'];
         }
         require_once $wp_load_path;
     }
@@ -471,12 +486,9 @@ function handlePluginInstallOrSync(): array {
 
 // Response
 header('Content-Type: application/json');
-if (!$deploy_ok) {
-    http_response_code(500);
-}
-
 echo json_encode([
-    'status' => $deploy_ok ? 'success' : 'error',
+    'status' => $deploy_status,
+    'message' => $deploy_message,
     'delivery' => $delivery,
     'event' => $event,
     'branch' => 'develop',
