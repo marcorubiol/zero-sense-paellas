@@ -1,5 +1,6 @@
 <?php
-// Fixed webhook deploy script 
+// Fixed webhook deploy script - VERSION 2.0
+header('X-Webhook-Version: 2.0-UPDATED-' . date('Y-m-d-H-i-s'));
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
