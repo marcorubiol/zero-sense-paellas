@@ -73,7 +73,6 @@ class DepositsCalculatorMetabox
         ?>
         <div class="zs-deposits-calculator-wrapper">
             <div class="zs-deposits-header">
-                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-deposits-reset-btn" 
@@ -83,6 +82,7 @@ class DepositsCalculatorMetabox
                         <?php esc_html_e('Reset to Auto', 'zero-sense'); ?>
                     </button>
                 <?php endif; ?>
+                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
             </div>
 
             <table class="zs-deposits-table">
@@ -148,10 +148,11 @@ class DepositsCalculatorMetabox
             .zs-deposits-header {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
+                justify-content: flex-end;
                 gap: 8px;
                 padding: 8px 12px;
                 border-bottom: 1px solid #f0f0f1;
+                position: relative;
             }
             .zs-deposits-table {
                 width: 100%;

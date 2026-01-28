@@ -2,7 +2,6 @@
 namespace ZeroSense\Features\WooCommerce\Migration;
 
 use WC_Order;
-use WP_Query;
 
 /**
  * MetaBox to Plugin Fields Migrator
@@ -66,7 +65,7 @@ class MetaBoxMigrator
             if ($total_orders === 0) {
                 // Fallback to legacy
                 global $wpdb;
-                $meta_keys = array_keys(self::FIELD_MAPPING);
+                $meta_keys = $this->getWatchedMetaKeys();
                 $statuses = $this->getOrderStatuses();
                 $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
                 $meta_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
@@ -82,16 +81,6 @@ class MetaBoxMigrator
                 $total_orders = (int) $wpdb->get_var($wpdb->prepare($sql, $params));
                 $migrated_orders = $this->getMigratedOrdersCountCorrect();
             }
-
-        $shipping_migrated = $this->migrateShippingEmail($order);
-        if ($shipping_migrated !== null) {
-            $migrated_fields[] = $shipping_migrated;
-        }
-
-        $material_migrated = $this->migrateOpsMaterial($order);
-        if ($material_migrated !== null) {
-            $migrated_fields[] = $material_migrated;
-        }
         } else {
             $total_orders = $this->getTotalOrdersWithMetaBox();
             $migrated_orders = $this->getMigratedOrdersCountCorrect();
@@ -230,7 +219,7 @@ class MetaBoxMigrator
 
         global $wpdb;
 
-        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $meta_keys = $this->getWatchedMetaKeys();
         $statuses = $this->getOrderStatuses();
 
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));
@@ -492,7 +481,7 @@ class MetaBoxMigrator
             global $wpdb;
             
             $tables = $this->getHposTables();
-            $meta_keys = array_keys(self::FIELD_MAPPING);
+            $meta_keys = $this->getWatchedMetaKeys();
             $placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
             
             // Delete migration flags from orders that have MetaBox data
@@ -514,7 +503,7 @@ class MetaBoxMigrator
             error_log('[ZS Migration] Resetting legacy migration status');
             global $wpdb;
             
-            $meta_keys = array_keys(self::FIELD_MAPPING);
+            $meta_keys = $this->getWatchedMetaKeys();
             $placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
             
             // Delete migration flags from orders that have MetaBox data
@@ -575,6 +564,16 @@ class MetaBoxMigrator
             } else {
                 error_log('[ZS Migration] Field ' . $metabox_key . ' is empty, skipping');
             }
+        }
+
+        $shipping_migrated = $this->migrateShippingEmail($order);
+        if ($shipping_migrated !== null) {
+            $migrated_fields[] = $shipping_migrated;
+        }
+
+        $material_migrated = $this->migrateOpsMaterial($order);
+        if ($material_migrated !== null) {
+            $migrated_fields[] = $material_migrated;
         }
 
         // Only mark as migrated if we actually migrated data
@@ -747,7 +746,7 @@ class MetaBoxMigrator
         // For legacy mode, get all orders with MetaBox data and filter in PHP
         global $wpdb;
         
-        $meta_keys = array_keys(self::FIELD_MAPPING);
+        $meta_keys = $this->getWatchedMetaKeys();
         $statuses = $this->getOrderStatuses();
         
         $status_placeholders = implode(',', array_fill(0, count($statuses), '%s'));

@@ -205,7 +205,8 @@
 .zs-deposits-logs-metabox .zs-badge,
 .zs-email-logs-metabox .zs-badge,
 .zs-email-logs-metabox .zs-badge-type,
-.zs-status-logs-metabox .zs-badge {
+.zs-status-logs-metabox .zs-badge,
+.zs-deposits-calculator-wrapper .zs-badge {
     position: absolute;
     top: 8px;
     right: 8px;
@@ -217,18 +218,7 @@
     line-height: 1;
 }
 
-/* Deposit calculator badge - NOT absolute positioned */
-.zs-deposits-calculator-wrapper .zs-badge {
-    position: static;
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 600;
-    border-radius: 3px;
-    text-transform: uppercase;
-    line-height: 1;
-}
-
-/* Remove special padding from calculator wrapper */
+/* Adjust calculator wrapper for badge positioning */
 .zs-deposits-calculator-wrapper {
     position: relative;
 }
