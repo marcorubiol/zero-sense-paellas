@@ -49,6 +49,9 @@ if (isset($_GET['test'])) {
 
 if (isset($_GET['sync'])) {
     $token = isset($_GET['token']) ? (string) $_GET['token'] : '';
+    if (!$token) {
+        $token = (string) ($_SERVER['HTTP_X_ZEROSENSE_TOKEN'] ?? '');
+    }
     if (!hash_equals($log_token, $token)) {
         http_response_code(403);
         header('Content-Type: application/json');
