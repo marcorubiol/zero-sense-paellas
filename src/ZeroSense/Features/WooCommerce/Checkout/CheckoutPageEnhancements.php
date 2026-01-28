@@ -12,6 +12,7 @@ use ZeroSense\Features\WooCommerce\Checkout\Components\PaymentGateways;
 use ZeroSense\Features\WooCommerce\Checkout\Components\TextModifications;
 use ZeroSense\Features\WooCommerce\Checkout\Components\MarketingConsent;
 use ZeroSense\Features\WooCommerce\Checkout\Components\HiddenItemMeta;
+use ZeroSense\Features\WooCommerce\Checkout\Components\ShippingEmail;
 
 class CheckoutPageEnhancements implements FeatureInterface
 {
@@ -65,6 +66,7 @@ class CheckoutPageEnhancements implements FeatureInterface
         new PaymentGateways();
         new TextModifications();
         new MarketingConsent();
+        new ShippingEmail();
         new HiddenItemMeta();
 
         add_action('wp_enqueue_scripts', [$this, 'enqueueCheckoutScripts']);

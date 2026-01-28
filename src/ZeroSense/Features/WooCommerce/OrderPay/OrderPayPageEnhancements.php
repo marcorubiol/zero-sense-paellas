@@ -10,6 +10,7 @@ use ZeroSense\Features\WooCommerce\OrderPay\Components\PaymentButtonText;
 use ZeroSense\Features\WooCommerce\OrderPay\Components\MarketingConsent;
 use ZeroSense\Features\WooCommerce\OrderPay\Components\CancelOrderButton;
 use ZeroSense\Features\WooCommerce\OrderPay\Components\EmailVerificationText;
+use ZeroSense\Features\WooCommerce\OrderPay\Components\ShippingEmail;
 
 class OrderPayPageEnhancements implements FeatureInterface
 {
@@ -56,6 +57,7 @@ class OrderPayPageEnhancements implements FeatureInterface
         new ConditionalDisplay();
         new PaymentButtonText();
         new MarketingConsent();
+        new ShippingEmail();
         new CancelOrderButton();
         new EmailVerificationText();
     }

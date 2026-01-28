@@ -34,7 +34,49 @@ class BricksDynamicTags implements FeatureInterface
         'postcode' => 'Shipping Postcode',
         'country' => 'Shipping Country',
         'state' => 'Shipping State',
+        'email' => 'Shipping Email',
         'phone' => 'Shipping Phone',
+    ];
+
+    private const OPS_FIELDS = [
+        'notes' => 'Ops Notes',
+    ];
+
+    private const OPS_MATERIAL_FIELDS = [
+        'vehicle' => 'Vehicle',
+        'black_tablecloths' => 'Black tablecloths',
+        'cart' => 'Cart',
+        'work_tables' => 'Work tables',
+        'paella_pans' => 'Paella pans',
+        'burners' => 'Burners',
+        'tripods_legs' => 'Tripods / legs',
+        'butane' => 'Butane',
+        'hose' => 'Hose',
+        'parasols' => 'Parasols',
+        'tent' => 'Tent',
+        'lighting' => 'Lighting',
+        'water_fountain_8l' => 'Water fountain (8L)',
+        'trash_buckets' => 'Trash buckets',
+        'coolers' => 'Coolers',
+        'other' => 'Other',
+    ];
+
+    private const OPS_MATERIAL_LEGACY_KEY_MAP = [
+        'black_tablecloths' => 'teles_negres',
+        'cart' => 'carreto',
+        'work_tables' => 'taules_treball',
+        'paella_pans' => 'paelles',
+        'burners' => 'cremadors',
+        'tripods_legs' => 'potes_tripodes',
+        'butane' => 'buta',
+        'hose' => 'manguera',
+        'parasols' => 'para_sols',
+        'tent' => 'carpa',
+        'lighting' => 'llum',
+        'water_fountain_8l' => 'font_aigua_8l',
+        'trash_buckets' => 'poals_fems',
+        'coolers' => 'neveres',
+        'other' => 'altres',
     ];
 
     private const META_BOX_FIELDS = [
@@ -164,6 +206,22 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
+        foreach (self::OPS_FIELDS as $field => $label) {
+            $tags[] = [
+                'name' => '{woo_ops_' . $field . '}',
+                'label' => $label,
+                'group' => 'WooCommerce',
+            ];
+        }
+
+        foreach (self::OPS_MATERIAL_FIELDS as $field => $label) {
+            $tags[] = [
+                'name' => '{woo_ops_material_' . $field . '}',
+                'label' => $label,
+                'group' => 'WooCommerce',
+            ];
+        }
+
         return $tags;
     }
 
@@ -196,6 +254,15 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getMetaBoxFieldValue($field, $post);
         }
 
+        if ($tag === '{woo_ops_notes}') {
+            return $this->getOpsNotesValue($post);
+        }
+
+        if (strpos($tag, '{woo_ops_material_') === 0) {
+            $field = $this->stripTag($tag, 'woo_ops_material_');
+            return $this->getOpsMaterialFieldValue($field, $post);
+        }
+
         return $tag;
     }
 
@@ -219,8 +286,14 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_order_note}', $this->getOrderNote($post), $content);
 
-        return $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
+        $content = $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
             return $this->getMetaBoxFieldValue($field, $post);
+        });
+
+        $content = str_replace('{woo_ops_notes}', $this->getOpsNotesValue($post), $content);
+
+        return $this->replaceTagsInContent($content, $post, 'woo_ops_material_', function (string $field) use ($post): string {
+            return $this->getOpsMaterialFieldValue($field, $post);
         });
     }
 
@@ -292,6 +365,50 @@ class BricksDynamicTags implements FeatureInterface
         return $value;
     }
 
+    private function getOpsNotesValue($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Ops notes');
+        }
+
+        $order = wc_get_order($orderId);
+        $raw = $order instanceof WC_Order
+            ? $order->get_meta('zs_ops_notes', true)
+            : get_post_meta($orderId, 'zs_ops_notes', true);
+
+        return is_string($raw) ? $raw : '';
+    }
+
+    private function getOpsMaterialFieldValue(string $field, $post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Ops material ' . $field);
+        }
+
+        $order = wc_get_order($orderId);
+        $raw = $order instanceof WC_Order
+            ? $order->get_meta('zs_ops_material', true)
+            : get_post_meta($orderId, 'zs_ops_material', true);
+
+        if (!is_array($raw)) {
+            return '';
+        }
+
+        $legacyKey = self::OPS_MATERIAL_LEGACY_KEY_MAP[$field] ?? null;
+        $entry = $raw[$field] ?? ($legacyKey ? ($raw[$legacyKey] ?? null) : null);
+        if (is_array($entry) && array_key_exists('value', $entry)) {
+            $entry = $entry['value'];
+        }
+
+        if (is_scalar($entry)) {
+            return (string) $entry;
+        }
+
+        return '';
+    }
+
     private function getShippingFieldValue(string $field, $post): string
     {
         $orderId = $this->resolveOrderId($post);
@@ -304,6 +421,14 @@ class BricksDynamicTags implements FeatureInterface
             if ($field === 'phone') {
                 $value = get_post_meta($orderId, '_shipping_phone', true);
                 return is_string($value) ? $value : '';
+            }
+
+            if ($field === 'email') {
+                $raw = get_post_meta($orderId, 'zs_shipping_email', true);
+                if (!is_string($raw) || $raw === '') {
+                    $raw = get_post_meta($orderId, '_shipping_email', true);
+                }
+                return is_string($raw) ? $raw : '';
             }
 
             $value = get_post_meta($orderId, '_shipping_' . $field, true);
@@ -323,6 +448,14 @@ class BricksDynamicTags implements FeatureInterface
         if ($field === 'phone') {
             $value = $order->get_meta('_shipping_phone', true);
             return is_string($value) ? $value : '';
+        }
+
+        if ($field === 'email') {
+            $raw = $order->get_meta('zs_shipping_email', true);
+            if (!is_string($raw) || $raw === '') {
+                $raw = $order->get_meta('_shipping_email', true);
+            }
+            return is_string($raw) ? $raw : '';
         }
 
         $method = 'get_shipping_' . $field;
