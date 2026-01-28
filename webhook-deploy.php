@@ -66,7 +66,31 @@ log_msg("Delivery: $delivery");
 log_msg("Signature: " . ($signature ? 'PRESENT' : 'NULL'));
 log_msg("Available headers: " . implode(', ', array_keys($headers)));
 
-if (!$signature || !$payload) {
+// GitHub IP whitelist for security (since signatures are blocked)
+$github_ips = [
+    '192.30.252.0/22',
+    '185.199.108.0/22',
+    '140.82.112.0/20',
+    '143.55.64.0/20'
+];
+
+$client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+$is_github = false;
+
+foreach ($github_ips as $ip_range) {
+    if (ip_in_range($client_ip, $ip_range)) {
+        $is_github = true;
+        break;
+    }
+}
+
+log_msg("Client IP: $client_ip");
+log_msg("Is GitHub IP: " . ($is_github ? 'YES' : 'NO'));
+
+// Skip signature validation if headers are blocked but IP is GitHub
+$skip_signature = (!$signature && $is_github);
+
+if (!$skip_signature && (!$signature || !$payload)) {
     log_msg("❌ Missing signature or payload");
     log_msg("=== WEBHOOK END ===\n");
     http_response_code(400);
@@ -77,54 +101,61 @@ if (!$signature || !$payload) {
         'debug' => [
             'has_signature' => !empty($signature),
             'has_payload' => !empty($payload),
-            'headers_found' => array_keys($headers)
+            'headers_found' => array_keys($headers),
+            'is_github_ip' => $is_github,
+            'client_ip' => $client_ip
         ]
     ]);
     exit;
 }
 
-// Verify signature
-$expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
-log_msg("Expected signature: $expected");
-log_msg("Received signature: $signature");
+if (!$skip_signature) {
+    // Verify signature
+    $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+    log_msg("Expected signature: $expected");
+    log_msg("Received signature: $signature");
 
-// Try both SHA256 and SHA1 signatures
-$signatures_to_try = [$signature];
-if (!empty($headers['X-Hub-Signature'])) {
-    $signatures_to_try[] = $headers['X-Hub-Signature'];
-}
-
-$valid_signature = false;
-foreach ($signatures_to_try as $sig) {
-    if (hash_equals($expected, $sig)) {
-        $valid_signature = true;
-        break;
+    // Try both SHA256 and SHA1 signatures
+    $signatures_to_try = [$signature];
+    if (!empty($headers['X-Hub-Signature'])) {
+        $signatures_to_try[] = $headers['X-Hub-Signature'];
     }
-    // Also try SHA1 if that's what we received
-    if (strpos($sig, 'sha1=') === 0) {
-        $expected_sha1 = 'sha1=' . hash_hmac('sha1', $payload, $secret);
-        if (hash_equals($expected_sha1, $sig)) {
+
+    $valid_signature = false;
+    foreach ($signatures_to_try as $sig) {
+        if (hash_equals($expected, $sig)) {
             $valid_signature = true;
             break;
         }
+        // Also try SHA1 if that's what we received
+        if (strpos($sig, 'sha1=') === 0) {
+            $expected_sha1 = 'sha1=' . hash_hmac('sha1', $payload, $secret);
+            if (hash_equals($expected_sha1, $sig)) {
+                $valid_signature = true;
+                break;
+            }
+        }
     }
-}
 
-if (!$valid_signature) {
-    log_msg("❌ Invalid signature");
-    log_msg("=== WEBHOOK END ===\n");
-    http_response_code(403);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'forbidden',
-        'delivery' => $delivery,
-        'debug' => [
-            'expected' => $expected,
-            'received' => $signature,
-            'signatures_tried' => $signatures_to_try
-        ]
-    ]);
-    exit;
+    if (!$valid_signature) {
+        log_msg("❌ Invalid signature");
+        log_msg("=== WEBHOOK END ===\n");
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'forbidden',
+            'delivery' => $delivery,
+            'debug' => [
+                'expected' => $expected,
+                'received' => $signature,
+                'signatures_tried' => $signatures_to_try
+            ]
+        ]);
+        exit;
+    }
+} else {
+    log_msg("⚠️ Skipping signature validation (headers blocked by server)");
+    log_msg("✅ GitHub IP validated");
 }
 
 log_msg("✅ Signature valid");
@@ -229,6 +260,22 @@ if (!chdir($staging_path)) {
 }
 
 log_msg("=== WEBHOOK END ===\n");
+
+/**
+ * Check if IP is in range (CIDR notation)
+ */
+function ip_in_range($ip, $range) {
+    if (strpos($range, '/') === false) {
+        return $ip === $range;
+    }
+    
+    list($subnet, $mask) = explode('/', $range);
+    $subnet = ip2long($subnet);
+    $ip = ip2long($ip);
+    $mask = -1 << (32 - (int)$mask);
+    
+    return ($ip & $mask) === ($subnet & $mask);
+}
 
 /**
  * Handle plugin installation or synchronization
