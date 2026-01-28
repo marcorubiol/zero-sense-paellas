@@ -35,6 +35,7 @@ jobs:
           overwrite: true
 
       - name: Trigger plugin sync
+        continue-on-error: true
         env:
           STG_WEBHOOK_SYNC_BASE_URL: ${{ secrets.STG_WEBHOOK_SYNC_BASE_URL }}
           STG_WEBHOOK_TOKEN: ${{ secrets.STG_WEBHOOK_TOKEN }}
@@ -48,12 +49,15 @@ jobs:
             -G "$url" \
             --data-urlencode "sync=1" \
             --data-urlencode "token=${STG_WEBHOOK_TOKEN}" \
-            -H "X-ZeroSense-Token: ${STG_WEBHOOK_TOKEN}")
+            -H "X-ZeroSense-Token: ${STG_WEBHOOK_TOKEN}" \
+            -H "Accept: application/json" \
+            -H "User-Agent: GitHub-Hookshot/actions")
 
           if [ "$http_code" != "200" ]; then
             echo "Webhook sync failed with HTTP $http_code"
             cat /tmp/webhook_sync_body.txt
-            exit 1
+            echo "You may need to run sync manually in browser: ${url}?sync=1&token=***"
+            exit 0
           fi
 
           cat /tmp/webhook_sync_body.txt
