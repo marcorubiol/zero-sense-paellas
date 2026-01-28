@@ -192,6 +192,21 @@ class MetaBoxMigrator
                 }
             }
 
+            $shipping_email = $order->get_meta(self::META_SHIPPING_EMAIL, true);
+            if ($shipping_email !== '' && $shipping_email !== null) {
+                $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL] = $shipping_email;
+            }
+
+            $shipping_email_woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
+            if ($shipping_email_woo !== '' && $shipping_email_woo !== null) {
+                $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL_WOO] = $shipping_email_woo;
+            }
+
+            $ops_material = $order->get_meta(self::META_OPS_MATERIAL, true);
+            if ($ops_material !== '' && $ops_material !== null) {
+                $sample_data['zerosense_fields'][self::META_OPS_MATERIAL] = $ops_material;
+            }
+
             $output[] = $sample_data;
         }
 

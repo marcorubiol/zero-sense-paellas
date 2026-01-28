@@ -220,7 +220,7 @@
 /* Deposit calculator badge with more top spacing */
 .zs-deposits-calculator-wrapper .zs-badge {
     position: absolute;
-    top: 12px;
+    top: 8px;
     right: 8px;
     padding: 2px 6px;
     font-size: 10px;

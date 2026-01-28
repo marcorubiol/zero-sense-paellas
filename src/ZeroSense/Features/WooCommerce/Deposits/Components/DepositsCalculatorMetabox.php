@@ -148,9 +148,9 @@ class DepositsCalculatorMetabox
             .zs-deposits-header {
                 display: flex;
                 align-items: center;
-                justify-content: flex-end;
+                justify-content: space-between;
                 gap: 8px;
-                padding: 12px 12px 8px 12px;
+                padding: 0 12px;
                 border-bottom: 1px solid #f0f0f1;
                 position: relative;
                 min-height: 32px;
