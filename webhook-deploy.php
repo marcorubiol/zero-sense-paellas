@@ -39,6 +39,7 @@ if ($method !== 'POST') {
 }
 
 log_msg("=== WEBHOOK START ===");
+log_msg("🔥 VERSION: v2.0 - Simplified SHA256/SHA1 Validation");
 log_msg("Method: {$method}");
 log_msg("User-Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? ''));
 log_msg("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? ''));
