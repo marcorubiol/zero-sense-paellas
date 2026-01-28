@@ -189,7 +189,15 @@ if (!chdir($staging_path)) {
         }
 
         if (!$failed) {
-            $deploy_ok = true;
+            // Check if plugin exists and install/sync
+            $sync_result = handlePluginInstallOrSync();
+            if ($sync_result['status'] === 'error') {
+                log_msg("❌ Plugin sync failed: " . $sync_result['message']);
+                $deploy_ok = false;
+            } else {
+                log_msg("✅ Plugin sync: " . $sync_result['message']);
+                $deploy_ok = true;
+            }
             log_msg("🎉 Deploy success! HEAD: $deployed_head");
         } else {
             log_msg("❌ Deploy failed");
@@ -198,6 +206,109 @@ if (!chdir($staging_path)) {
 }
 
 log_msg("=== WEBHOOK END ===\n");
+
+/**
+ * Handle plugin installation or synchronization
+ */
+function handlePluginInstallOrSync(): array {
+    global $staging_path;
+    
+    // Load WordPress
+    if (!defined('ABSPATH')) {
+        $wp_load_path = dirname($staging_path, 4) . '/wp-load.php';
+        if (!file_exists($wp_load_path)) {
+            return ['status' => 'error', 'message' => 'WordPress not found at expected path'];
+        }
+        require_once $wp_load_path;
+    }
+    
+    // Load WordPress admin functions
+    if (!function_exists('is_plugin_active')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    
+    if (!function_exists('activate_plugin')) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+    }
+    
+    $plugin_file = 'zero-sense/zero-sense.php';
+    
+    // Check if plugin files exist
+    if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin_file)) {
+        log_msg("❌ Plugin files not found in WordPress plugins directory");
+        return ['status' => 'error', 'message' => 'Plugin files not found'];
+    }
+    
+    // Check if plugin is already active
+    if (is_plugin_active($plugin_file)) {
+        log_msg("ℹ️ Plugin already active, syncing...");
+        
+        // Deactivate first to force refresh
+        deactivate_plugins($plugin_file, true);
+        
+        // Clear caches
+        wp_cache_flush();
+        
+        // Clear feature discovery cache
+        if (defined('ZERO_SENSE_VERSION')) {
+            $cacheKey = 'zs_feature_classes_v' . ZERO_SENSE_VERSION;
+            delete_transient($cacheKey);
+        }
+        
+        // Reactivate
+        $result = activate_plugin($plugin_file, '', is_network_admin());
+        
+        if (is_wp_error($result)) {
+            return ['status' => 'error', 'message' => 'Reactivation failed: ' . $result->get_error_message()];
+        }
+        
+        return ['status' => 'success', 'message' => 'Plugin synced successfully'];
+    }
+    
+    // Plugin not active - install and activate
+    log_msg("ℹ️ Plugin not active, installing...");
+    
+    // Get list of available plugins
+    if (!function_exists('get_plugins')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    
+    $all_plugins = get_plugins();
+    
+    if (!isset($all_plugins[$plugin_file])) {
+        // Plugin not registered in WordPress - try to register it
+        log_msg("ℹ️ Plugin not registered, attempting to register...");
+        
+        // Force WordPress to recognize the plugin
+        wp_cache_delete('plugins', 'plugins');
+        
+        // Try again
+        $all_plugins = get_plugins();
+        
+        if (!isset($all_plugins[$plugin_file])) {
+            return ['status' => 'error', 'message' => 'Plugin not recognized by WordPress'];
+        }
+    }
+    
+    // Activate the plugin
+    $result = activate_plugin($plugin_file, '', is_network_admin());
+    
+    if (is_wp_error($result)) {
+        return ['status' => 'error', 'message' => 'Activation failed: ' . $result->get_error_message()];
+    }
+    
+    // Run activation hooks if plugin class exists
+    if (class_exists('ZeroSense\Core\Plugin')) {
+        try {
+            ZeroSense\Core\Plugin::activate();
+            log_msg("✅ Plugin activation hooks executed");
+        } catch (Exception $e) {
+            log_msg("⚠️ Activation hooks error: " . $e->getMessage());
+        }
+    }
+    
+    return ['status' => 'success', 'message' => 'Plugin installed and activated successfully'];
+}
 
 // Response
 header('Content-Type: application/json');
