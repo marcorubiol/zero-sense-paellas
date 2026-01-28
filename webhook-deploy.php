@@ -27,9 +27,9 @@ rotate_log_if_needed();
 file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
 
 // Config
-$secret = $_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? 'zerosense-deploy-secret-2026';
+$secret = (string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? ''));
 $staging_path = '/home/OeTjuWhiCsmAoG0K/STGpaellasEnCasa/public_html/wp-content/plugins/zero-sense';
-$log_token = 'zerosense-log-2026';
+$log_token = (string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? ''));
 
 function log_msg($msg) {
     global $log_file;
@@ -40,7 +40,7 @@ function log_msg($msg) {
 // Log endpoint
 if (isset($_GET['log'])) {
     $token = isset($_GET['token']) ? (string) $_GET['token'] : '';
-    if (!hash_equals($log_token, $token)) {
+    if (!$log_token || !hash_equals($log_token, $token)) {
         http_response_code(403);
         header('Content-Type: application/json');
         echo json_encode(['status' => 'forbidden']);
@@ -69,7 +69,7 @@ if (isset($_GET['sync'])) {
     if (!$token) {
         $token = (string) ($_SERVER['HTTP_X_ZEROSENSE_TOKEN'] ?? '');
     }
-    if (!hash_equals($log_token, $token)) {
+    if (!$log_token || !hash_equals($log_token, $token)) {
         http_response_code(403);
         header('Content-Type: application/json');
         echo json_encode(['status' => 'forbidden']);
@@ -177,6 +177,11 @@ $is_github_user_agent = strpos($_SERVER['HTTP_USER_AGENT'] ?? '', 'GitHub-Hooksh
 
 // Allow without signature only when signatures are missing AND request looks like GitHub
 $allow_without_signature = (!$signature_sha256 && !$signature_sha1) && ($is_github || $is_github_user_agent);
+
+if (!$secret && ($is_github || $is_github_user_agent)) {
+    $allow_without_signature = true;
+    log_msg("⚠️ Secret missing; allowing based on GitHub IP/User-Agent");
+}
 
 log_msg("Client IP: $client_ip");
 log_msg("Is GitHub IP: " . ($is_github ? 'YES' : 'NO'));
@@ -315,11 +320,27 @@ if (!chdir($staging_path)) {
         log_msg("Dir entries (first 30): " . implode(', ', $entries));
         log_msg(".git exists: " . (file_exists('.git') ? 'YES' : 'NO'));
 
-        // No SSH on server: deployments are expected via SFTP (GitHub Actions).
-        // Do not fail the GitHub webhook with 500; just report skipped.
-        $deploy_ok = true;
-        $deploy_status = 'skipped_no_git';
-        $deploy_message = 'No .git found at staging path. If you deploy via SFTP/GitHub Actions, this is expected. Use ?sync=1&token=... after upload to activate/sync the plugin.';
+        $repo_full_name = (string) ($data['repository']['full_name'] ?? '');
+        $zip_result = deploy_from_github_zip($repo_full_name, 'develop', $staging_path, (string) $delivery);
+        if (($zip_result['status'] ?? '') !== 'success') {
+            log_msg("❌ ZIP deploy failed: " . ($zip_result['message'] ?? ''));
+            $deploy_ok = false;
+            $deploy_status = 'error';
+            $deploy_message = (string) ($zip_result['message'] ?? 'ZIP deploy failed');
+        } else {
+            $sync_result = handlePluginInstallOrSync();
+            if (($sync_result['status'] ?? '') === 'error') {
+                log_msg("❌ Plugin sync failed: " . ($sync_result['message'] ?? ''));
+                $deploy_ok = false;
+                $deploy_status = 'error';
+                $deploy_message = (string) ($sync_result['message'] ?? 'Plugin sync failed');
+            } else {
+                log_msg("✅ Plugin sync: " . ($sync_result['message'] ?? ''));
+                $deploy_ok = true;
+                $deploy_status = 'success';
+                $deploy_message = (string) ($zip_result['message'] ?? 'ZIP deploy success');
+            }
+        }
     } else {
         $commands = [
             'git status --porcelain',
@@ -366,8 +387,22 @@ if (!chdir($staging_path)) {
             log_msg("🎉 Deploy success! HEAD: $deployed_head");
         } else {
             log_msg("❌ Deploy failed");
-            $deploy_status = 'error';
-            $deploy_message = 'Git commands failed';
+            $repo_full_name = (string) ($data['repository']['full_name'] ?? '');
+            $zip_result = deploy_from_github_zip($repo_full_name, 'develop', $staging_path, (string) $delivery);
+            if (($zip_result['status'] ?? '') !== 'success') {
+                $deploy_status = 'error';
+                $deploy_message = 'Git commands failed; ZIP deploy also failed: ' . (string) ($zip_result['message'] ?? '');
+            } else {
+                $sync_result = handlePluginInstallOrSync();
+                if (($sync_result['status'] ?? '') === 'error') {
+                    $deploy_status = 'error';
+                    $deploy_message = (string) ($sync_result['message'] ?? 'Plugin sync failed');
+                } else {
+                    $deploy_ok = true;
+                    $deploy_status = 'success';
+                    $deploy_message = (string) ($zip_result['message'] ?? 'ZIP deploy success');
+                }
+            }
         }
     }
 }
@@ -502,6 +537,175 @@ function handlePluginInstallOrSync(): array {
     }
     
     return ['status' => 'success', 'message' => 'Plugin installed and activated successfully'];
+}
+
+function deploy_from_github_zip(string $repo_full_name, string $branch, string $target_dir, string $delivery): array {
+    if (!$repo_full_name) {
+        return ['status' => 'error', 'message' => 'Repository full_name not found in payload'];
+    }
+
+    $zip_url = 'https://github.com/' . $repo_full_name . '/archive/refs/heads/' . rawurlencode($branch) . '.zip';
+    $zip_path = '/tmp/zs-deploy-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $delivery ?: uniqid('', true)) . '.zip';
+    $extract_dir = '/tmp/zs-deploy-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $delivery ?: uniqid('', true));
+
+    $download_ok = download_file($zip_url, $zip_path);
+    if (!$download_ok || !file_exists($zip_path)) {
+        return ['status' => 'error', 'message' => 'Failed to download ZIP from ' . $zip_url];
+    }
+
+    if (is_dir($extract_dir)) {
+        rrmdir($extract_dir);
+    }
+    @mkdir($extract_dir, 0755, true);
+
+    $unzipped = false;
+    if (class_exists('ZipArchive')) {
+        $zip = new ZipArchive();
+        if ($zip->open($zip_path) === true) {
+            $unzipped = $zip->extractTo($extract_dir);
+            $zip->close();
+        }
+    }
+    if (!$unzipped) {
+        $output = [];
+        $return = 0;
+        exec('unzip -o ' . escapeshellarg($zip_path) . ' -d ' . escapeshellarg($extract_dir) . ' 2>&1', $output, $return);
+        $unzipped = ($return === 0);
+    }
+
+    if (!$unzipped) {
+        return ['status' => 'error', 'message' => 'Failed to unzip downloaded archive'];
+    }
+
+    $entries = @scandir($extract_dir) ?: [];
+    $src_root = '';
+    foreach ($entries as $e) {
+        if ($e === '.' || $e === '..' || $e === '__MACOSX') {
+            continue;
+        }
+        $candidate = rtrim($extract_dir, '/') . '/' . $e;
+        if (is_dir($candidate)) {
+            $src_root = $candidate;
+            break;
+        }
+    }
+
+    if (!$src_root) {
+        return ['status' => 'error', 'message' => 'Unzipped archive has no root directory'];
+    }
+
+    clean_dir_except($target_dir, ['webhook-deploy.php', '.git']);
+    $copy_ok = recursive_copy($src_root, $target_dir);
+
+    @unlink($zip_path);
+    rrmdir($extract_dir);
+
+    if (!$copy_ok) {
+        return ['status' => 'error', 'message' => 'Failed to copy extracted files into target directory'];
+    }
+
+    return ['status' => 'success', 'message' => 'Deployed from GitHub ZIP (' . $repo_full_name . ':' . $branch . ')'];
+}
+
+function download_file(string $url, string $dest): bool {
+    if (function_exists('curl_init')) {
+        $fp = @fopen($dest, 'wb');
+        if (!$fp) {
+            return false;
+        }
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'ZeroSense-Webhook-Deploy');
+        $ok = curl_exec($ch);
+        $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        fclose($fp);
+        if (!$ok || $http < 200 || $http >= 300) {
+            @unlink($dest);
+            return false;
+        }
+        return true;
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'timeout' => 30,
+            'follow_location' => 1,
+            'header' => "User-Agent: ZeroSense-Webhook-Deploy\r\n",
+        ],
+    ]);
+    $data = @file_get_contents($url, false, $context);
+    if ($data === false) {
+        return false;
+    }
+    return file_put_contents($dest, $data) !== false;
+}
+
+function clean_dir_except(string $dir, array $keep): void {
+    $entries = @scandir($dir) ?: [];
+    foreach ($entries as $e) {
+        if ($e === '.' || $e === '..') {
+            continue;
+        }
+        if (in_array($e, $keep, true)) {
+            continue;
+        }
+        $path = rtrim($dir, '/') . '/' . $e;
+        if (is_dir($path)) {
+            rrmdir($path);
+        } else {
+            @unlink($path);
+        }
+    }
+}
+
+function recursive_copy(string $src, string $dst): bool {
+    if (!is_dir($src)) {
+        return false;
+    }
+    if (!is_dir($dst) && !@mkdir($dst, 0755, true)) {
+        return false;
+    }
+    $entries = @scandir($src) ?: [];
+    foreach ($entries as $e) {
+        if ($e === '.' || $e === '..') {
+            continue;
+        }
+        $from = rtrim($src, '/') . '/' . $e;
+        $to = rtrim($dst, '/') . '/' . $e;
+        if (is_dir($from)) {
+            if (!recursive_copy($from, $to)) {
+                return false;
+            }
+        } else {
+            if (!@copy($from, $to)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function rrmdir(string $dir): void {
+    if (!is_dir($dir)) {
+        return;
+    }
+    $entries = @scandir($dir) ?: [];
+    foreach ($entries as $e) {
+        if ($e === '.' || $e === '..') {
+            continue;
+        }
+        $path = rtrim($dir, '/') . '/' . $e;
+        if (is_dir($path)) {
+            rrmdir($path);
+        } else {
+            @unlink($path);
+        }
+    }
+    @rmdir($dir);
 }
 
 // Response
