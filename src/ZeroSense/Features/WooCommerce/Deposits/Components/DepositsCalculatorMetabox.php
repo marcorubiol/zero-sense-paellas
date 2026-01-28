@@ -150,10 +150,13 @@ class DepositsCalculatorMetabox
                 align-items: center;
                 justify-content: space-between;
                 gap: 8px;
-                padding: 0 12px;
                 border-bottom: 1px solid #f0f0f1;
                 position: relative;
                 min-height: 32px;
+
+                .zs-badge.zs-badge-manual {
+                    position: static;
+                }
             }
             .zs-deposits-table {
                 width: 100%;
