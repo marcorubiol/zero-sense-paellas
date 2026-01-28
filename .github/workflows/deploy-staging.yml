@@ -1,0 +1,41 @@
+name: Deploy Staging (develop)
+
+on:
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy plugin via SFTP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STG_SFTP_HOST }}
+          username: ${{ secrets.STG_SFTP_USER }}
+          port: ${{ secrets.STG_SFTP_PORT }}
+          # Use ONE auth method:
+          # - Password auth: set STG_SFTP_PASSWORD
+          # - Key auth: set STG_SFTP_KEY (private key)
+          password: ${{ secrets.STG_SFTP_PASSWORD }}
+          key: ${{ secrets.STG_SFTP_KEY }}
+          source: |
+            *
+            !.git/**
+            !.github/**
+            !tests/**
+            !.phpunit.result.cache
+          target: ${{ secrets.STG_PLUGIN_TARGET_DIR }}
+          overwrite: true
+
+      - name: Trigger plugin sync
+        run: |
+          curl -fsS "${{ secrets.STG_WEBHOOK_SYNC_URL }}"

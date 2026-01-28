@@ -47,6 +47,29 @@ if (isset($_GET['test'])) {
     exit;
 }
 
+if (isset($_GET['sync'])) {
+    $token = isset($_GET['token']) ? (string) $_GET['token'] : '';
+    if (!hash_equals($log_token, $token)) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'forbidden']);
+        exit;
+    }
+
+    $sync_result = handlePluginInstallOrSync();
+
+    header('Content-Type: application/json');
+    if (($sync_result['status'] ?? '') !== 'success') {
+        http_response_code(500);
+    }
+    echo json_encode([
+        'status' => $sync_result['status'] ?? 'error',
+        'message' => $sync_result['message'] ?? '',
+        'timestamp' => date('c'),
+    ]);
+    exit;
+}
+
 // Only POST requests
 $method = $_SERVER['REQUEST_METHOD'] ?? '';
 if ($method !== 'POST') {
@@ -132,8 +155,8 @@ foreach ($github_ips as $ip_range) {
 // For debugging: allow if User-Agent is GitHub-Hookshot
 $is_github_user_agent = strpos($_SERVER['HTTP_USER_AGENT'] ?? '', 'GitHub-Hookshot') !== false;
 
-// Allow if either IP is GitHub OR User-Agent is GitHub-Hookshot
-$allow_without_signature = ($is_github || $is_github_user_agent);
+// Allow without signature only when signatures are missing AND request looks like GitHub
+$allow_without_signature = (!$signature_sha256 && !$signature_sha1) && ($is_github || $is_github_user_agent);
 
 log_msg("Client IP: $client_ip");
 log_msg("Is GitHub IP: " . ($is_github ? 'YES' : 'NO'));
@@ -261,7 +284,24 @@ if (!chdir($staging_path)) {
 } else {
     // Check if it's a git repo
     if (!is_dir('.git')) {
-        log_msg("❌ Not a git repository");
+        log_msg("❌ Not a git repository (.git not found)");
+        log_msg("Working dir: " . getcwd());
+
+        // Try to list a few entries for diagnostics
+        $entries = @scandir('.') ?: [];
+        $entries = array_slice($entries, 0, 30);
+        log_msg("Dir entries (first 30): " . implode(', ', $entries));
+        log_msg(".git exists: " . (file_exists('.git') ? 'YES' : 'NO'));
+
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'not_a_git_repository',
+            'path' => $staging_path,
+            'hint' => 'This folder must be a git checkout. Clone your repo here (one-time) or point $staging_path to the folder that contains .git.',
+            'suggested_command' => 'git clone --branch develop --single-branch <REPO_URL> ' . $staging_path,
+        ]);
+        exit;
     } else {
         $commands = [
             'git status --porcelain',
