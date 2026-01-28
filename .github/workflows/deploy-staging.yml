@@ -36,4 +36,4 @@ jobs:
 
       - name: Trigger plugin sync
         run: |
-          curl -fsS -H "X-ZeroSense-Token: ${{ secrets.STG_WEBHOOK_TOKEN }}" "${{ secrets.STG_WEBHOOK_SYNC_URL }}"
+          curl -fsS "${{ secrets.STG_WEBHOOK_SYNC_URL }}"
