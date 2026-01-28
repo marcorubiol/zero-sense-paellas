@@ -1,4 +1,4 @@
-# Changelog test
+# Changelog
 
 All notable changes to Zero Sense plugin will be documented in this file.
 
