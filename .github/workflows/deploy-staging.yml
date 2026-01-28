@@ -35,5 +35,25 @@ jobs:
           overwrite: true
 
       - name: Trigger plugin sync
+        env:
+          STG_WEBHOOK_SYNC_BASE_URL: ${{ secrets.STG_WEBHOOK_SYNC_BASE_URL }}
+          STG_WEBHOOK_TOKEN: ${{ secrets.STG_WEBHOOK_TOKEN }}
         run: |
-          curl -fsS "${{ secrets.STG_WEBHOOK_SYNC_URL }}"
+          set -euo pipefail
+          url="${STG_WEBHOOK_SYNC_BASE_URL}"
+
+          # Call sync using BOTH token-in-query and token header.
+          # This avoids subtle secret formatting issues and makes debugging easier.
+          http_code=$(curl -sS -o /tmp/webhook_sync_body.txt -w "%{http_code}" \
+            -G "$url" \
+            --data-urlencode "sync=1" \
+            --data-urlencode "token=${STG_WEBHOOK_TOKEN}" \
+            -H "X-ZeroSense-Token: ${STG_WEBHOOK_TOKEN}")
+
+          if [ "$http_code" != "200" ]; then
+            echo "Webhook sync failed with HTTP $http_code"
+            cat /tmp/webhook_sync_body.txt
+            exit 1
+          fi
+
+          cat /tmp/webhook_sync_body.txt
