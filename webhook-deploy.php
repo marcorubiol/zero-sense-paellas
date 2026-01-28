@@ -1,5 +1,5 @@
 <?php
-// Fixed webhook deploy script   wi
+// Fixed webhook deploy script 
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
@@ -40,6 +40,7 @@ if ($method !== 'POST') {
 
 log_msg("=== WEBHOOK START ===");
 log_msg("🔥 VERSION: v2.0 - Simplified SHA256/SHA1 Validation");
+log_msg("📅 UPDATED: " . date('Y-m-d H:i:s'));
 log_msg("Method: {$method}");
 log_msg("User-Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? ''));
 log_msg("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? ''));
