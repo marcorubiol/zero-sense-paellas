@@ -142,9 +142,6 @@ class DepositsCalculatorMetabox
         </div>
 
         <style>
-            .zs-deposits-calculator-wrapper {
-                margin: -12px -12px 0;
-            }
             .zs-deposits-header {
                 display: flex;
                 align-items: center;
@@ -152,7 +149,6 @@ class DepositsCalculatorMetabox
                 gap: 8px;
                 border-bottom: 1px solid #f0f0f1;
                 position: relative;
-                min-height: 32px;
 
                 .zs-badge.zs-badge-manual {
                     position: static;
