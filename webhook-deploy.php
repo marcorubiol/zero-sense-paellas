@@ -1,5 +1,5 @@
 <?php
-// Fixed webhook deploy script 2    
+// Fixed webhook deploy script   
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
