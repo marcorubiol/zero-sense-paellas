@@ -30,6 +30,19 @@ if (isset($_GET['log'])) {
     exit;
 }
 
+// Test endpoint
+if (isset($_GET['test'])) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'test_ok',
+        'version' => '2.0-UPDATED-' . date('Y-m-d-H-i-s'),
+        'file_modified' => date('Y-m-d H:i:s', filemtime(__FILE__)),
+        'file_path' => __FILE__,
+        'server_time' => date('Y-m-d H:i:s')
+    ]);
+    exit;
+}
+
 // Only POST requests
 $method = $_SERVER['REQUEST_METHOD'] ?? '';
 if ($method !== 'POST') {
@@ -42,10 +55,20 @@ if ($method !== 'POST') {
 log_msg("=== WEBHOOK START ===");
 log_msg("🔥 VERSION: v2.0 - Simplified SHA256/SHA1 Validation");
 log_msg("📅 UPDATED: " . date('Y-m-d H:i:s'));
+log_msg("🚀 FILE MODIFIED: " . date('Y-m-d H:i:s', filemtime(__FILE__)));
 log_msg("Method: {$method}");
 log_msg("User-Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? ''));
 log_msg("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? ''));
 log_msg("Content-Length: " . ($_SERVER['CONTENT_LENGTH'] ?? ''));
+
+// Debug: Log ALL server variables
+log_msg("=== DEBUG: ALL SERVER VARIABLES ===");
+foreach ($_SERVER as $key => $value) {
+    if (strpos($key, 'HTTP_') === 0 || strpos($key, 'CONTENT_') === 0) {
+        log_msg("$key: $value");
+    }
+}
+log_msg("=== END DEBUG ===");
 
 // Get payload
 $payload = file_get_contents('php://input');
