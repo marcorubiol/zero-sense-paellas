@@ -156,6 +156,7 @@ class DepositsCalculatorMetabox
 
                 .zs-badge.zs-badge-manual {
                     position: static;
+                    margin-right: 12px;
                 }
             }
             .zs-deposits-table {

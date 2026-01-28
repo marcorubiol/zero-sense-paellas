@@ -250,7 +250,10 @@ class DataExposer
             case 'event_date':
                 $date = $order->get_meta(MetaKeys::EVENT_DATE);
                 if ($date) {
-                    return date_i18n(get_option('date_format'), strtotime($date));
+                    if (is_numeric($date) && (int) $date == $date) {
+                        return date_i18n(get_option('date_format'), (int) $date);
+                    }
+                    return date_i18n(get_option('date_format'), strtotime((string) $date));
                 }
                 return '';
                 
@@ -300,7 +303,11 @@ class DataExposer
             'city' => $order->get_meta(MetaKeys::CITY),
             'location_link' => $order->get_meta(MetaKeys::LOCATION_LINK),
             'event_date' => $eventDate,
-            'event_date_formatted' => $eventDate ? date_i18n(get_option('date_format'), strtotime($eventDate)) : '',
+            'event_date_formatted' => $eventDate
+                ? (is_numeric($eventDate) && (int) $eventDate == $eventDate
+                    ? date_i18n(get_option('date_format'), (int) $eventDate)
+                    : date_i18n(get_option('date_format'), strtotime((string) $eventDate)))
+                : '',
             'serving_time' => $order->get_meta(MetaKeys::SERVING_TIME),
             'start_time' => $order->get_meta(MetaKeys::START_TIME),
             'event_type' => $eventType,

@@ -50,7 +50,10 @@ class EventDetailsMetabox
         $address = $order->get_meta(MetaKeys::ADDRESS);
         $city = $order->get_meta(MetaKeys::CITY);
         $locationLink = $order->get_meta(MetaKeys::LOCATION_LINK);
-        $eventDate = $order->get_meta(MetaKeys::EVENT_DATE);
+        $eventDateRaw = $order->get_meta(MetaKeys::EVENT_DATE);
+        $eventDateForInput = is_numeric($eventDateRaw)
+            ? (function_exists('wp_date') ? wp_date('Y-m-d', (int) $eventDateRaw) : date('Y-m-d', (int) $eventDateRaw))
+            : $eventDateRaw;
         $servingTime = $order->get_meta(MetaKeys::SERVING_TIME);
         $startTime = $order->get_meta(MetaKeys::START_TIME);
         $eventType = $order->get_meta(MetaKeys::EVENT_TYPE);
@@ -189,7 +192,7 @@ class EventDetailsMetabox
                         <input type="date" 
                                id="event_date" 
                                name="event_date" 
-                               value="<?php echo esc_attr($eventDate); ?>" 
+                               value="<?php echo esc_attr($eventDateForInput); ?>" 
                                class="widefat">
                     </div>
                     
@@ -351,7 +354,13 @@ class EventDetailsMetabox
 
         // Save event timing
         if (isset($_POST['event_date'])) {
-            $order->update_meta_data(MetaKeys::EVENT_DATE, sanitize_text_field($_POST['event_date']));
+            $rawDate = sanitize_text_field((string) $_POST['event_date']);
+            if ($rawDate === '') {
+                $order->update_meta_data(MetaKeys::EVENT_DATE, '');
+            } else {
+                $timestamp = $this->normalizeEventDateToTimestamp($rawDate);
+                $order->update_meta_data(MetaKeys::EVENT_DATE, $timestamp > 0 ? $timestamp : $rawDate);
+            }
         }
         if (isset($_POST['event_serving_time'])) {
             $order->update_meta_data(MetaKeys::SERVING_TIME, sanitize_text_field($_POST['event_serving_time']));
@@ -369,5 +378,32 @@ class EventDetailsMetabox
         }
 
         $order->save();
+    }
+
+    private function normalizeEventDateToTimestamp($value): int
+    {
+        if (is_numeric($value) && (int) $value == $value) {
+            return (int) $value;
+        }
+
+        if (!is_string($value)) {
+            return 0;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            $tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $value, $tz);
+            if ($dt instanceof \DateTimeImmutable) {
+                return $dt->setTime(0, 0, 0)->getTimestamp();
+            }
+        }
+
+        $ts = strtotime($value);
+        return $ts ? (int) $ts : 0;
     }
 }

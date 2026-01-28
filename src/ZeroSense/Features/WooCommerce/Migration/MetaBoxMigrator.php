@@ -30,6 +30,9 @@ class MetaBoxMigrator
         'location' => '_event_location',
     ];
 
+    private const EVENT_DATE_META_BOX_KEY = 'event_date';
+    private const EVENT_DATE_ZEROSENSE_KEY = '_event_date';
+
     private const META_SHIPPING_EMAIL = 'zs_shipping_email';
     private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
     private const META_OPS_MATERIAL = 'zs_ops_material';
@@ -563,13 +566,24 @@ class MetaBoxMigrator
             if ($metabox_value !== '' && $metabox_value !== null) {
                 $existing_value = $order->get_meta($zerosense_key, true);
 
+                $target_value = $metabox_value;
+                if ($metabox_key === self::EVENT_DATE_META_BOX_KEY && $zerosense_key === self::EVENT_DATE_ZEROSENSE_KEY) {
+                    $normalized = $this->normalizeEventDateToTimestamp($metabox_value);
+                    if ($normalized > 0) {
+                        $target_value = $normalized;
+                    }
+                }
+
+                $existing_scalar = is_scalar($existing_value) ? (string) $existing_value : '';
+                $target_scalar = is_scalar($target_value) ? (string) $target_value : '';
+
                 // Force migration if values are different or if ZeroSense field is empty
-                if ($existing_value === '' || $existing_value === null || $existing_value !== $metabox_value) {
-                    $order->update_meta_data($zerosense_key, $metabox_value);
+                if ($existing_scalar === '' || $existing_scalar !== $target_scalar) {
+                    $order->update_meta_data($zerosense_key, $target_value);
                     $migrated_fields[] = [
                         'field' => $zerosense_key,
                         'from' => $metabox_key,
-                        'value' => $metabox_value,
+                        'value' => $target_value,
                         'old_value' => $existing_value,
                     ];
                     error_log('[ZS Migration] Migrated field: ' . $metabox_key . ' -> ' . $zerosense_key . ' (was: ' . var_export($existing_value, true) . ')');
@@ -579,6 +593,18 @@ class MetaBoxMigrator
             } else {
                 error_log('[ZS Migration] Field ' . $metabox_key . ' is empty, skipping');
             }
+        }
+
+        $existing_event_date = $order->get_meta(self::EVENT_DATE_ZEROSENSE_KEY, true);
+        $event_ts = $this->normalizeEventDateToTimestamp($existing_event_date);
+        if ($event_ts > 0 && !(is_numeric($existing_event_date) && (int) $existing_event_date == $existing_event_date)) {
+            $order->update_meta_data(self::EVENT_DATE_ZEROSENSE_KEY, $event_ts);
+            $migrated_fields[] = [
+                'field' => self::EVENT_DATE_ZEROSENSE_KEY,
+                'from' => self::EVENT_DATE_ZEROSENSE_KEY,
+                'value' => $event_ts,
+                'old_value' => $existing_event_date,
+            ];
         }
 
         $shipping_migrated = $this->migrateShippingEmail($order);
@@ -706,6 +732,16 @@ class MetaBoxMigrator
             $metabox_value = $order->get_meta($metabox_key, true);
             $zerosense_value = $order->get_meta($zerosense_key, true);
 
+            if ($metabox_key === self::EVENT_DATE_META_BOX_KEY && $zerosense_key === self::EVENT_DATE_ZEROSENSE_KEY) {
+                $normalized = $this->normalizeEventDateToTimestamp($metabox_value);
+                if ($normalized > 0) {
+                    $metabox_value = (string) $normalized;
+                }
+                if (is_string($zerosense_value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $zerosense_value)) {
+                    return true;
+                }
+            }
+
             if (($metabox_value !== '' && $metabox_value !== null) &&
                 ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
                 return true;
@@ -738,6 +774,33 @@ class MetaBoxMigrator
         }
 
         return false;
+    }
+
+    private function normalizeEventDateToTimestamp($value): int
+    {
+        if (is_numeric($value) && (int) $value == $value) {
+            return (int) $value;
+        }
+
+        if (!is_string($value)) {
+            return 0;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            $tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $value, $tz);
+            if ($dt instanceof \DateTimeImmutable) {
+                return $dt->setTime(0, 0, 0)->getTimestamp();
+            }
+        }
+
+        $ts = strtotime($value);
+        return $ts ? (int) $ts : 0;
     }
 
     private function getWatchedMetaKeys(): array
