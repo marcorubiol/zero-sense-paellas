@@ -27,7 +27,7 @@ rotate_log_if_needed();
 file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
 
 // Config
-$secret = 'zerosense-deploy-secret-2026';
+$secret = $_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? 'zerosense-deploy-secret-2026';
 $staging_path = '/home/OeTjuWhiCsmAoG0K/STGpaellasEnCasa/public_html/wp-content/plugins/zero-sense';
 $log_token = 'zerosense-log-2026';
 
