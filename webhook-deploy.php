@@ -4,16 +4,17 @@ header('X-Webhook-Version: 2.0-UPDATED-' . date('Y-m-d-H-i-s'));
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
+// Log (versioned to avoid mixing with older runs)
+$log_file = '/tmp/webhook-deploy-v21.log';
+
 // FORCE LOG AT THE VERY BEGINNING
-file_put_contents('/tmp/webhook-deploy.log', date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
+file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
 
 // Config
 $secret = 'zerosense-deploy-secret-2026';
 $staging_path = '/home/OeTjuWhiCsmAoG0K/STGpaellasEnCasa/public_html/wp-content/plugins/zero-sense';
 $log_token = 'zerosense-log-2026';
 
-// Log
-$log_file = '/tmp/webhook-deploy.log';
 function log_msg($msg) {
     global $log_file;
     file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
@@ -86,10 +87,23 @@ foreach ($_SERVER as $name => $value) {
     }
 }
 
-$signature_sha256 = $headers['X-Hub-Signature-256'] ?? '';
-$signature_sha1 = $headers['X-Hub-Signature'] ?? '';
-$event = $headers['X-GitHub-Event'] ?? '';
-$delivery = $headers['X-GitHub-Delivery'] ?? '';
+// Prefer direct $_SERVER vars (these are the canonical way in PHP)
+$signature_sha256 = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
+$signature_sha1 = $_SERVER['HTTP_X_HUB_SIGNATURE'] ?? '';
+$event = $_SERVER['HTTP_X_GITHUB_EVENT'] ?? '';
+$delivery = $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '';
+
+// Fallback: case-insensitive lookup in $headers (because array keys are case-sensitive)
+if (!$signature_sha256 || !$signature_sha1 || !$event || !$delivery) {
+    $headers_lc = [];
+    foreach ($headers as $k => $v) {
+        $headers_lc[strtolower($k)] = $v;
+    }
+    $signature_sha256 = $signature_sha256 ?: ($headers_lc['x-hub-signature-256'] ?? '');
+    $signature_sha1 = $signature_sha1 ?: ($headers_lc['x-hub-signature'] ?? '');
+    $event = $event ?: ($headers_lc['x-github-event'] ?? '');
+    $delivery = $delivery ?: ($headers_lc['x-github-delivery'] ?? '');
+}
 
 log_msg("Event: $event");
 log_msg("Delivery: $delivery");
