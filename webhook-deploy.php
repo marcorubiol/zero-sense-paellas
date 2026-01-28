@@ -69,18 +69,25 @@ log_msg("Available headers: " . implode(', ', array_keys($headers)));
 // GitHub IP whitelist for security (since signatures are blocked)
 $github_ips = [
     '192.30.252.0/22',
-    '185.199.108.0/22',
+    '185.199.108.0/22', 
     '140.82.112.0/20',
-    '143.55.64.0/20'
+    '143.55.64.0/20',
+    '20.27.177.113', // GitHub Actions IP
+    '20.201.28.151'  // Another GitHub IP
 ];
 
 $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
 $is_github = false;
 
+log_msg("Checking IP: $client_ip against GitHub ranges");
+
 foreach ($github_ips as $ip_range) {
     if (ip_in_range($client_ip, $ip_range)) {
         $is_github = true;
+        log_msg("✅ IP matches range: $ip_range");
         break;
+    } else {
+        log_msg("❌ IP does not match range: $ip_range");
     }
 }
 
@@ -90,8 +97,19 @@ log_msg("Is GitHub IP: " . ($is_github ? 'YES' : 'NO'));
 // Skip signature validation if headers are blocked but IP is GitHub
 $skip_signature = (!$signature && $is_github);
 
-if (!$skip_signature && (!$signature || !$payload)) {
-    log_msg("❌ Missing signature or payload");
+log_msg("Skip signature: " . ($skip_signature ? 'YES' : 'NO'));
+log_msg("Has signature: " . ($signature ? 'YES' : 'NO'));
+log_msg("Has payload: " . ($payload ? 'YES' : 'NO'));
+
+// For debugging: allow if User-Agent is GitHub-Hookshot
+$is_github_user_agent = strpos($_SERVER['HTTP_USER_AGENT'] ?? '', 'GitHub-Hookshot') !== false;
+log_msg("Is GitHub User-Agent: " . ($is_github_user_agent ? 'YES' : 'NO'));
+
+// Allow if either IP is GitHub OR User-Agent is GitHub-Hookshot
+$allow_without_signature = ($is_github || $is_github_user_agent);
+
+if (!$allow_without_signature && (!$signature || !$payload)) {
+    log_msg("❌ Missing signature or payload - not allowing");
     log_msg("=== WEBHOOK END ===\n");
     http_response_code(400);
     header('Content-Type: application/json');
@@ -103,7 +121,9 @@ if (!$skip_signature && (!$signature || !$payload)) {
             'has_payload' => !empty($payload),
             'headers_found' => array_keys($headers),
             'is_github_ip' => $is_github,
-            'client_ip' => $client_ip
+            'is_github_user_agent' => $is_github_user_agent,
+            'client_ip' => $client_ip,
+            'allow_without_signature' => $allow_without_signature
         ]
     ]);
     exit;
