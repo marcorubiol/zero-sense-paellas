@@ -1,4 +1,4 @@
-Test 
+Test 3 
 # Zerø Sense v3 — Technical Guide
 
 Modern, modular WordPress plugin for Paellas en Casa. PSR-4, auto-discovered features, zero external UI dependencies. Built for humans and AI agents to understand and extend quickly.
