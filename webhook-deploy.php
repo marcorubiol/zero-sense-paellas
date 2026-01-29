@@ -28,7 +28,7 @@ file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ==
 
 // Config
 $secret = (string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? ''));
-$staging_path = '/home/OeTjuWhiCsmAoG0K/STGpaellasEnCasa/public_html/wp-content/plugins/zero-sense';
+$staging_path = detect_zero_sense_plugin_dir(__DIR__);
 $log_token = (string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? ''));
 
 function log_msg($msg) {
@@ -706,6 +706,32 @@ function rrmdir(string $dir): void {
         }
     }
     @rmdir($dir);
+}
+
+function detect_zero_sense_plugin_dir(string $start_dir): string {
+    $start_dir = rtrim($start_dir, '/');
+
+    // Case 1: script is already inside the plugin directory
+    if (file_exists($start_dir . '/zero-sense.php')) {
+        return $start_dir;
+    }
+
+    // Case 2: script is somewhere under WP root; walk up and look for wp-content/plugins/zero-sense
+    $dir = $start_dir;
+    for ($i = 0; $i <= 10; $i++) {
+        $candidate = $dir . '/wp-content/plugins/zero-sense/zero-sense.php';
+        if (file_exists($candidate)) {
+            return dirname($candidate);
+        }
+        $parent = dirname($dir);
+        if (!$parent || $parent === $dir || $parent === '/') {
+            break;
+        }
+        $dir = $parent;
+    }
+
+    // Fallback (better than hardcoded path): assume plugin folder is next to this script
+    return $start_dir;
 }
 
 // Response

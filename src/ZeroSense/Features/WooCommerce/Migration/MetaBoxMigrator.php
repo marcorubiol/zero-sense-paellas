@@ -12,6 +12,25 @@ use WC_Order;
 class MetaBoxMigrator
 {
     private const FIELD_MAPPING = [
+        'total_guests' => 'zs_event_total_guests',
+        'adults' => 'zs_event_adults',
+        'children_5_to_8' => 'zs_event_children_5_to_8',
+        'children_0_to_4' => 'zs_event_children_0_to_4',
+        'event_service_location' => 'zs_event_service_location',
+        'event_address' => 'zs_event_address',
+        'event_city' => 'zs_event_city',
+        'location_link' => 'zs_event_location_link',
+        'event_date' => 'zs_event_date',
+        'serving_time' => 'zs_event_serving_time',
+        'event_start_time' => 'zs_event_start_time',
+        'event_type' => 'zs_event_type',
+        'how_found_us' => 'zs_event_how_found_us',
+        'promo_code' => 'zs_event_promo_code',
+        'intolerances' => 'zs_event_intolerances',
+        'location' => 'zs_event_location',
+    ];
+
+    private const LEGACY_EVENT_MAPPING = [
         'total_guests' => '_event_total_guests',
         'adults' => '_event_adults',
         'children_5_to_8' => '_event_children_5_to_8',
@@ -31,7 +50,7 @@ class MetaBoxMigrator
     ];
 
     private const EVENT_DATE_META_BOX_KEY = 'event_date';
-    private const EVENT_DATE_ZEROSENSE_KEY = '_event_date';
+    private const EVENT_DATE_ZEROSENSE_KEY = 'zs_event_date';
 
     private const META_SHIPPING_EMAIL = 'zs_shipping_email';
     private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
@@ -563,6 +582,16 @@ class MetaBoxMigrator
                 error_log('[ZS Migration] Legacy read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
             }
 
+            if ($metabox_value === '' || $metabox_value === null) {
+                $legacyKey = self::LEGACY_EVENT_MAPPING[$metabox_key] ?? null;
+                if (is_string($legacyKey) && $legacyKey !== '') {
+                    $legacyValue = $order->get_meta($legacyKey, true);
+                    if ($legacyValue !== '' && $legacyValue !== null) {
+                        $metabox_value = $legacyValue;
+                    }
+                }
+            }
+
             if ($metabox_value !== '' && $metabox_value !== null) {
                 $existing_value = $order->get_meta($zerosense_key, true);
 
@@ -605,6 +634,10 @@ class MetaBoxMigrator
                 'value' => $event_ts,
                 'old_value' => $existing_event_date,
             ];
+        }
+
+        foreach (array_values(self::LEGACY_EVENT_MAPPING) as $legacyKey) {
+            $order->delete_meta_data($legacyKey);
         }
 
         $shipping_migrated = $this->migrateShippingEmail($order);
@@ -808,6 +841,7 @@ class MetaBoxMigrator
         return array_values(array_unique(array_merge(
             array_keys(self::FIELD_MAPPING),
             array_values(self::FIELD_MAPPING),
+            array_values(self::LEGACY_EVENT_MAPPING),
             [self::META_SHIPPING_EMAIL, self::META_SHIPPING_EMAIL_WOO, self::META_OPS_MATERIAL]
         )));
     }

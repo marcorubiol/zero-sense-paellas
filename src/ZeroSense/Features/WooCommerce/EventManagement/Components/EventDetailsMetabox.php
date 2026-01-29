@@ -7,6 +7,38 @@ use ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions;
 
 class EventDetailsMetabox
 {
+    private const LEGACY_META_KEYS = [
+        MetaKeys::TOTAL_GUESTS => 'total_guests',
+        MetaKeys::ADULTS => 'adults',
+        MetaKeys::CHILDREN_5_TO_8 => 'children_5_to_8',
+        MetaKeys::CHILDREN_0_TO_4 => 'children_0_to_4',
+        MetaKeys::SERVICE_LOCATION => 'event_service_location',
+        MetaKeys::ADDRESS => 'event_address',
+        MetaKeys::CITY => 'event_city',
+        MetaKeys::LOCATION_LINK => 'location_link',
+        MetaKeys::EVENT_DATE => 'event_date',
+        MetaKeys::SERVING_TIME => 'serving_time',
+        MetaKeys::START_TIME => 'event_start_time',
+        MetaKeys::EVENT_TYPE => 'event_type',
+        MetaKeys::HOW_FOUND_US => 'how_found_us',
+    ];
+
+    private const LEGACY_EVENT_KEYS = [
+        MetaKeys::TOTAL_GUESTS => '_event_total_guests',
+        MetaKeys::ADULTS => '_event_adults',
+        MetaKeys::CHILDREN_5_TO_8 => '_event_children_5_to_8',
+        MetaKeys::CHILDREN_0_TO_4 => '_event_children_0_to_4',
+        MetaKeys::SERVICE_LOCATION => '_event_service_location',
+        MetaKeys::ADDRESS => '_event_address',
+        MetaKeys::CITY => '_event_city',
+        MetaKeys::LOCATION_LINK => '_event_location_link',
+        MetaKeys::EVENT_DATE => '_event_date',
+        MetaKeys::SERVING_TIME => '_event_serving_time',
+        MetaKeys::START_TIME => '_event_start_time',
+        MetaKeys::EVENT_TYPE => '_event_type',
+        MetaKeys::HOW_FOUND_US => '_event_how_found_us',
+    ];
+
     public function register(): void
     {
         if (!is_admin()) {
@@ -42,22 +74,22 @@ class EventDetailsMetabox
         }
 
         // Get values
-        $totalGuests = $order->get_meta(MetaKeys::TOTAL_GUESTS);
-        $adults = $order->get_meta(MetaKeys::ADULTS);
-        $children5to8 = $order->get_meta(MetaKeys::CHILDREN_5_TO_8);
-        $children0to4 = $order->get_meta(MetaKeys::CHILDREN_0_TO_4);
-        $serviceLocation = $order->get_meta(MetaKeys::SERVICE_LOCATION);
-        $address = $order->get_meta(MetaKeys::ADDRESS);
-        $city = $order->get_meta(MetaKeys::CITY);
-        $locationLink = $order->get_meta(MetaKeys::LOCATION_LINK);
-        $eventDateRaw = $order->get_meta(MetaKeys::EVENT_DATE);
+        $totalGuests = $this->getOrderMetaWithFallback($order, MetaKeys::TOTAL_GUESTS);
+        $adults = $this->getOrderMetaWithFallback($order, MetaKeys::ADULTS);
+        $children5to8 = $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_5_TO_8);
+        $children0to4 = $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_0_TO_4);
+        $serviceLocation = $this->getOrderMetaWithFallback($order, MetaKeys::SERVICE_LOCATION);
+        $address = $this->getOrderMetaWithFallback($order, MetaKeys::ADDRESS);
+        $city = $this->getOrderMetaWithFallback($order, MetaKeys::CITY);
+        $locationLink = $this->getOrderMetaWithFallback($order, MetaKeys::LOCATION_LINK);
+        $eventDateRaw = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
         $eventDateForInput = is_numeric($eventDateRaw)
             ? (function_exists('wp_date') ? wp_date('Y-m-d', (int) $eventDateRaw) : date('Y-m-d', (int) $eventDateRaw))
             : $eventDateRaw;
-        $servingTime = $order->get_meta(MetaKeys::SERVING_TIME);
-        $startTime = $order->get_meta(MetaKeys::START_TIME);
-        $eventType = $order->get_meta(MetaKeys::EVENT_TYPE);
-        $howFoundUs = $order->get_meta(MetaKeys::HOW_FOUND_US);
+        $servingTime = $this->getOrderMetaWithFallback($order, MetaKeys::SERVING_TIME);
+        $startTime = $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
+        $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
+        $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
         
         wp_nonce_field('zs_event_details_save', 'zs_event_details_nonce');
         ?>
@@ -405,5 +437,28 @@ class EventDetailsMetabox
 
         $ts = strtotime($value);
         return $ts ? (int) $ts : 0;
+    }
+
+    private function getOrderMetaWithFallback(WC_Order $order, string $key)
+    {
+        $value = $order->get_meta($key, true);
+        if ($value !== '' && $value !== null) {
+            return $value;
+        }
+
+        $legacyMetaBoxKey = self::LEGACY_META_KEYS[$key] ?? null;
+        if (is_string($legacyMetaBoxKey) && $legacyMetaBoxKey !== '') {
+            $legacyValue = $order->get_meta($legacyMetaBoxKey, true);
+            if ($legacyValue !== '' && $legacyValue !== null) {
+                return $legacyValue;
+            }
+        }
+
+        $legacyEventKey = self::LEGACY_EVENT_KEYS[$key] ?? null;
+        if (is_string($legacyEventKey) && $legacyEventKey !== '') {
+            return $order->get_meta($legacyEventKey, true);
+        }
+
+        return '';
     }
 }

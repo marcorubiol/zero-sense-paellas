@@ -4,25 +4,25 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Support;
 class MetaKeys
 {
     // Guest Information
-    public const TOTAL_GUESTS = '_event_total_guests';
-    public const ADULTS = '_event_adults';
-    public const CHILDREN_5_TO_8 = '_event_children_5_to_8';
-    public const CHILDREN_0_TO_4 = '_event_children_0_to_4';
+    public const TOTAL_GUESTS = 'zs_event_total_guests';
+    public const ADULTS = 'zs_event_adults';
+    public const CHILDREN_5_TO_8 = 'zs_event_children_5_to_8';
+    public const CHILDREN_0_TO_4 = 'zs_event_children_0_to_4';
     
     // Location Information
-    public const SERVICE_LOCATION = '_event_service_location';
-    public const ADDRESS = '_event_address';
-    public const CITY = '_event_city';
-    public const LOCATION_LINK = '_event_location_link';
+    public const SERVICE_LOCATION = 'zs_event_service_location';
+    public const ADDRESS = 'zs_event_address';
+    public const CITY = 'zs_event_city';
+    public const LOCATION_LINK = 'zs_event_location_link';
     
     // Event Timing
-    public const EVENT_DATE = '_event_date';
-    public const SERVING_TIME = '_event_serving_time';
-    public const START_TIME = '_event_start_time';
+    public const EVENT_DATE = 'zs_event_date';
+    public const SERVING_TIME = 'zs_event_serving_time';
+    public const START_TIME = 'zs_event_start_time';
     
     // Event Details
-    public const EVENT_TYPE = '_event_type';
-    public const HOW_FOUND_US = '_event_how_found_us';
+    public const EVENT_TYPE = 'zs_event_type';
+    public const HOW_FOUND_US = 'zs_event_how_found_us';
     
     /**
      * Get all meta keys as array
