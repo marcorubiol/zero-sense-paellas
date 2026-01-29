@@ -83,6 +83,7 @@ class EventDetailsMetabox
         $city = $this->getOrderMetaWithFallback($order, MetaKeys::CITY);
         $locationLink = $this->getOrderMetaWithFallback($order, MetaKeys::LOCATION_LINK);
         $eventDateRaw = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
+        $teamArrivalTime = $this->getOrderMetaWithFallback($order, MetaKeys::TEAM_ARRIVAL_TIME);
         $eventDateForInput = is_numeric($eventDateRaw)
             ? (function_exists('wp_date') ? wp_date('Y-m-d', (int) $eventDateRaw) : date('Y-m-d', (int) $eventDateRaw))
             : $eventDateRaw;
@@ -90,6 +91,7 @@ class EventDetailsMetabox
         $startTime = $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
         $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
         $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
+        $intolerances = $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
         
         wp_nonce_field('zs_event_details_save', 'zs_event_details_nonce');
         ?>
@@ -218,6 +220,17 @@ class EventDetailsMetabox
                 
                 <div class="zs-field-row">
                     <div class="zs-field">
+                        <label for="event_team_arrival_time">
+                            <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_team_arrival_time" 
+                               name="event_team_arrival_time" 
+                               value="<?php echo esc_attr($teamArrivalTime); ?>" 
+                               class="widefat">
+                    </div>
+
+                    <div class="zs-field">
                         <label for="event_date">
                             <?php esc_html_e('Event Date', 'zero-sense'); ?>
                         </label>
@@ -230,7 +243,7 @@ class EventDetailsMetabox
                     
                     <div class="zs-field">
                         <label for="event_serving_time">
-                            <?php esc_html_e('Serving Time', 'zero-sense'); ?>
+                            <?php esc_html_e('Service time', 'zero-sense'); ?>
                         </label>
                         <input type="time" 
                                id="event_serving_time" 
@@ -241,7 +254,7 @@ class EventDetailsMetabox
                     
                     <div class="zs-field">
                         <label for="event_start_time">
-                            <?php esc_html_e('Event Start Time', 'zero-sense'); ?>
+                            <?php esc_html_e('Event start time', 'zero-sense'); ?>
                         </label>
                         <input type="time" 
                                id="event_start_time" 
@@ -284,6 +297,13 @@ class EventDetailsMetabox
                             <?php endforeach; ?>
                         </select>
                     </div>
+                </div>
+
+                <div class="zs-field">
+                    <label for="event_intolerances">
+                        <?php esc_html_e('Allergies / intolerances', 'zero-sense'); ?>
+                    </label>
+                    <textarea id="event_intolerances" name="event_intolerances" rows="4" class="widefat"><?php echo esc_textarea(is_string($intolerances) ? $intolerances : ''); ?></textarea>
                 </div>
             </div>
         </div>
@@ -394,6 +414,9 @@ class EventDetailsMetabox
                 $order->update_meta_data(MetaKeys::EVENT_DATE, $timestamp > 0 ? $timestamp : $rawDate);
             }
         }
+        if (isset($_POST['event_team_arrival_time'])) {
+            $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, sanitize_text_field((string) $_POST['event_team_arrival_time']));
+        }
         if (isset($_POST['event_serving_time'])) {
             $order->update_meta_data(MetaKeys::SERVING_TIME, sanitize_text_field($_POST['event_serving_time']));
         }
@@ -407,6 +430,9 @@ class EventDetailsMetabox
         }
         if (isset($_POST['event_how_found_us'])) {
             $order->update_meta_data(MetaKeys::HOW_FOUND_US, sanitize_text_field($_POST['event_how_found_us']));
+        }
+        if (isset($_POST['event_intolerances'])) {
+            $order->update_meta_data(MetaKeys::INTOLERANCES, sanitize_textarea_field((string) $_POST['event_intolerances']));
         }
 
         $order->save();

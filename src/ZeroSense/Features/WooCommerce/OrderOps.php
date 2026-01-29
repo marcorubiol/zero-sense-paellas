@@ -11,42 +11,45 @@ class OrderOps implements FeatureInterface
     private const META_SHIPPING_EMAIL = 'zs_shipping_email';
     private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
 
-    private const MATERIAL_LEGACY_KEY_MAP = [
-        'black_tablecloths' => 'teles_negres',
-        'cart' => 'carreto',
-        'work_tables' => 'taules_treball',
-        'paella_pans' => 'paelles',
-        'burners' => 'cremadors',
-        'tripods_legs' => 'potes_tripodes',
-        'butane' => 'buta',
-        'hose' => 'manguera',
-        'parasols' => 'para_sols',
-        'tent' => 'carpa',
-        'lighting' => 'llum',
-        'water_fountain_8l' => 'font_aigua_8l',
-        'trash_buckets' => 'poals_fems',
-        'coolers' => 'neveres',
-        'other' => 'altres',
-    ];
+    private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
-    private const MATERIAL_ITEMS = [
-        'vehicle' => ['label' => 'Vehicle', 'type' => 'text'],
-        'black_tablecloths' => ['label' => 'Black tablecloths', 'type' => 'qty_int'],
-        'cart' => ['label' => 'Cart', 'type' => 'bool'],
-        'work_tables' => ['label' => 'Work tables', 'type' => 'qty_int'],
-        'paella_pans' => ['label' => 'Paella pans', 'type' => 'qty_int'],
-        'burners' => ['label' => 'Burners', 'type' => 'qty_int'],
-        'tripods_legs' => ['label' => 'Tripods / legs', 'type' => 'qty_int'],
-        'butane' => ['label' => 'Butane', 'type' => 'qty_int'],
-        'hose' => ['label' => 'Hose', 'type' => 'bool'],
-        'parasols' => ['label' => 'Parasols', 'type' => 'qty_int'],
-        'tent' => ['label' => 'Tent', 'type' => 'bool'],
-        'lighting' => ['label' => 'Lighting', 'type' => 'qty_int'],
-        'water_fountain_8l' => ['label' => 'Water fountain (8L)', 'type' => 'qty_int'],
-        'trash_buckets' => ['label' => 'Trash buckets', 'type' => 'qty_int'],
-        'coolers' => ['label' => 'Coolers', 'type' => 'qty_int'],
-        'other' => ['label' => 'Other', 'type' => 'textarea'],
-    ];
+
+    private function getMaterialItems(): array
+    {
+        $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
+        if (!is_array($schema) || $schema === []) {
+            return [];
+        }
+
+        $allowed = ['text', 'qty_int', 'bool', 'textarea'];
+        $items = [];
+
+        foreach ($schema as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $key = isset($row['key']) ? sanitize_key((string) $row['key']) : '';
+            $label = isset($row['label']) ? sanitize_text_field((string) $row['label']) : '';
+            $type = isset($row['type']) ? sanitize_key((string) $row['type']) : 'text';
+
+            if ($key === '' || $label === '') {
+                continue;
+            }
+
+            if (!in_array($type, $allowed, true)) {
+                $type = 'text';
+            }
+
+            $name = 'ops_material_label_' . $key;
+            $translated = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
+            $finalLabel = is_string($translated) && $translated !== '' ? $translated : $label;
+
+            $items[$key] = ['label' => $finalLabel, 'type' => $type];
+        }
+
+        return $items;
+    }
 
     public function getName(): string
     {
@@ -145,13 +148,23 @@ class OrderOps implements FeatureInterface
         $material = $order->get_meta(self::META_OPS_MATERIAL, true);
         $material = is_array($material) ? $material : [];
 
+        $items = $this->getMaterialItems();
+
         wp_nonce_field('zs_order_ops_save', 'zs_order_ops_nonce');
+
+        if ($items === []) {
+            $url = admin_url('admin.php?page=zs_ops_material_schema');
+            echo '<p>';
+            echo esc_html__('Material & Logistics fields are not configured yet.', 'zero-sense') . ' ';
+            echo '<a href="' . esc_url($url) . '">' . esc_html__('Configure schema', 'zero-sense') . '</a>';
+            echo '</p>';
+            return;
+        }
         ?>
         <table class="widefat striped" style="margin-top:8px;">
             <tbody>
-            <?php foreach (self::MATERIAL_ITEMS as $key => $item) :
-                $legacyKey = self::MATERIAL_LEGACY_KEY_MAP[$key] ?? null;
-                $raw = $material[$key] ?? ($legacyKey ? ($material[$legacyKey] ?? []) : []);
+            <?php foreach ($items as $key => $item) :
+                $raw = $material[$key] ?? [];
                 $value = is_array($raw) ? ($raw['value'] ?? '') : $raw;
                 $type = $item['type'];
                 ?>
@@ -241,14 +254,14 @@ class OrderOps implements FeatureInterface
             $order->update_meta_data(self::META_OPS_NOTES, sanitize_textarea_field((string) $_POST['zs_ops_notes']));
         }
 
-        if (isset($_POST['zs_ops_material']) && is_array($_POST['zs_ops_material'])) {
+        $items = $this->getMaterialItems();
+        if ($items !== [] && isset($_POST['zs_ops_material']) && is_array($_POST['zs_ops_material'])) {
             $incoming = $_POST['zs_ops_material'];
             $saved = [];
 
-            foreach (self::MATERIAL_ITEMS as $key => $item) {
+            foreach ($items as $key => $item) {
                 $type = $item['type'];
-                $legacyKey = self::MATERIAL_LEGACY_KEY_MAP[$key] ?? null;
-                $raw = $incoming[$key] ?? ($legacyKey ? ($incoming[$legacyKey] ?? null) : null);
+                $raw = $incoming[$key] ?? null;
 
                 if ($type === 'bool') {
                     $value = $raw === '1' ? '1' : '0';

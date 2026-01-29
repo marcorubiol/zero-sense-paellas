@@ -61,23 +61,8 @@ class BricksDynamicTags implements FeatureInterface
         'other' => 'Other',
     ];
 
-    private const OPS_MATERIAL_LEGACY_KEY_MAP = [
-        'black_tablecloths' => 'teles_negres',
-        'cart' => 'carreto',
-        'work_tables' => 'taules_treball',
-        'paella_pans' => 'paelles',
-        'burners' => 'cremadors',
-        'tripods_legs' => 'potes_tripodes',
-        'butane' => 'buta',
-        'hose' => 'manguera',
-        'parasols' => 'para_sols',
-        'tent' => 'carpa',
-        'lighting' => 'llum',
-        'water_fountain_8l' => 'font_aigua_8l',
-        'trash_buckets' => 'poals_fems',
-        'coolers' => 'neveres',
-        'other' => 'altres',
-    ];
+    private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
+
 
     private const META_BOX_FIELDS = [
         'total_guests' => 'Total Guests',
@@ -214,7 +199,7 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
-        foreach (self::OPS_MATERIAL_FIELDS as $field => $label) {
+        foreach ($this->getOpsMaterialFields() as $field => $label) {
             $tags[] = [
                 'name' => '{woo_ops_material_' . $field . '}',
                 'label' => $label,
@@ -223,6 +208,32 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return $tags;
+    }
+
+    private function getOpsMaterialFields(): array
+    {
+        $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
+        if (!is_array($schema) || $schema === []) {
+            return self::OPS_MATERIAL_FIELDS;
+        }
+
+        $fields = [];
+        foreach ($schema as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $key = isset($row['key']) ? sanitize_key((string) $row['key']) : '';
+            $label = isset($row['label']) ? sanitize_text_field((string) $row['label']) : '';
+            if ($key === '' || $label === '') {
+                continue;
+            }
+
+            $name = 'ops_material_label_' . $key;
+            $translated = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
+            $fields[$key] = is_string($translated) && $translated !== '' ? $translated : $label;
+        }
+
+        return $fields !== [] ? $fields : self::OPS_MATERIAL_FIELDS;
     }
 
     /**
@@ -396,8 +407,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $legacyKey = self::OPS_MATERIAL_LEGACY_KEY_MAP[$field] ?? null;
-        $entry = $raw[$field] ?? ($legacyKey ? ($raw[$legacyKey] ?? null) : null);
+        $entry = $raw[$field] ?? null;
         if (is_array($entry) && array_key_exists('value', $entry)) {
             $entry = $entry['value'];
         }

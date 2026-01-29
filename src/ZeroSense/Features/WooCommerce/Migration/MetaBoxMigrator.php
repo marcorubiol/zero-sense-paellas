@@ -56,23 +56,6 @@ class MetaBoxMigrator
     private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
     private const META_OPS_MATERIAL = 'zs_ops_material';
 
-    private const OPS_MATERIAL_LEGACY_KEY_MAP = [
-        'teles_negres' => 'black_tablecloths',
-        'carreto' => 'cart',
-        'taules_treball' => 'work_tables',
-        'paelles' => 'paella_pans',
-        'cremadors' => 'burners',
-        'potes_tripodes' => 'tripods_legs',
-        'buta' => 'butane',
-        'manguera' => 'hose',
-        'para_sols' => 'parasols',
-        'carpa' => 'tent',
-        'llum' => 'lighting',
-        'font_aigua_8l' => 'water_fountain_8l',
-        'poals_fems' => 'trash_buckets',
-        'neveres' => 'coolers',
-        'altres' => 'other',
-    ];
 
     public function getMigrationStatus(): array
     {
@@ -721,19 +704,6 @@ class MetaBoxMigrator
         $normalized = $raw;
         $changed = false;
 
-        foreach (self::OPS_MATERIAL_LEGACY_KEY_MAP as $legacyKey => $canonicalKey) {
-            if (!array_key_exists($legacyKey, $normalized)) {
-                continue;
-            }
-
-            if (!array_key_exists($canonicalKey, $normalized)) {
-                $normalized[$canonicalKey] = $normalized[$legacyKey];
-                $changed = true;
-            }
-
-            unset($normalized[$legacyKey]);
-            $changed = true;
-        }
 
         foreach ($normalized as $k => $v) {
             if (is_array($v)) {
@@ -793,11 +763,6 @@ class MetaBoxMigrator
 
         $material = $order->get_meta(self::META_OPS_MATERIAL, true);
         if (is_array($material)) {
-            foreach (array_keys(self::OPS_MATERIAL_LEGACY_KEY_MAP) as $legacyKey) {
-                if (array_key_exists($legacyKey, $material)) {
-                    return true;
-                }
-            }
 
             foreach ($material as $v) {
                 if (!is_array($v) && is_scalar($v)) {
