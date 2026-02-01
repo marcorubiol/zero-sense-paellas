@@ -3,11 +3,21 @@
     color: #666;
     font-family: monospace;
     font-size: 11px;
-    display: block;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.zs-ops-key-info {
+    color: #999;
+    font-size: 14px;
+    margin-left: 4px;
+    cursor: help;
+}
+.zs-ops-key-info:hover {
+    color: #0073aa;
 }
 .zs-ops-drag-handle {
     cursor: move;
