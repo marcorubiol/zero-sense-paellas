@@ -113,10 +113,10 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                             ?>
                             <tr>
                                 <td>
-                                    <input type="text" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="regular-text" placeholder="e.g. work_tables">
+                                    <input type="text" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="regular-text zs-ops-key-field" readonly>
                                 </td>
                                 <td>
-                                    <input type="text" name="zs_ops_material_schema[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text" style="width:100%;" placeholder="e.g. Work tables">
+                                    <input type="text" name="zs_ops_material_schema[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. Work tables">
                                 </td>
                                 <td>
                                     <select name="zs_ops_material_schema[type][]" style="width:100%;">
@@ -145,6 +145,24 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     var addBtn = document.getElementById('zs-ops-schema-add');
                     if (!tbody || !addBtn) return;
 
+                    function generateKeyFromLabel(label) {
+                        return label.toLowerCase()
+                            .replace(/[^a-z0-9\s-]/g, '')
+                            .replace(/\s+/g, '_')
+                            .replace(/-+/g, '_')
+                            .replace(/^_+|_+$/g, '')
+                            .substring(0, 50);
+                    }
+
+                    function updateKeyField(labelField, keyField) {
+                        var label = labelField.value.trim();
+                        if (label) {
+                            keyField.value = generateKeyFromLabel(label);
+                        } else {
+                            keyField.value = '';
+                        }
+                    }
+
                     function bindRemoveButtons(scope) {
                         var buttons = (scope || document).querySelectorAll('.zs-ops-schema-remove');
                         buttons.forEach(function(btn) {
@@ -155,13 +173,26 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         });
                     }
 
+                    function bindLabelChange(scope) {
+                        var labelFields = (scope || document).querySelectorAll('.zs-ops-label-field');
+                        labelFields.forEach(function(labelField) {
+                            var tr = labelField.closest('tr');
+                            var keyField = tr.querySelector('.zs-ops-key-field');
+                            
+                            labelField.addEventListener('input', function() {
+                                updateKeyField(labelField, keyField);
+                            });
+                        });
+                    }
+
                     bindRemoveButtons();
+                    bindLabelChange();
 
                     addBtn.addEventListener('click', function() {
                         var tr = document.createElement('tr');
                         tr.innerHTML = '' +
-                            '<td><input type="text" name="zs_ops_material_schema[key][]" class="regular-text" placeholder="e.g. new_field"></td>' +
-                            '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text" style="width:100%;" placeholder="e.g. New field"></td>' +
+                            '<td><input type="text" name="zs_ops_material_schema[key][]" class="regular-text zs-ops-key-field" readonly></td>' +
+                            '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. New field"></td>' +
                             '<td>' +
                                 '<select name="zs_ops_material_schema[type][]" style="width:100%;">' +
                                     <?php
@@ -177,6 +208,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
 
                         tbody.appendChild(tr);
                         bindRemoveButtons(tr);
+                        bindLabelChange(tr);
                     });
                 })();
             </script>

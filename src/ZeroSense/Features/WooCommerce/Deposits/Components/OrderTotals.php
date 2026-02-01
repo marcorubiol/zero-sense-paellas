@@ -46,10 +46,7 @@ class OrderTotals
         }
 
         $depositAmount = $depositInfo['deposit_amount'] ?? 0;
-        $balanceAmount = (float) MetaKeys::get($order, MetaKeys::BALANCE_AMOUNT);
-        if ($balanceAmount <= 0) {
-            $balanceAmount = max(0, (float) $order->get_total() - (float) $depositAmount);
-        }
+        $remainingAmount = $depositInfo['remaining_amount'] ?? 0;
         ?>
         <tr>
             <td class="label"><?php esc_html_e('Deposit Amount:', 'zero-sense'); ?></td>
@@ -58,19 +55,19 @@ class OrderTotals
                 <?php echo wc_price($depositAmount, ['currency' => $order->get_currency()]); ?>
             </td>
         </tr>
-        <?php if ($balanceAmount > 0) : ?>
+        <?php if ($remainingAmount > 0) : ?>
             <tr>
-                <td class="label"><?php esc_html_e('Balance:', 'zero-sense'); ?></td>
+                <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
                 <td width="1%"></td>
                 <td class="total">
-                    <?php echo wc_price($balanceAmount, ['currency' => $order->get_currency()]); ?>
+                    <?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?>
                 </td>
             </tr>
         <?php endif; ?>
         <script>
         jQuery(document).ready(function($) {
             // Reorder deposit rows to appear before Order Total
-            var depositRows = $('tr:has(td.label:contains("Deposit Amount:")), tr:has(td.label:contains("Balance:"))');
+            var depositRows = $('tr:has(td.label:contains("Deposit Amount:")), tr:has(td.label:contains("Remaining Balance:"))');
             var orderTotalRow = $('tr:has(td.label:contains("Order Total:"))');
             
             if (depositRows.length && orderTotalRow.length) {
@@ -101,25 +98,19 @@ class OrderTotals
             $depositInfo['remaining_amount'] = $orderTotal - $depositInfo['deposit_amount'];
         }
 
-        $depositAmount = (float) ($depositInfo['deposit_amount'] ?? 0);
-        $balanceAmount = (float) MetaKeys::get($order, MetaKeys::BALANCE_AMOUNT);
-        if ($balanceAmount <= 0) {
-            $balanceAmount = max(0, (float) $order->get_total() - $depositAmount);
-        }
-
         $newRows = [];
         foreach ($rows as $key => $row) {
             $newRows[$key] = $row;
             if ($key === 'order_total') {
                 $newRows['deposit_amount'] = [
                     'label' => __('Deposit Amount:', 'zero-sense'),
-                    'value' => wc_price($depositAmount, ['currency' => $order->get_currency()]),
+                    'value' => wc_price($depositInfo['deposit_amount'] ?? 0, ['currency' => $order->get_currency()]),
                 ];
 
-                if ($balanceAmount > 0) {
-                    $newRows['balance'] = [
-                        'label' => __('Balance:', 'zero-sense'),
-                        'value' => wc_price($balanceAmount, ['currency' => $order->get_currency()]),
+                if (($depositInfo['remaining_amount'] ?? 0) > 0) {
+                    $newRows['remaining_balance'] = [
+                        'label' => __('Remaining Balance:', 'zero-sense'),
+                        'value' => wc_price($depositInfo['remaining_amount'], ['currency' => $order->get_currency()]),
                     ];
                 }
             }
