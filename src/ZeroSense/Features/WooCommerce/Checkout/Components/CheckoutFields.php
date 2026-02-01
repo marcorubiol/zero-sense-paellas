@@ -210,51 +210,37 @@ class CheckoutFields
                             if ($translated_id) {
                                 $field_value = $translated_id;
                             }
-                        }
-                    }
+                            break;
 
-                    if ($field_value === null) {
-                        continue;
-                    }
-
-                    if (isset($field["type"]) && $field["type"] === 'date') {
-                        $date = \DateTime::createFromFormat('d/m/Y', $field_value);
-                        if ($date) {
-                            $order->update_meta_data($field['id'], $date->getTimestamp());
-                        } else {
-                            $fallback_date = strtotime(is_string($field_value) ? $field_value : '');
-                            if ($fallback_date !== false) {
-                                $order->update_meta_data($field['id'], $fallback_date);
-                            } else {
-                                $order->update_meta_data($field['id'], 0);
+                        default:
+                            $wc_field_type = $field["type"];
+                            if (isset($field["options"]) && is_array($field["options"])) {
+                                $field_options = $field["options"];
                             }
-                        }
-                    } else {
-                        if (is_array($field_value)) {
-                            $field_value = implode(',', array_map('sanitize_text_field', $field_value));
-                        } else {
-                            $field_value = sanitize_text_field((string) $field_value);
-                        }
-                        $order->update_meta_data($field['id'], $field_value);
+                            break;
                     }
                 }
-            }
-        }
-    }
 
-    /**
-     * Register translation strings with WPML
-     */
-    public function register_checkout_strings_for_translation()
-    {
-        if (function_exists('icl_register_string')) {
-            icl_register_string('woocommerce', 'checkout_select_option', '-- Select an option --');
-        }
-    }
+                // Prefill defaults from URL when available
+                $prefillDefault = $this->getPrefillDefault($field, $wc_field_type);
 
-    /**
-     * Prevent WPML from processing array post_meta values (from legacy implementation)
-     */
+                // Generate the field using WooCommerce's form field function.
+                woocommerce_form_field(
+                    $field["id"],
+                    [
+                        "type" => $wc_field_type,
+                        "label" => isset($field["name"]) ? $field["name"] : "",
+                        "required" => !empty($field["required"]),
+                        "default" => $prefillDefault !== null ? $prefillDefault : "",
+                        "placeholder" => isset($field["placeholder"]) ? $field["placeholder"] :
+                            (in_array($wc_field_type, ["select", "taxonomy"]) ? __("-- Select an option --", "woocommerce") : ""),
+                        "options" => $field_options,
+                        "class" => ["form-row-wide"],
+                        "custom_attributes" => !empty($field["required"]) ? ["required" => "required"] : [],
+                        "input_class" => ["form-row-wide"],
+                    ],
+                    ""
+                );
     private function prevent_wpml_array_processing()
     {
         $init_wpml_fix = function () {

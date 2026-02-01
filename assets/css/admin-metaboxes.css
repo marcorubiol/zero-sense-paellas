@@ -128,12 +128,6 @@
    METABOX CONTAINERS - only essential structure
    ================================================================= */
 
-.zs-deposits-logs-metabox,
-.zs-email-logs-metabox,
-.zs-status-logs-metabox {
-    max-width: 100%;
-}
-
 /* Email Logs - specific error/note styling only */
 .zs-email-logs-metabox .zs-log-error {
     color: #DC2626;
