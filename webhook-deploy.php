@@ -1,12 +1,28 @@
 <?php
-<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
-// Fixed webhook deploy script - VERSION 2.5 - GitHub standards compliant
-header('X-Webhook-Version: 2.0-UPDATED-' . date('Y-m-d-H-i-s'));
-=======
-header('Content-Type: application/json');
->>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
+
+function load_local_secrets(string $dir): array {
+    $p = "$dir/.zs-secrets.php";
+    return file_exists($p) ? (include $p) : [];
+}
+
+function detect_plugin_dir(string $dir): string {
+    if (file_exists("$dir/zero-sense.php")) return $dir;
+    for ($i = 0; $i <= 10; $i++) {
+        $c = "$dir/wp-content/plugins/zero-sense/zero-sense.php";
+        if (file_exists($c)) return dirname($c);
+        $p = dirname($dir);
+        if ($p === $dir) break;
+        $dir = $p;
+    }
+    return $dir;
+}
+
+function log_msg($msg) {
+    global $log_file;
+    @file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
+}
 
 $log_file = '/tmp/webhook-deploy.log';
 $local_secrets = load_local_secrets(__DIR__);
@@ -14,10 +30,7 @@ $secret = trim(getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($local_secrets['deploy_secr
 $log_token = trim(getenv('ZEROSENSE_LOG_TOKEN') ?: ($local_secrets['log_token'] ?? ''));
 $staging_path = detect_plugin_dir(__DIR__);
 
-function log_msg($msg) {
-    global $log_file;
-    @file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
-}
+header('Content-Type: application/json');
 
 // Endpoints
 if (isset($_GET['log'])) {
@@ -55,16 +68,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 }
 
 log_msg("=== WEBHOOK START ===");
-<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
-log_msg("🔥 VERSION: v2.5 - GitHub standards compliant");
-log_msg("📅 UPDATED: " . date('Y-m-d H:i:s'));
-log_msg("🚀 FILE MODIFIED: " . date('Y-m-d H:i:s', filemtime(__FILE__)));
-log_msg("Method: {$method}");
-log_msg("User-Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? ''));
-log_msg("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? ''));
-log_msg("Content-Length: " . ($_SERVER['CONTENT_LENGTH'] ?? ''));
-=======
->>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
 
 $payload = file_get_contents('php://input');
 $signature = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
@@ -91,76 +94,10 @@ if (!$valid && ($is_github_ip || $is_github_ua)) {
     log_msg("Signature skipped (GitHub detected)");
 }
 
-<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
-if ($allow_without_signature) {
-    log_msg("⚠️ Skipping signature validation (GitHub detected by IP/User-Agent)");
-} else {
-    // Validate signatures - try both SHA256 and SHA1
-    $valid_signature = false;
-    $expected_sha256 = 'sha256=' . hash_hmac('sha256', $payload, $secret);
-    $expected_sha1 = 'sha1=' . hash_hmac('sha1', $payload, $secret);
-
-    log_msg("Secret length: " . strlen($secret));
-    log_msg("Secret first 4 chars: " . substr($secret, 0, 4) . "...");
-    log_msg("Expected SHA256: $expected_sha256");
-    log_msg("Received SHA256: " . ($signature_sha256 ?: 'NULL'));
-    log_msg("Expected SHA1: $expected_sha1");
-    log_msg("Received SHA1: " . ($signature_sha1 ?: 'NULL'));
-
-    // Check SHA256 first (preferred)
-    if ($signature_sha256 && hash_equals($expected_sha256, $signature_sha256)) {
-        $valid_signature = true;
-        log_msg("✅ SHA256 signature valid");
-    }
-    // Fallback to SHA1
-    elseif ($signature_sha1 && hash_equals($expected_sha1, $signature_sha1)) {
-        $valid_signature = true;
-        log_msg("✅ SHA1 signature valid");
-    }
-    else {
-        log_msg("❌ Invalid signature");
-        log_msg("Received SHA256: " . ($signature_sha256 ?: 'NULL'));
-        log_msg("Received SHA1: " . ($signature_sha1 ?: 'NULL'));
-    }
-
-    if (!$valid_signature) {
-        // If we are confident it's GitHub, do not block deploy.
-        // Accept if EITHER: (a) IP is in GitHub range, OR (b) User-Agent is GitHub-Hookshot
-        // This handles cases where CDN/proxy changes the client IP
-        if ($is_github || $is_github_user_agent) {
-            $valid_signature = true;
-            $reason = $is_github ? 'GitHub IP' : 'GitHub User-Agent';
-            if ($is_github && $is_github_user_agent) {
-                $reason = 'GitHub IP + User-Agent';
-            }
-            log_msg("⚠️ Proceeding despite invalid signature ({$reason} matched)");
-        }
-    }
-
-    if (!$valid_signature) {
-        log_msg("=== WEBHOOK END ===\n");
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'forbidden',
-            'delivery' => $delivery,
-            'debug' => [
-                'expected_sha256' => $expected_sha256,
-                'received_sha256' => $signature_sha256,
-                'expected_sha1' => $expected_sha1,
-                'received_sha1' => $signature_sha1,
-                'sha256_valid' => $signature_sha256 ? hash_equals($expected_sha256, $signature_sha256) : false,
-                'sha1_valid' => $signature_sha1 ? hash_equals($expected_sha1, $signature_sha1) : false
-            ]
-        ]);
-        exit;
-    }
-=======
 if (!$valid) {
     log_msg("Forbidden: invalid signature");
     http_response_code(403);
     exit(json_encode(['status' => 'forbidden', 'delivery' => $delivery]));
->>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
 }
 
 $data = json_decode($payload, true);
@@ -209,60 +146,6 @@ function sync_plugin(): array {
     if (function_exists('opcache_reset')) @opcache_reset();
     
     $cfg = parse_wp_config(find_wp_config(dirname($staging_path)));
-<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
-    if (!$cfg) {
-        return ['status' => 'error', 'message' => 'wp-config.php not found or could not be parsed'];
-    }
-
-    $prefix = $cfg['table_prefix'] ?: 'wp_';
-    $options_table = $prefix . 'options';
-    $plugin_rel = 'zero-sense/zero-sense.php';
-    $plugin_abs = rtrim(dirname(dirname($staging_path)), '/') . '/plugins/' . $plugin_rel;
-
-    if (!file_exists($plugin_abs)) {
-        return ['status' => 'error', 'message' => 'Plugin file not found: ' . $plugin_rel];
-    }
-
-    if (!class_exists('mysqli')) {
-        return ['status' => 'error', 'message' => 'mysqli extension is not available'];
-    }
-
-    try {
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-        $mysqli = new mysqli($cfg['db_host'], $cfg['db_user'], $cfg['db_password'], $cfg['db_name']);
-        $mysqli->set_charset('utf8mb4');
-
-        // Check if table exists first
-        $table_check = $mysqli->query("SHOW TABLES LIKE '{$options_table}'");
-        if (!$table_check || $table_check->num_rows === 0) {
-            $mysqli->close();
-            return ['status' => 'success', 'message' => 'Sync skipped (table not found: ' . $options_table . ') - deploy OK'];
-        }
-
-        // Ensure plugin is active (single-site)
-        $res = $mysqli->query("SELECT option_value FROM {$options_table} WHERE option_name='active_plugins' LIMIT 1");
-        if ($res && ($row = $res->fetch_assoc())) {
-            $active = @unserialize($row['option_value']);
-            if (!is_array($active)) {
-                $active = [];
-            }
-            if (!in_array($plugin_rel, $active, true)) {
-                $active[] = $plugin_rel;
-                $val = $mysqli->real_escape_string(serialize(array_values($active)));
-                $mysqli->query("UPDATE {$options_table} SET option_value='{$val}' WHERE option_name='active_plugins'");
-            }
-        }
-
-        // Clear feature discovery transients
-        $mysqli->query("DELETE FROM {$options_table} WHERE option_name LIKE '_transient_zs_feature_classes_v%' OR option_name LIKE '_transient_timeout_zs_feature_classes_v%'");
-
-        $mysqli->close();
-        return ['status' => 'success', 'message' => 'Sync lite done (opcache + transients)'];
-    } catch (mysqli_sql_exception $e) {
-        return ['status' => 'success', 'message' => 'Sync skipped (DB error: ' . $e->getMessage() . ') - deploy OK'];
-    } catch (Throwable $e) {
-        return ['status' => 'success', 'message' => 'Sync skipped (error: ' . $e->getMessage() . ') - deploy OK'];
-=======
     if (!$cfg) return ['status' => 'success', 'message' => 'wp-config not found, skipped'];
     
     $table = ($cfg['table_prefix'] ?: 'wp_') . 'options';
@@ -283,7 +166,6 @@ function sync_plugin(): array {
         return ['status' => 'success', 'message' => 'Transients cleared'];
     } catch (Throwable $e) {
         return ['status' => 'success', 'message' => 'DB error: ' . $e->getMessage()];
->>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
     }
 }
 
@@ -399,21 +281,4 @@ function rrmdir(string $dir): void {
         is_dir($p) ? rrmdir($p) : @unlink($p);
     }
     @rmdir($dir);
-}
-
-function load_local_secrets(string $dir): array {
-    $p = "$dir/.zs-secrets.php";
-    return file_exists($p) ? (include $p) : [];
-}
-
-function detect_plugin_dir(string $dir): string {
-    if (file_exists("$dir/zero-sense.php")) return $dir;
-    for ($i = 0; $i <= 10; $i++) {
-        $c = "$dir/wp-content/plugins/zero-sense/zero-sense.php";
-        if (file_exists($c)) return dirname($c);
-        $p = dirname($dir);
-        if ($p === $dir) break;
-        $dir = $p;
-    }
-    return $dir;
 }
