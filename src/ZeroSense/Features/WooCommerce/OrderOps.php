@@ -176,7 +176,7 @@ class OrderOps implements FeatureInterface
                     <td>
                         <?php if ($type === 'bool') : ?>
                             <input type="hidden" name="zs_ops_material[<?php echo esc_attr($key); ?>]" value="0">
-                            <label>
+                            <label class="zs-switch">
                                 <input
                                     type="checkbox"
                                     id="zs_ops_material_<?php echo esc_attr($key); ?>"
@@ -184,6 +184,7 @@ class OrderOps implements FeatureInterface
                                     value="1"
                                     <?php checked((string) $value, '1'); ?>
                                 >
+                                <span class="zs-slider"></span>
                             </label>
                         <?php elseif ($type === 'qty_int') : ?>
                             <input

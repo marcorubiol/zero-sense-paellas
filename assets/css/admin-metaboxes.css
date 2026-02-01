@@ -516,3 +516,75 @@
     padding: 12px;
     border-top: 1px solid #f0f0f1;
 }
+
+/* Switch styles for checkboxes */
+.zs-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.zs-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.zs-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.zs-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .zs-slider {
+    background-color: #2271b1;
+}
+
+input:focus + .zs-slider {
+    box-shadow: 0 0 1px #2271b1;
+}
+
+input:checked + .zs-slider:before {
+    transform: translateX(20px);
+}
+
+/* Style for checkbox cells in Material & Logistics */
+.zs-ops-checkbox-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.zs-ops-checkbox-cell .zs-switch {
+    margin: 0 auto;
+}
+
+/* Alternative: Apply switches to all checkboxes in specific contexts */
+.metabox_form_table .zs-ops-checkbox-cell input[type="checkbox"],
+.zs-deposits-table input[type="checkbox"] {
+    /* Hide original checkbox if switch is applied */
+    display: none;
+}
+
+.metabox_form_table .zs-ops-checkbox-cell .zs-switch,
+.zs-deposits-table .zs-switch {
+    display: inline-block;
+}
