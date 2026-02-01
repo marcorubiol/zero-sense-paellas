@@ -36,6 +36,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     {
         add_action('admin_menu', [$this, 'addAdminMenu']);
         add_action('admin_post_zs_ops_material_schema_save', [$this, 'handleSave']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueStyles']);
     }
 
     public function getPriority(): int
@@ -46,6 +47,22 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     public function getConditions(): array
     {
         return ['class_exists:WooCommerce', 'is_admin'];
+    }
+
+    public function enqueueStyles(): void
+    {
+        $screen = get_current_screen();
+        if ($screen && $screen->id === 'woocommerce_page_zs_ops_material_schema') {
+            $css_path = plugin_dir_path(ZERO_SENSE_FILE) . 'assets/css/admin-material-logistics.css';
+            $css_ver = file_exists($css_path) ? (string) filemtime($css_path) : ZERO_SENSE_VERSION;
+            
+            wp_enqueue_style(
+                'zero-sense-admin-material-logistics',
+                plugin_dir_url(ZERO_SENSE_FILE) . 'assets/css/admin-material-logistics.css',
+                [],
+                $css_ver
+            );
+        }
     }
 
     public function addAdminMenu(): void
@@ -257,62 +274,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     }
                 })();
             </script>
-
-            <style>
-                .zs-ops-drag-handle {
-                    cursor: move;
-                    font-size: 18px;
-                    color: #50575e;
-                    padding: 6px 8px;
-                    display: inline-block;
-                    line-height: 1.4;
-                }
-                .zs-ops-drag-handle:hover {
-                    color: #135e96;
-                }
-                .zs-ops-sortable-ghost {
-                    opacity: 0.4;
-                    background: #f0f0f0;
-                    border: 2px dashed #ccc;
-                }
-                .zs-ops-sortable-chosen {
-                    background: #e3f2fd;
-                    border: 1px solid #0073aa;
-                }
-                .zs-ops-sortable-drag {
-                    opacity: 0.9;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                }
-                .zs-ops-sortable-row {
-                    transition: all 0.2s ease;
-                }
-                .zs-ops-schema-remove {
-                    padding: 6px 10px;
-                    font-size: 13px;
-                    line-height: 1.4;
-                }
-                .zs-ops-schema-remove:hover {
-                    background-color: #dc3232;
-                    border-color: #dc3232;
-                    color: #fff;
-                }
-                .zs-ops-schema-remove:hover .dashicons {
-                    color: #fff;
-                }
-                .screen-reader-text {
-                    position: absolute;
-                    margin: -1px;
-                    padding: 0;
-                    height: 1px;
-                    width: 1px;
-                    overflow: hidden;
-                    clip: rect(0 0 0 0);
-                    border: 0;
-                }
-                #zs-ops-schema-rows tr:hover {
-                    background-color: #f9f9f9;
-                }
-            </style>
         </div>
         <?php
     }
