@@ -301,9 +301,9 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     {
         return [
             'text' => __('Text', 'zero-sense'),
+            'textarea' => __('Textarea', 'zero-sense'),
             'qty_int' => __('Quantity', 'zero-sense'),
             'bool' => __('Checkbox', 'zero-sense'),
-            'textarea' => __('Textarea', 'zero-sense'),
         ];
     }
 
