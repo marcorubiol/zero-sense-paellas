@@ -99,7 +99,7 @@ class OrderOps implements FeatureInterface
 
         add_meta_box(
             'zs_ops_notes',
-            __('Operational Notes', 'zero-sense'),
+            __('Operational Notesgh', 'zero-sense'),
             [$this, 'renderOpsNotesMetabox'],
             $screen,
             'normal',
