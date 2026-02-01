@@ -35,51 +35,14 @@ class OrderTotals
             $depositInfo['remaining_amount'] = $orderTotal - $depositInfo['deposit_amount'];
         }
 
-        $manualOverride = MetaKeys::isEnabled($order, MetaKeys::IS_MANUAL_OVERRIDE);
-        $statusAllowsAuto = in_array($order->get_status(), ['pending', 'budget-requested'], true);
-        $modeBadgeClass = $manualOverride ? 'is-manual' : 'is-auto';
-        $modeBadgeText = $manualOverride ? __('MAN', 'zero-sense') : __('AUTO', 'zero-sense');
-        $depositAmount = $depositInfo['deposit_amount'] ?? (float) MetaKeys::get($order, MetaKeys::DEPOSIT_AMOUNT);
-        $remainingAmount = $depositInfo['remaining_amount'] ?? (float) MetaKeys::get($order, MetaKeys::REMAINING_AMOUNT);
+        $depositAmount = $depositInfo['deposit_amount'] ?? 0;
+        $remainingAmount = $depositInfo['remaining_amount'] ?? 0;
         ?>
         <tr>
-            <td colspan="3" style="border-top:1px solid #eee;"></td>
-        </tr>
-        <tr>
-            <td class="label">
-                <span class="zs-deposit-mode-indicator <?php echo esc_attr($modeBadgeClass); ?>">
-                    <?php echo esc_html($modeBadgeText); ?>
-                </span>
-                <?php if ($manualOverride && $statusAllowsAuto) : ?>
-                    <button type="button" 
-                            class="zs-deposits-reset-to-auto" 
-                            data-order-id="<?php echo esc_attr($orderId); ?>"
-                            title="<?php esc_attr_e('Reset to automatic calculation', 'zero-sense'); ?>">
-                        <span class="dashicons dashicons-update"></span>
-                    </button>
-                <?php endif; ?>
-                <?php esc_html_e('Deposit Amount:', 'zero-sense'); ?>
-            </td>
+            <td class="label"><?php esc_html_e('Deposit Amount:', 'zero-sense'); ?></td>
             <td width="1%"></td>
             <td class="total">
-                <span class="deposit-amount-display" data-order-id="<?php echo esc_attr($orderId); ?>">
-                    <a href="#" class="edit-deposit" data-order-id="<?php echo esc_attr($orderId); ?>" data-amount="<?php echo esc_attr($depositAmount); ?>">
-                        <span class="dashicons dashicons-edit" style="font-size:14px;width:14px;height:14px;vertical-align:middle;"></span>
-                    </a>
-                    <span class="deposit-amount-value"><?php echo wc_price($depositAmount, ['currency' => $order->get_currency()]); ?></span>
-                </span>
-                <span class="deposit-amount-edit">
-                    <input type="text" class="deposit-amount-input" value="<?php echo esc_attr(wc_format_localized_price($depositAmount)); ?>">
-                    <input type="hidden" id="zs_deposits_deposit_amount" name="zs_deposits_deposit_amount" value="<?php echo esc_attr(wc_format_localized_price($depositAmount)); ?>">
-                    <input type="hidden" id="zs_deposits_deposit_manual_override" name="zs_deposits_deposit_manual_override" value="<?php echo $manualOverride ? 'yes' : 'no'; ?>">
-                    <input type="hidden" id="zs_deposits_save_nonce" name="zs_deposits_save_nonce" value="<?php echo wp_create_nonce('zs_deposits_save_deposit_meta'); ?>">
-                    <a href="#" class="save-deposit" data-order-id="<?php echo esc_attr($orderId); ?>" style="margin-right:5px;text-decoration:none;">
-                        <span class="dashicons dashicons-yes" style="color:#46b450;font-size:16px;width:16px;height:16px;vertical-align:middle;"></span>
-                    </a>
-                    <a href="#" class="cancel-deposit" style="text-decoration:none;">
-                        <span class="dashicons dashicons-no" style="color:#dc3232;font-size:16px;width:16px;height:16px;vertical-align:middle;"></span>
-                    </a>
-                </span>
+                <?php echo wc_price($depositAmount, ['currency' => $order->get_currency()]); ?>
             </td>
         </tr>
         <?php if ($remainingAmount > 0) : ?>
@@ -87,9 +50,7 @@ class OrderTotals
                 <td class="label"><?php esc_html_e('Balance:', 'zero-sense'); ?></td>
                 <td width="1%"></td>
                 <td class="total">
-                    <span class="remaining-balance-display">
-                        <?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?>
-                    </span>
+                    <?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?>
                 </td>
             </tr>
         <?php endif; ?>
