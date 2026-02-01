@@ -234,9 +234,9 @@ class DataExposer
                 return (string) $order->get_meta(MetaKeys::CHILDREN_0_TO_4);
                 
             case 'event_service_location':
-                $value = $order->get_meta(MetaKeys::SERVICE_LOCATION);
-                $options = FieldOptions::getServiceLocationOptions();
-                return $options[$value] ?? $value;
+            case 'service_location':
+            case 'service_location_label':
+                return $this->getServiceAreaNameForOrder($order);
                 
             case 'event_address':
                 return (string) $order->get_meta(MetaKeys::ADDRESS);
@@ -278,6 +278,36 @@ class DataExposer
         }
     }
 
+    private function getServiceAreaNameForOrder(WC_Order $order): string
+    {
+        $canonicalId = $order->get_meta(MetaKeys::SERVICE_LOCATION);
+        $canonicalId = is_numeric($canonicalId) ? (int) $canonicalId : 0;
+        if ($canonicalId <= 0) {
+            return '';
+        }
+
+        $termId = $canonicalId;
+        if (defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters')) {
+            $lang = apply_filters('wpml_current_language', null);
+            if (!is_string($lang) || $lang === '') {
+                $lang = $order->get_meta('wpml_language', true);
+            }
+            if (is_string($lang) && $lang !== '') {
+                $translatedId = apply_filters('wpml_object_id', $canonicalId, 'service-area', true, $lang);
+                if ($translatedId) {
+                    $termId = (int) $translatedId;
+                }
+            }
+        }
+
+        $term = get_term($termId, 'service-area');
+        if ($term instanceof \WP_Term) {
+            return $term->name;
+        }
+
+        return '';
+    }
+
     /**
      * Get all event data for an order (useful for Flowmattic)
      */
@@ -288,9 +318,22 @@ class DataExposer
         $howFoundUs = $order->get_meta(MetaKeys::HOW_FOUND_US);
         $eventDate = $order->get_meta(MetaKeys::EVENT_DATE);
         
-        $serviceLocationOptions = FieldOptions::getServiceLocationOptions();
         $eventTypeOptions = FieldOptions::getEventTypeOptions();
         $howFoundUsOptions = FieldOptions::getHowFoundUsOptions();
+        
+        $canonicalId = is_numeric($serviceLocation) ? (int) $serviceLocation : 0;
+        $termId = $canonicalId;
+        if ($canonicalId > 0 && defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters')) {
+            $lang = $order->get_meta('wpml_language', true);
+            if (is_string($lang) && $lang !== '') {
+                $translatedId = apply_filters('wpml_object_id', $canonicalId, 'service-area', true, $lang);
+                if ($translatedId) {
+                    $termId = (int) $translatedId;
+                }
+            }
+        }
+        $term = $termId > 0 ? get_term($termId, 'service-area') : null;
+        $serviceLocationLabel = $term instanceof \WP_Term ? $term->name : '';
         
         return [
             'total_guests' => $order->get_meta(MetaKeys::TOTAL_GUESTS),
@@ -298,7 +341,7 @@ class DataExposer
             'children_5_to_8' => $order->get_meta(MetaKeys::CHILDREN_5_TO_8),
             'children_0_to_4' => $order->get_meta(MetaKeys::CHILDREN_0_TO_4),
             'service_location' => $serviceLocation,
-            'service_location_label' => $serviceLocationOptions[$serviceLocation] ?? '',
+            'service_location_label' => $serviceLocationLabel,
             'address' => $order->get_meta(MetaKeys::ADDRESS),
             'city' => $order->get_meta(MetaKeys::CITY),
             'location_link' => $order->get_meta(MetaKeys::LOCATION_LINK),

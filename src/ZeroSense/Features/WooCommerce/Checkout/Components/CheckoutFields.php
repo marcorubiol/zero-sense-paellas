@@ -241,7 +241,6 @@ class CheckoutFields
 
                     $order->update_meta_data($field['id'], $field_value);
 
-                    // Keep EventManagement canonical meta in sync
                     if ($field['id'] === 'event_service_location') {
                         $canonicalId = is_numeric($field_value) ? (int) $field_value : 0;
                         $order->update_meta_data('zs_event_service_location', $canonicalId > 0 ? $canonicalId : '');
