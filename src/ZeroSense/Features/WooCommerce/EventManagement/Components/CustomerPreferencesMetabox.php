@@ -41,7 +41,6 @@ class CustomerPreferencesMetabox
         }
 
         $marketingConsent = $order->get_meta(MetaKeys::MARKETING_CONSENT, true);
-        $rabbitOption = $order->get_meta(MetaKeys::RABBIT_OPTION, true);
         
         wp_nonce_field('zs_customer_preferences_save', 'zs_customer_preferences_nonce');
         ?>
@@ -61,19 +60,6 @@ class CustomerPreferencesMetabox
                 </span>
             </p>
             
-            <p>
-                <label>
-                    <input type="checkbox" 
-                           id="rabbit_option" 
-                           name="rabbit_option" 
-                           value="1"
-                           <?php checked($rabbitOption, '1'); ?>>
-                    <?php esc_html_e('Rabbit Option', 'zero-sense'); ?>
-                </label>
-                <span class="description" style="display:block;margin-top:4px;font-size:12px;color:#646970;">
-                    <?php esc_html_e('Customer wants rabbit in paella', 'zero-sense'); ?>
-                </span>
-            </p>
         </div>
         <?php
     }
@@ -91,7 +77,6 @@ class CustomerPreferencesMetabox
         }
 
         $order->update_meta_data(MetaKeys::MARKETING_CONSENT, isset($_POST['marketing_consent']) ? '1' : '0');
-        $order->update_meta_data(MetaKeys::RABBIT_OPTION, isset($_POST['rabbit_option']) ? '1' : '0');
 
         $order->save();
     }

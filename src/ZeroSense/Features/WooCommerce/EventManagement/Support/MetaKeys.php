@@ -32,7 +32,6 @@ class MetaKeys
     
     // Customer Preferences
     public const MARKETING_CONSENT = 'zs_marketing_consent';
-    public const RABBIT_OPTION = 'zs_rabbit_option';
     
     /**
      * Get all meta keys as array

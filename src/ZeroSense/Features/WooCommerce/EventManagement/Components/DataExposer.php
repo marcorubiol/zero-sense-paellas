@@ -49,7 +49,6 @@ class DataExposer
                 'budget_email_content' => __('Budget Email Content', 'zero-sense'),
                 'final_details_email_content' => __('Final Details Email Content', 'zero-sense'),
                 'marketing_consent' => __('Marketing Consent', 'zero-sense'),
-                'rabbit_option' => __('Rabbit Option', 'zero-sense'),
             ],
         ];
         
@@ -289,10 +288,6 @@ class DataExposer
             case 'event_marketing_consent':
                 return $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no';
                 
-            case 'rabbit_option':
-            case 'event_rabbit_option':
-                return $order->get_meta(MetaKeys::RABBIT_OPTION) === '1' ? 'yes' : 'no';
-                
             default:
                 return '';
         }
@@ -380,7 +375,6 @@ class DataExposer
             'budget_email_content' => $order->get_meta(MetaKeys::BUDGET_EMAIL_CONTENT),
             'final_details_email_content' => $order->get_meta(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT),
             'marketing_consent' => $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no',
-            'rabbit_option' => $order->get_meta(MetaKeys::RABBIT_OPTION) === '1' ? 'yes' : 'no',
         ];
     }
 }

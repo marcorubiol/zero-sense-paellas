@@ -91,10 +91,10 @@ class DepositsCalculatorMetabox
                         <td class="label"><?php esc_html_e('Deposit Amount:', 'zero-sense'); ?></td>
                         <td class="total">
                             <div class="zs-deposit-display">
-                                <span class="zs-amount-text"><?php echo wc_price($depositAmount, ['currency' => $order->get_currency()]); ?></span>
                                 <a href="#" class="zs-edit-link">
                                     <span class="dashicons dashicons-edit"></span>
                                 </a>
+                                <span class="zs-amount-text"><?php echo wc_price($depositAmount, ['currency' => $order->get_currency()]); ?></span>
                             </div>
                             <div class="zs-deposit-edit" style="display:none;">
                                 <input type="number" 
