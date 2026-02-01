@@ -24,23 +24,11 @@ function log_msg($msg) {
     $timestamp = date('Y-m-d H:i:s');
     $log_entry = "$timestamp - $msg\n";
     
-    // Read existing logs
-    $existing_logs = [];
-    if (file_exists($log_file)) {
-        $existing_logs = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    }
+    // Add new log entry
+    @file_put_contents($log_file, $log_entry, FILE_APPEND);
     
-    // Add new entry at the beginning (newest first)
-    array_unshift($existing_logs, trim($log_entry));
-    
-    // Keep only last 1000 entries
-    if (count($existing_logs) > 1000) {
-        $existing_logs = array_slice($existing_logs, 0, 1000);
-    }
-    
-    // Write back with newest first
-    $content = implode("\n", $existing_logs) . "\n";
-    @file_put_contents($log_file, $content);
+    // Clean up old logs (keep last 1000 lines)
+    cleanup_logs($log_file);
 }
 
 function cleanup_logs(string $log_file): void {
@@ -49,10 +37,8 @@ function cleanup_logs(string $log_file): void {
     $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if (count($lines) <= 1000) return;
     
-    // Keep only last 1000 lines (newest first)
+    // Keep only last 1000 lines
     $recent_lines = array_slice($lines, -1000);
-    // Reverse to maintain newest-first order in file
-    $recent_lines = array_reverse($recent_lines);
     $content = implode("\n", $recent_lines) . "\n";
     
     // Write back the cleaned content
@@ -74,13 +60,7 @@ if (isset($_GET['log'])) {
         exit(json_encode(['status' => 'forbidden']));
     }
     header('Content-Type: text/plain');
-    
-    // Read and display logs (newest first - already stored this way)
-    if (file_exists($log_file)) {
-        readfile($log_file);
-    } else {
-        echo "No logs found.\n";
-    }
+    readfile($log_file);
     exit;
 }
 
