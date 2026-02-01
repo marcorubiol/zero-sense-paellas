@@ -67,17 +67,6 @@ class OrderTotals
                 </td>
             </tr>
         <?php endif; ?>
-        <script>
-        jQuery(document).ready(function($) {
-            // Reorder deposit rows to appear before Order Total
-            var depositRows = $('tr:has(td.label:contains("Deposit Amount:")), tr:has(td.label:contains("Balance:"))');
-            var orderTotalRow = $('tr:has(td.label:contains("Order Total:"))');
-            
-            if (depositRows.length && orderTotalRow.length) {
-                orderTotalRow.first().before(depositRows);
-            }
-        });
-        </script>
         <?php
     }
 
