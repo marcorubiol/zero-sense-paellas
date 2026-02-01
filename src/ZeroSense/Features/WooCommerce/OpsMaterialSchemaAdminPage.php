@@ -218,6 +218,29 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         bindLabelChange(tr);
                         updateSortable();
                     });
+
+                    function updateSortable() {
+                        if (typeof Sortable !== 'undefined') {
+                            if (window.zsSortable) {
+                                window.zsSortable.destroy();
+                            }
+                            window.zsSortable = Sortable.create(tbody, {
+                                handle: '.zs-ops-drag-handle',
+                                animation: 150,
+                                ghostClass: 'zs-ops-sortable-ghost',
+                                chosenClass: 'zs-ops-sortable-chosen',
+                                dragClass: 'zs-ops-sortable-drag'
+                            });
+                        }
+                    }
+
+                    // Load SortableJS if not available
+                    if (typeof Sortable === 'undefined') {
+                        var script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+                        script.onload = updateSortable;
+                        document.head.appendChild(script);
+                    }
                 })();
             </script>
 
