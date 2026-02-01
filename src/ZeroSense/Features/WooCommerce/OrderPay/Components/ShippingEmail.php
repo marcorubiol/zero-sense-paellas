@@ -61,9 +61,6 @@ class ShippingEmail
             $order->save();
             return;
         }
-
-        update_post_meta($orderId, self::META_KEY, $email);
-        update_post_meta($orderId, self::META_KEY_WOO, $email);
     }
 
     private function isOrderPayPage(): bool

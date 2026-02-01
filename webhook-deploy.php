@@ -1,118 +1,61 @@
 <?php
+<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
 // Fixed webhook deploy script - VERSION 2.5 - GitHub standards compliant
 header('X-Webhook-Version: 2.0-UPDATED-' . date('Y-m-d-H-i-s'));
+=======
+header('Content-Type: application/json');
+>>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-// Log (versioned to avoid mixing with older runs)
-$log_file = '/tmp/webhook-deploy-v21.log';
-$max_log_bytes = 2097152;
-
-function rotate_log_if_needed(): void {
-    global $log_file, $max_log_bytes;
-    if (!file_exists($log_file)) {
-        return;
-    }
-    $size = @filesize($log_file);
-    if ($size === false || $size <= $max_log_bytes) {
-        return;
-    }
-    $rotated = $log_file . '.1';
-    @unlink($rotated);
-    @rename($log_file, $rotated);
-}
-
-// FORCE LOG AT THE VERY BEGINNING
-rotate_log_if_needed();
-file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
-
-// Config
+$log_file = '/tmp/webhook-deploy.log';
 $local_secrets = load_local_secrets(__DIR__);
-$secret = trim((string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? '') ?: ($local_secrets['deploy_secret'] ?? '')));
-$staging_path = detect_zero_sense_plugin_dir(__DIR__);
-$log_token = trim((string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? '') ?: ($local_secrets['log_token'] ?? '')));
+$secret = trim(getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($local_secrets['deploy_secret'] ?? ''));
+$log_token = trim(getenv('ZEROSENSE_LOG_TOKEN') ?: ($local_secrets['log_token'] ?? ''));
+$staging_path = detect_plugin_dir(__DIR__);
 
 function log_msg($msg) {
     global $log_file;
-    rotate_log_if_needed();
-    file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
+    @file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
 }
 
-// Log endpoint
+// Endpoints
 if (isset($_GET['log'])) {
-    $token = isset($_GET['token']) ? trim((string) $_GET['token']) : '';
-    if (!$log_token || !hash_equals($log_token, $token)) {
+    if (!$log_token || !hash_equals($log_token, $_GET['token'] ?? '')) {
         http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'forbidden']);
-        exit;
+        exit(json_encode(['status' => 'forbidden']));
     }
     header('Content-Type: text/plain');
     readfile($log_file);
     exit;
 }
 
-// Test endpoint
 if (isset($_GET['test'])) {
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'test_ok',
-        'version' => '2.0-UPDATED-' . date('Y-m-d-H-i-s'),
-        'file_modified' => date('Y-m-d H:i:s', filemtime(__FILE__)),
-        'file_path' => __FILE__,
-        'server_time' => date('Y-m-d H:i:s'),
-        'diagnostics' => [
-            'has_log_token' => (bool) $GLOBALS['log_token'],
-            'log_token_len' => strlen((string) $GLOBALS['log_token']),
-            'has_deploy_secret' => (bool) $GLOBALS['secret'],
-            'deploy_secret_len' => strlen((string) $GLOBALS['secret']),
-            'local_secrets_file' => rtrim((string) dirname(__FILE__), '/') . '/.zs-secrets.php',
-            'local_secrets_file_exists' => file_exists(rtrim((string) dirname(__FILE__), '/') . '/.zs-secrets.php'),
-            'local_secrets_loaded' => !empty($GLOBALS['local_secrets']) && is_array($GLOBALS['local_secrets']),
-            'local_secrets_loaded_keys' => array_keys(is_array($GLOBALS['local_secrets'] ?? null) ? $GLOBALS['local_secrets'] : []),
-            'detected_plugin_dir' => (string) $GLOBALS['staging_path'],
-            'plugin_file_exists' => file_exists(rtrim((string) $GLOBALS['staging_path'], '/') . '/zero-sense.php'),
-        ],
-    ]);
-    exit;
+    exit(json_encode([
+        'status' => 'ok',
+        'has_secret' => (bool)$secret,
+        'has_log_token' => (bool)$log_token,
+        'plugin_dir' => $staging_path,
+        'plugin_exists' => file_exists($staging_path . '/zero-sense.php'),
+    ]));
 }
 
 if (isset($_GET['sync'])) {
-    $token = isset($_GET['token']) ? trim((string) $_GET['token']) : '';
-    if (!$token) {
-        $token = trim((string) ($_SERVER['HTTP_X_ZEROSENSE_TOKEN'] ?? ''));
-    }
-    if (!$log_token || !hash_equals($log_token, $token)) {
+    if (!$log_token || !hash_equals($log_token, $_GET['token'] ?? '')) {
         http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'forbidden']);
-        exit;
+        exit(json_encode(['status' => 'forbidden']));
     }
-
-    $sync_result = handlePluginSyncLite();
-
-    header('Content-Type: application/json');
-    if (($sync_result['status'] ?? '') !== 'success') {
-        http_response_code(500);
-    }
-    echo json_encode([
-        'status' => $sync_result['status'] ?? 'error',
-        'message' => $sync_result['message'] ?? '',
-        'timestamp' => date('c'),
-    ]);
-    exit;
+    exit(json_encode(sync_plugin()));
 }
 
-// Only POST requests
-$method = $_SERVER['REQUEST_METHOD'] ?? '';
-if ($method !== 'POST') {
+// Only POST
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'method_not_allowed']);
-    exit;
+    exit(json_encode(['status' => 'method_not_allowed']));
 }
 
 log_msg("=== WEBHOOK START ===");
+<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
 log_msg("🔥 VERSION: v2.5 - GitHub standards compliant");
 log_msg("📅 UPDATED: " . date('Y-m-d H:i:s'));
 log_msg("🚀 FILE MODIFIED: " . date('Y-m-d H:i:s', filemtime(__FILE__)));
@@ -120,106 +63,35 @@ log_msg("Method: {$method}");
 log_msg("User-Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? ''));
 log_msg("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? ''));
 log_msg("Content-Length: " . ($_SERVER['CONTENT_LENGTH'] ?? ''));
+=======
+>>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
 
-// Debug: Log ALL server variables
-log_msg("=== DEBUG: ALL SERVER VARIABLES ===");
-foreach ($_SERVER as $key => $value) {
-    if (strpos($key, 'HTTP_') === 0 || strpos($key, 'CONTENT_') === 0) {
-        log_msg("$key: $value");
-    }
-}
-log_msg("=== END DEBUG ===");
-
-// Get payload
 $payload = file_get_contents('php://input');
-log_msg("Payload length: " . strlen($payload));
-
-// Get headers - compatible method
-$headers = [];
-foreach ($_SERVER as $name => $value) {
-    if (strpos($name, 'HTTP_') === 0) {
-        $header_name = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
-        $headers[$header_name] = $value;
-    }
-}
-
-// Prefer direct $_SERVER vars (these are the canonical way in PHP)
-$signature_sha256 = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
-$signature_sha1 = $_SERVER['HTTP_X_HUB_SIGNATURE'] ?? '';
+$signature = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
 $event = $_SERVER['HTTP_X_GITHUB_EVENT'] ?? '';
 $delivery = $_SERVER['HTTP_X_GITHUB_DELIVERY'] ?? '';
 
-// Fallback: case-insensitive lookup in $headers (because array keys are case-sensitive)
-if (!$signature_sha256 || !$signature_sha1 || !$event || !$delivery) {
-    $headers_lc = [];
-    foreach ($headers as $k => $v) {
-        $headers_lc[strtolower($k)] = $v;
-    }
-    $signature_sha256 = $signature_sha256 ?: ($headers_lc['x-hub-signature-256'] ?? '');
-    $signature_sha1 = $signature_sha1 ?: ($headers_lc['x-hub-signature'] ?? '');
-    $event = $event ?: ($headers_lc['x-github-event'] ?? '');
-    $delivery = $delivery ?: ($headers_lc['x-github-delivery'] ?? '');
-}
-
-log_msg("Event: $event");
-log_msg("Delivery: $delivery");
-log_msg("SHA256 Signature: " . ($signature_sha256 ? 'PRESENT' : 'NULL'));
-log_msg("SHA1 Signature: " . ($signature_sha1 ? 'PRESENT' : 'NULL'));
-log_msg("Available headers: " . implode(', ', array_keys($headers)));
-
-// GitHub IP whitelist for security (since signatures are blocked)
-$github_ips = [
-    '192.30.252.0/22',
-    '185.199.108.0/22', 
-    '140.82.112.0/20',
-    '143.55.64.0/20'
-];
-
+// GitHub IP ranges
+$github_ips = ['192.30.252.0/22', '185.199.108.0/22', '140.82.112.0/20', '143.55.64.0/20'];
 $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
-$is_github = false;
+$is_github_ip = false;
+foreach ($github_ips as $range) {
+    if (ip_in_range($client_ip, $range)) { $is_github_ip = true; break; }
+}
+$is_github_ua = strpos($_SERVER['HTTP_USER_AGENT'] ?? '', 'GitHub-Hookshot') !== false;
 
-foreach ($github_ips as $ip_range) {
-    if (ip_in_range($client_ip, $ip_range)) {
-        $is_github = true;
-        break;
-    }
+// Validate signature
+$valid = false;
+if ($secret && $signature) {
+    $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+    $valid = hash_equals($expected, $signature);
+}
+if (!$valid && ($is_github_ip || $is_github_ua)) {
+    $valid = true;
+    log_msg("Signature skipped (GitHub detected)");
 }
 
-// For debugging: allow if User-Agent is GitHub-Hookshot
-$is_github_user_agent = strpos($_SERVER['HTTP_USER_AGENT'] ?? '', 'GitHub-Hookshot') !== false;
-
-// Allow without signature when request looks like GitHub and either (a) signatures are missing or (b) no secret is configured.
-$allow_without_signature = ($is_github || $is_github_user_agent) && ((!$signature_sha256 && !$signature_sha1) || !$secret);
-
-if (!$secret && ($is_github || $is_github_user_agent)) {
-    log_msg("⚠️ Deploy secret missing; allowing based on GitHub IP/User-Agent (skipping signature validation)");
-}
-
-log_msg("Client IP: $client_ip");
-log_msg("Is GitHub IP: " . ($is_github ? 'YES' : 'NO'));
-log_msg("Is GitHub User-Agent: " . ($is_github_user_agent ? 'YES' : 'NO'));
-log_msg("Allow without signature: " . ($allow_without_signature ? 'YES' : 'NO'));
-
-// Skip signature validation if headers are blocked but request is from GitHub
-if (!$allow_without_signature && (!$signature_sha256 && !$signature_sha1)) {
-    log_msg("❌ Missing signatures and not from GitHub");
-    log_msg("=== WEBHOOK END ===\n");
-    http_response_code(403);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'forbidden',
-        'delivery' => $delivery,
-        'debug' => [
-            'has_signature_sha256' => !empty($signature_sha256),
-            'has_signature_sha1' => !empty($signature_sha1),
-            'is_github_ip' => $is_github,
-            'is_github_user_agent' => $is_github_user_agent,
-            'client_ip' => $client_ip
-        ]
-    ]);
-    exit;
-}
-
+<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
 if ($allow_without_signature) {
     log_msg("⚠️ Skipping signature validation (GitHub detected by IP/User-Agent)");
 } else {
@@ -283,193 +155,61 @@ if ($allow_without_signature) {
         ]);
         exit;
     }
+=======
+if (!$valid) {
+    log_msg("Forbidden: invalid signature");
+    http_response_code(403);
+    exit(json_encode(['status' => 'forbidden', 'delivery' => $delivery]));
+>>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
 }
-
-log_msg("✅ Request validated");
 
 $data = json_decode($payload, true);
-if (json_last_error() !== JSON_ERROR_NONE) {
-    log_msg("❌ Invalid JSON: " . json_last_error_msg());
-    log_msg("=== WEBHOOK END ===\n");
+if (!$data) {
     http_response_code(400);
-    echo json_encode(['status' => 'invalid_json']);
-    exit;
+    exit(json_encode(['status' => 'invalid_json']));
 }
 
-$ref = $data['ref'] ?? '';
-$branch = str_replace('refs/heads/', '', $ref);
-$repo = $data['repository']['name'] ?? '';
+$branch = str_replace('refs/heads/', '', $data['ref'] ?? '');
+$repo = $data['repository']['full_name'] ?? '';
 
-log_msg("Repository: $repo");
-log_msg("Branch: $branch");
-log_msg("Ref: $ref");
+log_msg("Event: $event, Branch: $branch, Repo: $repo");
 
 if ($event !== 'push' || $branch !== 'develop') {
-    log_msg("Ignored - Event: $event, Branch: $branch");
-    log_msg("=== WEBHOOK END ===\n");
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'ignored',
-        'event' => $event,
-        'branch' => $branch,
-        'delivery' => $delivery
-    ]);
-    exit;
+    exit(json_encode(['status' => 'ignored', 'event' => $event, 'branch' => $branch]));
 }
 
-// Verify path exists
 if (!is_dir($staging_path)) {
-    log_msg("❌ Staging path does not exist: {$staging_path}");
-    log_msg("=== WEBHOOK END ===\n");
     http_response_code(500);
-    echo json_encode([
-        'status' => 'path_not_found',
-        'path' => $staging_path
-    ]);
-    exit;
+    exit(json_encode(['status' => 'error', 'message' => 'Plugin dir not found']));
 }
 
-log_msg("🚀 Starting deploy...");
+// Deploy
+log_msg("Starting deploy...");
+$result = deploy_from_zip($repo, $branch, $staging_path, $delivery);
 
-$deploy_ok = false;
-$deploy_status = 'error';
-$deploy_message = '';
-$deployed_head = '';
-
-if (!chdir($staging_path)) {
-    log_msg("❌ Cannot chdir to staging path: {$staging_path}");
-} else {
-    // Check if it's a git repo
-    if (!is_dir('.git')) {
-        log_msg("❌ Not a git repository (.git not found)");
-        log_msg("Working dir: " . getcwd());
-
-        // Try to list a few entries for diagnostics
-        $entries = @scandir('.') ?: [];
-        $entries = array_slice($entries, 0, 30);
-        log_msg("Dir entries (first 30): " . implode(', ', $entries));
-        log_msg(".git exists: " . (file_exists('.git') ? 'YES' : 'NO'));
-
-        $repo_full_name = (string) ($data['repository']['full_name'] ?? '');
-        $zip_result = deploy_from_github_zip($repo_full_name, 'develop', $staging_path, (string) $delivery);
-        if (($zip_result['status'] ?? '') !== 'success') {
-            log_msg("❌ ZIP deploy failed: " . ($zip_result['message'] ?? ''));
-            $deploy_ok = false;
-            $deploy_status = 'error';
-            $deploy_message = (string) ($zip_result['message'] ?? 'ZIP deploy failed');
-        } else {
-            $sync_result = handlePluginInstallOrSync();
-            if (($sync_result['status'] ?? '') === 'error') {
-                log_msg("❌ Plugin sync failed: " . ($sync_result['message'] ?? ''));
-                $deploy_ok = false;
-                $deploy_status = 'error';
-                $deploy_message = (string) ($sync_result['message'] ?? 'Plugin sync failed');
-            } else {
-                log_msg("✅ Plugin sync: " . ($sync_result['message'] ?? ''));
-                $deploy_ok = true;
-                $deploy_status = 'success';
-                $deploy_message = (string) ($zip_result['message'] ?? 'ZIP deploy success');
-            }
-        }
-    } else {
-        $commands = [
-            'git status --porcelain',
-            'git fetch origin develop',
-            'git reset --hard origin/develop',
-            'git clean -fd',
-            'git rev-parse --short HEAD'
-        ];
-
-        $failed = false;
-        foreach ($commands as $cmd) {
-            $output = [];
-            $return = 0;
-            exec($cmd . ' 2>&1', $output, $return);
-            log_msg("$cmd => exit {$return}");
-            if (!empty($output)) {
-                foreach ($output as $line) {
-                    log_msg("  $line");
-                }
-            }
-            if ($return !== 0) {
-                $failed = true;
-                break;
-            }
-            if ($cmd === 'git rev-parse --short HEAD') {
-                $deployed_head = !empty($output) ? trim(end($output)) : '';
-            }
-        }
-
-        if (!$failed) {
-            // Check if plugin exists and install/sync
-            $sync_result = handlePluginInstallOrSync();
-            if ($sync_result['status'] === 'error') {
-                log_msg("❌ Plugin sync failed: " . $sync_result['message']);
-                $deploy_ok = false;
-                $deploy_status = 'error';
-                $deploy_message = $sync_result['message'];
-            } else {
-                log_msg("✅ Plugin sync: " . $sync_result['message']);
-                $deploy_ok = true;
-                $deploy_status = 'success';
-                $deploy_message = $sync_result['message'];
-            }
-            log_msg("🎉 Deploy success! HEAD: $deployed_head");
-        } else {
-            log_msg("❌ Deploy failed");
-            $repo_full_name = (string) ($data['repository']['full_name'] ?? '');
-            $zip_result = deploy_from_github_zip($repo_full_name, 'develop', $staging_path, (string) $delivery);
-            if (($zip_result['status'] ?? '') !== 'success') {
-                $deploy_status = 'error';
-                $deploy_message = 'Git commands failed; ZIP deploy also failed: ' . (string) ($zip_result['message'] ?? '');
-            } else {
-                $sync_result = handlePluginInstallOrSync();
-                if (($sync_result['status'] ?? '') === 'error') {
-                    $deploy_status = 'error';
-                    $deploy_message = (string) ($sync_result['message'] ?? 'Plugin sync failed');
-                } else {
-                    $deploy_ok = true;
-                    $deploy_status = 'success';
-                    $deploy_message = (string) ($zip_result['message'] ?? 'ZIP deploy success');
-                }
-            }
-        }
-    }
+if ($result['status'] === 'success') {
+    $sync = sync_plugin();
+    log_msg("Sync: " . $sync['message']);
 }
 
-log_msg("=== WEBHOOK END ===\n");
+log_msg("Deploy: " . $result['status']);
+exit(json_encode($result));
 
-/**
- * Check if IP is in range (CIDR notation)
- */
+// === FUNCTIONS ===
+
 function ip_in_range($ip, $range) {
-    if (strpos($range, '/') === false) {
-        return $ip === $range;
-    }
-    
+    if (strpos($range, '/') === false) return $ip === $range;
     list($subnet, $mask) = explode('/', $range);
-    $subnet = ip2long($subnet);
-    $ip = ip2long($ip);
     $mask = -1 << (32 - (int)$mask);
-    
-    return ($ip & $mask) === ($subnet & $mask);
-}
-/**
- * Handle plugin installation or synchronization
- */
-function handlePluginInstallOrSync(): array {
-    // Keep legacy name for compatibility, but avoid bootstrapping WordPress (can cause redirects to wp-login).
-    return handlePluginSyncLite();
+    return (ip2long($ip) & $mask) === (ip2long($subnet) & $mask);
 }
 
-function handlePluginSyncLite(): array {
+function sync_plugin(): array {
     global $staging_path;
-
-    if (function_exists('opcache_reset')) {
-        @opcache_reset();
-    }
-
+    if (function_exists('opcache_reset')) @opcache_reset();
+    
     $cfg = parse_wp_config(find_wp_config(dirname($staging_path)));
+<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/webhook-deploy.php
     if (!$cfg) {
         return ['status' => 'error', 'message' => 'wp-config.php not found or could not be parsed'];
     }
@@ -522,269 +262,158 @@ function handlePluginSyncLite(): array {
         return ['status' => 'success', 'message' => 'Sync skipped (DB error: ' . $e->getMessage() . ') - deploy OK'];
     } catch (Throwable $e) {
         return ['status' => 'success', 'message' => 'Sync skipped (error: ' . $e->getMessage() . ') - deploy OK'];
+=======
+    if (!$cfg) return ['status' => 'success', 'message' => 'wp-config not found, skipped'];
+    
+    $table = ($cfg['table_prefix'] ?: 'wp_') . 'options';
+    
+    try {
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+        $db = new mysqli($cfg['db_host'], $cfg['db_user'], $cfg['db_password'], $cfg['db_name']);
+        $db->set_charset('utf8mb4');
+        
+        $check = $db->query("SHOW TABLES LIKE '$table'");
+        if (!$check || $check->num_rows === 0) {
+            $db->close();
+            return ['status' => 'success', 'message' => 'Table not found, skipped'];
+        }
+        
+        $db->query("DELETE FROM $table WHERE option_name LIKE '_transient_zs_feature_classes_v%' OR option_name LIKE '_transient_timeout_zs_feature_classes_v%'");
+        $db->close();
+        return ['status' => 'success', 'message' => 'Transients cleared'];
+    } catch (Throwable $e) {
+        return ['status' => 'success', 'message' => 'DB error: ' . $e->getMessage()];
+>>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-b8fea4f2/webhook-deploy.php
     }
 }
 
-function find_wp_config(string $start_dir): string {
-    $dir = rtrim($start_dir, '/');
+function find_wp_config(string $dir): string {
     for ($i = 0; $i <= 10; $i++) {
-        $candidate = $dir . '/wp-config.php';
-        if (file_exists($candidate)) {
-            return $candidate;
-        }
+        if (file_exists($dir . '/wp-config.php')) return $dir . '/wp-config.php';
         $parent = dirname($dir);
-        if (!$parent || $parent === $dir || $parent === '/') {
-            break;
-        }
+        if ($parent === $dir) break;
         $dir = $parent;
     }
     return '';
 }
 
 function parse_wp_config(string $path): array {
-    if (!$path || !file_exists($path)) {
-        return [];
-    }
-    $content = (string) @file_get_contents($path);
-    if (!$content) {
-        return [];
-    }
-
-    $get_define = function (string $name) use ($content): string {
-        $re = "/define\\(\\s*['\"]" . preg_quote($name, '/') . "['\"]\\s*,\\s*['\"]([^'\"]*)['\"]\\s*\\)\\s*;/";
-        if (preg_match($re, $content, $m)) {
-            return (string) $m[1];
-        }
-        return '';
+    if (!$path || !file_exists($path)) return [];
+    $c = @file_get_contents($path);
+    if (!$c) return [];
+    
+    $get = function($n) use ($c) {
+        $pattern = '/define\s*\(\s*[\'"]' . preg_quote($n, '/') . '[\'"]\s*,\s*[\'"]([^\'"]*)[\'"]\\s*\)/';
+        return preg_match($pattern, $c, $m) ? $m[1] : '';
     };
-
-    $prefix = '';
-    if (preg_match("/\\$table_prefix\\s*=\\s*['\"]([^'\"]+)['\"]\\s*;/", $content, $m)) {
-        $prefix = (string) $m[1];
-    }
-
+    $prefix = preg_match('/\$table_prefix\s*=\s*[\'"]([^\'"]+)[\'"]/', $c, $m) ? $m[1] : 'wp_';
+    
     return [
-        'db_name' => $get_define('DB_NAME'),
-        'db_user' => $get_define('DB_USER'),
-        'db_password' => $get_define('DB_PASSWORD'),
-        'db_host' => $get_define('DB_HOST') ?: 'localhost',
+        'db_name' => $get('DB_NAME'),
+        'db_user' => $get('DB_USER'),
+        'db_password' => $get('DB_PASSWORD'),
+        'db_host' => $get('DB_HOST') ?: 'localhost',
         'table_prefix' => $prefix,
     ];
 }
 
-function deploy_from_github_zip(string $repo_full_name, string $branch, string $target_dir, string $delivery): array {
-    if (!$repo_full_name) {
-        return ['status' => 'error', 'message' => 'Repository full_name not found in payload'];
-    }
-
-    $zip_url = 'https://github.com/' . $repo_full_name . '/archive/refs/heads/' . rawurlencode($branch) . '.zip';
-    $zip_path = '/tmp/zs-deploy-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $delivery ?: uniqid('', true)) . '.zip';
-    $extract_dir = '/tmp/zs-deploy-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $delivery ?: uniqid('', true));
-
-    $download_ok = download_file($zip_url, $zip_path);
-    if (!$download_ok || !file_exists($zip_path)) {
-        return ['status' => 'error', 'message' => 'Failed to download ZIP from ' . $zip_url];
-    }
-
-    if (is_dir($extract_dir)) {
-        rrmdir($extract_dir);
-    }
-    @mkdir($extract_dir, 0755, true);
-
-    $unzipped = false;
+function deploy_from_zip(string $repo, string $branch, string $target, string $delivery): array {
+    if (!$repo) return ['status' => 'error', 'message' => 'No repo'];
+    
+    $url = "https://github.com/$repo/archive/refs/heads/$branch.zip";
+    $zip = '/tmp/zs-' . md5($delivery ?: uniqid()) . '.zip';
+    $tmp = '/tmp/zs-' . md5($delivery ?: uniqid());
+    
+    log_msg("Downloading: $url");
+    if (!download($url, $zip)) return ['status' => 'error', 'message' => 'Download failed'];
+    log_msg("Downloaded: $zip");
+    
+    @mkdir($tmp, 0755, true);
+    $ok = false;
     if (class_exists('ZipArchive')) {
-        $zip = new ZipArchive();
-        if ($zip->open($zip_path) === true) {
-            $unzipped = $zip->extractTo($extract_dir);
-            $zip->close();
-        }
+        $z = new ZipArchive();
+        if ($z->open($zip) === true) { $ok = $z->extractTo($tmp); $z->close(); }
     }
-    if (!$unzipped) {
-        $output = [];
-        $return = 0;
-        exec('unzip -o ' . escapeshellarg($zip_path) . ' -d ' . escapeshellarg($extract_dir) . ' 2>&1', $output, $return);
-        $unzipped = ($return === 0);
+    if (!$ok) {
+        exec('unzip -o ' . escapeshellarg($zip) . ' -d ' . escapeshellarg($tmp) . ' 2>&1', $out, $ret);
+        $ok = ($ret === 0);
     }
-
-    if (!$unzipped) {
-        return ['status' => 'error', 'message' => 'Failed to unzip downloaded archive'];
+    @unlink($zip);
+    
+    if (!$ok) return ['status' => 'error', 'message' => 'Unzip failed'];
+    log_msg("Extracted to: $tmp");
+    
+    $src = '';
+    foreach (scandir($tmp) as $e) {
+        if ($e !== '.' && $e !== '..' && is_dir("$tmp/$e")) { $src = "$tmp/$e"; break; }
     }
-
-    $entries = @scandir($extract_dir) ?: [];
-    $src_root = '';
-    foreach ($entries as $e) {
-        if ($e === '.' || $e === '..' || $e === '__MACOSX') {
-            continue;
-        }
-        $candidate = rtrim($extract_dir, '/') . '/' . $e;
-        if (is_dir($candidate)) {
-            $src_root = $candidate;
-            break;
-        }
-    }
-
-    if (!$src_root) {
-        return ['status' => 'error', 'message' => 'Unzipped archive has no root directory'];
-    }
-
-    clean_dir_except($target_dir, ['webhook-deploy.php', '.git', '.zs-secrets.php']);
-    $copy_ok = recursive_copy($src_root, $target_dir);
-
-    @unlink($zip_path);
-    rrmdir($extract_dir);
-
-    if (!$copy_ok) {
-        return ['status' => 'error', 'message' => 'Failed to copy extracted files into target directory'];
-    }
-
-    return ['status' => 'success', 'message' => 'Deployed from GitHub ZIP (' . $repo_full_name . ':' . $branch . ')'];
+    if (!$src) { rrmdir($tmp); return ['status' => 'error', 'message' => 'No root dir']; }
+    
+    log_msg("Copying from: $src");
+    clean_dir($target, ['webhook-deploy.php', '.git', '.zs-secrets.php']);
+    rcopy($src, $target);
+    rrmdir($tmp);
+    
+    log_msg("Deploy complete");
+    return ['status' => 'success', 'message' => 'Deployed', 'delivery' => $delivery];
 }
 
-function download_file(string $url, string $dest): bool {
+function download(string $url, string $dest): bool {
     if (function_exists('curl_init')) {
         $fp = @fopen($dest, 'wb');
-        if (!$fp) {
-            return false;
-        }
+        if (!$fp) return false;
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_FILE, $fp);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'ZeroSense-Webhook-Deploy');
+        curl_setopt_array($ch, [CURLOPT_FILE => $fp, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 30, CURLOPT_USERAGENT => 'ZS-Deploy']);
         $ok = curl_exec($ch);
-        $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         fclose($fp);
-        if (!$ok || $http < 200 || $http >= 300) {
-            @unlink($dest);
-            return false;
-        }
+        if (!$ok || $code < 200 || $code >= 300) { @unlink($dest); return false; }
         return true;
     }
-
-    $context = stream_context_create([
-        'http' => [
-            'timeout' => 30,
-            'follow_location' => 1,
-            'header' => "User-Agent: ZeroSense-Webhook-Deploy\r\n",
-        ],
-    ]);
-    $data = @file_get_contents($url, false, $context);
-    if ($data === false) {
-        return false;
-    }
-    return file_put_contents($dest, $data) !== false;
+    $data = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 30, 'header' => "User-Agent: ZS-Deploy\r\n"]]));
+    return $data !== false && file_put_contents($dest, $data) !== false;
 }
 
-function clean_dir_except(string $dir, array $keep): void {
-    $entries = @scandir($dir) ?: [];
-    foreach ($entries as $e) {
-        if ($e === '.' || $e === '..') {
-            continue;
-        }
-        if (in_array($e, $keep, true)) {
-            continue;
-        }
-        $path = rtrim($dir, '/') . '/' . $e;
-        if (is_dir($path)) {
-            rrmdir($path);
-        } else {
-            @unlink($path);
-        }
+function clean_dir(string $dir, array $keep): void {
+    foreach (scandir($dir) as $e) {
+        if ($e === '.' || $e === '..' || in_array($e, $keep)) continue;
+        $p = "$dir/$e";
+        is_dir($p) ? rrmdir($p) : @unlink($p);
     }
 }
 
-function recursive_copy(string $src, string $dst): bool {
-    if (!is_dir($src)) {
-        return false;
+function rcopy(string $src, string $dst): void {
+    if (!is_dir($dst)) @mkdir($dst, 0755, true);
+    foreach (scandir($src) as $e) {
+        if ($e === '.' || $e === '..') continue;
+        is_dir("$src/$e") ? rcopy("$src/$e", "$dst/$e") : @copy("$src/$e", "$dst/$e");
     }
-    if (!is_dir($dst) && !@mkdir($dst, 0755, true)) {
-        return false;
-    }
-    $entries = @scandir($src) ?: [];
-    foreach ($entries as $e) {
-        if ($e === '.' || $e === '..') {
-            continue;
-        }
-        $from = rtrim($src, '/') . '/' . $e;
-        $to = rtrim($dst, '/') . '/' . $e;
-        if (is_dir($from)) {
-            if (!recursive_copy($from, $to)) {
-                return false;
-            }
-        } else {
-            if (!@copy($from, $to)) {
-                return false;
-            }
-        }
-    }
-    return true;
 }
 
 function rrmdir(string $dir): void {
-    if (!is_dir($dir)) {
-        return;
-    }
-    $entries = @scandir($dir) ?: [];
-    foreach ($entries as $e) {
-        if ($e === '.' || $e === '..') {
-            continue;
-        }
-        $path = rtrim($dir, '/') . '/' . $e;
-        if (is_dir($path)) {
-            rrmdir($path);
-        } else {
-            @unlink($path);
-        }
+    if (!is_dir($dir)) return;
+    foreach (scandir($dir) as $e) {
+        if ($e === '.' || $e === '..') continue;
+        $p = "$dir/$e";
+        is_dir($p) ? rrmdir($p) : @unlink($p);
     }
     @rmdir($dir);
 }
 
 function load_local_secrets(string $dir): array {
-    $path = rtrim($dir, '/') . '/.zs-secrets.php';
-    if (!file_exists($path)) {
-        return [];
-    }
-    $data = include $path;
-    return is_array($data) ? $data : [];
+    $p = "$dir/.zs-secrets.php";
+    return file_exists($p) ? (include $p) : [];
 }
 
-function detect_zero_sense_plugin_dir(string $start_dir): string {
-    $start_dir = rtrim($start_dir, '/');
-
-    // Case 1: script is already inside the plugin directory
-    if (file_exists($start_dir . '/zero-sense.php')) {
-        return $start_dir;
-    }
-
-    // Case 2: script is somewhere under WP root; walk up and look for wp-content/plugins/zero-sense
-    $dir = $start_dir;
+function detect_plugin_dir(string $dir): string {
+    if (file_exists("$dir/zero-sense.php")) return $dir;
     for ($i = 0; $i <= 10; $i++) {
-        $candidate = $dir . '/wp-content/plugins/zero-sense/zero-sense.php';
-        if (file_exists($candidate)) {
-            return dirname($candidate);
-        }
-        $parent = dirname($dir);
-        if (!$parent || $parent === $dir || $parent === '/') {
-            break;
-        }
-        $dir = $parent;
+        $c = "$dir/wp-content/plugins/zero-sense/zero-sense.php";
+        if (file_exists($c)) return dirname($c);
+        $p = dirname($dir);
+        if ($p === $dir) break;
+        $dir = $p;
     }
-
-    // Fallback (better than hardcoded path): assume plugin folder is next to this script
-    return $start_dir;
+    return $dir;
 }
-
-// Response
-header('Content-Type: application/json');
-echo json_encode([
-    'status' => $deploy_status,
-    'message' => $deploy_message,
-    'delivery' => $delivery,
-    'event' => $event,
-    'branch' => 'develop',
-    'deployed_head' => $deployed_head,
-    'timestamp' => date('c')
-]);
-?>

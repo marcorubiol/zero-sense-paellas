@@ -11,7 +11,7 @@ class ShippingEmail
     public function __construct()
     {
         add_filter('woocommerce_checkout_fields', [$this, 'addField'], 30);
-        add_action('woocommerce_checkout_update_order_meta', [$this, 'save'], 20, 1);
+        add_action('woocommerce_checkout_create_order', [$this, 'save'], 20, 2);
     }
 
     public function addField($fields)
@@ -32,23 +32,16 @@ class ShippingEmail
         return $fields;
     }
 
-    public function save($orderId): void
+    public function save(WC_Order $order, $data): void
     {
-        if (!$orderId || !isset($_POST['shipping_email'])) {
+        if (!isset($_POST['shipping_email'])) {
             return;
         }
 
         $email = sanitize_email(wp_unslash((string) $_POST['shipping_email']));
 
-        $order = wc_get_order($orderId);
-        if ($order instanceof WC_Order) {
-            $order->update_meta_data(self::META_KEY, $email);
-            $order->update_meta_data(self::META_KEY_WOO, $email);
-            $order->save();
-            return;
-        }
-
-        update_post_meta($orderId, self::META_KEY, $email);
-        update_post_meta($orderId, self::META_KEY_WOO, $email);
+        $order->update_meta_data(self::META_KEY, $email);
+        $order->update_meta_data(self::META_KEY_WOO, $email);
+        $order->save();
     }
 }

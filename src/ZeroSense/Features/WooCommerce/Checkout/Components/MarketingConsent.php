@@ -1,6 +1,8 @@
 <?php
 namespace ZeroSense\Features\WooCommerce\Checkout\Components;
 
+use WC_Order;
+
 class MarketingConsent
 {
     const METABOX_CONSENT_KEY = 'marketing_consent_checkbox';
@@ -26,7 +28,7 @@ class MarketingConsent
         add_action('woocommerce_review_order_before_submit', [$this, 'add_consent_checkbox'], 9);
         
         // Save checkbox value to MetaBox field and add order notes
-        add_action('woocommerce_checkout_update_order_meta', [$this, 'save_consent_to_order'], 10, 1);
+        add_action('woocommerce_checkout_create_order', [$this, 'save_consent_to_order'], 20, 2);
     }
 
     /**
@@ -60,30 +62,15 @@ class MarketingConsent
     /**
      * Save checkbox value to MetaBox field and add to order notes
      */
-    public function save_consent_to_order($order_id)
+    public function save_consent_to_order(WC_Order $order, $data): void
     {
-        if (!$order_id) {
-            return;
-        }
-
-        // Verify this is an order post type
-        if (get_post_type($order_id) !== self::ORDER_POST_TYPE) {
-            return;
-        }
-
         // Check if the marketing consent checkbox was checked
         $marketing_consent = isset($_POST[self::FORM_CONSENT_KEY]) ? 1 : 0;
-        
-        // Save to MetaBox field using the MetaBox API
-        if (function_exists('rwmb_set_meta')) {
-            rwmb_set_meta($order_id, self::METABOX_CONSENT_KEY, $marketing_consent, self::ORDER_POST_TYPE);
-        } else {
-            // Fallback to standard WordPress function if MetaBox API is not available
-            update_post_meta($order_id, self::METABOX_CONSENT_KEY, $marketing_consent);
-        }
+
+        $order->update_meta_data(self::METABOX_CONSENT_KEY, $marketing_consent);
+        $order->save();
         
         // Add the consent status to the order notes
-        $order = wc_get_order($order_id);
         if ($order) {
             $consent_text = $marketing_consent ? __('yes', 'zero-sense') : __('no', 'zero-sense');
             $note = sprintf(

@@ -1,6 +1,8 @@
 <?php
 namespace ZeroSense\Features\WooCommerce\Checkout\Components;
 
+use WC_Order;
+
 class CheckoutFields
 {
     public function __construct()
@@ -11,7 +13,7 @@ class CheckoutFields
         // Meta Box integration (like legacy plugin)
         add_action('woocommerce_after_checkout_billing_form', [$this, 'display_meta_box_fields']);
         add_action('woocommerce_checkout_process', [$this, 'validate_meta_box_fields']);
-        add_action('woocommerce_checkout_update_order_meta', [$this, 'save_meta_box_fields']);
+        add_action('woocommerce_checkout_create_order', [$this, 'save_meta_box_fields'], 20, 2);
 
         // WPML compatibility fixes
         add_action('init', [$this, 'register_checkout_strings_for_translation']);
@@ -169,9 +171,10 @@ class CheckoutFields
     /**
      * Save meta box fields (from legacy implementation)
      */
-    public function save_meta_box_fields($order_id)
+    public function save_meta_box_fields(WC_Order $order, $data): void
     {
-        if (!$order_id) {
+        $order_id = (int) $order->get_id();
+        if ($order_id <= 0) {
             return;
         }
 
@@ -217,13 +220,13 @@ class CheckoutFields
                     if (isset($field["type"]) && $field["type"] === 'date') {
                         $date = \DateTime::createFromFormat('d/m/Y', $field_value);
                         if ($date) {
-                            update_post_meta($order_id, $field['id'], $date->getTimestamp());
+                            $order->update_meta_data($field['id'], $date->getTimestamp());
                         } else {
                             $fallback_date = strtotime(is_string($field_value) ? $field_value : '');
                             if ($fallback_date !== false) {
-                                update_post_meta($order_id, $field['id'], $fallback_date);
+                                $order->update_meta_data($field['id'], $fallback_date);
                             } else {
-                                update_post_meta($order_id, $field['id'], 0);
+                                $order->update_meta_data($field['id'], 0);
                             }
                         }
                     } else {
@@ -232,7 +235,7 @@ class CheckoutFields
                         } else {
                             $field_value = sanitize_text_field((string) $field_value);
                         }
-                        update_post_meta($order_id, $field['id'], $field_value);
+                        $order->update_meta_data($field['id'], $field_value);
                     }
                 }
             }

@@ -1,6 +1,8 @@
 <?php
 namespace ZeroSense\Features\WooCommerce\OrderPay\Components;
 
+use WC_Order;
+
 class MarketingConsent
 {
     const METABOX_CONSENT_KEY = 'marketing_consent_checkbox';
@@ -65,28 +67,18 @@ class MarketingConsent
      */
     public function save_consent_to_order($order_id)
     {
-        if (!$order_id) {
-            return;
-        }
-
-        // Verify this is an order post type
-        if (get_post_type($order_id) !== self::ORDER_POST_TYPE) {
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) {
             return;
         }
 
         // Check if the marketing consent checkbox was checked
         $marketing_consent = isset($_POST[self::FORM_CONSENT_KEY]) ? 1 : 0;
-        
-        // Save to MetaBox field using the MetaBox API
-        if (function_exists('rwmb_set_meta')) {
-            rwmb_set_meta($order_id, self::METABOX_CONSENT_KEY, $marketing_consent, self::ORDER_POST_TYPE);
-        } else {
-            // Fallback to standard WordPress function if MetaBox API is not available
-            update_post_meta($order_id, self::METABOX_CONSENT_KEY, $marketing_consent);
-        }
+
+        $order->update_meta_data(self::METABOX_CONSENT_KEY, $marketing_consent);
+        $order->save();
         
         // Add the consent status to the order notes
-        $order = wc_get_order($order_id);
         if ($order) {
             $consent_text = $marketing_consent ? __('yes', 'zero-sense') : __('no', 'zero-sense');
             $note = sprintf(

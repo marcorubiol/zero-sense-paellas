@@ -340,18 +340,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
-            $value = get_post_meta($orderId, '_billing_' . $field, true);
-
-            if ($field === 'country') {
-                return $this->formatCountry($value);
-            }
-
-            if ($field === 'state') {
-                $country = get_post_meta($orderId, '_billing_country', true);
-                return $this->formatState($value, $country);
-            }
-
-            return is_string($value) ? $value : '';
+            return '';
         }
 
         $method = 'get_billing_' . $field;
@@ -384,9 +373,11 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $order = wc_get_order($orderId);
-        $raw = $order instanceof WC_Order
-            ? $order->get_meta('zs_ops_notes', true)
-            : get_post_meta($orderId, 'zs_ops_notes', true);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $raw = $order->get_meta('zs_ops_notes', true);
 
         return is_string($raw) ? $raw : '';
     }
@@ -399,9 +390,11 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $order = wc_get_order($orderId);
-        $raw = $order instanceof WC_Order
-            ? $order->get_meta('zs_ops_material', true)
-            : get_post_meta($orderId, 'zs_ops_material', true);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $raw = $order->get_meta('zs_ops_material', true);
 
         if (!is_array($raw)) {
             return '';
@@ -428,31 +421,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
-            if ($field === 'phone') {
-                $value = get_post_meta($orderId, '_shipping_phone', true);
-                return is_string($value) ? $value : '';
-            }
-
-            if ($field === 'email') {
-                $raw = get_post_meta($orderId, 'zs_shipping_email', true);
-                if (!is_string($raw) || $raw === '') {
-                    $raw = get_post_meta($orderId, '_shipping_email', true);
-                }
-                return is_string($raw) ? $raw : '';
-            }
-
-            $value = get_post_meta($orderId, '_shipping_' . $field, true);
-
-            if ($field === 'country') {
-                return $this->formatCountry($value);
-            }
-
-            if ($field === 'state') {
-                $country = get_post_meta($orderId, '_shipping_country', true);
-                return $this->formatState($value, $country);
-            }
-
-            return is_string($value) ? $value : '';
+            return '';
         }
 
         if ($field === 'phone') {
@@ -598,8 +567,7 @@ class BricksDynamicTags implements FeatureInterface
         if ($order instanceof WC_Order) {
             $raw = $order->get_meta($metaKey, true);
         } else {
-            // Fallback for environments where wc_get_order is unavailable
-            $raw = get_post_meta($orderId, $metaKey, true);
+            return '';
         }
         
         if (is_scalar($raw)) {
