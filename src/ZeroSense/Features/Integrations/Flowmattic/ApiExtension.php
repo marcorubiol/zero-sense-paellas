@@ -224,6 +224,28 @@ class ApiExtension
             }
         }
 
+        $canonicalIdRaw = $order->get_meta('zs_event_service_location', true);
+        $canonicalId = is_numeric($canonicalIdRaw) ? (int) $canonicalIdRaw : 0;
+        if ($canonicalId > 0) {
+            $data['event_service_location_term_id_default'] = $canonicalId;
+
+            $orderLangId = $canonicalId;
+            if (defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters') && is_string($orderLanguage) && $orderLanguage !== '') {
+                $translatedId = apply_filters('wpml_object_id', $canonicalId, 'service-area', true, $orderLanguage);
+                if ($translatedId) {
+                    $orderLangId = (int) $translatedId;
+                }
+            }
+
+            $data['event_service_location_term_id_order_lang'] = $orderLangId;
+
+            $term = get_term($orderLangId, 'service-area');
+            if ($term instanceof \WP_Term) {
+                $data['event_service_location_term_slug_order_lang'] = $term->slug;
+                $data['event_service_location_term_name_order_lang'] = $term->name;
+            }
+        }
+
         if ($originalLanguage !== null && !empty($orderLanguage) && $orderLanguage !== $originalLanguage) {
             do_action('wpml_switch_language', $originalLanguage);
         }
