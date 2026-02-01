@@ -117,7 +117,7 @@ class DepositsCalculatorMetabox
                     </tr>
                     <?php if ($remainingAmount > 0) : ?>
                         <tr class="zs-balance-row">
-                            <td class="label"><?php esc_html_e('Balance:', 'zero-sense'); ?></td>
+                            <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
                             <td class="total">
                                 <span class="zs-balance-text"><?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?></span>
                             </td>
