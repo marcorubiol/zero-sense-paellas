@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL);
+error_reporting(E_ALL);w
 ini_set('display_errors', 0);
 
 function load_local_secrets(string $dir): array {
