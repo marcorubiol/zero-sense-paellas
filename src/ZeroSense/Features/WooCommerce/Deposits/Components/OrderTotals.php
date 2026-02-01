@@ -10,7 +10,7 @@ class OrderTotals
 {
     public function register(): void
     {
-        add_action('woocommerce_admin_order_totals_after_total', [$this, 'renderAdminTotals'], 20);
+        add_action('woocommerce_admin_order_totals_after_subtotal', [$this, 'renderAdminTotals'], 20);
         add_filter('woocommerce_get_order_item_totals', [$this, 'injectFrontendTotals'], 20, 3);
     }
 
