@@ -111,11 +111,6 @@ class EventDetailsMetabox
         $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
         $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
         $intolerances = $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
-        $budgetEmailContent = $this->getOrderMetaWithFallback($order, MetaKeys::BUDGET_EMAIL_CONTENT);
-        $finalDetailsEmailContent = $this->getOrderMetaWithFallback($order, MetaKeys::FINAL_DETAILS_EMAIL_CONTENT);
-        $marketingConsent = $this->getOrderMetaWithFallback($order, MetaKeys::MARKETING_CONSENT);
-        $rabbitOption = $this->getOrderMetaWithFallback($order, MetaKeys::RABBIT_OPTION);
-        
         wp_nonce_field('zs_event_details_save', 'zs_event_details_nonce');
         ?>
         
@@ -333,58 +328,6 @@ class EventDetailsMetabox
                     <textarea id="event_intolerances" name="event_intolerances" rows="4" class="widefat"><?php echo esc_textarea(is_string($intolerances) ? $intolerances : ''); ?></textarea>
                 </div>
             </div>
-
-            <!-- Email Content -->
-            <div class="zs-field-group">
-                <h3><?php esc_html_e('Email Content', 'zero-sense'); ?></h3>
-                
-                <div class="zs-field">
-                    <label for="budget_email_content">
-                        <?php esc_html_e('Budget Email Content', 'zero-sense'); ?>
-                    </label>
-                    <textarea id="budget_email_content" name="budget_email_content" rows="6" class="widefat"><?php echo esc_textarea(is_string($budgetEmailContent) ? $budgetEmailContent : ''); ?></textarea>
-                    <p class="description"><?php esc_html_e('Custom content for budget emails sent via FlowMattic.', 'zero-sense'); ?></p>
-                </div>
-                
-                <div class="zs-field">
-                    <label for="final_details_email_content">
-                        <?php esc_html_e('Final Details Email Content', 'zero-sense'); ?>
-                    </label>
-                    <textarea id="final_details_email_content" name="final_details_email_content" rows="6" class="widefat"><?php echo esc_textarea(is_string($finalDetailsEmailContent) ? $finalDetailsEmailContent : ''); ?></textarea>
-                    <p class="description"><?php esc_html_e('Custom content for final details emails sent via FlowMattic.', 'zero-sense'); ?></p>
-                </div>
-            </div>
-
-            <!-- Customer Preferences -->
-            <div class="zs-field-group">
-                <h3><?php esc_html_e('Customer Preferences', 'zero-sense'); ?></h3>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field zs-checkbox-field">
-                        <label>
-                            <input type="checkbox" 
-                                   id="marketing_consent" 
-                                   name="marketing_consent" 
-                                   value="1"
-                                   <?php checked($marketingConsent, '1'); ?>>
-                            <?php esc_html_e('Marketing Consent', 'zero-sense'); ?>
-                        </label>
-                        <p class="description"><?php esc_html_e('Customer has agreed to receive marketing communications.', 'zero-sense'); ?></p>
-                    </div>
-                    
-                    <div class="zs-field zs-checkbox-field">
-                        <label>
-                            <input type="checkbox" 
-                                   id="rabbit_option" 
-                                   name="rabbit_option" 
-                                   value="1"
-                                   <?php checked($rabbitOption, '1'); ?>>
-                            <?php esc_html_e('Rabbit Option', 'zero-sense'); ?>
-                        </label>
-                        <p class="description"><?php esc_html_e('Customer wants rabbit in their paella.', 'zero-sense'); ?></p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <style>
@@ -528,18 +471,6 @@ class EventDetailsMetabox
         if (isset($_POST['event_intolerances'])) {
             $order->update_meta_data(MetaKeys::INTOLERANCES, sanitize_textarea_field((string) $_POST['event_intolerances']));
         }
-
-        // Save email content
-        if (isset($_POST['budget_email_content'])) {
-            $order->update_meta_data(MetaKeys::BUDGET_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['budget_email_content']));
-        }
-        if (isset($_POST['final_details_email_content'])) {
-            $order->update_meta_data(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['final_details_email_content']));
-        }
-
-        // Save customer preferences
-        $order->update_meta_data(MetaKeys::MARKETING_CONSENT, isset($_POST['marketing_consent']) ? '1' : '0');
-        $order->update_meta_data(MetaKeys::RABBIT_OPTION, isset($_POST['rabbit_option']) ? '1' : '0');
 
         $order->save();
     }

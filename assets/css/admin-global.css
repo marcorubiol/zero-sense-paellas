@@ -37,3 +37,10 @@
 #adminmenu div.wp-menu-image:before {
   color: #c3c4c7 !important;
 }
+
+/* Fix WooCommerce admin page content alignment */
+@media (min-width: 783px) {
+  .woocommerce-admin-page #wpbody-content {
+    padding-left: 20px !important;
+  }
+}
