@@ -60,15 +60,13 @@ class OrderTotals
                 <?php echo wc_price($depositAmount, ['currency' => $order->get_currency()]); ?>
             </td>
         </tr>
-        <?php if ($balanceAmount > 0) : ?>
-            <tr>
-                <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
-                <td width="1%"></td>
-                <td class="total">
-                    <?php echo wc_price($balanceAmount, ['currency' => $order->get_currency()]); ?>
-                </td>
-            </tr>
-        <?php endif; ?>
+        <tr>
+            <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
+            <td width="1%"></td>
+            <td class="total">
+                <?php echo wc_price($balanceAmount, ['currency' => $order->get_currency()]); ?>
+            </td>
+        </tr>
         <?php
     }
 
@@ -132,12 +130,10 @@ class OrderTotals
                     'value' => wc_price($depositAmount, ['currency' => $order->get_currency()]),
                 ];
 
-                if ($balanceAmount > 0) {
-                    $newRows['balance'] = [
-                        'label' => __('Remaining Balance:', 'zero-sense'),
-                        'value' => wc_price($balanceAmount, ['currency' => $order->get_currency()]),
-                    ];
-                }
+                $newRows['balance'] = [
+                    'label' => __('Remaining Balance:', 'zero-sense'),
+                    'value' => wc_price($balanceAmount, ['currency' => $order->get_currency()]),
+                ];
             }
         }
 

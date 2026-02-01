@@ -115,14 +115,12 @@ class DepositsCalculatorMetabox
                             <input type="hidden" class="zs-deposit-nonce-hidden" value="<?php echo wp_create_nonce('order-item'); ?>">
                         </td>
                     </tr>
-                    <?php if ($remainingAmount > 0) : ?>
-                        <tr class="zs-balance-row">
-                            <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
-                            <td class="total">
-                                <span class="zs-balance-text"><?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?></span>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
+                    <tr class="zs-balance-row">
+                        <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
+                        <td class="total">
+                            <span class="zs-balance-text"><?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?></span>
+                        </td>
+                    </tr>
                     <tr class="zs-order-total-row">
                         <td class="label"><?php esc_html_e('Order Total:', 'zero-sense'); ?></td>
                         <td class="total">
