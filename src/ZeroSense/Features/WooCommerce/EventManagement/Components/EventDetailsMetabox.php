@@ -79,6 +79,25 @@ class EventDetailsMetabox
         $children5to8 = $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_5_TO_8);
         $children0to4 = $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_0_TO_4);
         $serviceLocation = $this->getOrderMetaWithFallback($order, MetaKeys::SERVICE_LOCATION);
+        $serviceLocationCanonicalId = is_numeric($serviceLocation) ? absint($serviceLocation) : 0;
+        $serviceLocationSelectedId = $serviceLocationCanonicalId;
+        if ($serviceLocationCanonicalId > 0 && defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters')) {
+            $currentLang = apply_filters('wpml_current_language', null);
+            if (is_string($currentLang) && $currentLang !== '') {
+                $translatedId = apply_filters('wpml_object_id', $serviceLocationCanonicalId, 'service-area', true, $currentLang);
+                if ($translatedId) {
+                    $serviceLocationSelectedId = (int) $translatedId;
+                }
+            }
+        }
+
+        $serviceAreaTerms = get_terms([
+            'taxonomy' => 'service-area',
+            'hide_empty' => false,
+        ]);
+        if (is_wp_error($serviceAreaTerms) || !is_array($serviceAreaTerms)) {
+            $serviceAreaTerms = [];
+        }
         $address = $this->getOrderMetaWithFallback($order, MetaKeys::ADDRESS);
         $city = $this->getOrderMetaWithFallback($order, MetaKeys::CITY);
         $locationLink = $this->getOrderMetaWithFallback($order, MetaKeys::LOCATION_LINK);
@@ -164,10 +183,12 @@ class EventDetailsMetabox
                     </label>
                     <select id="event_service_location" name="event_service_location" class="widefat">
                         <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
-                        <?php foreach (FieldOptions::getServiceLocationOptions() as $value => $label) : ?>
-                            <option value="<?php echo esc_attr($value); ?>" <?php selected($serviceLocation, $value); ?>>
-                                <?php echo esc_html($label); ?>
-                            </option>
+                        <?php foreach ($serviceAreaTerms as $term) : ?>
+                            <?php if ($term instanceof \WP_Term) : ?>
+                                <option value="<?php echo esc_attr((string) $term->term_id); ?>" <?php selected($serviceLocationSelectedId, (int) $term->term_id); ?>>
+                                    <?php echo esc_html($term->name); ?>
+                                </option>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -393,7 +414,22 @@ class EventDetailsMetabox
 
         // Save location information
         if (isset($_POST['event_service_location'])) {
-            $order->update_meta_data(MetaKeys::SERVICE_LOCATION, sanitize_text_field($_POST['event_service_location']));
+            $raw = absint($_POST['event_service_location']);
+            if ($raw <= 0) {
+                $order->update_meta_data(MetaKeys::SERVICE_LOCATION, '');
+            } else {
+                $canonicalId = $raw;
+                if (defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters')) {
+                    $defaultLang = apply_filters('wpml_default_language', null);
+                    if (is_string($defaultLang) && $defaultLang !== '') {
+                        $translated = apply_filters('wpml_object_id', $raw, 'service-area', true, $defaultLang);
+                        if ($translated) {
+                            $canonicalId = (int) $translated;
+                        }
+                    }
+                }
+                $order->update_meta_data(MetaKeys::SERVICE_LOCATION, (int) $canonicalId);
+            }
         }
         if (isset($_POST['event_address'])) {
             $order->update_meta_data(MetaKeys::ADDRESS, sanitize_text_field($_POST['event_address']));
