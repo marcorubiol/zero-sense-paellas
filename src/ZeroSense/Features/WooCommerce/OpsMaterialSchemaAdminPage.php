@@ -117,7 +117,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     <thead>
                         <tr>
                             <th style="width: 40px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
-                            <th style="width: 120px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
+                            <th style="width: 120px;"><?php esc_html_e('Key (Informative)', 'zero-sense'); ?></th>
                             <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
                             <th style="width: 220px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
                             <th style="width: 90px;"></th>
@@ -135,9 +135,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                 </td>
                                 <td>
                                     <span class="zs-ops-key-display"><?php echo esc_html($key); ?></span>
-                                    <span class="zs-ops-key-info" title="<?php esc_attr_e('Generated automatically from label', 'zero-sense'); ?>">
-                                        <span class="dashicons dashicons-info"></span>
-                                    </span>
                                     <input type="hidden" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="zs-ops-key-field">
                                 </td>
                                 <td>
@@ -235,7 +232,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         tr.className = 'zs-ops-sortable-row';
                         tr.innerHTML = '' +
                             '<td><span class="zs-ops-drag-handle dashicons dashicons-menu"></span></td>' +
-                            '<td><span class="zs-ops-key-display"></span><span class="zs-ops-key-info" title="<?php echo esc_js(__('Generated automatically from label', 'zero-sense')); ?>"><span class="dashicons dashicons-info"></span></span><input type="hidden" name="zs_ops_material_schema[key][]" class="zs-ops-key-field"></td>' +
+                            '<td><span class="zs-ops-key-display"></span><input type="hidden" name="zs_ops_material_schema[key][]" class="zs-ops-key-field"></td>' +
                             '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. New field"></td>' +
                             '<td>' +
                                 '<select name="zs_ops_material_schema[type][]" style="width:100%;">' +
