@@ -1,0 +1,6 @@
+/* Zero Sense - Admin Taxonomies Styles */
+
+/* Taxonomy input width control for switch labels */
+.rwmb-input:has(.rwmb-switch-label) {
+  width: 25px !important;
+}

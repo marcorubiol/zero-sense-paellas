@@ -92,6 +92,24 @@ class AdminDashboard
                 );
             }
         }
+
+        // Enqueue taxonomies styles for taxonomy edit pages
+        if ($screen && (
+            strpos($screen->id, 'edit-') === 0 || // Edit taxonomy pages
+            strpos($screen->id, 'taxonomy-') === 0 || // Taxonomy pages
+            in_array($screen->id, ['edit-tags', 'edit-category', 'edit-post_tag'], true) // Common taxonomy screens
+        )) {
+            $taxonomies_css_path = plugin_dir_path(ZERO_SENSE_FILE) . 'assets/css/admin-taxonomies.css';
+            if (file_exists($taxonomies_css_path)) {
+                $taxonomies_css_ver = (string) filemtime($taxonomies_css_path);
+                wp_enqueue_style(
+                    'zero-sense-admin-taxonomies',
+                    plugin_dir_url(ZERO_SENSE_FILE) . 'assets/css/admin-taxonomies.css',
+                    [],
+                    $taxonomies_css_ver
+                );
+            }
+        }
     }
 
     /**
