@@ -220,7 +220,11 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     });
 
                     function updateSortable() {
-                        if (typeof Sortable !== 'undefined') {
+                        console.log('updateSortable called, Sortable available:', typeof Sortable !== 'undefined');
+                        console.log('tbody element:', tbody);
+                        console.log('drag handles:', document.querySelectorAll('.zs-ops-drag-handle'));
+                        
+                        if (typeof Sortable !== 'undefined' && tbody) {
                             if (window.zsSortable) {
                                 window.zsSortable.destroy();
                             }
@@ -229,17 +233,33 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                 animation: 150,
                                 ghostClass: 'zs-ops-sortable-ghost',
                                 chosenClass: 'zs-ops-sortable-chosen',
-                                dragClass: 'zs-ops-sortable-drag'
+                                dragClass: 'zs-ops-sortable-drag',
+                                onEnd: function(evt) {
+                                    console.log('Drag ended, new order:', evt.oldIndex, '->', evt.newIndex);
+                                }
                             });
+                            console.log('Sortable initialized successfully');
+                        } else {
+                            console.log('Sortable not available or tbody not found');
                         }
                     }
 
                     // Load SortableJS if not available
                     if (typeof Sortable === 'undefined') {
+                        console.log('Loading SortableJS...');
                         var script = document.createElement('script');
                         script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
-                        script.onload = updateSortable;
+                        script.onload = function() {
+                            console.log('SortableJS loaded');
+                            updateSortable();
+                        };
+                        script.onerror = function() {
+                            console.error('Failed to load SortableJS');
+                        };
                         document.head.appendChild(script);
+                    } else {
+                        console.log('Sortable already available');
+                        updateSortable();
                     }
                 })();
             </script>
