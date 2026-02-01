@@ -40,7 +40,7 @@
 
 /* Fix WooCommerce admin page content alignment */
 @media (min-width: 783px) {
-  .woocommerce-admin-page #wpbody-content {
+  .woocommerce-admin-page #wpcontent{
     padding-left: 20px !important;
   }
 }
