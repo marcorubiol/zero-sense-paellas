@@ -582,3 +582,8 @@ input:checked + .zs-slider:before {
 .zs-deposits-table .zs-switch {
     display: inline-block;
 }
+
+/* Taxonomy input width control for switch labels */
+.rwmb-input:has(.rwmb-switch-label) {
+  width: 25px !important;
+}

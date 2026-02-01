@@ -262,7 +262,8 @@ class EventDetailsMetabox
                                class="widefat">
                     </div>
                 </div>
-                    
+
+                <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_serving_time">
                             <?php esc_html_e('Service time', 'zero-sense'); ?>
