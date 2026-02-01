@@ -1,4 +1,9 @@
 /* Material & Logistics Schema Styles */
+/* Override WordPress default vertical-align: top for .widefat td */
+#zs-ops-schema-rows td:nth-child(2) {
+    vertical-align: middle;
+}
+
 .zs-ops-key-display {
     color: #666;
     font-family: monospace;
