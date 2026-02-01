@@ -22,11 +22,17 @@ class FieldOptions
     public static function getEventTypeOptions(): array
     {
         return apply_filters('zs_event_type_options', [
-            'birthday' => __('Birthday', 'zero-sense'),
             'wedding' => __('Wedding', 'zero-sense'),
-            'corporate' => __('Corporate Event', 'zero-sense'),
-            'family' => __('Family Gathering', 'zero-sense'),
-            'anniversary' => __('Anniversary', 'zero-sense'),
+            'corporate_meal' => __('Corporate Meal', 'zero-sense'),
+            'wedding_eve' => __('Wedding Eve', 'zero-sense'),
+            'wedding_day_after' => __('Wedding Day After', 'zero-sense'),
+            'birthday' => __('Birthday', 'zero-sense'),
+            'friends_family_gathering' => __('Friends and/or Family Gathering', 'zero-sense'),
+            'inauguration' => __('Inauguration', 'zero-sense'),
+            'sports_event' => __('Sports Event', 'zero-sense'),
+            'social_event' => __('Social Event', 'zero-sense'),
+            'farewell_ceremony' => __('Farewell Ceremony', 'zero-sense'),
+            'workshop_teambuilding' => __('Workshop / Teambuilding', 'zero-sense'),
             'other' => __('Other', 'zero-sense'),
         ]);
     }
@@ -38,10 +44,14 @@ class FieldOptions
     {
         return apply_filters('zs_event_how_found_us_options', [
             'google' => __('Google', 'zero-sense'),
-            'social_media' => __('Social Media', 'zero-sense'),
-            'friend' => __('Friend/Family Recommendation', 'zero-sense'),
+            'instagram' => __('Instagram', 'zero-sense'),
+            'facebook' => __('Facebook', 'zero-sense'),
             'previous_customer' => __('Previous Customer', 'zero-sense'),
-            'advertisement' => __('Advertisement', 'zero-sense'),
+            'friend_recommendation' => __('Friend Recommendation', 'zero-sense'),
+            'our_hosts' => __('Our Hosts', 'zero-sense'),
+            'catering_guide' => __('Catering Guide', 'zero-sense'),
+            'catering_click' => __('Catering Click', 'zero-sense'),
+            'bodas_net' => __('Bodas.net', 'zero-sense'),
             'other' => __('Other', 'zero-sense'),
         ]);
     }
