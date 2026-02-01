@@ -10,10 +10,12 @@ class OrderTotals
 {
     public function register(): void
     {
-        // Hook for both Classic WooCommerce and HPOS
-        add_action('woocommerce_admin_order_totals_after_total', [$this, 'renderAdminTotals'], 20);
-        // Additional hook for HPOS
-        add_action('woocommerce_admin_order_totals_after_order_total', [$this, 'renderAdminTotals'], 20);
+        // Hook for both Classic WooCommerce and HPOS - Add deposit info BEFORE order total
+        add_action('woocommerce_admin_order_totals_after_tax', [$this, 'renderAdminTotals'], 20);
+        // Additional hook for HPOS - Add deposit info BEFORE order total
+        add_action('woocommerce_admin_order_totals_after_order_total', [$this, 'renderAdminTotals'], 10);
+        // Hook to display order total at the end
+        add_action('woocommerce_admin_order_totals_after_order_total', [$this, 'renderOrderTotalAtEnd'], 30);
         add_filter('woocommerce_get_order_item_totals', [$this, 'injectFrontendTotals'], 20, 3);
     }
 
@@ -67,6 +69,31 @@ class OrderTotals
                 </td>
             </tr>
         <?php endif; ?>
+        <?php
+    }
+
+    public function renderOrderTotalAtEnd(int $orderId): void
+    {
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        $depositInfo = Utils::getDepositInfo($order);
+        $isDepositStatus = in_array($order->get_status(), ['deposit-paid', 'fully-paid'], true);
+
+        // Only show order total at the end if there's deposit info
+        if (($depositInfo['has_deposit'] ?? false) === false && !$isDepositStatus) {
+            return;
+        }
+        ?>
+        <tr>
+            <td class="label"><?php esc_html_e('Order Total:', 'zero-sense'); ?></td>
+            <td width="1%"></td>
+            <td class="total">
+                <?php echo wc_price($order->get_total(), ['currency' => $order->get_currency()]); ?>
+            </td>
+        </tr>
         <?php
     }
 
