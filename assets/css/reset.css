@@ -1,29 +1,29 @@
-/* Zerø Sense Admin Reset */
+/* Zerø Sense Admin Reset - Scoped to prevent conflicts with WordPress admin layout */
 
-:where(*, *::before, *::after) {
+:where(.zs-dashboard *, .zs-dashboard *::before, .zs-dashboard *::after) {
     box-sizing: border-box;
 }
 
-:where(body) {
+:where(.zs-dashboard body) {
     margin: 0;
 }
 
-:where(h1, h2, h3, h4, h5, h6, p, figure) {
+:where(.zs-dashboard h1, .zs-dashboard h2, .zs-dashboard h3, .zs-dashboard h4, .zs-dashboard h5, .zs-dashboard h6, .zs-dashboard p, .zs-dashboard figure) {
     margin: 0;
 }
 
-:where(ul, ol) {
+:where(.zs-dashboard ul, .zs-dashboard ol) {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-:where(button, input, select, textarea) {
+:where(.zs-dashboard button, .zs-dashboard input, .zs-dashboard select, .zs-dashboard textarea) {
     font: inherit;
     color: inherit;
 }
 
-:where(img, svg, video) {
+:where(.zs-dashboard img, .zs-dashboard svg, .zs-dashboard video) {
     display: block;
     max-width: 100%;
 }

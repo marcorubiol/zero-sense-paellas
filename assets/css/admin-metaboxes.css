@@ -125,6 +125,33 @@
 }
 
 /* =================================================================
+   WOOCOMMERCE COMPATIBILITY - Ensure proper column layout
+   ================================================================= */
+
+/* Force WooCommerce admin column layout to work properly */
+body.post-type-shop_order #poststuff .postbox-container,
+body.post-type-shop_order_page_wc-orders #poststuff .postbox-container,
+body.woocommerce_page_wc-orders #poststuff .postbox-container {
+    max-width: none !important;
+    width: auto !important;
+}
+
+/* Ensure 2-column layout works in WooCommerce order pages */
+body.post-type-shop_order #poststuff #postbox-container-1,
+body.post-type-shop_order_page_wc-orders #poststuff #postbox-container-1,
+body.woocommerce_page_wc-orders #poststuff #postbox-container-1 {
+    width: 50% !important;
+    max-width: 50% !important;
+}
+
+body.post-type-shop_order #poststuff #postbox-container-2,
+body.post-type-shop_order_page_wc-orders #poststuff #postbox-container-2,
+body.woocommerce_page_wc-orders #poststuff #postbox-container-2 {
+    width: 50% !important;
+    max-width: 50% !important;
+}
+
+/* =================================================================
    METABOX CONTAINERS - only essential structure
    ================================================================= */
 
