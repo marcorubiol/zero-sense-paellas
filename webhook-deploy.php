@@ -21,7 +21,42 @@ function detect_plugin_dir(string $dir): string {
 
 function log_msg($msg) {
     global $log_file;
-    @file_put_contents($log_file, date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
+    $timestamp = date('Y-m-d H:i:s');
+    $log_entry = "$timestamp - $msg\n";
+    
+    // Read existing logs
+    $existing_logs = [];
+    if (file_exists($log_file)) {
+        $existing_logs = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    }
+    
+    // Add new entry at the beginning (newest first)
+    array_unshift($existing_logs, trim($log_entry));
+    
+    // Keep only last 1000 entries
+    if (count($existing_logs) > 1000) {
+        $existing_logs = array_slice($existing_logs, 0, 1000);
+    }
+    
+    // Write back with newest first
+    $content = implode("\n", $existing_logs) . "\n";
+    @file_put_contents($log_file, $content);
+}
+
+function cleanup_logs(string $log_file): void {
+    if (!file_exists($log_file)) return;
+    
+    $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (count($lines) <= 1000) return;
+    
+    // Keep only last 1000 lines (newest first)
+    $recent_lines = array_slice($lines, -1000);
+    // Reverse to maintain newest-first order in file
+    $recent_lines = array_reverse($recent_lines);
+    $content = implode("\n", $recent_lines) . "\n";
+    
+    // Write back the cleaned content
+    @file_put_contents($log_file, $content);
 }
 
 $log_file = '/tmp/webhook-deploy.log';
@@ -39,7 +74,13 @@ if (isset($_GET['log'])) {
         exit(json_encode(['status' => 'forbidden']));
     }
     header('Content-Type: text/plain');
-    readfile($log_file);
+    
+    // Read and display logs (newest first - already stored this way)
+    if (file_exists($log_file)) {
+        readfile($log_file);
+    } else {
+        echo "No logs found.\n";
+    }
     exit;
 }
 
