@@ -27,9 +27,10 @@ rotate_log_if_needed();
 file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ===\n", FILE_APPEND);
 
 // Config
-$secret = (string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? ''));
+$local_secrets = load_local_secrets(__DIR__);
+$secret = (string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? '') ?: ($local_secrets['deploy_secret'] ?? ''));
 $staging_path = detect_zero_sense_plugin_dir(__DIR__);
-$log_token = (string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? ''));
+$log_token = (string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? '') ?: ($local_secrets['log_token'] ?? ''));
 
 function log_msg($msg) {
     global $log_file;
@@ -59,7 +60,19 @@ if (isset($_GET['test'])) {
         'version' => '2.0-UPDATED-' . date('Y-m-d-H-i-s'),
         'file_modified' => date('Y-m-d H:i:s', filemtime(__FILE__)),
         'file_path' => __FILE__,
-        'server_time' => date('Y-m-d H:i:s')
+        'server_time' => date('Y-m-d H:i:s'),
+        'diagnostics' => [
+            'has_log_token' => (bool) $GLOBALS['log_token'],
+            'log_token_len' => strlen((string) $GLOBALS['log_token']),
+            'has_deploy_secret' => (bool) $GLOBALS['secret'],
+            'deploy_secret_len' => strlen((string) $GLOBALS['secret']),
+            'local_secrets_file' => rtrim((string) dirname(__FILE__), '/') . '/.zs-secrets.php',
+            'local_secrets_file_exists' => file_exists(rtrim((string) dirname(__FILE__), '/') . '/.zs-secrets.php'),
+            'local_secrets_loaded' => !empty($GLOBALS['local_secrets']) && is_array($GLOBALS['local_secrets']),
+            'local_secrets_loaded_keys' => array_keys(is_array($GLOBALS['local_secrets'] ?? null) ? $GLOBALS['local_secrets'] : []),
+            'detected_plugin_dir' => (string) $GLOBALS['staging_path'],
+            'plugin_file_exists' => file_exists(rtrim((string) $GLOBALS['staging_path'], '/') . '/zero-sense.php'),
+        ],
     ]);
     exit;
 }
@@ -175,12 +188,11 @@ foreach ($github_ips as $ip_range) {
 // For debugging: allow if User-Agent is GitHub-Hookshot
 $is_github_user_agent = strpos($_SERVER['HTTP_USER_AGENT'] ?? '', 'GitHub-Hookshot') !== false;
 
-// Allow without signature only when signatures are missing AND request looks like GitHub
-$allow_without_signature = (!$signature_sha256 && !$signature_sha1) && ($is_github || $is_github_user_agent);
+// Allow without signature when request looks like GitHub and either (a) signatures are missing or (b) no secret is configured.
+$allow_without_signature = ($is_github || $is_github_user_agent) && ((!$signature_sha256 && !$signature_sha1) || !$secret);
 
 if (!$secret && ($is_github || $is_github_user_agent)) {
-    $allow_without_signature = true;
-    log_msg("⚠️ Secret missing; allowing based on GitHub IP/User-Agent");
+    log_msg("⚠️ Deploy secret missing; allowing based on GitHub IP/User-Agent (skipping signature validation)");
 }
 
 log_msg("Client IP: $client_ip");
@@ -594,7 +606,7 @@ function deploy_from_github_zip(string $repo_full_name, string $branch, string $
         return ['status' => 'error', 'message' => 'Unzipped archive has no root directory'];
     }
 
-    clean_dir_except($target_dir, ['webhook-deploy.php', '.git']);
+    clean_dir_except($target_dir, ['webhook-deploy.php', '.git', '.zs-secrets.php']);
     $copy_ok = recursive_copy($src_root, $target_dir);
 
     @unlink($zip_path);
@@ -706,6 +718,15 @@ function rrmdir(string $dir): void {
         }
     }
     @rmdir($dir);
+}
+
+function load_local_secrets(string $dir): array {
+    $path = rtrim($dir, '/') . '/.zs-secrets.php';
+    if (!file_exists($path)) {
+        return [];
+    }
+    $data = include $path;
+    return is_array($data) ? $data : [];
 }
 
 function detect_zero_sense_plugin_dir(string $start_dir): string {
