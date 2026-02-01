@@ -10,7 +10,11 @@ class OrderTotals
 {
     public function register(): void
     {
+<<<<<<< /Users/marcorubiol/Zerø Sense/01_AGENCY/Paellas En Casa/full site/wp-content/plugins/zero-sense/src/ZeroSense/Features/WooCommerce/Deposits/Components/OrderTotals.php
         add_action('woocommerce_admin_order_totals_after_subtotal', [$this, 'renderAdminTotals'], 20);
+=======
+        add_action('woocommerce_admin_order_totals_before_total', [$this, 'renderAdminTotals'], 20);
+>>>>>>> /Users/marcorubiol/.windsurf/worktrees/zero-sense/zero-sense-92aa0eb9/src/ZeroSense/Features/WooCommerce/Deposits/Components/OrderTotals.php
         add_filter('woocommerce_get_order_item_totals', [$this, 'injectFrontendTotals'], 20, 3);
     }
 
