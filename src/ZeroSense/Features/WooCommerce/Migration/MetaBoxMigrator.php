@@ -28,6 +28,10 @@ class MetaBoxMigrator
         'promo_code' => 'zs_event_promo_code',
         'intolerances' => 'zs_event_intolerances',
         'location' => 'zs_event_location',
+        'budget_email_content' => 'zs_budget_email_content',
+        'final_details_email_content' => 'zs_final_details_email_content',
+        'marketing_consent_checkbox' => 'zs_marketing_consent',
+        'rabbit' => 'zs_rabbit_option',
     ];
 
     private const LEGACY_EVENT_MAPPING = [
@@ -47,6 +51,10 @@ class MetaBoxMigrator
         'promo_code' => '_event_promo_code',
         'intolerances' => '_event_intolerances',
         'location' => '_event_location',
+        'budget_email_content' => '_budget_email_content',
+        'final_details_email_content' => '_final_details_email_content',
+        'marketing_consent_checkbox' => '_marketing_consent_checkbox',
+        'rabbit' => '_rabbit',
     ];
 
     private const EVENT_DATE_META_BOX_KEY = 'event_date';

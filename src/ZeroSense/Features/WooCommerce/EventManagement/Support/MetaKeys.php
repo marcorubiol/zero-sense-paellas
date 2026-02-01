@@ -26,6 +26,14 @@ class MetaKeys
     public const HOW_FOUND_US = 'zs_event_how_found_us';
     public const INTOLERANCES = 'zs_event_intolerances';
     
+    // Email Content
+    public const BUDGET_EMAIL_CONTENT = 'zs_budget_email_content';
+    public const FINAL_DETAILS_EMAIL_CONTENT = 'zs_final_details_email_content';
+    
+    // Customer Preferences
+    public const MARKETING_CONSENT = 'zs_marketing_consent';
+    public const RABBIT_OPTION = 'zs_rabbit_option';
+    
     /**
      * Get all meta keys as array
      */

@@ -46,6 +46,10 @@ class DataExposer
                 'event_type_label' => __('Event Type (Label)', 'zero-sense'),
                 'how_found_us' => __('How Found Us', 'zero-sense'),
                 'how_found_us_label' => __('How Found Us (Label)', 'zero-sense'),
+                'budget_email_content' => __('Budget Email Content', 'zero-sense'),
+                'final_details_email_content' => __('Final Details Email Content', 'zero-sense'),
+                'marketing_consent' => __('Marketing Consent', 'zero-sense'),
+                'rabbit_option' => __('Rabbit Option', 'zero-sense'),
             ],
         ];
         
@@ -273,6 +277,22 @@ class DataExposer
                 $options = FieldOptions::getHowFoundUsOptions();
                 return $options[$value] ?? $value;
                 
+            case 'budget_email_content':
+            case 'event_budget_email_content':
+                return (string) $order->get_meta(MetaKeys::BUDGET_EMAIL_CONTENT);
+                
+            case 'final_details_email_content':
+            case 'event_final_details_email_content':
+                return (string) $order->get_meta(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT);
+                
+            case 'marketing_consent':
+            case 'event_marketing_consent':
+                return $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no';
+                
+            case 'rabbit_option':
+            case 'event_rabbit_option':
+                return $order->get_meta(MetaKeys::RABBIT_OPTION) === '1' ? 'yes' : 'no';
+                
             default:
                 return '';
         }
@@ -357,6 +377,10 @@ class DataExposer
             'event_type_label' => $eventTypeOptions[$eventType] ?? '',
             'how_found_us' => $howFoundUs,
             'how_found_us_label' => $howFoundUsOptions[$howFoundUs] ?? '',
+            'budget_email_content' => $order->get_meta(MetaKeys::BUDGET_EMAIL_CONTENT),
+            'final_details_email_content' => $order->get_meta(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT),
+            'marketing_consent' => $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no',
+            'rabbit_option' => $order->get_meta(MetaKeys::RABBIT_OPTION) === '1' ? 'yes' : 'no',
         ];
     }
 }
