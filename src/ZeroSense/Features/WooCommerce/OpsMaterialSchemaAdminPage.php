@@ -239,15 +239,23 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         $schema = [];
         $seen = [];
 
-        $count = max(count($keys), count($labels), count($types));
+        $count = max(count($labels), count($types));
         for ($i = 0; $i < $count; $i++) {
-            $key = isset($keys[$i]) ? sanitize_key((string) $keys[$i]) : '';
             $label = isset($labels[$i]) ? sanitize_text_field((string) $labels[$i]) : '';
             $type = isset($types[$i]) ? sanitize_key((string) $types[$i]) : 'text';
 
-            if ($key === '') {
+            if ($label === '') {
                 continue;
             }
+
+            // Generate key from label
+            $key = strtolower($label);
+            $key = preg_replace('/[^a-z0-9\s-]/', '', $key);
+            $key = preg_replace('/\s+/', '_', $key);
+            $key = preg_replace('/-+/', '_', $key);
+            $key = preg_replace('/^_+|_+$/', '', $key);
+            $key = substr($key, 0, 50);
+            $key = sanitize_key($key);
 
             if (!in_array($type, $allowedTypeKeys, true)) {
                 $type = 'text';
@@ -293,8 +301,8 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     {
         return [
             'text' => __('Text', 'zero-sense'),
-            'qty_int' => __('Quantity (integer)', 'zero-sense'),
-            'bool' => __('Yes/No', 'zero-sense'),
+            'qty_int' => __('Quantity', 'zero-sense'),
+            'bool' => __('Checkbox', 'zero-sense'),
             'textarea' => __('Textarea', 'zero-sense'),
         ];
     }
