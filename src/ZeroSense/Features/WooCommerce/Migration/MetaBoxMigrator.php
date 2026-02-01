@@ -56,6 +56,89 @@ class MetaBoxMigrator
     private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
     private const META_OPS_MATERIAL = 'zs_ops_material';
 
+    // Value mappings for field updates
+    private const EVENT_TYPE_VALUE_MAPPING = [
+        // Old Spanish values -> New English keys
+        'Boda' => 'wedding',
+        'Comida de empresa' => 'corporate_meal',
+        'Día antes de la boda' => 'wedding_eve',
+        'Día después de la boda' => 'wedding_day_after',
+        'Cumpleaños' => 'birthday',
+        'Encuentro de amigos y/o familia' => 'friends_family_gathering',
+        'Inauguración' => 'inauguration',
+        'Evento deportivo' => 'sports_event',
+        'Evento social' => 'social_event',
+        'Ceremonia de despedida' => 'farewell_ceremony',
+        'Workshop / Teambuilding' => 'workshop_teambuilding',
+        'Otro' => 'other',
+        
+        // Old Catalan values -> New English keys
+        'Boda' => 'wedding',
+        'Sopar d empresa' => 'corporate_meal',
+        'Dia abans de la boda' => 'wedding_eve',
+        'Dia després de la boda' => 'wedding_day_after',
+        'Aniversari' => 'birthday',
+        'Trobada d amics i o familia' => 'friends_family_gathering',
+        'Inauguració' => 'inauguration',
+        'Esdeveniment esportiu' => 'sports_event',
+        'Esdeveniment social' => 'social_event',
+        'Cerimònia de comiat' => 'farewell_ceremony',
+        'Workshop / Teambuilding' => 'workshop_teambuilding',
+        'Altre' => 'other',
+        
+        // Keep existing English keys if they match
+        'wedding' => 'wedding',
+        'corporate_meal' => 'corporate_meal',
+        'wedding_eve' => 'wedding_eve',
+        'wedding_day_after' => 'wedding_day_after',
+        'birthday' => 'birthday',
+        'friends_family_gathering' => 'friends_family_gathering',
+        'inauguration' => 'inauguration',
+        'sports_event' => 'sports_event',
+        'social_event' => 'social_event',
+        'farewell_ceremony' => 'farewell_ceremony',
+        'workshop_teambuilding' => 'workshop_teambuilding',
+        'other' => 'other',
+    ];
+
+    private const HOW_FOUND_US_VALUE_MAPPING = [
+        // Old Spanish values -> New English keys
+        'Google' => 'google',
+        'Instagram' => 'instagram',
+        'Facebook' => 'facebook',
+        'De ocasiones anteriores' => 'previous_customer',
+        'Recomendación de amistades' => 'friend_recommendation',
+        'Nuestros anfitriones' => 'our_hosts',
+        'Guia catering' => 'catering_guide',
+        'Catering click' => 'catering_click',
+        'Bodas.net' => 'bodas_net',
+        'Otros' => 'other',
+        
+        // Old Catalan values -> New English keys
+        'Google' => 'google',
+        'Instagram' => 'instagram',
+        'Facebook' => 'facebook',
+        'Ocasions anteriors' => 'previous_customer',
+        'Recomanació d amistats' => 'friend_recommendation',
+        'Els nostres amfitrions' => 'our_hosts',
+        'Guia catering' => 'catering_guide',
+        'Catering click' => 'catering_click',
+        'Bodas.net' => 'bodas_net',
+        'Altres' => 'other',
+        
+        // Keep existing English keys if they match
+        'google' => 'google',
+        'instagram' => 'instagram',
+        'facebook' => 'facebook',
+        'previous_customer' => 'previous_customer',
+        'friend_recommendation' => 'friend_recommendation',
+        'our_hosts' => 'our_hosts',
+        'catering_guide' => 'catering_guide',
+        'catering_click' => 'catering_click',
+        'bodas_net' => 'bodas_net',
+        'other' => 'other',
+    ];
+
 
     public function getMigrationStatus(): array
     {
@@ -585,6 +668,14 @@ class MetaBoxMigrator
                         $target_value = $normalized;
                     }
                 }
+                
+                // Apply value mapping for event_type and how_found_us
+                if ($metabox_key === 'event_type') {
+                    $target_value = self::EVENT_TYPE_VALUE_MAPPING[$metabox_value] ?? $metabox_value;
+                }
+                if ($metabox_key === 'how_found_us') {
+                    $target_value = self::HOW_FOUND_US_VALUE_MAPPING[$metabox_value] ?? $metabox_value;
+                }
 
                 $existing_scalar = is_scalar($existing_value) ? (string) $existing_value : '';
                 $target_scalar = is_scalar($target_value) ? (string) $target_value : '';
@@ -744,9 +835,18 @@ class MetaBoxMigrator
                     return true;
                 }
             }
+            
+            // Apply value mapping for event_type and how_found_us in comparison
+            $expected_value = $metabox_value;
+            if ($metabox_key === 'event_type') {
+                $expected_value = self::EVENT_TYPE_VALUE_MAPPING[$metabox_value] ?? $metabox_value;
+            }
+            if ($metabox_key === 'how_found_us') {
+                $expected_value = self::HOW_FOUND_US_VALUE_MAPPING[$metabox_value] ?? $metabox_value;
+            }
 
             if (($metabox_value !== '' && $metabox_value !== null) &&
-                ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $metabox_value)) {
+                ($zerosense_value === '' || $zerosense_value === null || $zerosense_value !== $expected_value)) {
                 return true;
             }
         }
