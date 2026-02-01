@@ -117,7 +117,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     <thead>
                         <tr>
                             <th style="width: 40px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
-                            <th style="width: 150px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
+                            <th style="width: 120px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
                             <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
                             <th style="width: 220px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
                             <th style="width: 90px;"></th>
@@ -135,6 +135,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                 </td>
                                 <td>
                                     <span class="zs-ops-key-display"><?php echo esc_html($key); ?></span>
+                                    <input type="hidden" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="zs-ops-key-field">
                                 </td>
                                 <td>
                                     <input type="text" name="zs_ops_material_schema[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. Work tables">
@@ -189,13 +190,14 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                             .substring(0, 50);
                     }
 
-                    function updateKeyDisplay(labelField, keyDisplay) {
+                    function updateKeyDisplay(labelField, keyDisplay, keyField) {
                         var label = labelField.value.trim();
+                        var generatedKey = '';
                         if (label) {
-                            keyDisplay.textContent = generateKeyFromLabel(label);
-                        } else {
-                            keyDisplay.textContent = '';
+                            generatedKey = generateKeyFromLabel(label);
                         }
+                        keyDisplay.textContent = generatedKey;
+                        keyField.value = generatedKey;
                     }
 
                     function bindRemoveButtons(scope) {
@@ -213,9 +215,10 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         labelFields.forEach(function(labelField) {
                             var tr = labelField.closest('tr');
                             var keyDisplay = tr.querySelector('.zs-ops-key-display');
+                            var keyField = tr.querySelector('.zs-ops-key-field');
                             
                             labelField.addEventListener('input', function() {
-                                updateKeyDisplay(labelField, keyDisplay);
+                                updateKeyDisplay(labelField, keyDisplay, keyField);
                             });
                         });
                     }
@@ -229,7 +232,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         tr.className = 'zs-ops-sortable-row';
                         tr.innerHTML = '' +
                             '<td><span class="zs-ops-drag-handle dashicons dashicons-menu"></span></td>' +
-                            '<td><span class="zs-ops-key-display"></span></td>' +
+                            '<td><span class="zs-ops-key-display"></span><input type="hidden" name="zs_ops_material_schema[key][]" class="zs-ops-key-field"></td>' +
                             '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. New field"></td>' +
                             '<td>' +
                                 '<select name="zs_ops_material_schema[type][]" style="width:100%;">' +
