@@ -47,7 +47,7 @@ class OrderTotals
         </tr>
         <?php if ($remainingAmount > 0) : ?>
             <tr>
-                <td class="label"><?php esc_html_e('Balance:', 'zero-sense'); ?></td>
+                <td class="label"><?php esc_html_e('Remaining Balance:', 'zero-sense'); ?></td>
                 <td width="1%"></td>
                 <td class="total">
                     <?php echo wc_price($remainingAmount, ['currency' => $order->get_currency()]); ?>
@@ -88,7 +88,7 @@ class OrderTotals
 
                 if (($depositInfo['remaining_amount'] ?? 0) > 0) {
                     $newRows['remaining_balance'] = [
-                        'label' => __('Balance:', 'zero-sense'),
+                        'label' => __('Remaining Balance:', 'zero-sense'),
                         'value' => wc_price($depositInfo['remaining_amount'], ['currency' => $order->get_currency()]),
                     ];
                 }
