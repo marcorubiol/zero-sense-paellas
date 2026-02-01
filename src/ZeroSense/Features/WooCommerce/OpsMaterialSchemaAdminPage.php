@@ -76,9 +76,9 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             wp_die(__('You do not have sufficient permissions to access this page.', 'zero-sense'));
         }
 
-        $schema = get_option(self::OPTION_SCHEMA, null);
-        if (!is_array($schema) || $schema === []) {
-            $schema = $this->getDefaultSchema();
+        $schema = get_option(self::OPTION_SCHEMA, []);
+        if (!is_array($schema)) {
+            $schema = [];
         }
 
         $allowedTypes = $this->getAllowedTypes();
@@ -305,7 +305,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         }
 
         if ($schema === []) {
-            $schema = $this->getDefaultSchema();
+            $schema = [];
         }
 
         update_option(self::OPTION_SCHEMA, $schema, false);
