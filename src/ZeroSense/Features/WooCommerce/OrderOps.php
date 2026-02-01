@@ -151,18 +151,19 @@ class OrderOps implements FeatureInterface
         $items = $this->getMaterialItems();
 
         wp_nonce_field('zs_order_ops_save', 'zs_order_ops_nonce');
-
-        if ($items === []) {
-            $url = admin_url('admin.php?page=zs_ops_material_schema');
-            echo '<p>';
-            echo esc_html__('Material & Logistics fields are not configured yet.', 'zero-sense') . ' ';
-            echo '<a href="' . esc_url($url) . '">' . esc_html__('Configure schema', 'zero-sense') . '</a>';
-            echo '</p>';
-            return;
-        }
         ?>
         <table class="widefat striped" style="margin-top:8px;">
             <tbody>
+            <?php if ($items === []) : 
+                $url = admin_url('admin.php?page=zs_ops_material_schema');
+            ?>
+                <tr>
+                    <td colspan="2" style="padding:12px;">
+                        <?php echo esc_html__('Material & Logistics fields are not configured yet.', 'zero-sense'); ?> 
+                        <a href="<?php echo esc_url($url); ?>"><?php echo esc_html__('Configure schema', 'zero-sense'); ?></a>
+                    </td>
+                </tr>
+            <?php endif; ?>
             <?php foreach ($items as $key => $item) :
                 $raw = $material[$key] ?? [];
                 $value = is_array($raw) ? ($raw['value'] ?? '') : $raw;

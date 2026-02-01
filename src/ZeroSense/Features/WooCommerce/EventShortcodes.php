@@ -377,7 +377,7 @@ class EventShortcodes implements FeatureInterface
     {
         $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
         if (!is_array($schema) || $schema === []) {
-            return $this->getDefaultMaterialSchema();
+            return [];
         }
 
         $allowed = ['text', 'qty_int', 'bool', 'textarea'];
@@ -408,29 +408,7 @@ class EventShortcodes implements FeatureInterface
             $out[$key] = ['label' => $finalLabel, 'type' => $type];
         }
 
-        return $out !== [] ? $out : $this->getDefaultMaterialSchema();
-    }
-
-    private function getDefaultMaterialSchema(): array
-    {
-        return [
-            'vehicle' => ['label' => __('Vehicle', 'zero-sense'), 'type' => 'text'],
-            'black_tablecloths' => ['label' => __('Black tablecloths', 'zero-sense'), 'type' => 'qty_int'],
-            'cart' => ['label' => __('Cart', 'zero-sense'), 'type' => 'bool'],
-            'work_tables' => ['label' => __('Work tables', 'zero-sense'), 'type' => 'qty_int'],
-            'paella_pans' => ['label' => __('Paella pans', 'zero-sense'), 'type' => 'qty_int'],
-            'burners' => ['label' => __('Burners', 'zero-sense'), 'type' => 'qty_int'],
-            'tripods_legs' => ['label' => __('Tripods / legs', 'zero-sense'), 'type' => 'qty_int'],
-            'butane' => ['label' => __('Butane', 'zero-sense'), 'type' => 'qty_int'],
-            'hose' => ['label' => __('Hose', 'zero-sense'), 'type' => 'bool'],
-            'parasols' => ['label' => __('Parasols', 'zero-sense'), 'type' => 'qty_int'],
-            'tent' => ['label' => __('Tent', 'zero-sense'), 'type' => 'bool'],
-            'lighting' => ['label' => __('Lighting', 'zero-sense'), 'type' => 'qty_int'],
-            'water_fountain_8l' => ['label' => __('Water fountain (8L)', 'zero-sense'), 'type' => 'qty_int'],
-            'trash_buckets' => ['label' => __('Trash buckets', 'zero-sense'), 'type' => 'qty_int'],
-            'coolers' => ['label' => __('Coolers', 'zero-sense'), 'type' => 'qty_int'],
-            'other' => ['label' => __('Other', 'zero-sense'), 'type' => 'textarea'],
-        ];
+        return $out;
     }
 
     private function formatNumber(float $n): string

@@ -42,25 +42,6 @@ class BricksDynamicTags implements FeatureInterface
         'notes' => 'Ops Notes',
     ];
 
-    private const OPS_MATERIAL_FIELDS = [
-        'vehicle' => 'Vehicle',
-        'black_tablecloths' => 'Black tablecloths',
-        'cart' => 'Cart',
-        'work_tables' => 'Work tables',
-        'paella_pans' => 'Paella pans',
-        'burners' => 'Burners',
-        'tripods_legs' => 'Tripods / legs',
-        'butane' => 'Butane',
-        'hose' => 'Hose',
-        'parasols' => 'Parasols',
-        'tent' => 'Tent',
-        'lighting' => 'Lighting',
-        'water_fountain_8l' => 'Water fountain (8L)',
-        'trash_buckets' => 'Trash buckets',
-        'coolers' => 'Coolers',
-        'other' => 'Other',
-    ];
-
     private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
 
@@ -214,7 +195,7 @@ class BricksDynamicTags implements FeatureInterface
     {
         $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
         if (!is_array($schema) || $schema === []) {
-            return self::OPS_MATERIAL_FIELDS;
+            return [];
         }
 
         $fields = [];
@@ -233,7 +214,7 @@ class BricksDynamicTags implements FeatureInterface
             $fields[$key] = is_string($translated) && $translated !== '' ? $translated : $label;
         }
 
-        return $fields !== [] ? $fields : self::OPS_MATERIAL_FIELDS;
+        return $fields;
     }
 
     /**

@@ -16,13 +16,6 @@ class OrderTotals
 
     public function renderAdminTotals(int $orderId): void
     {
-        // Only render in Classic WooCommerce, not in HPOS
-        // In HPOS, we use the DepositsCalculatorMetabox instead
-        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if ($screen && $screen->id === 'woocommerce_page_wc-orders') {
-            return;
-        }
-
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
             return;
