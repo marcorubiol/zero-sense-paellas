@@ -99,6 +99,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                 <table class="widefat striped" style="max-width: 1100px;">
                     <thead>
                         <tr>
+                            <th style="width: 40px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
                             <th style="width: 260px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
                             <th><?php esc_html_e('Label (base language)', 'zero-sense'); ?></th>
                             <th style="width: 220px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
@@ -111,7 +112,10 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                             $label = isset($row['label']) ? (string) $row['label'] : '';
                             $type = isset($row['type']) ? (string) $row['type'] : 'text';
                             ?>
-                            <tr>
+                            <tr class="zs-ops-sortable-row">
+                                <td>
+                                    <span class="zs-ops-drag-handle">☰</span>
+                                </td>
                                 <td>
                                     <input type="text" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="regular-text zs-ops-key-field" readonly>
                                 </td>
@@ -187,10 +191,13 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
 
                     bindRemoveButtons();
                     bindLabelChange();
+                    updateSortable();
 
                     addBtn.addEventListener('click', function() {
                         var tr = document.createElement('tr');
+                        tr.className = 'zs-ops-sortable-row';
                         tr.innerHTML = '' +
+                            '<td><span class="zs-ops-drag-handle">☰</span></td>' +
                             '<td><input type="text" name="zs_ops_material_schema[key][]" class="regular-text zs-ops-key-field" readonly></td>' +
                             '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. New field"></td>' +
                             '<td>' +
@@ -209,9 +216,36 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         tbody.appendChild(tr);
                         bindRemoveButtons(tr);
                         bindLabelChange(tr);
+                        updateSortable();
                     });
                 })();
             </script>
+
+            <style>
+                .zs-ops-drag-handle {
+                    cursor: move;
+                    font-size: 16px;
+                    color: #666;
+                    padding: 4px 8px;
+                    display: inline-block;
+                }
+                .zs-ops-drag-handle:hover {
+                    color: #333;
+                }
+                .zs-ops-sortable-ghost {
+                    opacity: 0.4;
+                    background: #f0f0f0;
+                }
+                .zs-ops-sortable-chosen {
+                    background: #e3f2fd;
+                }
+                .zs-ops-sortable-drag {
+                    opacity: 0.9;
+                }
+                .zs-ops-sortable-row {
+                    transition: background-color 0.2s ease;
+                }
+            </style>
         </div>
         <?php
     }
@@ -304,28 +338,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             'textarea' => __('Textarea', 'zero-sense'),
             'qty_int' => __('Quantity', 'zero-sense'),
             'bool' => __('Checkbox', 'zero-sense'),
-        ];
-    }
-
-    private function getDefaultSchema(): array
-    {
-        return [
-            ['key' => 'vehicle', 'label' => 'Vehicle', 'type' => 'text'],
-            ['key' => 'black_tablecloths', 'label' => 'Black tablecloths', 'type' => 'qty_int'],
-            ['key' => 'cart', 'label' => 'Cart', 'type' => 'bool'],
-            ['key' => 'work_tables', 'label' => 'Work tables', 'type' => 'qty_int'],
-            ['key' => 'paella_pans', 'label' => 'Paella pans', 'type' => 'qty_int'],
-            ['key' => 'burners', 'label' => 'Burners', 'type' => 'qty_int'],
-            ['key' => 'tripods_legs', 'label' => 'Tripods / legs', 'type' => 'qty_int'],
-            ['key' => 'butane', 'label' => 'Butane', 'type' => 'qty_int'],
-            ['key' => 'hose', 'label' => 'Hose', 'type' => 'bool'],
-            ['key' => 'parasols', 'label' => 'Parasols', 'type' => 'qty_int'],
-            ['key' => 'tent', 'label' => 'Tent', 'type' => 'bool'],
-            ['key' => 'lighting', 'label' => 'Lighting', 'type' => 'qty_int'],
-            ['key' => 'water_fountain_8l', 'label' => 'Water fountain (8L)', 'type' => 'qty_int'],
-            ['key' => 'trash_buckets', 'label' => 'Trash buckets', 'type' => 'qty_int'],
-            ['key' => 'coolers', 'label' => 'Coolers', 'type' => 'qty_int'],
-            ['key' => 'other', 'label' => 'Other', 'type' => 'textarea'],
         ];
     }
 }
