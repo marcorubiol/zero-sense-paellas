@@ -101,7 +101,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         <tr>
                             <th style="width: 40px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
                             <th style="width: 260px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Label (base language)', 'zero-sense'); ?></th>
+                            <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
                             <th style="width: 220px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
                             <th style="width: 90px;"></th>
                         </tr>
@@ -114,7 +114,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                             ?>
                             <tr class="zs-ops-sortable-row">
                                 <td>
-                                    <span class="zs-ops-drag-handle">☰</span>
+                                    <span class="zs-ops-drag-handle dashicons dashicons-menu"></span>
                                 </td>
                                 <td>
                                     <input type="text" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="regular-text zs-ops-key-field" readonly>
@@ -130,17 +130,31 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                     </select>
                                 </td>
                                 <td>
-                                    <button type="button" class="button zs-ops-schema-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                                    <button type="button" class="button zs-ops-schema-remove">
+                                        <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
+                                        <span class="screen-reader-text"><?php esc_html_e('Remove', 'zero-sense'); ?></span>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
 
-                <p style="max-width:1100px; display:flex; gap:10px; align-items:center;">
-                    <button type="button" class="button" id="zs-ops-schema-add"><?php esc_html_e('Add field', 'zero-sense'); ?></button>
-                    <button type="submit" class="button button-primary"><?php esc_html_e('Save', 'zero-sense'); ?></button>
-                </p>
+                <div class="tablenav top" style="max-width:1100px;">
+                    <div class="alignleft actions">
+                        <button type="button" class="button" id="zs-ops-schema-add">
+                            <span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Add field', 'zero-sense'); ?>
+                        </button>
+                    </div>
+                    <div class="alignright">
+                        <button type="submit" class="button button-primary">
+                            <span class="dashicons dashicons-saved" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Save', 'zero-sense'); ?>
+                        </button>
+                    </div>
+                    <br class="clear">
+                </div>
             </form>
 
             <script>
@@ -197,7 +211,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         var tr = document.createElement('tr');
                         tr.className = 'zs-ops-sortable-row';
                         tr.innerHTML = '' +
-                            '<td><span class="zs-ops-drag-handle">☰</span></td>' +
+                            '<td><span class="zs-ops-drag-handle dashicons dashicons-menu"></span></td>' +
                             '<td><input type="text" name="zs_ops_material_schema[key][]" class="regular-text zs-ops-key-field" readonly></td>' +
                             '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. New field"></td>' +
                             '<td>' +
@@ -211,7 +225,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                     ?> +
                                 '</select>' +
                             '</td>' +
-                            '<td><button type="button" class="button zs-ops-schema-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button></td>';
+                            '<td><button type="button" class="button zs-ops-schema-remove"><span class="dashicons dashicons-trash" style="vertical-align: middle;"></span><span class="screen-reader-text"><?php echo esc_js(__('Remove', 'zero-sense')); ?></span></button></td>';
 
                         tbody.appendChild(tr);
                         bindRemoveButtons(tr);
@@ -247,26 +261,56 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             <style>
                 .zs-ops-drag-handle {
                     cursor: move;
-                    font-size: 16px;
-                    color: #666;
-                    padding: 4px 8px;
+                    font-size: 18px;
+                    color: #50575e;
+                    padding: 6px 8px;
                     display: inline-block;
+                    line-height: 1.4;
                 }
                 .zs-ops-drag-handle:hover {
-                    color: #333;
+                    color: #135e96;
                 }
                 .zs-ops-sortable-ghost {
                     opacity: 0.4;
                     background: #f0f0f0;
+                    border: 2px dashed #ccc;
                 }
                 .zs-ops-sortable-chosen {
                     background: #e3f2fd;
+                    border: 1px solid #0073aa;
                 }
                 .zs-ops-sortable-drag {
                     opacity: 0.9;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                 }
                 .zs-ops-sortable-row {
-                    transition: background-color 0.2s ease;
+                    transition: all 0.2s ease;
+                }
+                .zs-ops-schema-remove {
+                    padding: 6px 10px;
+                    font-size: 13px;
+                    line-height: 1.4;
+                }
+                .zs-ops-schema-remove:hover {
+                    background-color: #dc3232;
+                    border-color: #dc3232;
+                    color: #fff;
+                }
+                .zs-ops-schema-remove:hover .dashicons {
+                    color: #fff;
+                }
+                .screen-reader-text {
+                    position: absolute;
+                    margin: -1px;
+                    padding: 0;
+                    height: 1px;
+                    width: 1px;
+                    overflow: hidden;
+                    clip: rect(0 0 0 0);
+                    border: 0;
+                }
+                #zs-ops-schema-rows tr:hover {
+                    background-color: #f9f9f9;
                 }
             </style>
         </div>
