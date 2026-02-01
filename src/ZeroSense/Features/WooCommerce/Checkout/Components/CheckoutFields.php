@@ -185,62 +185,85 @@ class CheckoutFields
                 continue;
             }
 
-            if (!empty($meta_box["fields"])) {
-                foreach ($meta_box["fields"] as $field) {
-                    if (!isset($field["id"])) {
-                        continue;
-                    }
+            if (empty($meta_box["fields"])) {
+                continue;
+            }
 
-                    $field_value = $this->getSubmittedFieldValue($field['id']);
+            foreach ($meta_box["fields"] as $field) {
+                if (!isset($field["id"])) {
+                    continue;
+                }
 
-                    // Fix: Normalize Service Area ID to default language (Spanish)
-                    // This creates compatibility with MetaBox backend which expects default-language IDs
-                    if ($field['id'] === 'event_service_location' && !empty($field_value)) {
-                        $default_lang = apply_filters('wpml_default_language', null);
-                        if ($default_lang) {
-                            // Use field taxonomy if defined, otherwise fallback to 'service-area' (hyphen) as confirmed by user
-                            $taxonomy = isset($field['taxonomy']) && !empty($field['taxonomy']) ? $field['taxonomy'] : 'service-area';
+                $field_value = $this->getSubmittedFieldValue($field['id']);
 
-                            // Robustness: Ensure taxonomy is a string (MetaBox sometimes returns an array)
-                            if (is_array($taxonomy)) {
-                                $taxonomy = reset($taxonomy);
-                            }
+                // Fix: Normalize Service Area ID to default language (Spanish)
+                // This creates compatibility with MetaBox backend which expects default-language IDs
+                if ($field['id'] === 'event_service_location' && !empty($field_value)) {
+                    $default_lang = apply_filters('wpml_default_language', null);
+                    if ($default_lang) {
+                        // Use field taxonomy if defined, otherwise fallback to 'service-area' (hyphen) as confirmed by user
+                        $taxonomy = isset($field['taxonomy']) && !empty($field['taxonomy']) ? $field['taxonomy'] : 'service-area';
 
-                            $translated_id = apply_filters('wpml_object_id', $field_value, $taxonomy, true, $default_lang);
-                            if ($translated_id) {
-                                $field_value = $translated_id;
-                            }
-                            break;
+                        // Robustness: Ensure taxonomy is a string (MetaBox sometimes returns an array)
+                        if (is_array($taxonomy)) {
+                            $taxonomy = reset($taxonomy);
+                        }
 
-                        default:
-                            $wc_field_type = $field["type"];
-                            if (isset($field["options"]) && is_array($field["options"])) {
-                                $field_options = $field["options"];
-                            }
-                            break;
+                        $translated_id = apply_filters('wpml_object_id', $field_value, $taxonomy, true, $default_lang);
+                        if ($translated_id) {
+                            $field_value = $translated_id;
+                        }
                     }
                 }
 
-                // Prefill defaults from URL when available
-                $prefillDefault = $this->getPrefillDefault($field, $wc_field_type);
+                if ($field_value === null) {
+                    continue;
+                }
 
-                // Generate the field using WooCommerce's form field function.
-                woocommerce_form_field(
-                    $field["id"],
-                    [
-                        "type" => $wc_field_type,
-                        "label" => isset($field["name"]) ? $field["name"] : "",
-                        "required" => !empty($field["required"]),
-                        "default" => $prefillDefault !== null ? $prefillDefault : "",
-                        "placeholder" => isset($field["placeholder"]) ? $field["placeholder"] :
-                            (in_array($wc_field_type, ["select", "taxonomy"]) ? __("-- Select an option --", "woocommerce") : ""),
-                        "options" => $field_options,
-                        "class" => ["form-row-wide"],
-                        "custom_attributes" => !empty($field["required"]) ? ["required" => "required"] : [],
-                        "input_class" => ["form-row-wide"],
-                    ],
-                    ""
-                );
+                if (isset($field["type"]) && $field["type"] === 'date') {
+                    $date = \DateTime::createFromFormat('d/m/Y', $field_value);
+                    if ($date) {
+                        $order->update_meta_data($field['id'], $date->getTimestamp());
+                    } else {
+                        $fallback_date = strtotime(is_string($field_value) ? $field_value : '');
+                        if ($fallback_date !== false) {
+                            $order->update_meta_data($field['id'], $fallback_date);
+                        } else {
+                            $order->update_meta_data($field['id'], 0);
+                        }
+                    }
+                } else {
+                    if (is_array($field_value)) {
+                        $field_value = implode(',', array_map('sanitize_text_field', $field_value));
+                    } else {
+                        $field_value = sanitize_text_field((string) $field_value);
+                    }
+
+                    $order->update_meta_data($field['id'], $field_value);
+
+                    // Keep EventManagement canonical meta in sync
+                    if ($field['id'] === 'event_service_location') {
+                        $canonicalId = is_numeric($field_value) ? (int) $field_value : 0;
+                        $order->update_meta_data('zs_event_service_location', $canonicalId > 0 ? $canonicalId : '');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Register translation strings with WPML
+     */
+    public function register_checkout_strings_for_translation()
+    {
+        if (function_exists('icl_register_string')) {
+            icl_register_string('woocommerce', 'checkout_select_option', '-- Select an option --');
+        }
+    }
+
+    /**
+     * Prevent WPML from processing array post_meta values (from legacy implementation)
+     */
     private function prevent_wpml_array_processing()
     {
         $init_wpml_fix = function () {
