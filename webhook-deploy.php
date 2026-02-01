@@ -28,9 +28,9 @@ file_put_contents($log_file, date('Y-m-d H:i:s') . " - === WEBHOOK v2.1 START ==
 
 // Config
 $local_secrets = load_local_secrets(__DIR__);
-$secret = (string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? '') ?: ($local_secrets['deploy_secret'] ?? ''));
+$secret = trim((string) (getenv('ZEROSENSE_DEPLOY_SECRET') ?: ($_ENV['ZEROSENSE_DEPLOY_SECRET'] ?? '') ?: ($local_secrets['deploy_secret'] ?? '')));
 $staging_path = detect_zero_sense_plugin_dir(__DIR__);
-$log_token = (string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? '') ?: ($local_secrets['log_token'] ?? ''));
+$log_token = trim((string) (getenv('ZEROSENSE_LOG_TOKEN') ?: ($_ENV['ZEROSENSE_LOG_TOKEN'] ?? '') ?: ($local_secrets['log_token'] ?? '')));
 
 function log_msg($msg) {
     global $log_file;
@@ -40,7 +40,7 @@ function log_msg($msg) {
 
 // Log endpoint
 if (isset($_GET['log'])) {
-    $token = isset($_GET['token']) ? (string) $_GET['token'] : '';
+    $token = isset($_GET['token']) ? trim((string) $_GET['token']) : '';
     if (!$log_token || !hash_equals($log_token, $token)) {
         http_response_code(403);
         header('Content-Type: application/json');
@@ -78,9 +78,9 @@ if (isset($_GET['test'])) {
 }
 
 if (isset($_GET['sync'])) {
-    $token = isset($_GET['token']) ? (string) $_GET['token'] : '';
+    $token = isset($_GET['token']) ? trim((string) $_GET['token']) : '';
     if (!$token) {
-        $token = (string) ($_SERVER['HTTP_X_ZEROSENSE_TOKEN'] ?? '');
+        $token = trim((string) ($_SERVER['HTTP_X_ZEROSENSE_TOKEN'] ?? ''));
     }
     if (!$log_token || !hash_equals($log_token, $token)) {
         http_response_code(403);
@@ -89,7 +89,7 @@ if (isset($_GET['sync'])) {
         exit;
     }
 
-    $sync_result = handlePluginInstallOrSync();
+    $sync_result = handlePluginSyncLite();
 
     header('Content-Type: application/json');
     if (($sync_result['status'] ?? '') !== 'success') {
@@ -436,119 +436,111 @@ function ip_in_range($ip, $range) {
     
     return ($ip & $mask) === ($subnet & $mask);
 }
-
 /**
  * Handle plugin installation or synchronization
  */
 function handlePluginInstallOrSync(): array {
+    // Keep legacy name for compatibility, but avoid bootstrapping WordPress (can cause redirects to wp-login).
+    return handlePluginSyncLite();
+}
+
+function handlePluginSyncLite(): array {
     global $staging_path;
-    
-    // Load WordPress
-    if (!defined('ABSPATH')) {
-        $wp_load_path = '';
-        for ($i = 0; $i <= 6; $i++) {
-            $candidate_dir = $i === 0 ? $staging_path : dirname($staging_path, $i);
-            if (!$candidate_dir || $candidate_dir === '.' || $candidate_dir === '/') {
-                break;
-            }
-            $candidate = rtrim($candidate_dir, '/') . '/wp-load.php';
-            if (file_exists($candidate)) {
-                $wp_load_path = $candidate;
-                break;
-            }
+
+    if (function_exists('opcache_reset')) {
+        @opcache_reset();
+    }
+
+    $cfg = parse_wp_config(find_wp_config(dirname($staging_path)));
+    if (!$cfg) {
+        return ['status' => 'error', 'message' => 'wp-config.php not found or could not be parsed'];
+    }
+
+    $prefix = $cfg['table_prefix'] ?: 'wp_';
+    $options_table = $prefix . 'options';
+    $plugin_rel = 'zero-sense/zero-sense.php';
+    $plugin_abs = rtrim(dirname(dirname($staging_path)), '/') . '/plugins/' . $plugin_rel;
+
+    if (!file_exists($plugin_abs)) {
+        return ['status' => 'error', 'message' => 'Plugin file not found: ' . $plugin_rel];
+    }
+
+    if (!class_exists('mysqli')) {
+        return ['status' => 'error', 'message' => 'mysqli extension is not available'];
+    }
+
+    $mysqli = @new mysqli($cfg['db_host'], $cfg['db_user'], $cfg['db_password'], $cfg['db_name']);
+    if ($mysqli->connect_errno) {
+        return ['status' => 'error', 'message' => 'DB connect error: ' . $mysqli->connect_error];
+    }
+    $mysqli->set_charset('utf8mb4');
+
+    // Ensure plugin is active (single-site)
+    $res = $mysqli->query("SELECT option_value FROM {$options_table} WHERE option_name='active_plugins' LIMIT 1");
+    if ($res && ($row = $res->fetch_assoc())) {
+        $active = @unserialize($row['option_value']);
+        if (!is_array($active)) {
+            $active = [];
         }
-        if (!$wp_load_path) {
-            return ['status' => 'error', 'message' => 'WordPress not found (wp-load.php not found by upward search)'];
-        }
-        require_once $wp_load_path;
-    }
-    
-    // Load WordPress admin functions
-    if (!function_exists('is_plugin_active')) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-    
-    if (!function_exists('activate_plugin')) {
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-    }
-    
-    $plugin_file = 'zero-sense/zero-sense.php';
-    
-    // Check if plugin files exist
-    if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin_file)) {
-        log_msg("❌ Plugin files not found in WordPress plugins directory");
-        return ['status' => 'error', 'message' => 'Plugin files not found'];
-    }
-    
-    // Check if plugin is already active
-    if (is_plugin_active($plugin_file)) {
-        log_msg("ℹ️ Plugin already active, syncing...");
-        
-        // Deactivate first to force refresh
-        deactivate_plugins($plugin_file, true);
-        
-        // Clear caches
-        wp_cache_flush();
-        
-        // Clear feature discovery cache
-        if (defined('ZERO_SENSE_VERSION')) {
-            $cacheKey = 'zs_feature_classes_v' . ZERO_SENSE_VERSION;
-            delete_transient($cacheKey);
-        }
-        
-        // Reactivate
-        $result = activate_plugin($plugin_file, '', is_network_admin());
-        
-        if (is_wp_error($result)) {
-            return ['status' => 'error', 'message' => 'Reactivation failed: ' . $result->get_error_message()];
-        }
-        
-        return ['status' => 'success', 'message' => 'Plugin synced successfully'];
-    }
-    
-    // Plugin not active - install and activate
-    log_msg("ℹ️ Plugin not active, installing...");
-    
-    // Get list of available plugins
-    if (!function_exists('get_plugins')) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-    
-    $all_plugins = get_plugins();
-    
-    if (!isset($all_plugins[$plugin_file])) {
-        // Plugin not registered in WordPress - try to register it
-        log_msg("ℹ️ Plugin not registered, attempting to register...");
-        
-        // Force WordPress to recognize the plugin
-        wp_cache_delete('plugins', 'plugins');
-        
-        // Try again
-        $all_plugins = get_plugins();
-        
-        if (!isset($all_plugins[$plugin_file])) {
-            return ['status' => 'error', 'message' => 'Plugin not recognized by WordPress'];
+        if (!in_array($plugin_rel, $active, true)) {
+            $active[] = $plugin_rel;
+            $val = $mysqli->real_escape_string(serialize(array_values($active)));
+            $mysqli->query("UPDATE {$options_table} SET option_value='{$val}' WHERE option_name='active_plugins'");
         }
     }
-    
-    // Activate the plugin
-    $result = activate_plugin($plugin_file, '', is_network_admin());
-    
-    if (is_wp_error($result)) {
-        return ['status' => 'error', 'message' => 'Activation failed: ' . $result->get_error_message()];
-    }
-    
-    // Run activation hooks if plugin class exists
-    if (class_exists('ZeroSense\Core\Plugin')) {
-        try {
-            ZeroSense\Core\Plugin::activate();
-            log_msg("✅ Plugin activation hooks executed");
-        } catch (Exception $e) {
-            log_msg("⚠️ Activation hooks error: " . $e->getMessage());
+
+    // Clear feature discovery transients
+    $mysqli->query("DELETE FROM {$options_table} WHERE option_name LIKE '_transient_zs_feature_classes_v%' OR option_name LIKE '_transient_timeout_zs_feature_classes_v%'");
+
+    $mysqli->close();
+    return ['status' => 'success', 'message' => 'Sync lite done (opcache + transients)'];
+}
+
+function find_wp_config(string $start_dir): string {
+    $dir = rtrim($start_dir, '/');
+    for ($i = 0; $i <= 10; $i++) {
+        $candidate = $dir . '/wp-config.php';
+        if (file_exists($candidate)) {
+            return $candidate;
         }
+        $parent = dirname($dir);
+        if (!$parent || $parent === $dir || $parent === '/') {
+            break;
+        }
+        $dir = $parent;
     }
-    
-    return ['status' => 'success', 'message' => 'Plugin installed and activated successfully'];
+    return '';
+}
+
+function parse_wp_config(string $path): array {
+    if (!$path || !file_exists($path)) {
+        return [];
+    }
+    $content = (string) @file_get_contents($path);
+    if (!$content) {
+        return [];
+    }
+
+    $get_define = function (string $name) use ($content): string {
+        $re = "/define\\(\\s*['\"]" . preg_quote($name, '/') . "['\"]\\s*,\\s*['\"]([^'\"]*)['\"]\\s*\\)\\s*;/";
+        if (preg_match($re, $content, $m)) {
+            return (string) $m[1];
+        }
+        return '';
+    };
+
+    $prefix = '';
+    if (preg_match("/\\$table_prefix\\s*=\\s*['\"]([^'\"]+)['\"]\\s*;/", $content, $m)) {
+        $prefix = (string) $m[1];
+    }
+
+    return [
+        'db_name' => $get_define('DB_NAME'),
+        'db_user' => $get_define('DB_USER'),
+        'db_password' => $get_define('DB_PASSWORD'),
+        'db_host' => $get_define('DB_HOST') ?: 'localhost',
+        'table_prefix' => $prefix,
+    ];
 }
 
 function deploy_from_github_zip(string $repo_full_name, string $branch, string $target_dir, string $delivery): array {
