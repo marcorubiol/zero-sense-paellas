@@ -16,12 +16,6 @@ This README is the single source of truth for:
 
 Use this when onboarding a developer or another AI agent.
 
-Related docs:
-
-- `SHORT.md` — Quick reference (2‑minute guide)
-- `DEV_NOTES.md` — Architectural decisions, patterns and anti‑patterns
-
----
 
 ## System architecture
 
@@ -155,7 +149,7 @@ Below is the complete set of features implementing `FeatureInterface` with their
 
 1. Install dependencies
    ```bash
-   cd wp-content/plugins/zero-sense-3
+   cd wp-content/plugins/zero-sense
    composer install
    ```
 2. Activate the plugin in WP Admin → Plugins.
@@ -257,7 +251,7 @@ GPL v2 or later.
 
 ### 📁 Directory Structure
 ```
-zero-sense-3/
+zero-sense/
 ├── zero-sense.php              # Primary bootstrap
 ├── composer.json               # PSR-4 autoloading definition
 ├── src/ZeroSense/
@@ -292,7 +286,7 @@ zero-sense-3/
 ### 📦 Installation
 1. **Install dependencies**
    ```bash
-   cd wp-content/plugins/zero-sense-3/
+   cd wp-content/plugins/zero-sense/
    composer install
    ```
 2. **Activate the plugin**
@@ -306,11 +300,11 @@ zero-sense-3/
 
 ## 🧭 Quick Onboarding
 
-1. Clone the repository and run `composer install` inside `zero-sense-3/`.
+1. Clone the repository and run `composer install` inside `zero-sense/`.
 2. Review `zero-sense.php` for global constants and bootstrap (`zero_sense_init()` loads `ZeroSense\Core\Plugin`).
 3. Inspect `src/ZeroSense/Core/Plugin.php` and `FeatureManager.php` to understand the main flow and auto-discovery.
 4. Create or enable a feature under `src/ZeroSense/Features/<Category>/` ensuring it implements `FeatureInterface`.
-5. Activate the feature from the Zerø Sense dashboard and follow the QA checklist in `MIGRATION_PLAN.md`. For Flowmattic, add transitions and class actions through the dashboard—no hardcoded IDs exist.
+5. Activate the feature from the Zerø Sense dashboard and follow the QA checklist in the README.
 
 ### 🎛️ Dashboard Usage
 - **Category tabs**: Navigate between WordPress, WooCommerce, etc.
@@ -322,9 +316,10 @@ zero-sense-3/
 ## 👨‍💻 Development
 
 ### 📚 Documentation Policy (Mandatory)
-- **README**: Update this `README.md` whenever any feature’s behavior changes.
+- **README**: Update this `README.md` whenever any feature's behavior changes.
 - **Backend Info/Settings**: After editing a feature, adjust the information presented in its dashboard card (`getInformationBlocks()` and `getConfigurationFields()` in `src/ZeroSense/Features/**/`).
 - **Source comments**: Write all inline/block comments in English across PHP, JS, CSS, and other source files.
+- **Code language**: ALL CODE (PHP, JS, CSS) must be written in English. No exceptions.
 - **Strict rule**: No change is considered complete until both documentation surfaces are updated.
 
 ### ⚡ Performance Best Practices
@@ -353,6 +348,7 @@ zero-sense-3/
 ### 🗂️ Asset Organization
 
 - **Shared root**: All resources live under `assets/` (for example, `assets/css/reset.css`, `assets/css/admin.css`, `assets/js/admin.js`).
+- **Separate files rule**: CSS and JS must ALWAYS be in separate files. No inline styles or scripts.
 - **Context-specific folders**: Create optional directories such as `assets/css/frontend/` or `assets/js/frontend/` when a feature needs its own files. Avoid per-feature folders unless necessary.
 - **Central dashboard loading**: `ZeroSense\Core\AdminDashboard::enqueueAdminAssets()` registers global assets for `settings_page_zero-sense-*` screens.
 - **Feature-level loading**: Individual feature classes enqueue CSS/JS inside `init()` after checking `isEnabled()`.
@@ -429,7 +425,7 @@ class MyFeature implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return get_option('zs_my_feature', false);
+        return (bool) get_option('zs_my_feature', true);
     }
 
     public function getPriority(): int
@@ -494,8 +490,8 @@ public function getConfigurationFields(): array
 - **Test features**: Three example features working as references.
 
 ### 📈 Current Stats
-- **Features created**: 6/20 (30%).
-- **Categories implemented**: 4/9 (44%).
+- **Features created**: 15+ features across 5 categories.
+- **Categories implemented**: 5/5 (100%).
 - **Architecture**: 100% PSR-4.
 - **Dashboard**: 100% functional.
 - **Auto-discovery**: 100% operational.
@@ -508,9 +504,9 @@ public function getConfigurationFields(): array
 - Optimize performance under heavy traffic.
 - Perform comprehensive testing.
 
-## 📝 Migrating from v2.0
+## 📝 Migration Notes
 
-This is a complete rewrite. See `MIGRATION_PLAN.md` for migration steps.
+This is a complete rewrite from v2.0. All features have been rebuilt with modern PSR-4 architecture.
 
 ## 🧪 Testing
 
