@@ -116,9 +116,11 @@ jQuery(document).ready(function($) {
             content = '<img src="' + url + '" style="max-width:90vw;max-height:80vh;object-fit:contain;">';
         }
 
-        var overlay = '<div id="zs-lightbox" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;">' +
-            '<span style="position:absolute;top:20px;right:30px;color:#fff;font-size:32px;cursor:pointer;line-height:1;">&times;</span>' +
-            content +
+        var overlay = '<div id="zs-lightbox" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:40px;">' +
+            '<div style="background:#fff;border-radius:8px;padding:20px;max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:default;" onclick="event.stopPropagation();">' +
+                '<span id="zs-lightbox-close" style="position:absolute;top:-12px;right:-12px;background:#333;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.3);">&times;</span>' +
+                content +
+            '</div>' +
         '</div>';
 
         $('body').append(overlay);
