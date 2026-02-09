@@ -82,7 +82,7 @@ class MediaUploadAdmin
                                 <video src="<?php echo esc_url($media['url']); ?>"></video>
                             <?php endif; ?>
                             <div class="media-actions">
-                                <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="button button-small"><?php esc_html_e('View', 'zero-sense'); ?></a>
+                                <a href="<?php echo esc_url($media['url']); ?>" class="button button-small zs-lightbox-trigger" data-type="<?php echo esc_attr(strpos($media['type'], 'video') !== false ? 'video' : 'image'); ?>"><?php esc_html_e('View', 'zero-sense'); ?></a>
                                 <button type="button" class="button button-small remove-media"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
                             </div>
                         </div>

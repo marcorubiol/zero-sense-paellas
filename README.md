@@ -67,6 +67,7 @@ Autoloading is PSR-4 via `composer.json`. Features are discovered, validated aga
 - Namespaces/class files mirror directory structure.
 - Keep hooks guarded: call condition checks early (`is_admin`, `is_checkout`, `class_exists:WooCommerce`, etc.).
 - Prefer vanilla JS; use jQuery only where stability requires it (documented in the feature).
+- **HPOS mandatory**: ALL WooCommerce features must be compatible with High-Performance Order Storage. Use `wc_get_page_screen_id('shop-order')` for metaboxes and support both `shop_order` and `woocommerce_page_wc-orders` screen IDs.
 - Options, handles, and meta keys use the `zs_` prefix.
 - CSS variables use the `--zs-*` prefix.
 

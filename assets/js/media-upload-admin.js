@@ -2,8 +2,54 @@ jQuery(document).ready(function($) {
     let mediaUploader;
     let mediaItems = [];
 
+    // Lightbox
+    function initLightbox() {
+        if ($('#zs-lightbox').length) return;
+        $('body').append(
+            '<div id="zs-lightbox" class="zs-lightbox">' +
+                '<div class="zs-lightbox-overlay"></div>' +
+                '<div class="zs-lightbox-content">' +
+                    '<button type="button" class="zs-lightbox-close">&times;</button>' +
+                    '<div class="zs-lightbox-body"></div>' +
+                '</div>' +
+            '</div>'
+        );
+    }
+
+    function openLightbox(url, type) {
+        initLightbox();
+        var $body = $('#zs-lightbox .zs-lightbox-body');
+        $body.empty();
+        if (type === 'video') {
+            $body.html('<video src="' + url + '" controls autoplay style="max-width:100%;max-height:80vh;"></video>');
+        } else {
+            $body.html('<img src="' + url + '" style="max-width:100%;max-height:80vh;">');
+        }
+        $('#zs-lightbox').addClass('active');
+    }
+
+    $(document).on('click', '.zs-lightbox-close, .zs-lightbox-overlay', function() {
+        var $lb = $('#zs-lightbox');
+        $lb.find('video').each(function() { this.pause(); });
+        $lb.removeClass('active');
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var $lb = $('#zs-lightbox');
+            $lb.find('video').each(function() { this.pause(); });
+            $lb.removeClass('active');
+        }
+    });
+
+    $(document).on('click', '.zs-lightbox-trigger', function(e) {
+        e.preventDefault();
+        openLightbox($(this).attr('href'), $(this).data('type') || 'image');
+    });
+
+    // Media uploader
     function initializeExistingMedia() {
-        let existingIds = $('#zs_event_media').val();
+        var existingIds = $('#zs_event_media').val();
         if (existingIds) {
             existingIds.split(',').forEach(function(id) {
                 id = $.trim(id);
@@ -51,6 +97,7 @@ jQuery(document).ready(function($) {
 
     function appendPreviewItem(att) {
         var thumb = '';
+        var dataType = att.type || 'image';
         if (att.type === 'image') {
             var src = (att.sizes && att.sizes.thumbnail) ? att.sizes.thumbnail.url : att.url;
             thumb = '<img src="' + src + '" alt="' + (att.title || '') + '">';
@@ -61,7 +108,7 @@ jQuery(document).ready(function($) {
         var html = '<div class="zs-media-item" data-id="' + att.id + '">' +
             thumb +
             '<div class="media-actions">' +
-                '<a href="' + att.url + '" target="_blank" class="button button-small">View</a>' +
+                '<a href="' + att.url + '" class="button button-small zs-lightbox-trigger" data-type="' + dataType + '">View</a>' +
                 '<button type="button" class="button button-small remove-media">Remove</button>' +
             '</div>' +
         '</div>';
