@@ -15,7 +15,7 @@ class MediaUploadAdmin
     public function enqueue_admin_scripts()
     {
         $screen = get_current_screen();
-        if ($screen && $screen->id === 'shop_order') {
+        if ($screen && ($screen->id === 'shop_order' || $screen->id === 'woocommerce_page_wc-orders')) {
             wp_enqueue_media();
             wp_enqueue_script('zs-media-upload-admin', ZERO_SENSE_URL . 'assets/js/media-upload-admin.js', ['jquery'], ZERO_SENSE_VERSION, true);
             wp_enqueue_style('zs-media-upload-admin', ZERO_SENSE_URL . 'assets/css/media-upload-admin.css', [], ZERO_SENSE_VERSION);
