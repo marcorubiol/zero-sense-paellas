@@ -72,48 +72,33 @@ class MediaUploadAdmin
         <div class="zs-media-upload-admin-wrapper">
             <div class="zs-media-existing">
                 <h4><?php esc_html_e('Current Media Files', 'zero-sense'); ?></h4>
-                <?php if (!empty($existing_media)): ?>
-                    <div class="zs-media-grid">
-                        <?php foreach ($existing_media as $media): ?>
-                            <div class="zs-media-item" data-id="<?php echo esc_attr($media['id']); ?>">
-                                <?php if (strpos($media['type'], 'image') !== false): ?>
-                                    <img src="<?php echo esc_url($media['url']); ?>" alt="<?php echo esc_attr($media['title']); ?>">
-                                <?php elseif (strpos($media['type'], 'video') !== false): ?>
-                                    <video src="<?php echo esc_url($media['url']); ?>" controls></video>
-                                <?php else: ?>
-                                    <div class="media-placeholder">
-                                        <span class="file-icon">📄</span>
-                                        <span class="file-name"><?php echo esc_html($media['title']); ?></span>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="media-actions">
-                                    <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="button button-small" title="<?php esc_attr_e('View full size', 'zero-sense'); ?>">
-                                        <?php esc_html_e('View', 'zero-sense'); ?>
-                                    </a>
-                                    <button type="button" class="button button-small remove-media" title="<?php esc_attr_e('Remove media', 'zero-sense'); ?>">
-                                        <?php esc_html_e('Remove', 'zero-sense'); ?>
-                                    </button>
-                                </div>
+                <p class="zs-empty-msg" <?php if (!empty($existing_media)) echo 'style="display:none;"'; ?>><?php esc_html_e('No media files uploaded yet.', 'zero-sense'); ?></p>
+                <div class="zs-media-grid" <?php if (empty($existing_media)) echo 'style="display:none;"'; ?>>
+                    <?php foreach ($existing_media as $media): ?>
+                        <div class="zs-media-item" data-id="<?php echo esc_attr($media['id']); ?>">
+                            <?php if (strpos($media['type'], 'image') !== false): ?>
+                                <img src="<?php echo esc_url($media['url']); ?>" alt="<?php echo esc_attr($media['title']); ?>">
+                            <?php elseif (strpos($media['type'], 'video') !== false): ?>
+                                <video src="<?php echo esc_url($media['url']); ?>"></video>
+                            <?php endif; ?>
+                            <div class="media-actions">
+                                <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="button button-small"><?php esc_html_e('View', 'zero-sense'); ?></a>
+                                <button type="button" class="button button-small remove-media"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <p><?php esc_html_e('No media files uploaded yet.', 'zero-sense'); ?></p>
-                <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
             <div class="zs-media-upload-section">
-                <h4><?php esc_html_e('Add New Media', 'zero-sense'); ?></h4>
                 <div class="zs-media-upload-area">
                     <button type="button" class="button button-primary zs-media-upload-btn" id="zs-media-upload-btn">
                         <?php esc_html_e('Choose Files', 'zero-sense'); ?>
                     </button>
                     <span class="description">
-                        <?php esc_html_e('Supported formats: JPG, PNG, GIF, MP4, MOV. Max file size: 10MB per file.', 'zero-sense'); ?>
+                        <?php esc_html_e('JPG, PNG, GIF, MP4, MOV — Max 10MB per file', 'zero-sense'); ?>
                     </span>
                 </div>
-                
-                <div class="zs-media-preview" id="zs-media-preview"></div>
                 <input type="hidden" id="zs_event_media" name="zs_event_media" value="<?php echo esc_attr($media_ids); ?>">
             </div>
         </div>
