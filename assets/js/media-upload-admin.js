@@ -2,54 +2,8 @@ jQuery(document).ready(function($) {
     let mediaUploader;
     let mediaItems = [];
 
-    // Lightbox
-    function initLightbox() {
-        if ($('#zs-lightbox').length) return;
-        $('body').append(
-            '<div id="zs-lightbox" class="zs-lightbox">' +
-                '<div class="zs-lightbox-overlay"></div>' +
-                '<div class="zs-lightbox-content">' +
-                    '<button type="button" class="zs-lightbox-close">&times;</button>' +
-                    '<div class="zs-lightbox-body"></div>' +
-                '</div>' +
-            '</div>'
-        );
-    }
-
-    function openLightbox(url, type) {
-        initLightbox();
-        var $body = $('#zs-lightbox .zs-lightbox-body');
-        $body.empty();
-        if (type === 'video') {
-            $body.html('<video src="' + url + '" controls autoplay style="max-width:100%;max-height:80vh;"></video>');
-        } else {
-            $body.html('<img src="' + url + '" style="max-width:100%;max-height:80vh;">');
-        }
-        $('#zs-lightbox').addClass('active');
-    }
-
-    $(document).on('click', '.zs-lightbox-close, .zs-lightbox-overlay', function() {
-        var $lb = $('#zs-lightbox');
-        $lb.find('video').each(function() { this.pause(); });
-        $lb.removeClass('active');
-    });
-
-    $(document).on('keydown', function(e) {
-        if (e.key === 'Escape') {
-            var $lb = $('#zs-lightbox');
-            $lb.find('video').each(function() { this.pause(); });
-            $lb.removeClass('active');
-        }
-    });
-
-    $(document).on('click', '.zs-lightbox-trigger', function(e) {
-        e.preventDefault();
-        openLightbox($(this).attr('href'), $(this).data('type') || 'image');
-    });
-
-    // Media uploader
     function initializeExistingMedia() {
-        var existingIds = $('#zs_event_media').val();
+        let existingIds = $('#zs_event_media').val();
         if (existingIds) {
             existingIds.split(',').forEach(function(id) {
                 id = $.trim(id);
@@ -97,18 +51,18 @@ jQuery(document).ready(function($) {
 
     function appendPreviewItem(att) {
         var thumb = '';
-        var dataType = att.type || 'image';
-        if (att.type === 'image') {
+        var mediaType = att.type || 'image';
+        if (mediaType === 'image') {
             var src = (att.sizes && att.sizes.thumbnail) ? att.sizes.thumbnail.url : att.url;
-            thumb = '<img src="' + src + '" alt="' + (att.title || '') + '">';
-        } else if (att.type === 'video') {
-            thumb = '<video src="' + att.url + '"></video>';
+            thumb = '<img src="' + src + '" alt="' + (att.title || '') + '" data-full="' + att.url + '">';
+        } else if (mediaType === 'video') {
+            thumb = '<video src="' + att.url + '" data-full="' + att.url + '"></video>';
         }
 
         var html = '<div class="zs-media-item" data-id="' + att.id + '">' +
             thumb +
             '<div class="media-actions">' +
-                '<a href="' + att.url + '" class="button button-small zs-lightbox-trigger" data-type="' + dataType + '">View</a>' +
+                '<button type="button" class="button button-small zs-media-view" data-url="' + att.url + '" data-type="' + mediaType + '">View</button>' +
                 '<button type="button" class="button button-small remove-media">Remove</button>' +
             '</div>' +
         '</div>';
@@ -147,6 +101,35 @@ jQuery(document).ready(function($) {
         $item.fadeOut(300, function() { $(this).remove(); });
         updateHiddenField();
         toggleEmptyMessage();
+    });
+
+    // Lightbox
+    $(document).on('click', '.zs-media-view', function(e) {
+        e.preventDefault();
+        var url = $(this).data('url');
+        var type = $(this).data('type');
+        var content = '';
+
+        if (type === 'video') {
+            content = '<video src="' + url + '" controls autoplay style="max-width:90vw;max-height:80vh;"></video>';
+        } else {
+            content = '<img src="' + url + '" style="max-width:90vw;max-height:80vh;object-fit:contain;">';
+        }
+
+        var overlay = '<div id="zs-lightbox" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;">' +
+            '<span style="position:absolute;top:20px;right:30px;color:#fff;font-size:32px;cursor:pointer;line-height:1;">&times;</span>' +
+            content +
+        '</div>';
+
+        $('body').append(overlay);
+    });
+
+    $(document).on('click', '#zs-lightbox', function() {
+        $(this).remove();
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') $('#zs-lightbox').remove();
     });
 
     initializeExistingMedia();

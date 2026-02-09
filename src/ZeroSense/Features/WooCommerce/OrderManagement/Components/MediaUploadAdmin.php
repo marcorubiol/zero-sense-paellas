@@ -77,12 +77,12 @@ class MediaUploadAdmin
                     <?php foreach ($existing_media as $media): ?>
                         <div class="zs-media-item" data-id="<?php echo esc_attr($media['id']); ?>">
                             <?php if (strpos($media['type'], 'image') !== false): ?>
-                                <img src="<?php echo esc_url($media['url']); ?>" alt="<?php echo esc_attr($media['title']); ?>">
+                                <img src="<?php echo esc_url($media['url']); ?>" alt="<?php echo esc_attr($media['title']); ?>" data-full="<?php echo esc_url($media['url']); ?>">
                             <?php elseif (strpos($media['type'], 'video') !== false): ?>
-                                <video src="<?php echo esc_url($media['url']); ?>"></video>
+                                <video src="<?php echo esc_url($media['url']); ?>" data-full="<?php echo esc_url($media['url']); ?>"></video>
                             <?php endif; ?>
                             <div class="media-actions">
-                                <a href="<?php echo esc_url($media['url']); ?>" class="button button-small zs-lightbox-trigger" data-type="<?php echo esc_attr(strpos($media['type'], 'video') !== false ? 'video' : 'image'); ?>"><?php esc_html_e('View', 'zero-sense'); ?></a>
+                                <button type="button" class="button button-small zs-media-view" data-url="<?php echo esc_url($media['url']); ?>" data-type="<?php echo esc_attr(strpos($media['type'], 'video') !== false ? 'video' : 'image'); ?>"><?php esc_html_e('View', 'zero-sense'); ?></button>
                                 <button type="button" class="button button-small remove-media"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
                             </div>
                         </div>

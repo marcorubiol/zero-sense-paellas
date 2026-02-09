@@ -188,6 +188,18 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
+        $tags[] = [
+            'name' => '{woo_event_media}',
+            'label' => 'Event Media Gallery',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_event_media_urls}',
+            'label' => 'Event Media URLs (comma-separated)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -255,6 +267,14 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOpsMaterialFieldValue($field, $post);
         }
 
+        if ($tag === '{woo_event_media}') {
+            return $this->getEventMediaGallery($post);
+        }
+
+        if ($tag === '{woo_event_media_urls}') {
+            return $this->getEventMediaUrls($post);
+        }
+
         return $tag;
     }
 
@@ -284,9 +304,14 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_ops_notes}', $this->getOpsNotesValue($post), $content);
 
-        return $this->replaceTagsInContent($content, $post, 'woo_ops_material_', function (string $field) use ($post): string {
+        $content = $this->replaceTagsInContent($content, $post, 'woo_ops_material_', function (string $field) use ($post): string {
             return $this->getOpsMaterialFieldValue($field, $post);
         });
+
+        $content = str_replace('{woo_event_media}', $this->getEventMediaGallery($post), $content);
+        $content = str_replace('{woo_event_media_urls}', $this->getEventMediaUrls($post), $content);
+
+        return $content;
     }
 
     private function replaceTagsInContent(string $content, $post, string $prefix, callable $callback): string
@@ -825,6 +850,77 @@ class BricksDynamicTags implements FeatureInterface
                 ],
             ],
         ];
+    }
+
+    private function getEventMediaGallery($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Event Media Gallery');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $raw = $order->get_meta('_zs_event_media', true);
+        if (!is_string($raw) || $raw === '') {
+            return '';
+        }
+
+        $ids = array_filter(array_map('trim', explode(',', $raw)));
+        if (empty($ids)) {
+            return '';
+        }
+
+        $html = '<div class="zs-event-media-gallery">';
+        foreach ($ids as $id) {
+            $url = wp_get_attachment_url((int) $id);
+            $type = get_post_mime_type((int) $id);
+            if (!$url) {
+                continue;
+            }
+
+            if (is_string($type) && strpos($type, 'video') !== false) {
+                $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls></video></div>';
+            } else {
+                $thumb = wp_get_attachment_image_url((int) $id, 'medium');
+                $html .= '<div class="zs-gallery-item zs-gallery-image"><a href="' . esc_url($url) . '" data-lightbox="event-media"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a></div>';
+            }
+        }
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    private function getEventMediaUrls($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Event Media URLs');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $raw = $order->get_meta('_zs_event_media', true);
+        if (!is_string($raw) || $raw === '') {
+            return '';
+        }
+
+        $ids = array_filter(array_map('trim', explode(',', $raw)));
+        $urls = [];
+        foreach ($ids as $id) {
+            $url = wp_get_attachment_url((int) $id);
+            if ($url) {
+                $urls[] = $url;
+            }
+        }
+
+        return implode(',', $urls);
     }
 
     /**
