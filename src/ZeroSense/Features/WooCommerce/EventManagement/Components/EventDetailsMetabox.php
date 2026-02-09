@@ -328,6 +328,46 @@ class EventDetailsMetabox
                     <textarea id="event_intolerances" name="event_intolerances" rows="4" class="widefat"><?php echo esc_textarea(is_string($intolerances) ? $intolerances : ''); ?></textarea>
                 </div>
             </div>
+
+            <!-- Event Media -->
+            <div class="zs-field-group">
+                <h3><?php esc_html_e('Event Media', 'zero-sense'); ?></h3>
+                
+                <div class="zs-field">
+                    <label><?php esc_html_e('Uploaded Media', 'zero-sense'); ?></label>
+                    <?php
+                    $media_ids = $order->get_meta('_zs_event_media', true);
+                    if ($media_ids) {
+                        $ids = explode(',', $media_ids);
+                        echo '<div class="zs-media-preview-admin">';
+                        foreach ($ids as $id) {
+                            $id = trim($id);
+                            if (empty($id)) continue;
+                            
+                            $url = wp_get_attachment_url($id);
+                            $type = get_post_mime_type($id);
+                            $title = get_the_title($id);
+                            
+                            if ($url) {
+                                echo '<div class="zs-media-item-admin" title="' . esc_attr($title) . '">';
+                                if (strpos($type, 'image') !== false) {
+                                    echo '<img src="' . esc_url($url) . '" alt="' . esc_attr($title) . '">';
+                                } elseif (strpos($type, 'video') !== false) {
+                                    echo '<video src="' . esc_url($url) . '" controls></video>';
+                                } else {
+                                    echo '<div class="media-placeholder">File: ' . esc_html($title) . '</div>';
+                                }
+                                echo '<a href="' . esc_url($url) . '" target="_blank" class="media-link" title="View full size">🔗</a>';
+                                echo '</div>';
+                            }
+                        }
+                        echo '</div>';
+                    } else {
+                        echo '<p>' . esc_html__('No media uploaded', 'zero-sense') . '</p>';
+                    }
+                    ?>
+                </div>
+            </div>
         </div>
 
         <style>
@@ -380,6 +420,55 @@ class EventDetailsMetabox
             }
             .zs-field input.short {
                 width: 100px;
+            }
+            .zs-media-preview-admin {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                margin-top: 10px;
+            }
+            .zs-media-item-admin {
+                position: relative;
+                width: 120px;
+                height: 120px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .zs-media-item-admin img,
+            .zs-media-item-admin video {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .zs-media-item-admin .media-link {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background: rgba(0,0,0,0.7);
+                color: white;
+                text-decoration: none;
+                padding: 3px 6px;
+                border-radius: 3px;
+                font-size: 12px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .zs-media-item-admin:hover .media-link {
+                opacity: 1;
+            }
+            .media-placeholder {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #f5f5f5;
+                font-size: 11px;
+                text-align: center;
+                padding: 5px;
+                box-sizing: border-box;
             }
         </style>
         <?php

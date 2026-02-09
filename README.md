@@ -141,7 +141,9 @@ Below is the complete set of features implementing `FeatureInterface` with their
 - `src/ZeroSense/Features/WooCommerce/OrderManagement/AdminOrderEventDate.php`
   - Sortable “Event Date” order column with filters (Future/Past/All), classic + HPOS.
 - `src/ZeroSense/Features/WooCommerce/OrderManagement/AdminOrderPaymentLinks.php`
-  - Adds a unified “Customer payment page” link in admin orders and appends admin language to payment URLs.
+  - Adds a unified "Customer payment page" link in admin orders and appends admin language to payment URLs.
+- `src/ZeroSense/Features/WooCommerce/OrderManagement/MediaUploadAdminFeature.php`
+  - Media upload functionality for WooCommerce orders in admin backend. Allows admin to add/remove images and videos for events.
 
 ---
 
