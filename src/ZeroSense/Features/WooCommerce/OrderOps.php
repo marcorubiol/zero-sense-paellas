@@ -221,11 +221,31 @@ class OrderOps implements FeatureInterface
 
     public function registerShippingEmailField(array $fields, $order = false, string $context = 'edit'): array
     {
-        $fields['email'] = [
-            'label' => __('On-site contact email', 'zero-sense'),
+        $email_field = [
+            'label' => __('Email address', 'woocommerce'),
         ];
 
-        return $fields;
+        if ($context === 'view' && $order instanceof WC_Order) {
+            $raw = $order->get_meta('_shipping_email', true);
+            $raw = is_string($raw) ? $raw : '';
+            if ($raw !== '') {
+                $email_field['value'] = '<a href="' . esc_url('mailto:' . $raw) . '">' . esc_html($raw) . '</a>';
+            }
+        }
+
+        $reordered = [];
+        foreach ($fields as $key => $field) {
+            if ($key === 'phone') {
+                $reordered['email'] = $email_field;
+            }
+            $reordered[$key] = $field;
+        }
+
+        if (!isset($reordered['email'])) {
+            $reordered['email'] = $email_field;
+        }
+
+        return $reordered;
     }
 
     public function save($orderId): void
