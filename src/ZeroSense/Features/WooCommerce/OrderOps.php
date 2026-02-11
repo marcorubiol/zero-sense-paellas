@@ -79,7 +79,7 @@ class OrderOps implements FeatureInterface
     public function init(): void
     {
         add_action('add_meta_boxes', [$this, 'addMetaboxes']);
-        add_action('woocommerce_admin_order_data_after_shipping_address', [$this, 'renderShippingEmailField']);
+        add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingEmailField'], 10, 3);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20);
     }
 
@@ -220,25 +220,31 @@ class OrderOps implements FeatureInterface
         <?php
     }
 
-    public function renderShippingEmailField($order): void
+    public function registerShippingEmailField(array $fields, $order = false, string $context = 'edit'): array
     {
-        if (!$order instanceof WC_Order) {
-            return;
+        $value = '';
+        if ($order instanceof WC_Order) {
+            $raw = $order->get_meta(self::META_SHIPPING_EMAIL, true);
+            if (!is_string($raw) || $raw === '') {
+                $raw = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
+            }
+            $value = is_string($raw) ? $raw : '';
         }
 
-        $raw = $order->get_meta(self::META_SHIPPING_EMAIL, true);
-        if (!is_string($raw) || $raw === '') {
-            $raw = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
-        }
-        $email = is_string($raw) ? $raw : '';
+        $fields['email'] = [
+            'label'           => __('On-site contact email', 'zero-sense'),
+            'value'           => $value,
+            'update_callback' => [self::class, 'saveShippingEmailFromNativeField'],
+        ];
 
-        wp_nonce_field('zs_order_ops_save', 'zs_order_ops_nonce');
-        ?>
-        <p class="form-field form-field-wide">
-            <label for="zs_shipping_email"><?php esc_html_e('On-site contact email', 'zero-sense'); ?></label>
-            <input type="email" class="short" style="width:100%;" name="zs_shipping_email" id="zs_shipping_email" value="<?php echo esc_attr($email); ?>">
-        </p>
-        <?php
+        return $fields;
+    }
+
+    public static function saveShippingEmailFromNativeField(string $fieldId, string $value, WC_Order $order): void
+    {
+        $email = sanitize_email($value);
+        $order->update_meta_data(self::META_SHIPPING_EMAIL, $email);
+        $order->update_meta_data(self::META_SHIPPING_EMAIL_WOO, $email);
     }
 
     public function save($orderId): void
@@ -279,12 +285,6 @@ class OrderOps implements FeatureInterface
             }
 
             $order->update_meta_data(self::META_OPS_MATERIAL, $saved);
-        }
-
-        if (isset($_POST['zs_shipping_email'])) {
-            $email = sanitize_email(wp_unslash((string) $_POST['zs_shipping_email']));
-            $order->update_meta_data(self::META_SHIPPING_EMAIL, $email);
-            $order->update_meta_data(self::META_SHIPPING_EMAIL_WOO, $email);
         }
 
         $order->save();
