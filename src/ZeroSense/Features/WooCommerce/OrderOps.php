@@ -79,6 +79,7 @@ class OrderOps implements FeatureInterface
     {
         add_action('add_meta_boxes', [$this, 'addMetaboxes']);
         add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingEmailField'], 10, 3);
+        add_action('admin_head', [$this, 'shippingFieldsCss']);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20);
     }
 
@@ -217,6 +218,15 @@ class OrderOps implements FeatureInterface
             </tbody>
         </table>
         <?php
+    }
+
+    public function shippingFieldsCss(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->id, ['shop_order', wc_get_page_screen_id('shop-order')], true)) {
+            return;
+        }
+        echo '<style>#order_data ._shipping_phone_field{float:right;clear:right}#order_data ._shipping_email_field{margin-top:13px}</style>';
     }
 
     public function registerShippingEmailField(array $fields, $order = false, string $context = 'edit'): array
