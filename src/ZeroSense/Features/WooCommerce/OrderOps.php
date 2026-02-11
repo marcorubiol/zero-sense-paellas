@@ -226,7 +226,7 @@ class OrderOps implements FeatureInterface
         if (!$screen || !in_array($screen->id, ['shop_order', wc_get_page_screen_id('shop-order')], true)) {
             return;
         }
-        echo '<style>#order_data ._shipping_phone_field{float:right;clear:right}#order_data ._shipping_email_field{margin-top:13px}</style>';
+        echo '<style>#order_data .order_data_column ._shipping_phone_field{float:right;clear:right}#order_data .order_data_column ._shipping_email_field{margin-top:13px}</style>';
     }
 
     public function registerShippingEmailField(array $fields, $order = false, string $context = 'edit'): array
