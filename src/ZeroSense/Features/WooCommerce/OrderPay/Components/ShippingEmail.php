@@ -5,8 +5,7 @@ use WC_Order;
 
 class ShippingEmail
 {
-    private const META_KEY = 'zs_shipping_email';
-    private const META_KEY_WOO = '_shipping_email';
+    private const META_KEY = '_shipping_email';
 
     public function __construct()
     {
@@ -32,9 +31,6 @@ class ShippingEmail
 
         if ($order instanceof WC_Order) {
             $raw = $order->get_meta(self::META_KEY, true);
-            if (!is_string($raw) || $raw === '') {
-                $raw = $order->get_meta(self::META_KEY_WOO, true);
-            }
             $value = is_string($raw) ? $raw : '';
         }
 
@@ -57,7 +53,6 @@ class ShippingEmail
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
             $order->update_meta_data(self::META_KEY, $email);
-            $order->update_meta_data(self::META_KEY_WOO, $email);
             $order->save();
             return;
         }

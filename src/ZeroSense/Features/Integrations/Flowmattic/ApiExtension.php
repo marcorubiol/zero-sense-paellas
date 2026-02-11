@@ -48,7 +48,7 @@ class ApiExtension
         'marketing_consent_checkbox',
         'budget_email_content',
         'final_details_email_content',
-        'zs_shipping_email',
+        '_shipping_email',
         'zs_ops_notes',
         'zs_ops_material',
         'zs_deposits_has_deposit',

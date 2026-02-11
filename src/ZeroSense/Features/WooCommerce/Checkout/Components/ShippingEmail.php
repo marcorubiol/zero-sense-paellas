@@ -5,8 +5,7 @@ use WC_Order;
 
 class ShippingEmail
 {
-    private const META_KEY = 'zs_shipping_email';
-    private const META_KEY_WOO = '_shipping_email';
+    private const META_KEY = '_shipping_email';
 
     public function __construct()
     {
@@ -41,7 +40,6 @@ class ShippingEmail
         $email = sanitize_email(wp_unslash((string) $_POST['shipping_email']));
 
         $order->update_meta_data(self::META_KEY, $email);
-        $order->update_meta_data(self::META_KEY_WOO, $email);
         $order->save();
     }
 }

@@ -8,8 +8,7 @@ class OrderOps implements FeatureInterface
 {
     private const META_OPS_NOTES = 'zs_ops_notes';
     private const META_OPS_MATERIAL = 'zs_ops_material';
-    private const META_SHIPPING_EMAIL = 'zs_shipping_email';
-    private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
+    private const META_SHIPPING_EMAIL = '_shipping_email';
 
     private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
@@ -222,29 +221,11 @@ class OrderOps implements FeatureInterface
 
     public function registerShippingEmailField(array $fields, $order = false, string $context = 'edit'): array
     {
-        $value = '';
-        if ($order instanceof WC_Order) {
-            $raw = $order->get_meta(self::META_SHIPPING_EMAIL, true);
-            if (!is_string($raw) || $raw === '') {
-                $raw = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
-            }
-            $value = is_string($raw) ? $raw : '';
-        }
-
         $fields['email'] = [
-            'label'           => __('On-site contact email', 'zero-sense'),
-            'value'           => $value,
-            'update_callback' => [self::class, 'saveShippingEmailFromNativeField'],
+            'label' => __('On-site contact email', 'zero-sense'),
         ];
 
         return $fields;
-    }
-
-    public static function saveShippingEmailFromNativeField(string $fieldId, string $value, WC_Order $order): void
-    {
-        $email = sanitize_email($value);
-        $order->update_meta_data(self::META_SHIPPING_EMAIL, $email);
-        $order->update_meta_data(self::META_SHIPPING_EMAIL_WOO, $email);
     }
 
     public function save($orderId): void

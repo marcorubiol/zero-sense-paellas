@@ -436,10 +436,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if ($field === 'email') {
-            $raw = $order->get_meta('zs_shipping_email', true);
-            if (!is_string($raw) || $raw === '') {
-                $raw = $order->get_meta('_shipping_email', true);
-            }
+            $raw = $order->get_meta('_shipping_email', true);
             return is_string($raw) ? $raw : '';
         }
 

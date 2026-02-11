@@ -58,8 +58,7 @@ class MetaBoxMigrator
     private const EVENT_DATE_META_BOX_KEY = 'event_date';
     private const EVENT_DATE_ZEROSENSE_KEY = 'zs_event_date';
 
-    private const META_SHIPPING_EMAIL = 'zs_shipping_email';
-    private const META_SHIPPING_EMAIL_WOO = '_shipping_email';
+    private const META_SHIPPING_EMAIL = '_shipping_email';
     private const META_OPS_MATERIAL = 'zs_ops_material';
 
     // Value mappings for field updates
@@ -289,11 +288,6 @@ class MetaBoxMigrator
             $shipping_email = $order->get_meta(self::META_SHIPPING_EMAIL, true);
             if ($shipping_email !== '' && $shipping_email !== null) {
                 $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL] = $shipping_email;
-            }
-
-            $shipping_email_woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
-            if ($shipping_email_woo !== '' && $shipping_email_woo !== null) {
-                $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL_WOO] = $shipping_email_woo;
             }
 
             $ops_material = $order->get_meta(self::META_OPS_MATERIAL, true);
@@ -720,11 +714,6 @@ class MetaBoxMigrator
             $order->delete_meta_data($legacyKey);
         }
 
-        $shipping_migrated = $this->migrateShippingEmail($order);
-        if ($shipping_migrated !== null) {
-            $migrated_fields[] = $shipping_migrated;
-        }
-
         $material_migrated = $this->migrateOpsMaterial($order);
         if ($material_migrated !== null) {
             $migrated_fields[] = $material_migrated;
@@ -758,36 +747,6 @@ class MetaBoxMigrator
             'order_id' => $order_id,
             'migrated_fields' => $migrated_fields,
             'errors' => $errors,
-        ];
-    }
-
-    private function migrateShippingEmail(WC_Order $order): ?array
-    {
-        $zs = $order->get_meta(self::META_SHIPPING_EMAIL, true);
-        $woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
-
-        $zs = is_string($zs) ? $zs : '';
-        $woo = is_string($woo) ? $woo : '';
-
-        $final = $zs !== '' ? $zs : $woo;
-        if ($final === '') {
-            return null;
-        }
-
-        if ($zs === $final && $woo === $final) {
-            return null;
-        }
-
-        $old_value = $zs !== '' ? $zs : $woo;
-
-        $order->update_meta_data(self::META_SHIPPING_EMAIL, $final);
-        $order->update_meta_data(self::META_SHIPPING_EMAIL_WOO, $final);
-
-        return [
-            'field' => self::META_SHIPPING_EMAIL,
-            'from' => self::META_SHIPPING_EMAIL_WOO,
-            'value' => $final,
-            'old_value' => $old_value,
         ];
     }
 
@@ -857,16 +816,6 @@ class MetaBoxMigrator
             }
         }
 
-        $zs = $order->get_meta(self::META_SHIPPING_EMAIL, true);
-        $woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
-
-        $zs = is_string($zs) ? $zs : '';
-        $woo = is_string($woo) ? $woo : '';
-        $final = $zs !== '' ? $zs : $woo;
-        if ($final !== '' && ($zs !== $final || $woo !== $final)) {
-            return true;
-        }
-
         $material = $order->get_meta(self::META_OPS_MATERIAL, true);
         if (is_array($material)) {
 
@@ -913,7 +862,7 @@ class MetaBoxMigrator
             array_keys(self::FIELD_MAPPING),
             array_values(self::FIELD_MAPPING),
             array_values(self::LEGACY_EVENT_MAPPING),
-            [self::META_SHIPPING_EMAIL, self::META_SHIPPING_EMAIL_WOO, self::META_OPS_MATERIAL]
+            [self::META_SHIPPING_EMAIL, self::META_OPS_MATERIAL]
         )));
     }
 
@@ -1007,11 +956,6 @@ class MetaBoxMigrator
                 $shipping_email = $order->get_meta(self::META_SHIPPING_EMAIL, true);
                 if ($shipping_email !== '' && $shipping_email !== null) {
                     $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL] = $shipping_email;
-                }
-
-                $shipping_email_woo = $order->get_meta(self::META_SHIPPING_EMAIL_WOO, true);
-                if ($shipping_email_woo !== '' && $shipping_email_woo !== null) {
-                    $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL_WOO] = $shipping_email_woo;
                 }
 
                 $ops_material = $order->get_meta(self::META_OPS_MATERIAL, true);
