@@ -565,13 +565,26 @@ class BricksDynamicTags implements FeatureInterface
         // Map MetaBox field name to ZeroSense meta key
         $metaKey = self::FIELD_MAPPING[$field] ?? $field;
 
-        $raw = '';
         $order = wc_get_order($orderId);
-        if ($order instanceof WC_Order) {
-            $raw = $order->get_meta($metaKey, true);
-        } else {
+        if (!$order instanceof WC_Order) {
             return '';
         }
+
+        if ($field === 'event_address') {
+            $v = $order->get_shipping_address_1();
+            return $v !== '' ? $v : (string) $order->get_meta($metaKey, true);
+        }
+        if ($field === 'event_city') {
+            $v = $order->get_shipping_city();
+            return $v !== '' ? $v : (string) $order->get_meta($metaKey, true);
+        }
+        if ($field === 'location_link') {
+            $v = $order->get_meta('_shipping_location_link', true);
+            if (is_string($v) && $v !== '') { return $v; }
+            return (string) $order->get_meta($metaKey, true);
+        }
+
+        $raw = $order->get_meta($metaKey, true);
         
         if (is_scalar($raw)) {
             $value = (string) $raw;

@@ -98,9 +98,6 @@ class EventDetailsMetabox
         if (is_wp_error($serviceAreaTerms) || !is_array($serviceAreaTerms)) {
             $serviceAreaTerms = [];
         }
-        $address = $this->getOrderMetaWithFallback($order, MetaKeys::ADDRESS);
-        $city = $this->getOrderMetaWithFallback($order, MetaKeys::CITY);
-        $locationLink = $this->getOrderMetaWithFallback($order, MetaKeys::LOCATION_LINK);
         $eventDateRaw = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
         $teamArrivalTime = $this->getOrderMetaWithFallback($order, MetaKeys::TEAM_ARRIVAL_TIME);
         $eventDateForInput = is_numeric($eventDateRaw)
@@ -172,9 +169,9 @@ class EventDetailsMetabox
                 </div>
             </div>
 
-            <!-- Location Information -->
+            <!-- Service Location -->
             <div class="zs-field-group">
-                <h3><?php esc_html_e('Location Information', 'zero-sense'); ?></h3>
+                <h3><?php esc_html_e('Service Location', 'zero-sense'); ?></h3>
                 
                 <div class="zs-field">
                     <label for="event_service_location">
@@ -190,47 +187,6 @@ class EventDetailsMetabox
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
-                </div>
-                
-                <div class="zs-field">
-                    <label for="event_address">
-                        <?php esc_html_e('Event Address', 'zero-sense'); ?>
-                    </label>
-                    <input type="text" 
-                           id="event_address" 
-                           name="event_address" 
-                           value="<?php echo esc_attr($address); ?>" 
-                           class="widefat">
-                </div>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_city">
-                            <?php esc_html_e('City', 'zero-sense'); ?>
-                        </label>
-                        <input type="text" 
-                               id="event_city" 
-                               name="event_city" 
-                               value="<?php echo esc_attr($city); ?>" 
-                               class="widefat">
-                    </div>
-                    
-                    <div class="zs-field">
-                        <label for="event_location_link">
-                            <?php esc_html_e('Location Link', 'zero-sense'); ?>
-                        </label>
-                        <input type="url" 
-                               id="event_location_link" 
-                               name="event_location_link" 
-                               value="<?php echo esc_attr($locationLink); ?>" 
-                               class="widefat"
-                               placeholder="https://maps.google.com/...">
-                        <?php if ($locationLink) : ?>
-                            <a href="<?php echo esc_url($locationLink); ?>" target="_blank" class="button button-small" style="margin-top:5px;">
-                                <?php esc_html_e('Open Map', 'zero-sense'); ?>
-                            </a>
-                        <?php endif; ?>
-                    </div>
                 </div>
             </div>
 
@@ -431,16 +387,6 @@ class EventDetailsMetabox
                 $order->update_meta_data(MetaKeys::SERVICE_LOCATION, (int) $canonicalId);
             }
         }
-        if (isset($_POST['event_address'])) {
-            $order->update_meta_data(MetaKeys::ADDRESS, sanitize_text_field($_POST['event_address']));
-        }
-        if (isset($_POST['event_city'])) {
-            $order->update_meta_data(MetaKeys::CITY, sanitize_text_field($_POST['event_city']));
-        }
-        if (isset($_POST['event_location_link'])) {
-            $order->update_meta_data(MetaKeys::LOCATION_LINK, esc_url_raw($_POST['event_location_link']));
-        }
-
         // Save event timing
         if (isset($_POST['event_date'])) {
             $rawDate = sanitize_text_field((string) $_POST['event_date']);

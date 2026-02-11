@@ -78,7 +78,7 @@ class OrderOps implements FeatureInterface
     public function init(): void
     {
         add_action('add_meta_boxes', [$this, 'addMetaboxes']);
-        add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingEmailField'], 10, 3);
+        add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingCustomFields'], 10, 3);
         add_action('admin_head', [$this, 'shippingFieldsCss']);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20);
     }
@@ -226,10 +226,10 @@ class OrderOps implements FeatureInterface
         if (!$screen || !in_array($screen->id, ['shop_order', wc_get_page_screen_id('shop-order')], true)) {
             return;
         }
-        echo '<style>#order_data .order_data_column ._shipping_phone_field{float:right;clear:right}#order_data .order_data_column ._shipping_email_field{margin-top:13px}</style>';
+        echo '<style>#order_data .order_data_column ._shipping_phone_field{float:right;clear:right}#order_data .order_data_column ._shipping_email_field{margin-top:13px}#order_data .order_data_column ._shipping_location_link_field{width:100%;clear:both}</style>';
     }
 
-    public function registerShippingEmailField(array $fields, $order = false, string $context = 'edit'): array
+    public function registerShippingCustomFields(array $fields, $order = false, string $context = 'edit'): array
     {
         $email_field = [
             'label' => __('Email address', 'woocommerce'),
@@ -243,6 +243,27 @@ class OrderOps implements FeatureInterface
             }
         }
 
+        $location_link_field = [
+            'label' => __('Location Link', 'zero-sense'),
+        ];
+
+        if ($context === 'view' && $order instanceof WC_Order) {
+            $url = $order->get_meta('_shipping_location_link', true);
+            if (!is_string($url) || $url === '') {
+                $url = $order->get_meta('zs_event_location_link', true);
+            }
+            $url = is_string($url) ? $url : '';
+            if ($url !== '') {
+                $location_link_field['value'] = '<a href="' . esc_url($url) . '" target="_blank">' . esc_html($url) . '</a>';
+            }
+        } elseif ($context === 'edit' && $order instanceof WC_Order) {
+            $url = $order->get_meta('_shipping_location_link', true);
+            if (!is_string($url) || $url === '') {
+                $url = $order->get_meta('zs_event_location_link', true);
+            }
+            $location_link_field['value'] = is_string($url) ? $url : '';
+        }
+
         $reordered = [];
         foreach ($fields as $key => $field) {
             if ($key === 'phone') {
@@ -254,6 +275,8 @@ class OrderOps implements FeatureInterface
         if (!isset($reordered['email'])) {
             $reordered['email'] = $email_field;
         }
+
+        $reordered['location_link'] = $location_link_field;
 
         return $reordered;
     }

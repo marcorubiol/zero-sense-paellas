@@ -242,12 +242,16 @@ class DataExposer
                 return $this->getServiceAreaNameForOrder($order);
                 
             case 'event_address':
-                return (string) $order->get_meta(MetaKeys::ADDRESS);
+                $v = $order->get_shipping_address_1();
+                return $v !== '' ? $v : (string) $order->get_meta(MetaKeys::ADDRESS);
                 
             case 'event_city':
-                return (string) $order->get_meta(MetaKeys::CITY);
+                $v = $order->get_shipping_city();
+                return $v !== '' ? $v : (string) $order->get_meta(MetaKeys::CITY);
                 
             case 'event_location_link':
+                $v = $order->get_meta('_shipping_location_link', true);
+                if (is_string($v) && $v !== '') { return $v; }
                 return (string) $order->get_meta(MetaKeys::LOCATION_LINK);
                 
             case 'event_date':
@@ -357,9 +361,9 @@ class DataExposer
             'children_0_to_4' => $order->get_meta(MetaKeys::CHILDREN_0_TO_4),
             'service_location' => $serviceLocation,
             'service_location_label' => $serviceLocationLabel,
-            'address' => $order->get_meta(MetaKeys::ADDRESS),
-            'city' => $order->get_meta(MetaKeys::CITY),
-            'location_link' => $order->get_meta(MetaKeys::LOCATION_LINK),
+            'address' => $order->get_shipping_address_1() !== '' ? $order->get_shipping_address_1() : $order->get_meta(MetaKeys::ADDRESS),
+            'city' => $order->get_shipping_city() !== '' ? $order->get_shipping_city() : $order->get_meta(MetaKeys::CITY),
+            'location_link' => (($ll = $order->get_meta('_shipping_location_link', true)) && is_string($ll) && $ll !== '') ? $ll : $order->get_meta(MetaKeys::LOCATION_LINK),
             'event_date' => $eventDate,
             'event_date_formatted' => $eventDate
                 ? (is_numeric($eventDate) && (int) $eventDate == $eventDate

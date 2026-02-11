@@ -11,8 +11,11 @@ class MetaKeys
     
     // Location Information
     public const SERVICE_LOCATION = 'zs_event_service_location';
+    /** @deprecated Use _shipping_address_1 (native WooCommerce shipping field) */
     public const ADDRESS = 'zs_event_address';
+    /** @deprecated Use _shipping_city (native WooCommerce shipping field) */
     public const CITY = 'zs_event_city';
+    /** @deprecated Use _shipping_location_link (custom shipping field) */
     public const LOCATION_LINK = 'zs_event_location_link';
     
     // Event Timing
