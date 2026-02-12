@@ -125,8 +125,7 @@ class EventDetailsMetabox
                                id="event_total_guests" 
                                name="event_total_guests" 
                                value="<?php echo esc_attr($totalGuests); ?>" 
-                               min="0"
-                               class="short">
+                               min="0">
                     </div>
                     
                     <div class="zs-field">
@@ -137,8 +136,7 @@ class EventDetailsMetabox
                                id="event_adults" 
                                name="event_adults" 
                                value="<?php echo esc_attr($adults); ?>" 
-                               min="0"
-                               class="short">
+                               min="0">
                     </div>
                     
                     <div class="zs-field">
@@ -149,8 +147,7 @@ class EventDetailsMetabox
                                id="event_children_5_to_8" 
                                name="event_children_5_to_8" 
                                value="<?php echo esc_attr($children5to8); ?>" 
-                               min="0"
-                               class="short">
+                               min="0">
                     </div>
                     
                     <div class="zs-field">
@@ -161,8 +158,7 @@ class EventDetailsMetabox
                                id="event_children_0_to_4" 
                                name="event_children_0_to_4" 
                                value="<?php echo esc_attr($children0to4); ?>" 
-                               min="0"
-                               class="short">
+                               min="0">
                     </div>
                 </div>
             </div>
@@ -302,14 +298,14 @@ class EventDetailsMetabox
             }
             .zs-field-row {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 16px;
             }
 
             .zs-field-row .zs-field {
                 display: flex;
-                flex-direction: column;
-                justify-content: space-between;
+  flex-direction: column;
+  justify-content: space-between;
             }
 
             .zs-field label {
