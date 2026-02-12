@@ -139,7 +139,8 @@ class EventDetailsMetabox
                                id="event_adults" 
                                name="event_adults" 
                                value="<?php echo esc_attr($adults); ?>" 
-                               min="0">
+                               min="0"
+                               class="short">
                     </div>
                     
                     <div class="zs-field">
@@ -150,7 +151,8 @@ class EventDetailsMetabox
                                id="event_children_5_to_8" 
                                name="event_children_5_to_8" 
                                value="<?php echo esc_attr($children5to8); ?>" 
-                               min="0">
+                               min="0"
+                               class="short">
                     </div>
                     
                     <div class="zs-field">
@@ -161,7 +163,8 @@ class EventDetailsMetabox
                                id="event_children_0_to_4" 
                                name="event_children_0_to_4" 
                                value="<?php echo esc_attr($children0to4); ?>" 
-                               min="0">
+                               min="0"
+                               class="short">
                     </div>
                 </div>
 
@@ -181,7 +184,7 @@ class EventDetailsMetabox
                     <label for="event_service_location">
                         <?php esc_html_e('Service Location', 'zero-sense'); ?>
                     </label>
-                    <select id="event_service_location" name="event_service_location" class="widefat">
+                    <select id="event_service_location" name="event_service_location" class="short">
                         <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
                         <?php foreach ($serviceAreaTerms as $term) : ?>
                             <?php if ($term instanceof \WP_Term) : ?>
@@ -207,7 +210,7 @@ class EventDetailsMetabox
                                id="event_date" 
                                name="event_date" 
                                value="<?php echo esc_attr($eventDateForInput); ?>" 
-                               class="widefat">
+                               class="short">
                     </div>
                     
                     <div class="zs-field">
@@ -218,7 +221,7 @@ class EventDetailsMetabox
                                id="event_team_arrival_time" 
                                name="event_team_arrival_time" 
                                value="<?php echo esc_attr($teamArrivalTime); ?>" 
-                               class="widefat">
+                               class="short">
                     </div>
                     
                     <div class="zs-field">
@@ -229,7 +232,7 @@ class EventDetailsMetabox
                                id="event_serving_time" 
                                name="event_serving_time" 
                                value="<?php echo esc_attr($servingTime); ?>" 
-                               class="widefat">
+                               class="short">
                     </div>
                     
                     <div class="zs-field">
@@ -240,7 +243,7 @@ class EventDetailsMetabox
                                id="event_start_time" 
                                name="event_start_time" 
                                value="<?php echo esc_attr($startTime); ?>" 
-                               class="widefat">
+                               class="short">
                     </div>
                 </div>
             </div>
