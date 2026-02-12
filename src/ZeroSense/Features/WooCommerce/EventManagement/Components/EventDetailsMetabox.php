@@ -184,7 +184,7 @@ class EventDetailsMetabox
                     <label for="event_service_location">
                         <?php esc_html_e('Service Location', 'zero-sense'); ?>
                     </label>
-                    <select id="event_service_location" name="event_service_location" class="short">
+                    <select id="event_service_location" name="event_service_location">
                         <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
                         <?php foreach ($serviceAreaTerms as $term) : ?>
                             <?php if ($term instanceof \WP_Term) : ?>
