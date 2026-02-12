@@ -140,9 +140,7 @@ class EventDetailsMetabox
                                min="0"
                                class="short">
                     </div>
-                </div>
-                
-                <div class="zs-field-row">
+                    
                     <div class="zs-field">
                         <label for="event_children_5_to_8">
                             <?php esc_html_e('Children 5-8 years (40%)', 'zero-sense'); ?>
@@ -165,6 +163,50 @@ class EventDetailsMetabox
                                value="<?php echo esc_attr($children0to4); ?>" 
                                min="0"
                                class="short">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_date">
+                            <?php esc_html_e('Event Date', 'zero-sense'); ?>
+                        </label>
+                        <input type="date" 
+                               id="event_date" 
+                               name="event_date" 
+                               value="<?php echo esc_attr($eventDateForInput); ?>" 
+                               class="widefat">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_team_arrival_time">
+                            <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_team_arrival_time" 
+                               name="event_team_arrival_time" 
+                               value="<?php echo esc_attr($teamArrivalTime); ?>" 
+                               class="widefat">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_serving_time">
+                            <?php esc_html_e('Service time', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_serving_time" 
+                               name="event_serving_time" 
+                               value="<?php echo esc_attr($servingTime); ?>" 
+                               class="widefat">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_start_time">
+                            <?php esc_html_e('Event start time', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_start_time" 
+                               name="event_start_time" 
+                               value="<?php echo esc_attr($startTime); ?>" 
+                               class="widefat">
                     </div>
                 </div>
             </div>
@@ -190,58 +232,6 @@ class EventDetailsMetabox
                 </div>
             </div>
 
-            <!-- Event Timing -->
-            <div class="zs-field-group">
-                <h3><?php esc_html_e('Event Timing', 'zero-sense'); ?></h3>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_date">
-                            <?php esc_html_e('Event Date', 'zero-sense'); ?>
-                        </label>
-                        <input type="date" 
-                               id="event_date" 
-                               name="event_date" 
-                               value="<?php echo esc_attr($eventDateForInput); ?>" 
-                               class="widefat">
-                    </div>
-                    
-                    <div class="zs-field">
-                        <label for="event_team_arrival_time">
-                            <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_team_arrival_time" 
-                               name="event_team_arrival_time" 
-                               value="<?php echo esc_attr($teamArrivalTime); ?>" 
-                               class="widefat">
-                    </div>
-                </div>
-
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_serving_time">
-                            <?php esc_html_e('Service time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_serving_time" 
-                               name="event_serving_time" 
-                               value="<?php echo esc_attr($servingTime); ?>" 
-                               class="widefat">
-                    </div>
-                    
-                    <div class="zs-field">
-                        <label for="event_start_time">
-                            <?php esc_html_e('Event start time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_start_time" 
-                               name="event_start_time" 
-                               value="<?php echo esc_attr($startTime); ?>" 
-                               class="widefat">
-                    </div>
-                </div>
-            </div>
 
             <!-- Event Details -->
             <div class="zs-field-group">
@@ -306,7 +296,7 @@ class EventDetailsMetabox
             }
             .zs-field-row {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
                 gap: 16px;
                 margin-bottom: 16px;
             }

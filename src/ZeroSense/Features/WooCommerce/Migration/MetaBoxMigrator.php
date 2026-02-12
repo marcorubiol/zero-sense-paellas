@@ -17,9 +17,9 @@ class MetaBoxMigrator
         'children_5_to_8' => 'zs_event_children_5_to_8',
         'children_0_to_4' => 'zs_event_children_0_to_4',
         'event_service_location' => 'zs_event_service_location',
-        'event_address' => 'zs_event_address',
-        'event_city' => 'zs_event_city',
-        'location_link' => 'zs_event_location_link',
+        'event_address' => '_shipping_address_1',
+        'event_city' => '_shipping_city',
+        'location_link' => '_shipping_location_link',
         'event_date' => 'zs_event_date',
         'serving_time' => 'zs_event_serving_time',
         'event_start_time' => 'zs_event_start_time',
@@ -60,6 +60,11 @@ class MetaBoxMigrator
 
     private const META_SHIPPING_EMAIL = '_shipping_email';
     private const META_OPS_MATERIAL = 'zs_ops_material';
+
+    private const NATIVE_SHIPPING_SETTERS = [
+        '_shipping_address_1' => 'set_shipping_address_1',
+        '_shipping_city' => 'set_shipping_city',
+    ];
 
     // Value mappings for field updates
     private const EVENT_TYPE_VALUE_MAPPING = [
@@ -279,7 +284,10 @@ class MetaBoxMigrator
             }
 
             foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-                $value = $order->get_meta($zerosense_key, true);
+                $setter = self::NATIVE_SHIPPING_SETTERS[$zerosense_key] ?? null;
+                $value = $setter !== null && is_callable([$order, str_replace('set_', 'get_', $setter)])
+                    ? $order->{str_replace('set_', 'get_', $setter)}('edit')
+                    : $order->get_meta($zerosense_key, true);
                 if ($value !== '' && $value !== null) {
                     $sample_data['zerosense_fields'][$zerosense_key] = $value;
                 }
@@ -659,7 +667,10 @@ class MetaBoxMigrator
             }
 
             if ($metabox_value !== '' && $metabox_value !== null) {
-                $existing_value = $order->get_meta($zerosense_key, true);
+                $setter = self::NATIVE_SHIPPING_SETTERS[$zerosense_key] ?? null;
+                $existing_value = $setter !== null && is_callable([$order, str_replace('set_', 'get_', $setter)])
+                    ? $order->{str_replace('set_', 'get_', $setter)}('edit')
+                    : $order->get_meta($zerosense_key, true);
 
                 $target_value = $metabox_value;
                 if ($metabox_key === self::EVENT_DATE_META_BOX_KEY && $zerosense_key === self::EVENT_DATE_ZEROSENSE_KEY) {
@@ -680,9 +691,13 @@ class MetaBoxMigrator
                 $existing_scalar = is_scalar($existing_value) ? (string) $existing_value : '';
                 $target_scalar = is_scalar($target_value) ? (string) $target_value : '';
 
-                // Force migration if values are different or if ZeroSense field is empty
+                // Force migration if values are different or if target field is empty
                 if ($existing_scalar === '' || $existing_scalar !== $target_scalar) {
-                    $order->update_meta_data($zerosense_key, $target_value);
+                    if ($setter !== null) {
+                        $order->{$setter}((string) $target_value);
+                    } else {
+                        $order->update_meta_data($zerosense_key, $target_value);
+                    }
                     $migrated_fields[] = [
                         'field' => $zerosense_key,
                         'from' => $metabox_key,
@@ -789,7 +804,10 @@ class MetaBoxMigrator
     {
         foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
             $metabox_value = $order->get_meta($metabox_key, true);
-            $zerosense_value = $order->get_meta($zerosense_key, true);
+            $setter = self::NATIVE_SHIPPING_SETTERS[$zerosense_key] ?? null;
+            $zerosense_value = $setter !== null && is_callable([$order, str_replace('set_', 'get_', $setter)])
+                ? $order->{str_replace('set_', 'get_', $setter)}('edit')
+                : $order->get_meta($zerosense_key, true);
 
             if ($metabox_key === self::EVENT_DATE_META_BOX_KEY && $zerosense_key === self::EVENT_DATE_ZEROSENSE_KEY) {
                 $normalized = $this->normalizeEventDateToTimestamp($metabox_value);
@@ -947,7 +965,10 @@ class MetaBoxMigrator
                 }
 
                 foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
-                    $value = $order->get_meta($zerosense_key, true);
+                    $setter = self::NATIVE_SHIPPING_SETTERS[$zerosense_key] ?? null;
+                    $value = $setter !== null && is_callable([$order, str_replace('set_', 'get_', $setter)])
+                        ? $order->{str_replace('set_', 'get_', $setter)}('edit')
+                        : $order->get_meta($zerosense_key, true);
                     if ($value !== '' && $value !== null) {
                         $sample_data['zerosense_fields'][$zerosense_key] = $value;
                     }
@@ -980,7 +1001,12 @@ class MetaBoxMigrator
         if (is_array($migration_log) && isset($migration_log['migrated_fields'])) {
             foreach ($migration_log['migrated_fields'] as $field_info) {
                 $zerosense_key = $field_info['field'];
-                $order->delete_meta_data($zerosense_key);
+                $setter = self::NATIVE_SHIPPING_SETTERS[$zerosense_key] ?? null;
+                if ($setter !== null) {
+                    $order->{$setter}('');
+                } else {
+                    $order->delete_meta_data($zerosense_key);
+                }
                 $rollback_fields[] = $zerosense_key;
             }
         }
