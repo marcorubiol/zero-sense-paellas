@@ -164,6 +164,13 @@ class EventDetailsMetabox
                                min="0">
                     </div>
                 </div>
+
+                <div class="zs-field">
+                    <label for="event_intolerances">
+                        <?php esc_html_e('Allergies / intolerances', 'zero-sense'); ?>
+                    </label>
+                    <textarea id="event_intolerances" name="event_intolerances" rows="4" class="widefat"><?php echo esc_textarea(is_string($intolerances) ? $intolerances : ''); ?></textarea>
+                </div>
             </div>
 
             <!-- Service Location -->
@@ -270,13 +277,6 @@ class EventDetailsMetabox
                             <?php endforeach; ?>
                         </select>
                     </div>
-                </div>
-
-                <div class="zs-field">
-                    <label for="event_intolerances">
-                        <?php esc_html_e('Allergies / intolerances', 'zero-sense'); ?>
-                    </label>
-                    <textarea id="event_intolerances" name="event_intolerances" rows="4" class="widefat"><?php echo esc_textarea(is_string($intolerances) ? $intolerances : ''); ?></textarea>
                 </div>
             </div>
         </div>
