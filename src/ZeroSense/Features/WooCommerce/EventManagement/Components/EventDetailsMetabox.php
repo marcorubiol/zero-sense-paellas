@@ -212,7 +212,9 @@ class EventDetailsMetabox
                                value="<?php echo esc_attr($eventDateForInput); ?>" 
                                class="short">
                     </div>
-                    
+                </div>
+                
+                <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_team_arrival_time">
                             <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
