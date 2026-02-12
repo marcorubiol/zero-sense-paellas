@@ -125,9 +125,12 @@ class EventDetailsMetabox
                                id="event_total_guests" 
                                name="event_total_guests" 
                                value="<?php echo esc_attr($totalGuests); ?>" 
-                               min="0">
+                               min="0"
+                               class="short">
                     </div>
-                    
+                </div>
+                
+                <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_adults">
                             <?php esc_html_e('Adults', 'zero-sense'); ?>
@@ -304,8 +307,7 @@ class EventDetailsMetabox
 
             .zs-field-row .zs-field {
                 display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+                flex-direction: column;
             }
 
             .zs-field label {
@@ -324,7 +326,7 @@ class EventDetailsMetabox
                 width: 100%;
             }
             .zs-field input.short {
-                width: 100px;
+                width: 150px;
             }
         </style>
         <?php
