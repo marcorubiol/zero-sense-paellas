@@ -304,17 +304,14 @@ class EventDetailsMetabox
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
                 gap: 16px;
-                margin-bottom: 16px;
             }
-            .zs-field-row:last-child {
-                margin-bottom: 0;
+
+            .zs-field-row .zs-field {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
             }
-            .zs-field {
-                margin-bottom: 16px;
-            }
-            .zs-field:last-child {
-                margin-bottom: 0;
-            }
+
             .zs-field label {
                 display: block;
                 margin-bottom: 6px;
