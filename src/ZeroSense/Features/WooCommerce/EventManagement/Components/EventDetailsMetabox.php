@@ -286,6 +286,8 @@ class EventDetailsMetabox
                 padding: 12px;
             }
             .zs-field-group {
+                display: grid;
+                gap: 16px;
                 margin-bottom: 24px;
                 padding-bottom: 24px;
                 border-bottom: 1px solid #ddd;
@@ -294,7 +296,7 @@ class EventDetailsMetabox
                 border-bottom: none;
             }
             .zs-field-group h3 {
-                margin: 0 0 16px 0;
+                margin: 0;
                 font-size: 14px;
                 font-weight: 600;
                 color: #1d2327;
