@@ -164,7 +164,35 @@ class EventDetailsMetabox
                                min="0"
                                class="short">
                     </div>
-                    
+                </div>
+            </div>
+
+            <!-- Service Location -->
+            <div class="zs-field-group">
+                <h3><?php esc_html_e('Service Location', 'zero-sense'); ?></h3>
+                
+                <div class="zs-field">
+                    <label for="event_service_location">
+                        <?php esc_html_e('Service Location', 'zero-sense'); ?>
+                    </label>
+                    <select id="event_service_location" name="event_service_location" class="widefat">
+                        <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
+                        <?php foreach ($serviceAreaTerms as $term) : ?>
+                            <?php if ($term instanceof \WP_Term) : ?>
+                                <option value="<?php echo esc_attr((string) $term->term_id); ?>" <?php selected($serviceLocationSelectedId, (int) $term->term_id); ?>>
+                                    <?php echo esc_html($term->name); ?>
+                                </option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Event Timing -->
+            <div class="zs-field-group">
+                <h3><?php esc_html_e('Event Timing', 'zero-sense'); ?></h3>
+                
+                <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_date">
                             <?php esc_html_e('Event Date', 'zero-sense'); ?>
@@ -210,28 +238,6 @@ class EventDetailsMetabox
                     </div>
                 </div>
             </div>
-
-            <!-- Service Location -->
-            <div class="zs-field-group">
-                <h3><?php esc_html_e('Service Location', 'zero-sense'); ?></h3>
-                
-                <div class="zs-field">
-                    <label for="event_service_location">
-                        <?php esc_html_e('Service Location', 'zero-sense'); ?>
-                    </label>
-                    <select id="event_service_location" name="event_service_location" class="widefat">
-                        <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
-                        <?php foreach ($serviceAreaTerms as $term) : ?>
-                            <?php if ($term instanceof \WP_Term) : ?>
-                                <option value="<?php echo esc_attr((string) $term->term_id); ?>" <?php selected($serviceLocationSelectedId, (int) $term->term_id); ?>>
-                                    <?php echo esc_html($term->name); ?>
-                                </option>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
 
             <!-- Event Details -->
             <div class="zs-field-group">
