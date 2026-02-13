@@ -79,9 +79,7 @@ class AdminOrderEventDate implements FeatureInterface
         add_action('pre_get_posts', [$this, 'handleClassicSorting'], 10);
 
         // Sorting implementation (HPOS)
-        if (has_filter('woocommerce_shop_order_list_table_query_args')) {
-            add_filter('woocommerce_shop_order_list_table_query_args', [$this, 'handleHposSorting'], 10);
-        }
+        add_filter('woocommerce_shop_order_list_table_query_args', [$this, 'handleHposSorting'], 10);
 
         // Filter dropdowns
         add_action('restrict_manage_posts', [$this, 'renderClassicFilter'], 10);
