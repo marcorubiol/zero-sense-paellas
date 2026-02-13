@@ -986,6 +986,40 @@ class MetaBoxMigrator
         return $orders;
     }
 
+    public function getMigratedOrders(int $limit = 20): array
+    {
+        $args = [
+            'limit'      => $limit,
+            'orderby'    => 'date',
+            'order'      => 'DESC',
+            'meta_key'   => 'zs_metabox_migrated',
+            'meta_value' => '1',
+        ];
+        $wc_orders = wc_get_orders($args);
+        $result = [];
+
+        foreach ($wc_orders as $order) {
+            $row = [
+                'order_id'     => $order->get_id(),
+                'order_number' => $order->get_order_number(),
+                'status'       => $order->get_status(),
+                'fields'       => [],
+            ];
+            foreach (self::FIELD_MAPPING as $mb_key => $zs_key) {
+                $setter = self::NATIVE_SHIPPING_SETTERS[$zs_key] ?? null;
+                $val = $setter !== null && is_callable([$order, str_replace('set_', 'get_', $setter)])
+                    ? $order->{str_replace('set_', 'get_', $setter)}('edit')
+                    : $order->get_meta($zs_key, true);
+                if ($val !== '' && $val !== null) {
+                    $row['fields'][$zs_key] = is_scalar($val) ? (string) $val : wp_json_encode($val);
+                }
+            }
+            $result[] = $row;
+        }
+
+        return $result;
+    }
+
     public function rollbackOrder(WC_Order $order): array
     {
         $order_id = $order->get_id();

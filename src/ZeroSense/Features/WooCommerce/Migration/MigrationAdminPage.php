@@ -132,6 +132,7 @@ class MigrationAdminPage implements FeatureInterface
         $load_data = isset($_GET['zs_migration_load']) && sanitize_text_field(wp_unslash($_GET['zs_migration_load'])) === '1';
         $status = $load_data ? $this->migrator->getMigrationStatus() : null;
         $sample_orders = $load_data ? $this->migrator->getSampleOrders(3) : [];
+        $migrated_orders = $load_data ? $this->migrator->getMigratedOrders(20) : [];
 
         ?>
         <div class="wrap">
@@ -295,6 +296,46 @@ class MigrationAdminPage implements FeatureInterface
                                         </ul>
                                     <?php else: ?>
                                         <em><?php echo esc_html($detail['message'] ?? __('No fields changed', 'zero-sense')); ?></em>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+
+                <?php if (!empty($migrated_orders)): ?>
+                <div class="zs-migration-migrated-card">
+                    <h2><?php echo esc_html(sprintf(__('Migrated Orders (%d most recent)', 'zero-sense'), count($migrated_orders))); ?></h2>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th style="width:80px"><?php esc_html_e('Order', 'zero-sense'); ?></th>
+                                <th style="width:90px"><?php esc_html_e('Status', 'zero-sense'); ?></th>
+                                <th><?php esc_html_e('ZeroSense Fields', 'zero-sense'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($migrated_orders as $mo): ?>
+                            <tr>
+                                <td>
+                                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-orders&action=edit&id=' . $mo['order_id'])); ?>">#<?php echo esc_html($mo['order_number']); ?></a>
+                                </td>
+                                <td>
+                                    <mark class="order-status status-<?php echo esc_attr($mo['status']); ?>">
+                                        <?php echo esc_html(wc_get_order_status_name($mo['status'])); ?>
+                                    </mark>
+                                </td>
+                                <td>
+                                    <?php if (!empty($mo['fields'])): ?>
+                                        <ul style="margin:0;padding-left:16px">
+                                        <?php foreach ($mo['fields'] as $key => $val): ?>
+                                            <li><strong><?php echo esc_html($key); ?>:</strong> <?php echo esc_html($val); ?></li>
+                                        <?php endforeach; ?>
+                                        </ul>
+                                    <?php else: ?>
+                                        <em><?php esc_html_e('No fields', 'zero-sense'); ?></em>
                                     <?php endif; ?>
                                 </td>
                             </tr>
