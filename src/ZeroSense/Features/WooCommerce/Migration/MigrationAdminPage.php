@@ -380,15 +380,6 @@ class MigrationAdminPage implements FeatureInterface
                         </p>
                     </form>
 
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('zs_metabox_rollback'); ?>
-                        <input type="hidden" name="action" value="zs_metabox_rollback">
-                        <p>
-                            <button type="submit" class="button" onclick="return confirm('<?php esc_attr_e('Rollback is not fully implemented. Continue?', 'zero-sense'); ?>');">
-                                <?php esc_html_e('Rollback (Partial)', 'zero-sense'); ?>
-                            </button>
-                        </p>
-                    </form>
                 </div>
             </div>
         </div>
