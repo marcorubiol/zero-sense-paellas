@@ -176,12 +176,12 @@ class AdminOrderEventDate implements FeatureInterface
         }
 
         $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
-        $today_ts = (string) strtotime(current_time('Y-m-d'));
+        $today = current_time('Y-m-d');
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
             $query->set('meta_query', [
-                ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
+                ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'],
             ]);
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
@@ -189,7 +189,7 @@ class AdminOrderEventDate implements FeatureInterface
                 $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
                 $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
                 $query->set('meta_key', self::META_EVENT_DATE);
-                $query->set('orderby', 'meta_value_num');
+                $query->set('orderby', 'meta_value');
                 $query->set('order', $order);
             }
             return;
@@ -208,12 +208,12 @@ class AdminOrderEventDate implements FeatureInterface
     public function handleHposSorting(array $args): array
     {
         $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
-        $today_ts = (string) strtotime(current_time('Y-m-d'));
+        $today = current_time('Y-m-d');
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
             $mq = isset($args['meta_query']) && is_array($args['meta_query']) ? $args['meta_query'] : [];
-            $mq[] = ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'];
+            $mq[] = ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'];
             $args['meta_query'] = $mq;
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
