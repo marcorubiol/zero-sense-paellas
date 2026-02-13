@@ -79,11 +79,11 @@ class AdminOrderEventDate implements FeatureInterface
         add_action('pre_get_posts', [$this, 'handleClassicSorting'], 10);
 
         // Sorting implementation (HPOS)
-        add_filter('woocommerce_shop_order_list_table_query_args', [$this, 'handleHposSorting'], 10);
+        add_filter('woocommerce_order_list_table_prepare_items_query_args', [$this, 'handleHposSorting'], 10);
 
         // Filter dropdowns
         add_action('restrict_manage_posts', [$this, 'renderClassicFilter'], 10);
-        add_action('woocommerce_shop_order_list_table_restrict_manage_orders', [$this, 'renderHposFilter'], 10);
+        add_action('woocommerce_order_list_table_restrict_manage_orders', [$this, 'renderHposFilter'], 10);
     }
 
     public function registerColumn(array $columns): array
@@ -143,10 +143,10 @@ class AdminOrderEventDate implements FeatureInterface
         if ($column !== 'event_date') {
             return;
         }
-        if ($order && is_object($order) && method_exists($order, 'get_id')) {
-            $raw = get_post_meta($order->get_id(), self::META_EVENT_DATE, true);
+        if ($order && is_object($order) && method_exists($order, 'get_meta')) {
+            $raw = $order->get_meta(self::META_EVENT_DATE, true);
             if ($raw === '' || $raw === null) {
-                $raw = get_post_meta($order->get_id(), self::META_EVENT_DATE_LEGACY, true);
+                $raw = $order->get_meta(self::META_EVENT_DATE_LEGACY, true);
             }
             $formatted = self::formatEventDateForAdmin($raw);
             echo '<span class="zs-event-date" data-timestamp="' . esc_attr($raw) . '">' . esc_html($formatted) . '</span>';
