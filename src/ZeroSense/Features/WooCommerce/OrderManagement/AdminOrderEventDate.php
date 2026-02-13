@@ -214,39 +214,24 @@ class AdminOrderEventDate implements FeatureInterface
     public function handleHposSorting(array $args): array
     {
         $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
-        $today = current_time('Y-m-d');
-        $today_ts = (string) strtotime($today);
-
-        // DEBUG: Sample 5 orders to check what meta keys they have (remove after debugging)
-        if (!did_action('zs_event_date_debug_done')) {
-            do_action('zs_event_date_debug_done');
-            $sample = wc_get_orders(['limit' => 5, 'orderby' => 'date', 'order' => 'DESC']);
-            foreach ($sample as $o) {
-                $zs = $o->get_meta('zs_event_date', true);
-                $legacy = $o->get_meta('event_date', true);
-                $mb = $o->get_meta('_event_date', true);
-                error_log('[ZS EventDate Debug] Order #' . $o->get_id() . ' zs_event_date=' . var_export($zs, true) . ' event_date=' . var_export($legacy, true) . ' _event_date=' . var_export($mb, true));
-            }
-        }
+        $today_ts = (string) strtotime(current_time('Y-m-d'));
+        $today_iso = current_time('Y-m-d');
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
-            $meta_query = isset($args['meta_query']) && is_array($args['meta_query']) ? $args['meta_query'] : [];
-            $meta_query[] = [
+            $args['meta_query'] = [
                 'relation' => 'OR',
-                ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'],
-                ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
-                ['key' => self::META_EVENT_DATE_LEGACY, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
+                'zs_date_iso' => ['key' => self::META_EVENT_DATE, 'value' => $today_iso, 'compare' => $cmp, 'type' => 'DATE'],
+                'zs_date_ts'  => ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
+                'legacy_ts'   => ['key' => self::META_EVENT_DATE_LEGACY, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
             ];
-            $args['meta_query'] = $meta_query;
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
             if ($orderby === '' || $orderby === 'event_date') {
                 $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
                 $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
-                $args['meta_key'] = self::META_EVENT_DATE;
-                $args['orderby']  = 'meta_value';
-                $args['order']    = $order;
+                $args['orderby'] = 'ID';
+                $args['order']   = $order;
             }
             return $args;
         }
