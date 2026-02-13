@@ -175,7 +175,7 @@ class AdminOrderEventDate implements FeatureInterface
             return;
         }
 
-        $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
+        $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
         $today = current_time('Y-m-d');
         $today_ts = (string) strtotime($today);
 
@@ -186,6 +186,7 @@ class AdminOrderEventDate implements FeatureInterface
                 'relation' => 'OR',
                 ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'],
                 ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
+                ['key' => self::META_EVENT_DATE_LEGACY, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
             ];
             $query->set('meta_query', $meta_query);
 
@@ -212,9 +213,12 @@ class AdminOrderEventDate implements FeatureInterface
 
     public function handleHposSorting(array $args): array
     {
-        $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
+        $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
         $today = current_time('Y-m-d');
         $today_ts = (string) strtotime($today);
+
+        // DEBUG: Log filter values (remove after debugging)
+        error_log('[ZS EventDate Debug] filter=' . $filter . ' today=' . $today . ' today_ts=' . $today_ts);
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
@@ -223,6 +227,7 @@ class AdminOrderEventDate implements FeatureInterface
                 'relation' => 'OR',
                 ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'],
                 ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
+                ['key' => self::META_EVENT_DATE_LEGACY, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
             ];
             $args['meta_query'] = $meta_query;
 
@@ -254,7 +259,7 @@ class AdminOrderEventDate implements FeatureInterface
         if (!$screen || $screen->id !== 'edit-shop_order') {
             return;
         }
-        $current = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
+        $current = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
         echo '<select name="zs_event_date" id="zs_event_date" class="wc-enhanced-select">';
         echo '<option value=""' . selected($current, '', false) . '>' . esc_html__('All events', 'zero-sense') . '</option>';
         echo '<option value="future"' . selected($current, 'future', false) . '>' . esc_html__('Future events', 'zero-sense') . '</option>';
@@ -264,7 +269,7 @@ class AdminOrderEventDate implements FeatureInterface
 
     public function renderHposFilter(): void
     {
-        $current = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
+        $current = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
         echo '<select name="zs_event_date" id="zs_event_date" class="wc-enhanced-select">';
         echo '<option value=""' . selected($current, '', false) . '>' . esc_html__('All events', 'zero-sense') . '</option>';
         echo '<option value="future"' . selected($current, 'future', false) . '>' . esc_html__('Future events', 'zero-sense') . '</option>';
