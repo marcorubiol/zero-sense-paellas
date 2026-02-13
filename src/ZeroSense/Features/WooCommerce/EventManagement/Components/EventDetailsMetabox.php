@@ -98,11 +98,8 @@ class EventDetailsMetabox
         if (is_wp_error($serviceAreaTerms) || !is_array($serviceAreaTerms)) {
             $serviceAreaTerms = [];
         }
-        $eventDateRaw = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
+        $eventDateForInput = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
         $teamArrivalTime = $this->getOrderMetaWithFallback($order, MetaKeys::TEAM_ARRIVAL_TIME);
-        $eventDateForInput = is_numeric($eventDateRaw)
-            ? (function_exists('wp_date') ? wp_date('Y-m-d', (int) $eventDateRaw) : date('Y-m-d', (int) $eventDateRaw))
-            : $eventDateRaw;
         $servingTime = $this->getOrderMetaWithFallback($order, MetaKeys::SERVING_TIME);
         $startTime = $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
         $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
@@ -385,15 +382,9 @@ class EventDetailsMetabox
                 $order->update_meta_data(MetaKeys::SERVICE_LOCATION, (int) $canonicalId);
             }
         }
-        // Save event timing
+        // Save event timing (YYYY-MM-DD format, ISO 8601)
         if (isset($_POST['event_date'])) {
-            $rawDate = sanitize_text_field((string) $_POST['event_date']);
-            if ($rawDate === '') {
-                $order->update_meta_data(MetaKeys::EVENT_DATE, '');
-            } else {
-                $timestamp = $this->normalizeEventDateToTimestamp($rawDate);
-                $order->update_meta_data(MetaKeys::EVENT_DATE, $timestamp > 0 ? $timestamp : $rawDate);
-            }
+            $order->update_meta_data(MetaKeys::EVENT_DATE, sanitize_text_field((string) $_POST['event_date']));
         }
         if (isset($_POST['event_team_arrival_time'])) {
             $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, sanitize_text_field((string) $_POST['event_team_arrival_time']));
@@ -417,33 +408,6 @@ class EventDetailsMetabox
         }
 
         $order->save();
-    }
-
-    private function normalizeEventDateToTimestamp($value): int
-    {
-        if (is_numeric($value) && (int) $value == $value) {
-            return (int) $value;
-        }
-
-        if (!is_string($value)) {
-            return 0;
-        }
-
-        $value = trim($value);
-        if ($value === '') {
-            return 0;
-        }
-
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-            $tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
-            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $value, $tz);
-            if ($dt instanceof \DateTimeImmutable) {
-                return $dt->setTime(0, 0, 0)->getTimestamp();
-            }
-        }
-
-        $ts = strtotime($value);
-        return $ts ? (int) $ts : 0;
     }
 
     private function getOrderMetaWithFallback(WC_Order $order, string $key)

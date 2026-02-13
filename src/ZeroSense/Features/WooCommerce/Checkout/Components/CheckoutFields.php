@@ -221,16 +221,13 @@ class CheckoutFields
                 }
 
                 if (isset($field["type"]) && $field["type"] === 'date') {
+                    // Normalize to YYYY-MM-DD (ISO 8601)
                     $date = \DateTime::createFromFormat('d/m/Y', $field_value);
                     if ($date) {
-                        $order->update_meta_data($field['id'], $date->getTimestamp());
+                        $order->update_meta_data($field['id'], $date->format('Y-m-d'));
                     } else {
-                        $fallback_date = strtotime(is_string($field_value) ? $field_value : '');
-                        if ($fallback_date !== false) {
-                            $order->update_meta_data($field['id'], $fallback_date);
-                        } else {
-                            $order->update_meta_data($field['id'], 0);
-                        }
+                        $fallback_ts = strtotime(is_string($field_value) ? $field_value : '');
+                        $order->update_meta_data($field['id'], $fallback_ts ? date('Y-m-d', $fallback_ts) : '');
                     }
                 } else {
                     if (is_array($field_value)) {

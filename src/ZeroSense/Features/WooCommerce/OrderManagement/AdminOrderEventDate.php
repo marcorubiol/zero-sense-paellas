@@ -179,37 +179,24 @@ class AdminOrderEventDate implements FeatureInterface
 
         $has_param = array_key_exists('zs_event_date', $_GET);
         $filter = $has_param ? sanitize_text_field($_GET['zs_event_date']) : 'future';
+        $today = current_time('Y-m-d');
 
         if (in_array($filter, ['future', 'past'], true)) {
-            $now = current_time('timestamp');
             $meta_query = (array) $query->get('meta_query');
-            if ($filter === 'future') {
-                $meta_query[] = [
-                    'key' => self::META_EVENT_DATE,
-                    'value' => $now,
-                    'compare' => '>=',
-                    'type' => 'NUMERIC',
-                ];
-            } else {
-                $meta_query[] = [
-                    'key' => self::META_EVENT_DATE,
-                    'value' => $now,
-                    'compare' => '<',
-                    'type' => 'NUMERIC',
-                ];
-            }
+            $meta_query[] = [
+                'key' => self::META_EVENT_DATE,
+                'value' => $today,
+                'compare' => $filter === 'future' ? '>=' : '<',
+                'type' => 'DATE',
+            ];
             $query->set('meta_query', $meta_query);
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
-            if ($orderby === '') {
+            if ($orderby === '' || $orderby === 'event_date') {
+                $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
+                $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
                 $query->set('meta_key', self::META_EVENT_DATE);
-                $query->set('orderby', 'meta_value_num');
-                $query->set('order', $filter === 'future' ? 'ASC' : 'DESC');
-            } elseif ($orderby === 'event_date') {
-                $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
-                $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
-                $query->set('meta_key', self::META_EVENT_DATE);
-                $query->set('orderby', 'meta_value_num');
+                $query->set('orderby', 'meta_value');
                 $query->set('order', $order);
             }
             return;
@@ -218,7 +205,6 @@ class AdminOrderEventDate implements FeatureInterface
         // No filter applied
         $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
         if ($orderby === '' && $has_param) {
-            // User explicitly had param but chose "All" => default to ID DESC
             $query->set('orderby', 'ID');
             $query->set('order', 'DESC');
             return;
@@ -228,7 +214,7 @@ class AdminOrderEventDate implements FeatureInterface
             $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
             $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
             $query->set('meta_key', self::META_EVENT_DATE);
-            $query->set('orderby', 'meta_value_num');
+            $query->set('orderby', 'meta_value');
             $query->set('order', $order);
         }
     }
@@ -237,37 +223,24 @@ class AdminOrderEventDate implements FeatureInterface
     {
         $has_param = array_key_exists('zs_event_date', $_GET);
         $filter = $has_param ? sanitize_text_field($_GET['zs_event_date']) : 'future';
+        $today = current_time('Y-m-d');
 
         if (in_array($filter, ['future', 'past'], true)) {
-            $now = current_time('timestamp');
             $meta_query = isset($args['meta_query']) && is_array($args['meta_query']) ? $args['meta_query'] : [];
-            if ($filter === 'future') {
-                $meta_query[] = [
-                    'key' => self::META_EVENT_DATE,
-                    'value' => $now,
-                    'compare' => '>=',
-                    'type' => 'NUMERIC',
-                ];
-            } else {
-                $meta_query[] = [
-                    'key' => self::META_EVENT_DATE,
-                    'value' => $now,
-                    'compare' => '<',
-                    'type' => 'NUMERIC',
-                ];
-            }
+            $meta_query[] = [
+                'key' => self::META_EVENT_DATE,
+                'value' => $today,
+                'compare' => $filter === 'future' ? '>=' : '<',
+                'type' => 'DATE',
+            ];
             $args['meta_query'] = $meta_query;
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
-            if ($orderby === '') {
+            if ($orderby === '' || $orderby === 'event_date') {
+                $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
+                $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
                 $args['meta_key'] = self::META_EVENT_DATE;
-                $args['orderby']  = 'meta_value_num';
-                $args['order']    = ($filter === 'future') ? 'ASC' : 'DESC';
-            } elseif ($orderby === 'event_date') {
-                $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
-                $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
-                $args['meta_key'] = self::META_EVENT_DATE;
-                $args['orderby']  = 'meta_value_num';
+                $args['orderby']  = 'meta_value';
                 $args['order']    = $order;
             }
             return $args;
@@ -276,7 +249,6 @@ class AdminOrderEventDate implements FeatureInterface
         // No filter applied
         $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
         if ($orderby === '' && $has_param && isset($_GET['zs_event_date']) && $_GET['zs_event_date'] === '') {
-            // User explicitly selected All => default order by id DESC
             $args['orderby'] = 'id';
             $args['order']   = 'DESC';
             return $args;
@@ -286,7 +258,7 @@ class AdminOrderEventDate implements FeatureInterface
             $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
             $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
             $args['meta_key'] = self::META_EVENT_DATE;
-            $args['orderby']  = 'meta_value_num';
+            $args['orderby']  = 'meta_value';
             $args['order']    = $order;
         }
         return $args;
@@ -324,28 +296,16 @@ class AdminOrderEventDate implements FeatureInterface
             return zs_format_event_date_for_admin($value);
         }
 
-        if (empty($value)) {
+        if (empty($value) || !is_string($value)) {
             return '-';
         }
-        // Numeric timestamp
-        if (is_numeric($value) && (int) $value == $value) {
-            $ts = (int) $value;
-            if ($ts > 0) {
-                return date_i18n('d/m/Y', $ts);
-            }
+
+        // YYYY-MM-DD → dd/mm/YYYY
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m)) {
+            return $m[3] . '/' . $m[2] . '/' . $m[1];
         }
-        // String -> try DateTime
-        if (is_string($value)) {
-            try {
-                $date = new \DateTime($value);
-                return $date->format('d/m/Y');
-            } catch (\Exception $e) {
-                if (preg_match('/^(\d{2}\/\d{2}\/\d{4})/', $value, $m)) {
-                    return $m[1];
-                }
-            }
-        }
-        return '-';
+
+        return $value;
     }
 
     /**

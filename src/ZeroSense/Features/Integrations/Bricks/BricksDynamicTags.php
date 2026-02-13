@@ -690,38 +690,16 @@ class BricksDynamicTags implements FeatureInterface
 
     private function normalizeEventDate($value): string
     {
-        if (is_numeric($value) && (int) $value > 0) {
-            return date('d/m/Y', (int) $value);
-        }
-
-        if (!is_string($value)) {
+        if (!is_string($value) || $value === '') {
             return '';
         }
 
-        $formatted = $value;
-
-        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $formatted, $matches)) {
-            return $matches[3] . '/' . $matches[2] . '/' . $matches[1];
+        // YYYY-MM-DD → dd/mm/YYYY
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m)) {
+            return $m[3] . '/' . $m[2] . '/' . $m[1];
         }
 
-        if (preg_match('/^(\d{2})(\d{2})\/(\d{2})(\d{2})\/(\d{2})(\d{2})$/', $formatted, $matches)) {
-            return $matches[1] . '/' . $matches[3] . '/20' . $matches[5];
-        }
-
-        if (preg_match('/(\d{2}\/\d{2}\/\d{4})(\d{2}\/\d{2}\/\d{4})/', $formatted, $matches)) {
-            return $matches[1];
-        }
-
-        if (strpos($formatted, ',') !== false) {
-            $parts = explode(',', $formatted);
-            return trim($parts[0]);
-        }
-
-        if (strlen($formatted) > 10 && preg_match('/(\d{2}\/\d{2}\/\d{4})/', $formatted, $matches)) {
-            return $matches[1];
-        }
-
-        return $formatted;
+        return $value;
     }
 
     public function maybeResetMetaBoxTranslations(): void

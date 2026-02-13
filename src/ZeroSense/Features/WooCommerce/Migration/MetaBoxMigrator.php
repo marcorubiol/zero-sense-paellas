@@ -674,8 +674,8 @@ class MetaBoxMigrator
 
                 $target_value = $metabox_value;
                 if ($metabox_key === self::EVENT_DATE_META_BOX_KEY && $zerosense_key === self::EVENT_DATE_ZEROSENSE_KEY) {
-                    $normalized = $this->normalizeEventDateToTimestamp($metabox_value);
-                    if ($normalized > 0) {
+                    $normalized = $this->normalizeEventDateToIso($metabox_value);
+                    if ($normalized !== '') {
                         $target_value = $normalized;
                     }
                 }
@@ -714,13 +714,13 @@ class MetaBoxMigrator
         }
 
         $existing_event_date = $order->get_meta(self::EVENT_DATE_ZEROSENSE_KEY, true);
-        $event_ts = $this->normalizeEventDateToTimestamp($existing_event_date);
-        if ($event_ts > 0 && !(is_numeric($existing_event_date) && (int) $existing_event_date == $existing_event_date)) {
-            $order->update_meta_data(self::EVENT_DATE_ZEROSENSE_KEY, $event_ts);
+        $normalized_date = $this->normalizeEventDateToIso($existing_event_date);
+        if ($normalized_date !== '' && $normalized_date !== $existing_event_date) {
+            $order->update_meta_data(self::EVENT_DATE_ZEROSENSE_KEY, $normalized_date);
             $migrated_fields[] = [
                 'field' => self::EVENT_DATE_ZEROSENSE_KEY,
                 'from' => self::EVENT_DATE_ZEROSENSE_KEY,
-                'value' => $event_ts,
+                'value' => $normalized_date,
                 'old_value' => $existing_event_date,
             ];
         }
@@ -810,12 +810,9 @@ class MetaBoxMigrator
                 : $order->get_meta($zerosense_key, true);
 
             if ($metabox_key === self::EVENT_DATE_META_BOX_KEY && $zerosense_key === self::EVENT_DATE_ZEROSENSE_KEY) {
-                $normalized = $this->normalizeEventDateToTimestamp($metabox_value);
-                if ($normalized > 0) {
-                    $metabox_value = (string) $normalized;
-                }
-                if (is_string($zerosense_value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $zerosense_value)) {
-                    return true;
+                $normalized = $this->normalizeEventDateToIso($metabox_value);
+                if ($normalized !== '') {
+                    $metabox_value = $normalized;
                 }
             }
             
@@ -847,31 +844,29 @@ class MetaBoxMigrator
         return false;
     }
 
-    private function normalizeEventDateToTimestamp($value): int
+    private function normalizeEventDateToIso($value): string
     {
-        if (is_numeric($value) && (int) $value == $value) {
-            return (int) $value;
+        if (empty($value)) {
+            return '';
         }
 
-        if (!is_string($value)) {
-            return 0;
+        // Already YYYY-MM-DD
+        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return $value;
         }
 
-        $value = trim($value);
-        if ($value === '') {
-            return 0;
+        // Numeric timestamp → YYYY-MM-DD
+        if (is_numeric($value) && (int) $value > 0) {
+            return date('Y-m-d', (int) $value);
         }
 
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-            $tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
-            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $value, $tz);
-            if ($dt instanceof \DateTimeImmutable) {
-                return $dt->setTime(0, 0, 0)->getTimestamp();
-            }
+        // Any other string → try to parse
+        if (is_string($value)) {
+            $ts = strtotime(trim($value));
+            return $ts ? date('Y-m-d', $ts) : '';
         }
 
-        $ts = strtotime($value);
-        return $ts ? (int) $ts : 0;
+        return '';
     }
 
     private function getWatchedMetaKeys(): array
