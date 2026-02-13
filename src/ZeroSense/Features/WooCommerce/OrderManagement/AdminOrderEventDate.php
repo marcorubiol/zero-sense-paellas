@@ -178,6 +178,12 @@ class AdminOrderEventDate implements FeatureInterface
         $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
         $today = current_time('Y-m-d');
 
+        // Exclude cancelled orders unless a specific status tab is selected
+        if (!isset($_GET['post_status']) || $_GET['post_status'] === 'all') {
+            $statuses = array_diff(array_keys(wc_get_order_statuses()), ['wc-cancelled']);
+            $query->set('post_status', $statuses);
+        }
+
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
             $query->set('meta_query', [
@@ -200,7 +206,7 @@ class AdminOrderEventDate implements FeatureInterface
             $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
             $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
             $query->set('meta_key', self::META_EVENT_DATE);
-            $query->set('orderby', 'meta_value_num');
+            $query->set('orderby', 'meta_value');
             $query->set('order', $order);
         }
     }
@@ -209,6 +215,12 @@ class AdminOrderEventDate implements FeatureInterface
     {
         $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : 'future';
         $today = current_time('Y-m-d');
+
+        // Exclude cancelled orders unless a specific status tab is selected
+        if (!isset($_GET['status']) || $_GET['status'] === 'all') {
+            $all = array_keys(wc_get_order_statuses());
+            $args['status'] = array_values(array_diff($all, ['wc-cancelled']));
+        }
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
@@ -220,8 +232,9 @@ class AdminOrderEventDate implements FeatureInterface
             if ($orderby === '' || $orderby === 'event_date') {
                 $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
                 $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
-                $args['orderby'] = 'ID';
-                $args['order']   = $order;
+                $args['meta_key'] = self::META_EVENT_DATE;
+                $args['orderby']  = 'meta_value';
+                $args['order']    = $order;
             }
             return $args;
         }
@@ -231,7 +244,7 @@ class AdminOrderEventDate implements FeatureInterface
             $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
             $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
             $args['meta_key'] = self::META_EVENT_DATE;
-            $args['orderby']  = 'meta_value_num';
+            $args['orderby']  = 'meta_value';
             $args['order']    = $order;
         }
         return $args;
