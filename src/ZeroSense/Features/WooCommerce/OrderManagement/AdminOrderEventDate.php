@@ -175,17 +175,17 @@ class AdminOrderEventDate implements FeatureInterface
             return;
         }
 
-        $has_param = array_key_exists('zs_event_date', $_GET);
-        $filter = $has_param ? sanitize_text_field($_GET['zs_event_date']) : 'future';
+        $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
         $today = current_time('Y-m-d');
+        $today_ts = (string) strtotime($today);
 
         if (in_array($filter, ['future', 'past'], true)) {
+            $cmp = $filter === 'future' ? '>=' : '<';
             $meta_query = (array) $query->get('meta_query');
             $meta_query[] = [
-                'key' => self::META_EVENT_DATE,
-                'value' => $today,
-                'compare' => $filter === 'future' ? '>=' : '<',
-                'type' => 'DATE',
+                'relation' => 'OR',
+                ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'],
+                ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
             ];
             $query->set('meta_query', $meta_query);
 
@@ -200,14 +200,7 @@ class AdminOrderEventDate implements FeatureInterface
             return;
         }
 
-        // No filter applied
         $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
-        if ($orderby === '' && $has_param) {
-            $query->set('orderby', 'ID');
-            $query->set('order', 'DESC');
-            return;
-        }
-
         if ($orderby === 'event_date') {
             $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
             $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
@@ -219,17 +212,17 @@ class AdminOrderEventDate implements FeatureInterface
 
     public function handleHposSorting(array $args): array
     {
-        $has_param = array_key_exists('zs_event_date', $_GET);
-        $filter = $has_param ? sanitize_text_field($_GET['zs_event_date']) : 'future';
+        $filter = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
         $today = current_time('Y-m-d');
+        $today_ts = (string) strtotime($today);
 
         if (in_array($filter, ['future', 'past'], true)) {
+            $cmp = $filter === 'future' ? '>=' : '<';
             $meta_query = isset($args['meta_query']) && is_array($args['meta_query']) ? $args['meta_query'] : [];
             $meta_query[] = [
-                'key' => self::META_EVENT_DATE,
-                'value' => $today,
-                'compare' => $filter === 'future' ? '>=' : '<',
-                'type' => 'DATE',
+                'relation' => 'OR',
+                ['key' => self::META_EVENT_DATE, 'value' => $today, 'compare' => $cmp, 'type' => 'DATE'],
+                ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
             ];
             $args['meta_query'] = $meta_query;
 
@@ -244,14 +237,7 @@ class AdminOrderEventDate implements FeatureInterface
             return $args;
         }
 
-        // No filter applied
         $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
-        if ($orderby === '' && $has_param && isset($_GET['zs_event_date']) && $_GET['zs_event_date'] === '') {
-            $args['orderby'] = 'id';
-            $args['order']   = 'DESC';
-            return $args;
-        }
-
         if ($orderby === 'event_date') {
             $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : 'DESC';
             $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
@@ -268,33 +254,36 @@ class AdminOrderEventDate implements FeatureInterface
         if (!$screen || $screen->id !== 'edit-shop_order') {
             return;
         }
-        $has_param = array_key_exists('zs_event_date', $_GET);
-        $current   = $has_param ? sanitize_text_field($_GET['zs_event_date']) : '';
+        $current = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
         echo '<select name="zs_event_date" id="zs_event_date" class="wc-enhanced-select">';
-        echo '<option value=""' . ($has_param && $current === '' ? ' selected="selected"' : '') . '>' . esc_html__('All events', 'zero-sense') . '</option>';
-        echo '<option value="future"' . (!$has_param || $current === 'future' ? ' selected="selected"' : '') . '>' . esc_html__('Future events', 'zero-sense') . '</option>';
-        echo '<option value="past"' . ($has_param && $current === 'past' ? ' selected="selected"' : '') . '>' . esc_html__('Past events', 'zero-sense') . '</option>';
+        echo '<option value=""' . selected($current, '', false) . '>' . esc_html__('All events', 'zero-sense') . '</option>';
+        echo '<option value="future"' . selected($current, 'future', false) . '>' . esc_html__('Future events', 'zero-sense') . '</option>';
+        echo '<option value="past"' . selected($current, 'past', false) . '>' . esc_html__('Past events', 'zero-sense') . '</option>';
         echo '</select>';
     }
 
     public function renderHposFilter(): void
     {
-        $has_param = array_key_exists('zs_event_date', $_GET);
-        $current   = $has_param ? sanitize_text_field($_GET['zs_event_date']) : '';
+        $current = isset($_GET['zs_event_date']) ? sanitize_text_field($_GET['zs_event_date']) : '';
         echo '<select name="zs_event_date" id="zs_event_date" class="wc-enhanced-select">';
-        echo '<option value=""' . ($has_param && $current === '' ? ' selected="selected"' : '') . '>' . esc_html__('All events', 'zero-sense') . '</option>';
-        echo '<option value="future"' . (!$has_param || $current === 'future' ? ' selected="selected"' : '') . '>' . esc_html__('Future events', 'zero-sense') . '</option>';
-        echo '<option value="past"' . ($has_param && $current === 'past' ? ' selected="selected"' : '') . '>' . esc_html__('Past events', 'zero-sense') . '</option>';
+        echo '<option value=""' . selected($current, '', false) . '>' . esc_html__('All events', 'zero-sense') . '</option>';
+        echo '<option value="future"' . selected($current, 'future', false) . '>' . esc_html__('Future events', 'zero-sense') . '</option>';
+        echo '<option value="past"' . selected($current, 'past', false) . '>' . esc_html__('Past events', 'zero-sense') . '</option>';
         echo '</select>';
     }
 
     private static function formatEventDateForAdmin($value): string
     {
-        if (function_exists('zs_format_event_date_for_admin')) {
-            return zs_format_event_date_for_admin($value);
+        if (empty($value)) {
+            return '-';
         }
 
-        if (empty($value) || !is_string($value)) {
+        // Legacy numeric timestamp
+        if (is_numeric($value) && (int) $value > 0) {
+            return date_i18n('d/m/Y', (int) $value);
+        }
+
+        if (!is_string($value)) {
             return '-';
         }
 
