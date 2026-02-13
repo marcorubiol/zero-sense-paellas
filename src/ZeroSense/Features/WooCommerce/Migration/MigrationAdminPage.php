@@ -247,6 +247,63 @@ class MigrationAdminPage implements FeatureInterface
                 </div>
                 <?php endif; ?>
 
+                <?php
+                $last_results = get_transient('zs_metabox_migration_results');
+                if ($last_results && !empty($last_results['details'])):
+                ?>
+                <div class="zs-migration-results-card">
+                    <h2><?php esc_html_e('Last Migration Results', 'zero-sense'); ?></h2>
+                    <p>
+                        <strong><?php esc_html_e('Success:', 'zero-sense'); ?></strong> <?php echo esc_html($last_results['success']); ?> &mdash;
+                        <strong><?php esc_html_e('Errors:', 'zero-sense'); ?></strong> <?php echo esc_html($last_results['errors']); ?> &mdash;
+                        <strong><?php esc_html_e('Skipped:', 'zero-sense'); ?></strong> <?php echo esc_html($last_results['skipped']); ?>
+                    </p>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th style="width:80px"><?php esc_html_e('Order', 'zero-sense'); ?></th>
+                                <th style="width:70px"><?php esc_html_e('Status', 'zero-sense'); ?></th>
+                                <th><?php esc_html_e('Migrated Fields', 'zero-sense'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($last_results['details'] as $detail): ?>
+                            <tr>
+                                <td>
+                                    <?php if (!empty($detail['order_id'])): ?>
+                                        <a href="<?php echo esc_url(admin_url('post.php?post=' . $detail['order_id'] . '&action=edit')); ?>">#<?php echo esc_html($detail['order_id']); ?></a>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($detail['success'])): ?>
+                                        <span style="color:green">&#10003;</span>
+                                    <?php else: ?>
+                                        <span style="color:orange"><?php echo esc_html($detail['status'] ?? 'skip'); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($detail['migrated_fields'])): ?>
+                                        <ul style="margin:0;padding-left:16px">
+                                        <?php foreach ($detail['migrated_fields'] as $f): ?>
+                                            <li>
+                                                <strong><?php echo esc_html($f['field']); ?></strong>
+                                                <code><?php echo esc_html(is_scalar($f['old_value']) ? $f['old_value'] : json_encode($f['old_value'])); ?></code>
+                                                &rarr;
+                                                <code><?php echo esc_html(is_scalar($f['value']) ? $f['value'] : json_encode($f['value'])); ?></code>
+                                            </li>
+                                        <?php endforeach; ?>
+                                        </ul>
+                                    <?php else: ?>
+                                        <em><?php echo esc_html($detail['message'] ?? __('No fields changed', 'zero-sense')); ?></em>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+
                 <div class="zs-migration-actions">
                     <h2><?php esc_html_e('Actions', 'zero-sense'); ?></h2>
 
@@ -330,8 +387,7 @@ class MigrationAdminPage implements FeatureInterface
 
         set_transient('zs_metabox_migration_results', $results, 300);
 
-        error_log('[ZS Migration] Redirecting back to referrer...');
-        wp_safe_redirect(wp_get_referer());
+        wp_safe_redirect(admin_url('admin.php?page=zs_metabox_migration&zs_migration_load=1'));
         exit;
     }
 
