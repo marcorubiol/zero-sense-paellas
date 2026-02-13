@@ -151,7 +151,8 @@ class Recipes implements FeatureInterface
 
                     $termName = '';
                     if ($termId > 0) {
-                        $term = get_term($termId, self::TAX_INGREDIENT);
+                        $resolvedId = $this->resolveOriginalTermId($termId);
+                        $term = get_term($resolvedId, self::TAX_INGREDIENT);
                         if ($term instanceof WP_Term) {
                             $termName = $term->name;
                         }
@@ -385,6 +386,7 @@ class Recipes implements FeatureInterface
             'hide_empty' => false,
             'number' => 25,
             'search' => $q,
+            'suppress_filters' => true,
         ]);
 
         $results = [];
@@ -440,7 +442,8 @@ class Recipes implements FeatureInterface
             return;
         }
 
-        $current = (int) get_post_meta($post->ID, self::META_PRODUCT_RECIPE_ID, true);
+        $productId = $this->resolveOriginalProductId($post->ID);
+        $current = (int) get_post_meta($productId, self::META_PRODUCT_RECIPE_ID, true);
 
         $recipes = get_posts([
             'post_type' => self::CPT,
@@ -448,6 +451,7 @@ class Recipes implements FeatureInterface
             'numberposts' => 200,
             'orderby' => 'title',
             'order' => 'ASC',
+            'suppress_filters' => true,
         ]);
 
         echo '<div class="options_group">';
@@ -475,13 +479,44 @@ class Recipes implements FeatureInterface
             return;
         }
 
+        $originalId = $this->resolveOriginalProductId($product->get_id());
         $recipeId = isset($_POST['zs_recipe_id']) ? (int) $_POST['zs_recipe_id'] : 0;
+
+        // Always save on the original (default-language) product
+        if ($originalId !== $product->get_id()) {
+            if ($recipeId > 0) {
+                update_post_meta($originalId, self::META_PRODUCT_RECIPE_ID, $recipeId);
+            } else {
+                delete_post_meta($originalId, self::META_PRODUCT_RECIPE_ID);
+            }
+            return;
+        }
 
         if ($recipeId > 0) {
             $product->update_meta_data(self::META_PRODUCT_RECIPE_ID, $recipeId);
         } else {
             $product->delete_meta_data(self::META_PRODUCT_RECIPE_ID);
         }
+    }
+
+    private function resolveOriginalProductId(int $productId): int
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            return $productId;
+        }
+        $defaultLang = apply_filters('wpml_default_language', null);
+        $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
+        return $originalId ? (int) $originalId : $productId;
+    }
+
+    private function resolveOriginalTermId(int $termId): int
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            return $termId;
+        }
+        $defaultLang = apply_filters('wpml_default_language', null);
+        $originalId  = apply_filters('wpml_object_id', $termId, self::TAX_INGREDIENT, true, $defaultLang);
+        return $originalId ? (int) $originalId : $termId;
     }
 
     private function getAllowedUnits(): array
