@@ -72,8 +72,19 @@ class ProductDisplay
 
     public static function productHasRabbitOption(int $productId): bool
     {
+        // Resolve variation to parent
         $parentId = wp_get_post_parent_id($productId);
         $checkId  = $parentId ? $parentId : $productId;
+
+        // WPML: resolve to original (default language) product
+        if (function_exists('apply_filters') && defined('ICL_SITEPRESS_VERSION')) {
+            $defaultLang = apply_filters('wpml_default_language', null);
+            $originalId  = apply_filters('wpml_object_id', $checkId, 'product', true, $defaultLang);
+            if ($originalId) {
+                $checkId = (int) $originalId;
+            }
+        }
+
         return get_post_meta($checkId, MetaKeys::PRODUCT_HAS_RABBIT_OPTION, true) === 'yes';
     }
 }
