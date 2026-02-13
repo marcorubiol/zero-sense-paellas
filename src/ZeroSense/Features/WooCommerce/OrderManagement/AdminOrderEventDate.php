@@ -217,8 +217,17 @@ class AdminOrderEventDate implements FeatureInterface
         $today = current_time('Y-m-d');
         $today_ts = (string) strtotime($today);
 
-        // DEBUG: Log filter values (remove after debugging)
-        error_log('[ZS EventDate Debug] filter=' . $filter . ' today=' . $today . ' today_ts=' . $today_ts);
+        // DEBUG: Sample 5 orders to check what meta keys they have (remove after debugging)
+        if (!did_action('zs_event_date_debug_done')) {
+            do_action('zs_event_date_debug_done');
+            $sample = wc_get_orders(['limit' => 5, 'orderby' => 'date', 'order' => 'DESC']);
+            foreach ($sample as $o) {
+                $zs = $o->get_meta('zs_event_date', true);
+                $legacy = $o->get_meta('event_date', true);
+                $mb = $o->get_meta('_event_date', true);
+                error_log('[ZS EventDate Debug] Order #' . $o->get_id() . ' zs_event_date=' . var_export($zs, true) . ' event_date=' . var_export($legacy, true) . ' _event_date=' . var_export($mb, true));
+            }
+        }
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
