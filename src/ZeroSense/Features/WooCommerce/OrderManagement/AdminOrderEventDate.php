@@ -180,15 +180,15 @@ class AdminOrderEventDate implements FeatureInterface
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
-            $query->set('meta_key', self::META_EVENT_DATE);
-            $query->set('meta_value', $today_ts);
-            $query->set('meta_compare', $cmp);
-            $query->set('meta_type', 'NUMERIC');
+            $query->set('meta_query', [
+                ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'],
+            ]);
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
             if ($orderby === '' || $orderby === 'event_date') {
                 $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
                 $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
+                $query->set('meta_key', self::META_EVENT_DATE);
                 $query->set('orderby', 'meta_value_num');
                 $query->set('order', $order);
             }
@@ -212,17 +212,20 @@ class AdminOrderEventDate implements FeatureInterface
 
         if (in_array($filter, ['future', 'past'], true)) {
             $cmp = $filter === 'future' ? '>=' : '<';
-            $args['meta_key']     = self::META_EVENT_DATE;
-            $args['meta_value']   = $today_ts;
-            $args['meta_compare'] = $cmp;
-            $args['meta_type']    = 'NUMERIC';
+            $mq = isset($args['meta_query']) && is_array($args['meta_query']) ? $args['meta_query'] : [];
+            $mq[] = ['key' => self::META_EVENT_DATE, 'value' => $today_ts, 'compare' => $cmp, 'type' => 'NUMERIC'];
+            $args['meta_query'] = $mq;
+
+            // DEBUG (remove after fix)
+            error_log('[ZS HPOS] filter=' . $filter . ' cmp=' . $cmp . ' today_ts=' . $today_ts . ' meta_query=' . wp_json_encode($args['meta_query']));
 
             $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
             if ($orderby === '' || $orderby === 'event_date') {
                 $order = isset($_GET['order']) ? strtoupper(sanitize_text_field($_GET['order'])) : '';
                 $order = in_array($order, ['ASC', 'DESC'], true) ? $order : ($filter === 'future' ? 'ASC' : 'DESC');
-                $args['orderby'] = 'meta_value_num';
-                $args['order']   = $order;
+                $args['meta_key'] = self::META_EVENT_DATE;
+                $args['orderby']  = 'meta_value_num';
+                $args['order']    = $order;
             }
             return $args;
         }
