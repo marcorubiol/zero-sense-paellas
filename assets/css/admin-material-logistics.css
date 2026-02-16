@@ -109,3 +109,18 @@
 .zs-ops-toggle-text {
     vertical-align: middle;
 }
+
+/* Delete button (only for hidden fields with no data) */
+.zs-ops-delete-field {
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.zs-ops-delete-field:hover {
+    background-color: #dc3232;
+    border-color: #dc3232;
+    color: #fff;
+}
+.zs-ops-delete-field:hover .dashicons {
+    color: #fff;
+}

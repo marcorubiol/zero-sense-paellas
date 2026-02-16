@@ -165,6 +165,11 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                         <span class="dashicons <?php echo $isHidden ? 'dashicons-visibility' : 'dashicons-hidden'; ?>" style="vertical-align: middle;"></span>
                                         <span class="zs-ops-toggle-text"><?php echo $isHidden ? esc_html__('Unhide', 'zero-sense') : esc_html__('Hide', 'zero-sense'); ?></span>
                                     </button>
+                                    <?php if ($isHidden && $usageCount === 0) : ?>
+                                        <button type="button" class="button zs-ops-delete-field" title="<?php esc_attr_e('Delete field permanently', 'zero-sense'); ?>" style="margin-left:4px;">
+                                            <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -208,6 +213,9 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                 
                                 var icon = btn.querySelector('.dashicons');
                                 var text = btn.querySelector('.zs-ops-toggle-text');
+                                var actionsCell = btn.closest('td');
+                                var deleteBtn = actionsCell.querySelector('.zs-ops-delete-field');
+                                var usageCount = parseInt(tr.querySelector('.zs-ops-usage-badge').textContent.match(/\d+/)[0]) || 0;
                                 
                                 if (newStatus === 'hidden') {
                                     icon.classList.remove('dashicons-hidden');
@@ -215,12 +223,39 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                     text.textContent = <?php echo json_encode(__('Unhide', 'zero-sense')); ?>;
                                     btn.setAttribute('title', <?php echo json_encode(__('Unhide field', 'zero-sense')); ?>);
                                     tr.classList.add('zs-ops-row-hidden');
+                                    
+                                    if (usageCount === 0 && !deleteBtn) {
+                                        var newDeleteBtn = document.createElement('button');
+                                        newDeleteBtn.type = 'button';
+                                        newDeleteBtn.className = 'button zs-ops-delete-field';
+                                        newDeleteBtn.title = <?php echo json_encode(__('Delete field permanently', 'zero-sense')); ?>;
+                                        newDeleteBtn.style.marginLeft = '4px';
+                                        newDeleteBtn.innerHTML = '<span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>';
+                                        actionsCell.appendChild(newDeleteBtn);
+                                        bindDeleteButtons(tr);
+                                    }
                                 } else {
                                     icon.classList.remove('dashicons-visibility');
                                     icon.classList.add('dashicons-hidden');
                                     text.textContent = <?php echo json_encode(__('Hide', 'zero-sense')); ?>;
                                     btn.setAttribute('title', <?php echo json_encode(__('Hide field', 'zero-sense')); ?>);
                                     tr.classList.remove('zs-ops-row-hidden');
+                                    
+                                    if (deleteBtn) {
+                                        deleteBtn.remove();
+                                    }
+                                }
+                            });
+                        });
+                    }
+
+                    function bindDeleteButtons(scope) {
+                        var buttons = (scope || document).querySelectorAll('.zs-ops-delete-field');
+                        buttons.forEach(function(btn) {
+                            btn.addEventListener('click', function() {
+                                if (confirm(<?php echo json_encode(__('Are you sure you want to permanently delete this field? This action cannot be undone.', 'zero-sense')); ?>)) {
+                                    var tr = btn.closest('tr');
+                                    if (tr) tr.remove();
                                 }
                             });
                         });
@@ -251,6 +286,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     }
 
                     bindToggleVisibility();
+                    bindDeleteButtons();
                     bindLabelChange();
                     updateSortable();
 

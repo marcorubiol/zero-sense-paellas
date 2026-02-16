@@ -191,112 +191,8 @@ class Recipes implements FeatureInterface
         </p>
 
         <script>
-            (function() {
-                var ajaxUrl = <?php echo json_encode(admin_url('admin-ajax.php')); ?>;
-                var nonce = <?php echo json_encode(wp_create_nonce('zs_ingredient_ajax')); ?>;
-
-                function initSelect(el) {
-                    if (!el || !window.jQuery || !jQuery.fn.selectWoo) return;
-
-                    var $el = jQuery(el);
-                    if ($el.data('zs-init')) return;
-                    $el.data('zs-init', true);
-
-                    $el.selectWoo({
-                        width: '100%',
-                        tags: true,
-                        tokenSeparators: [','],
-                        ajax: {
-                            url: ajaxUrl,
-                            dataType: 'json',
-                            delay: 250,
-                            data: function(params) {
-                                return {
-                                    action: 'zs_ingredient_search',
-                                    nonce: nonce,
-                                    q: params.term || ''
-                                };
-                            },
-                            processResults: function(data) {
-                                return data;
-                            }
-                        }
-                    });
-
-                    $el.on('select2:select', function(e) {
-                        var data = e && e.params ? e.params.data : null;
-                        if (!data) return;
-                        var id = data.id;
-                        if (String(parseInt(id, 10)) === String(id)) return;
-
-                        jQuery.post(ajaxUrl, {
-                            action: 'zs_ingredient_create',
-                            nonce: nonce,
-                            name: id
-                        }).done(function(resp) {
-                            if (!resp || !resp.success || !resp.data) return;
-                            var newId = resp.data.id;
-                            var text = resp.data.text;
-
-                            var option = new Option(text, newId, true, true);
-                            $el.find('option[value="' + id.replace(/"/g, '\\"') + '"]').remove();
-                            $el.append(option).trigger('change');
-                        });
-                    });
-                }
-
-                function bindRemoveButtons(scope) {
-                    var buttons = (scope || document).querySelectorAll('.zs-recipe-remove');
-                    buttons.forEach(function(btn) {
-                        if (btn.dataset.zsInit) return;
-                        btn.dataset.zsInit = '1';
-                        btn.addEventListener('click', function() {
-                            var tr = btn.closest('tr');
-                            if (tr) tr.remove();
-                        });
-                    });
-                }
-
-                function initAllSelects() {
-                    document.querySelectorAll('.zs-ingredient-select').forEach(function(el) {
-                        initSelect(el);
-                    });
-                }
-
-                document.addEventListener('DOMContentLoaded', function() {
-                    bindRemoveButtons();
-                    initAllSelects();
-
-                    var addBtn = document.getElementById('zs-recipe-add-row');
-                    var tbody = document.getElementById('zs-recipe-rows');
-                    if (!addBtn || !tbody) return;
-
-                    addBtn.addEventListener('click', function() {
-                        var tr = document.createElement('tr');
-                        tr.innerHTML = '' +
-                            '<td>' +
-                                '<select name="zs_recipe_ingredients[ingredient][]" class="wc-enhanced-select zs-ingredient-select" style="width:100%;" data-placeholder="<?php echo esc_js(__('Search or create…', 'zero-sense')); ?>"></select>' +
-                            '</td>' +
-                            '<td><input type="number" step="0.001" min="0" name="zs_recipe_ingredients[qty][]" value="" style="width:100%;"></td>' +
-                            '<td>' +
-                                '<select name="zs_recipe_ingredients[unit][]" style="width:100%;">' +
-                                    <?php
-                                        $opt = [];
-                                        foreach ($units as $u => $label) {
-                                            $opt[] = '<option value="' . esc_js($u) . '">' . esc_js($label) . '</option>';
-                                        }
-                                        echo json_encode(implode('', $opt));
-                                    ?> +
-                                '</select>' +
-                            '</td>' +
-                            '<td><button type="button" class="button zs-recipe-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button></td>';
-
-                        tbody.appendChild(tr);
-                        bindRemoveButtons(tr);
-                        initAllSelects();
-                    });
-                });
-            })();
+            // Disable original script - we're using inline initialization
+            console.log('Zero Sense Recipes: Original script disabled, using inline initialization');
         </script>
         <?php
     }
@@ -390,9 +286,41 @@ class Recipes implements FeatureInterface
             
             // Add inline script to force initialization
             wp_add_inline_script('selectWoo', '
+                var ajaxurl = "' . admin_url('admin-ajax.php') . '";
                 console.log("Zero Sense Recipes: selectWoo loaded");
                 if (typeof jQuery !== "undefined" && jQuery.fn.selectWoo) {
                     console.log("Zero Sense Recipes: selectWoo available");
+                    // Force initialization after DOM is ready
+                    jQuery(document).ready(function($) {
+                        console.log("Zero Sense Recipes: DOM ready, initializing selects");
+                        setTimeout(function() {
+                            $(".zs-ingredient-select").each(function() {
+                                if (!$(this).data("select2")) {
+                                    console.log("Initializing selectWoo on:", this);
+                                    $(this).selectWoo({
+                                        width: "100%",
+                                        tags: true,
+                                        tokenSeparators: [","],
+                                        ajax: {
+                                            url: ajaxurl,
+                                            dataType: "json",
+                                            delay: 250,
+                                            data: function(params) {
+                                                return {
+                                                    action: "zs_ingredient_search",
+                                                    nonce: "' . wp_create_nonce('zs_ingredient_ajax') . '",
+                                                    q: params.term || ""
+                                                };
+                                            },
+                                            processResults: function(data) {
+                                                return data;
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        }, 500);
+                    });
                 } else {
                     console.error("Zero Sense Recipes: selectWoo NOT available");
                 }
