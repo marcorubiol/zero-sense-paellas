@@ -46,37 +46,6 @@ class Staff implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
-        add_action('admin_menu', [$this, 'addRolesSubmenu']);
-    }
-    
-    public function addRolesSubmenu(): void
-    {
-        // Add Staff Members as submenu under Event Operations
-        add_submenu_page(
-            'event-operations',
-            __('Staff Members', 'zero-sense'),
-            __('Staff Members', 'zero-sense'),
-            'edit_posts',
-            'edit.php?post_type=' . self::CPT
-        );
-        
-        // Add "Add New" submenu
-        add_submenu_page(
-            'event-operations',
-            __('Add staff member', 'zero-sense'),
-            __('Add new', 'zero-sense'),
-            'edit_posts',
-            'post-new.php?post_type=' . self::CPT
-        );
-        
-        // Add Staff Roles submenu
-        add_submenu_page(
-            'event-operations',
-            __('Staff Roles', 'zero-sense'),
-            __('Staff Roles', 'zero-sense'),
-            'manage_categories',
-            'edit-tags.php?taxonomy=' . self::TAX_ROLE . '&post_type=' . self::CPT
-        );
     }
 
     public function getPriority(): int
@@ -105,8 +74,9 @@ class Staff implements FeatureInterface
             ],
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => false, // Will be added manually to Event Operations
-            'menu_position' => 57,
+            'show_in_menu' => true,
+            'menu_position' => 56.1, // Right after Event Operations (56)
+            'menu_icon' => 'dashicons-groups',
             'supports' => ['title'],
             'capability_type' => 'post',
             'map_meta_cap' => true,
