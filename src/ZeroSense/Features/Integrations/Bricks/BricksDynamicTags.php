@@ -1590,22 +1590,34 @@ class BricksDynamicTags implements FeatureInterface
         </style>';
         
         $html .= '<script>
-            document.addEventListener("DOMContentLoaded", function() {
-                document.querySelectorAll(".zs-lightbox").forEach(function(lightbox) {
-                    lightbox.addEventListener("click", function(e) {
-                        if (e.target === this) {
-                            e.preventDefault();
-                            history.replaceState(null, null, " ");
+            (function() {
+                function closeLightbox(e) {
+                    if (e) e.preventDefault();
+                    var scrollY = window.scrollY;
+                    history.pushState("", document.title, window.location.pathname + window.location.search);
+                    window.scrollTo(0, scrollY);
+                }
+                
+                document.addEventListener("DOMContentLoaded", function() {
+                    document.querySelectorAll(".zs-lightbox").forEach(function(lightbox) {
+                        lightbox.addEventListener("click", function(e) {
+                            if (e.target === this) {
+                                closeLightbox(e);
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll(".zs-lightbox-close").forEach(function(closeBtn) {
+                        closeBtn.addEventListener("click", closeLightbox);
+                    });
+                    
+                    document.addEventListener("keydown", function(e) {
+                        if (e.key === "Escape" && location.hash.indexOf("zs-lightbox") !== -1) {
+                            closeLightbox(e);
                         }
                     });
                 });
-                document.addEventListener("keydown", function(e) {
-                    if (e.key === "Escape" && location.hash.indexOf("zs-lightbox") !== -1) {
-                        e.preventDefault();
-                        history.replaceState(null, null, " ");
-                    }
-                });
-            });
+            })();
         </script>';
         
         $html .= '<div class="zs-event-media-gallery">';
@@ -1626,7 +1638,7 @@ class BricksDynamicTags implements FeatureInterface
                 $html .= '<a href="#' . esc_attr($lightboxId) . '"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a>';
                 $html .= '</div>';
                 $html .= '<div id="' . esc_attr($lightboxId) . '" class="zs-lightbox">';
-                $html .= '<a href="#" onclick="event.preventDefault(); history.replaceState(null, null, \' \');" class="zs-lightbox-close">&times;</a>';
+                $html .= '<a href="#" class="zs-lightbox-close">&times;</a>';
                 $html .= '<img src="' . esc_url($url) . '" alt="">';
                 $html .= '</div>';
                 $index++;
