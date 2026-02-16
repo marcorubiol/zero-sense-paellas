@@ -114,14 +114,10 @@ class OrderLanguageAdmin
                     <h4 style="margin-bottom: 0.5em;">
                         <?php esc_html_e('Event Information Sheet', 'zero-sense'); ?>
                     </h4>
-                    <p class="description" style="margin-bottom: 0.5em;">
-                        <?php esc_html_e('View complete event details in a new window', 'zero-sense'); ?>
-                    </p>
                     <a 
                         href="<?php echo esc_url($eventLink); ?>" 
                         target="_blank"
-                        class="button button-primary"
-                        style="width: 100%;"
+                        class="button"
                     >
                         <?php esc_html_e('Open Event Sheet', 'zero-sense'); ?>
                     </a>
