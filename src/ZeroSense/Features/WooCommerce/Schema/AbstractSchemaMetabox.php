@@ -212,8 +212,18 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
 
         error_log("[Schema Debug] Saving to meta key: {$metaKey}");
         error_log("[Schema Debug] Data to save: " . print_r($saved, true));
-        update_post_meta($orderId, $metaKey, $saved);
-        error_log("[Schema Debug] Data saved successfully");
+        
+        // Use WooCommerce order object to save meta data
+        $order = wc_get_order($orderId);
+        if ($order instanceof WC_Order) {
+            $order->update_meta_data($metaKey, $saved);
+            $order->save();
+            error_log("[Schema Debug] Data saved via WC_Order->save()");
+        } else {
+            // Fallback to direct update_post_meta
+            update_post_meta($orderId, $metaKey, $saved);
+            error_log("[Schema Debug] Data saved via update_post_meta()");
+        }
     }
 
     /**
