@@ -491,23 +491,28 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             $allOrders = $wpdb->get_results($wpdb->prepare(
                 "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
                 WHERE meta_key = %s
-                LIMIT 5",
+                LIMIT 10",
                 'zs_ops_material'
             ));
             
             error_log('[ZS Schema DEBUG] Found ' . count($allOrders) . ' orders with zs_ops_material meta');
+            error_log('[ZS Schema DEBUG] Looking for key: ' . $key);
             
             foreach ($allOrders as $row) {
                 $data = maybe_unserialize($row->meta_value);
-                if (is_array($data) && isset($data[$key])) {
-                    error_log('[ZS Schema DEBUG] Order ' . $row->post_id . ' HAS key "' . $key . '"');
-                    error_log('[ZS Schema DEBUG] Raw serialized (first 300 chars): ' . substr($row->meta_value, 0, 300));
+                if (is_array($data)) {
+                    $keys = array_keys($data);
+                    error_log('[ZS Schema DEBUG] Order ' . $row->post_id . ' has keys: ' . implode(', ', $keys));
                     
-                    // Check what pattern we should search for
-                    $needle = 's:' . strlen($key) . ':"' . $key . '"';
-                    error_log('[ZS Schema DEBUG] Searching for pattern: ' . $needle);
-                    error_log('[ZS Schema DEBUG] Pattern found in serialized: ' . (strpos($row->meta_value, $needle) !== false ? 'YES' : 'NO'));
-                    break;
+                    if (isset($data[$key])) {
+                        error_log('[ZS Schema DEBUG] *** Order ' . $row->post_id . ' HAS the target key! ***');
+                        error_log('[ZS Schema DEBUG] Raw serialized (first 400 chars): ' . substr($row->meta_value, 0, 400));
+                        
+                        // Check what pattern we should search for
+                        $needle = 's:' . strlen($key) . ':"' . $key . '"';
+                        error_log('[ZS Schema DEBUG] Searching for pattern: ' . $needle);
+                        error_log('[ZS Schema DEBUG] Pattern found in serialized: ' . (strpos($row->meta_value, $needle) !== false ? 'YES' : 'NO'));
+                    }
                 }
             }
         }
