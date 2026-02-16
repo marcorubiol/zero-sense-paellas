@@ -454,20 +454,20 @@ class BricksDynamicTags implements FeatureInterface
 
             // Format value based on type
             if ($type === 'bool') {
-                $displayValue = ($value === '1' || $value === 1) ? __('Yes', 'zero-sense') : __('No', 'zero-sense');
+                $yesText = apply_filters('wpml_translate_single_string', 'Yes', 'zero-sense', 'material_yes');
+                $noText = apply_filters('wpml_translate_single_string', 'No', 'zero-sense', 'material_no');
+                $displayValue = ($value === '1' || $value === 1) ? $yesText : $noText;
             } elseif ($type === 'qty_int') {
                 $displayValue = is_numeric($value) && $value > 0 ? (string) $value : '-';
             } else {
                 $displayValue = is_scalar($value) && $value !== '' ? (string) $value : '-';
             }
 
-            // Only show if has value (not empty or not "No" for booleans)
-            if ($displayValue !== '-' && !($type === 'bool' && $displayValue === __('No', 'zero-sense'))) {
-                $html .= '<div class="zs-material-item">';
-                $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
-                $html .= '<span>' . esc_html($displayValue) . '</span>';
-                $html .= '</div>';
-            }
+            // Show all fields (even empty ones)
+            $html .= '<div class="zs-material-item">';
+            $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
+            $html .= '<span>' . esc_html($displayValue) . '</span>';
+            $html .= '</div>';
         }
         
         $html .= '</div>';
