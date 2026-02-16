@@ -134,6 +134,14 @@ class BricksDynamicTags implements FeatureInterface
         add_filter('bricks/dynamic_data/render_content', [$this, 'renderContent'], 10, 3);
         add_filter('bricks/frontend/render_data', [$this, 'renderContent'], 10, 2);
         add_action('wp', [$this, 'maybeResetMetaBoxTranslations']);
+        
+        // Track order modifications
+        add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
+    }
+    
+    public function trackOrderModification(int $orderId): void
+    {
+        update_post_meta($orderId, '_zs_last_modified', current_time('mysql'));
     }
 
     /**
@@ -849,28 +857,24 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Last Modified');
         }
 
-        global $wpdb;
-        
-        // Get the latest modification from order notes (system notes track all changes)
-        $lastNote = $wpdb->get_var($wpdb->prepare(
-            "SELECT comment_date FROM {$wpdb->comments} 
-            WHERE comment_post_ID = %d 
-            AND comment_type = 'order_note'
-            ORDER BY comment_date DESC 
-            LIMIT 1",
-            $orderId
-        ));
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
 
-        // If no notes, fall back to post_modified
-        if (!$lastNote) {
+        // Get our custom tracked modification date
+        $modified = $order->get_meta('_zs_last_modified', true);
+        
+        // Fallback to post_modified if our custom field doesn't exist yet
+        if (!$modified || $modified === '') {
             $postData = get_post($orderId);
             if (!$postData || !isset($postData->post_modified)) {
                 return '';
             }
-            $lastNote = $postData->post_modified;
+            $modified = $postData->post_modified;
         }
 
-        if (!$lastNote || $lastNote === '0000-00-00 00:00:00') {
+        if (!$modified || $modified === '0000-00-00 00:00:00') {
             return '';
         }
 
@@ -879,7 +883,7 @@ class BricksDynamicTags implements FeatureInterface
         $timeFormat = get_option('time_format', 'H:i:s');
 
         // Convert to timestamp and format
-        $timestamp = strtotime($lastNote);
+        $timestamp = strtotime($modified);
         
         if ($format === 'date') {
             return date_i18n($dateFormat, $timestamp);
