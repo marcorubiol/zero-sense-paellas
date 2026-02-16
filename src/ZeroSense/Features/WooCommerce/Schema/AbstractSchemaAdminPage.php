@@ -416,32 +416,19 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
 
                 function bindDeleteButtons(scope) {
                     var buttons = (scope || document).querySelectorAll('.zs-ops-delete-field');
-                    console.log('[Schema] Found ' + buttons.length + ' delete buttons to bind');
-                    
                     buttons.forEach(function(btn) {
-                        if (btn.dataset.deletebound) {
-                            console.log('[Schema] Button already bound, skipping');
-                            return;
-                        }
+                        if (btn.dataset.deletebound) return;
                         btn.dataset.deletebound = 'true';
                         
                         btn.addEventListener('click', function(e) {
-                            console.log('[Schema] Delete button clicked');
                             e.preventDefault();
                             e.stopPropagation();
                             
                             if (confirm(<?php echo json_encode(__('Are you sure you want to permanently delete this field? This action cannot be undone.', 'zero-sense')); ?>)) {
                                 var tr = btn.closest('tr');
                                 if (tr) {
-                                    var fieldKey = tr.getAttribute('data-field-key');
-                                    console.log('[Schema] Removing field: ' + fieldKey);
                                     tr.parentNode.removeChild(tr);
-                                    console.log('[Schema] Field removed from DOM');
-                                } else {
-                                    console.error('[Schema] Could not find TR element');
                                 }
-                            } else {
-                                console.log('[Schema] Delete cancelled by user');
                             }
                             return false;
                         });
@@ -476,18 +463,6 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                 bindDeleteButtons();
                 bindLabelChange();
                 updateSortable();
-                
-                // Debug form submission
-                var form = document.querySelector('form');
-                if (form) {
-                    form.addEventListener('submit', function(e) {
-                        var formData = new FormData(form);
-                        var keys = formData.getAll('<?php echo esc_js($formFieldName); ?>[key][]');
-                        var labels = formData.getAll('<?php echo esc_js($formFieldName); ?>[label][]');
-                        console.log('[Schema] Form submitting with keys:', keys);
-                        console.log('[Schema] Form submitting with labels:', labels);
-                    });
-                }
 
                 addBtn.addEventListener('click', function() {
                     var tr = document.createElement('tr');
@@ -561,10 +536,11 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         check_admin_referer($this->getFormAction());
 
         $formFieldName = $this->getFormFieldName();
-        $raw = $_POST[$formFieldName] ?? null;
+        $raw = $_POST[$formFieldName] ?? [];
+        
+        // Allow empty array (when all fields are deleted)
         if (!is_array($raw)) {
-            wp_safe_redirect(admin_url('admin.php?page=' . $this->getMenuSlug()));
-            exit;
+            $raw = [];
         }
 
         $existingSchema = get_option($this->getOptionName(), []);
