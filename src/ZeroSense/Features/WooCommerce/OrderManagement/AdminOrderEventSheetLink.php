@@ -96,19 +96,34 @@ class AdminOrderEventSheetLink implements FeatureInterface
         }
 
         printf(
-            '<a href="%s" target="_blank" title="%s" class="zs-event-sheet-link" style="color: #2271b1; text-decoration: none; display: inline-block; vertical-align: middle; line-height: 1; padding: 2px; border-radius: 3px; transition: all 0.2s ease;">
-                <span class="dashicons dashicons-clipboard" style="font-size: 18px; width: 18px; height: 18px;"></span>
+            '<a href="%s" target="_blank" title="%s" class="zs-event-sheet-link">
+                <span class="dashicons dashicons-clipboard"></span>
             </a> ',
             esc_url($url),
             esc_attr__('View event sheet', 'zero-sense')
         );
         
-        // Add hover effect CSS
+        // Add CSS matching the eye icon style
         echo '<style>
+            .zs-event-sheet-link {
+                float: right;
+                width: 16px;
+                padding: 20px 4px 4px 4px;
+                height: 0;
+                overflow: hidden;
+                position: relative;
+                border: 2px solid transparent;
+                border-radius: 4px;
+                color: #2271b1;
+                text-decoration: none;
+            }
             .zs-event-sheet-link:hover {
-                background-color: #f0f0f1;
-                border: 1px solid #2271b1;
-                padding: 1px;
+                border: 2px solid var(--wp-admin-theme-color, #00a0d2);
+            }
+            .zs-event-sheet-link .dashicons {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
             }
         </style>';
     }
