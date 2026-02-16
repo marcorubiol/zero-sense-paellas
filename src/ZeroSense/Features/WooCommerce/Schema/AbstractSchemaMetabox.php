@@ -131,9 +131,13 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
         
         $orderId = $order->get_id();
         $savedData = $order->get_meta($metaKey, true);
+        error_log("[Schema Debug] RENDER - Schema: {$schemaKey}, Order: {$orderId}");
+        error_log("[Schema Debug] RENDER - Meta key: {$metaKey}");
+        error_log("[Schema Debug] RENDER - Saved data from DB: " . print_r($savedData, true));
         $savedData = is_array($savedData) ? $savedData : [];
 
         $fields = $this->getFieldsForOrder($orderId);
+        error_log("[Schema Debug] RENDER - Fields to display: " . print_r(array_keys($fields), true));
 
         wp_nonce_field('zs_schema_save_' . $schemaKey, 'zs_schema_nonce_' . $schemaKey);
         ?>
