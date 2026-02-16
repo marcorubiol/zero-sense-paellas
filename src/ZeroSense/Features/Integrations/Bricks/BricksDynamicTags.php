@@ -1584,11 +1584,29 @@ class BricksDynamicTags implements FeatureInterface
             .zs-gallery-item a { display: block; width: 100%; height: 100%; }
             .zs-lightbox { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
             .zs-lightbox:target { display: flex; }
-            .zs-lightbox-bg { position: absolute; width: 100%; height: 100%; }
             .zs-lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; background: #fff; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); position: relative; z-index: 2; }
             .zs-lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; text-decoration: none; cursor: pointer; z-index: 3; line-height: 1; }
             .zs-lightbox-close:hover { color: #ccc; }
         </style>';
+        
+        $html .= '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                document.querySelectorAll(".zs-lightbox").forEach(function(lightbox) {
+                    lightbox.addEventListener("click", function(e) {
+                        if (e.target === this) {
+                            e.preventDefault();
+                            history.replaceState(null, null, " ");
+                        }
+                    });
+                });
+                document.addEventListener("keydown", function(e) {
+                    if (e.key === "Escape" && location.hash.indexOf("zs-lightbox") !== -1) {
+                        e.preventDefault();
+                        history.replaceState(null, null, " ");
+                    }
+                });
+            });
+        </script>';
         
         $html .= '<div class="zs-event-media-gallery">';
         $index = 0;
@@ -1607,8 +1625,8 @@ class BricksDynamicTags implements FeatureInterface
                 $html .= '<div class="zs-gallery-item zs-gallery-image">';
                 $html .= '<a href="#' . esc_attr($lightboxId) . '"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a>';
                 $html .= '</div>';
-                $html .= '<div id="' . esc_attr($lightboxId) . '" class="zs-lightbox" onclick="if(event.target === this) location.hash = \'\';">';
-                $html .= '<a href="#_" class="zs-lightbox-close">&times;</a>';
+                $html .= '<div id="' . esc_attr($lightboxId) . '" class="zs-lightbox">';
+                $html .= '<a href="#" onclick="event.preventDefault(); history.replaceState(null, null, \' \');" class="zs-lightbox-close">&times;</a>';
                 $html .= '<img src="' . esc_url($url) . '" alt="">';
                 $html .= '</div>';
                 $index++;
