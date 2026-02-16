@@ -169,21 +169,32 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
         $nonceField = 'zs_schema_nonce_' . $schemaKey;
         $nonceAction = 'zs_schema_save_' . $schemaKey;
         
+        error_log("[Schema Debug] Save called for schema: {$schemaKey}, order: {$orderId}");
+        error_log("[Schema Debug] Looking for nonce field: {$nonceField}");
+        error_log("[Schema Debug] Nonce exists: " . (isset($_POST[$nonceField]) ? 'yes' : 'no'));
+        
         if (!isset($_POST[$nonceField]) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonceField])), $nonceAction)) {
+            error_log("[Schema Debug] Nonce verification failed for {$schemaKey}");
             return;
         }
 
         if (!current_user_can('edit_shop_order', $orderId)) {
+            error_log("[Schema Debug] User cannot edit shop order");
             return;
         }
 
         $postKey = 'zs_schema_' . $schemaKey;
         $incoming = $_POST[$postKey] ?? [];
+        error_log("[Schema Debug] Post key: {$postKey}");
+        error_log("[Schema Debug] Incoming data: " . print_r($incoming, true));
+        
         if (!is_array($incoming)) {
+            error_log("[Schema Debug] Incoming data is not an array");
             return;
         }
 
         $allFields = $this->getAllFields();
+        error_log("[Schema Debug] All fields count: " . count($allFields));
         $saved = [];
 
         foreach ($allFields as $key => $fieldConfig) {
@@ -195,7 +206,10 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
             $saved[$key] = ['value' => $sanitizedValue];
         }
 
+        error_log("[Schema Debug] Saving to meta key: {$metaKey}");
+        error_log("[Schema Debug] Data to save: " . print_r($saved, true));
         update_post_meta($orderId, $metaKey, $saved);
+        error_log("[Schema Debug] Data saved successfully");
     }
 
     /**
