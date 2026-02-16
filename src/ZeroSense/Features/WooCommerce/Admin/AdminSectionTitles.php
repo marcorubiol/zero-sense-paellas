@@ -69,11 +69,11 @@ class AdminSectionTitles implements FeatureInterface
     public function modifyHposOrderTabs($tabs): array
     {
         if (isset($tabs['billing'])) {
-            $tabs['billing']['label'] = $this->getTranslatedString('Client', 'billing_section_title', 'Client');
+            $tabs['billing']['label'] = 'Client';
         }
         
         if (isset($tabs['shipping'])) {
-            $tabs['shipping']['label'] = $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner');
+            $tabs['shipping']['label'] = 'Venue/Wedding Planner';
         }
         
         return $tabs;
@@ -156,12 +156,12 @@ class AdminSectionTitles implements FeatureInterface
     {
         // Change Billing to Client
         if (isset($tabs['billing'])) {
-            $tabs['billing']['label'] = $this->getTranslatedString('Client', 'billing_section_title', 'Client');
+            $tabs['billing']['label'] = 'Client';
         }
         
         // Change Shipping to Venue/Wedding Planner
         if (isset($tabs['shipping'])) {
-            $tabs['shipping']['label'] = $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner');
+            $tabs['shipping']['label'] = 'Venue/Wedding Planner';
         }
         
         return $tabs;
