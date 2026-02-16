@@ -244,9 +244,164 @@ class ApiExtension
             }
         }
 
+        $this->addComputedFields($order, $data, is_string($orderLanguage) ? $orderLanguage : '');
+
         if ($originalLanguage !== null && !empty($orderLanguage) && $orderLanguage !== $originalLanguage) {
             do_action('wpml_switch_language', $originalLanguage);
         }
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    private function addComputedFields(WC_Order $order, array &$data, string $orderLanguage): void
+    {
+        $data['zs_order_products_simple'] = $this->buildOrderProductsSimple($order);
+        $data['zs_order_products_count'] = count($order->get_items());
+        $data['zs_order_products_by_category_json'] = wp_json_encode($this->buildOrderProductsByCategory($order));
+        $data['zs_event_media_urls'] = $this->buildEventMediaUrls($order);
+
+        $lastModifiedRaw = $this->resolveOrderLastModifiedRaw($order);
+        if ($lastModifiedRaw !== '') {
+            $timestamp = strtotime($lastModifiedRaw);
+            if ($timestamp !== false) {
+                $dateFormat = get_option('date_format', 'Y-m-d');
+                $timeFormat = get_option('time_format', 'H:i:s');
+                $data['zs_order_last_modified'] = date_i18n($dateFormat . ' ' . $timeFormat, $timestamp);
+                $data['zs_order_last_modified_date'] = date_i18n($dateFormat, $timestamp);
+                $data['zs_order_last_modified_time'] = date_i18n($timeFormat, $timestamp);
+            }
+        }
+
+        if ($orderLanguage !== '') {
+            $data['zs_order_language_name'] = $this->resolveOrderLanguageName($orderLanguage);
+        }
+    }
+
+    private function buildOrderProductsSimple(WC_Order $order): string
+    {
+        $products = [];
+        foreach ($order->get_items() as $item) {
+            if (!$item instanceof WC_Order_Item) {
+                continue;
+            }
+
+            $name = $item->get_name();
+            if ($name === '') {
+                continue;
+            }
+
+            $quantity = (int) $item->get_quantity();
+            $products[] = $quantity > 1 ? $name . ' (' . $quantity . 'x)' : $name;
+        }
+
+        return implode(', ', $products);
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    private function buildOrderProductsByCategory(WC_Order $order): array
+    {
+        $categorized = [];
+
+        foreach ($order->get_items() as $item) {
+            if (!$item instanceof WC_Order_Item) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product) {
+                continue;
+            }
+
+            $productId = $product->get_parent_id() > 0 ? $product->get_parent_id() : $product->get_id();
+            $terms = get_the_terms($productId, 'product_cat');
+
+            if (!$terms || is_wp_error($terms)) {
+                $terms = [];
+            }
+
+            if ($terms === []) {
+                $terms = [(object) ['term_id' => 0, 'name' => __('Other', 'zero-sense'), 'slug' => 'other']];
+            }
+
+            foreach ($terms as $term) {
+                if (!isset($term->term_id, $term->name, $term->slug)) {
+                    continue;
+                }
+
+                if ((string) $term->slug === 'uncategorized') {
+                    continue;
+                }
+
+                $termId = (int) $term->term_id;
+                if (!isset($categorized[$termId])) {
+                    $categorized[$termId] = [
+                        'category_id' => $termId,
+                        'category_name' => (string) $term->name,
+                        'category_slug' => (string) $term->slug,
+                        'products' => [],
+                    ];
+                }
+
+                $categorized[$termId]['products'][] = [
+                    'name' => $item->get_name(),
+                    'quantity' => (int) $item->get_quantity(),
+                ];
+            }
+        }
+
+        return array_values($categorized);
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private function buildEventMediaUrls(WC_Order $order): array
+    {
+        $raw = $order->get_meta('_zs_event_media', true);
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        $ids = array_filter(array_map('trim', explode(',', $raw)));
+        $urls = [];
+
+        foreach ($ids as $id) {
+            $url = wp_get_attachment_url((int) $id);
+            if (is_string($url) && $url !== '') {
+                $urls[] = $url;
+            }
+        }
+
+        return $urls;
+    }
+
+    private function resolveOrderLastModifiedRaw(WC_Order $order): string
+    {
+        $tracked = $order->get_meta('_zs_last_modified', true);
+        if (is_string($tracked) && $tracked !== '') {
+            return $tracked;
+        }
+
+        $postData = get_post($order->get_id());
+        if ($postData && isset($postData->post_modified) && is_string($postData->post_modified)) {
+            return $postData->post_modified;
+        }
+
+        return '';
+    }
+
+    private function resolveOrderLanguageName(string $langCode): string
+    {
+        $map = [
+            'es' => 'Español',
+            'en' => 'English',
+            'ca' => 'Català',
+        ];
+
+        return $map[$langCode] ?? strtoupper($langCode);
     }
 
     /**
