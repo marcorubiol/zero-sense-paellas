@@ -127,17 +127,19 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         </tr>
                     </thead>
                     <tbody id="zs-ops-schema-rows">
-                        <?php foreach ($schema as $row):
+                        <?php 
+                        // Only show active fields in main table
+                        foreach ($schema as $row):
+                            $status = isset($row['status']) ? (string) $row['status'] : 'active';
+                            if ($status === 'hidden') continue;
+                            
                             $key = isset($row['key']) ? (string) $row['key'] : '';
                             $label = isset($row['label']) ? (string) $row['label'] : '';
                             $type = isset($row['type']) ? (string) $row['type'] : 'text';
-                            $status = isset($row['status']) ? (string) $row['status'] : 'active';
                             $createdAt = isset($row['created_at']) ? (int) $row['created_at'] : time();
                             $usageCount = $this->getFieldUsageCount($key);
-                            $isHidden = $status === 'hidden';
-                            $rowClass = 'zs-ops-sortable-row' . ($isHidden ? ' zs-ops-row-hidden' : '');
                             ?>
-                            <tr class="<?php echo esc_attr($rowClass); ?>" data-field-key="<?php echo esc_attr($key); ?>">
+                            <tr class="zs-ops-sortable-row" data-field-key="<?php echo esc_attr($key); ?>">
                                 <td>
                                     <span class="zs-ops-drag-handle dashicons dashicons-menu"></span>
                                 </td>
@@ -161,20 +163,79 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                     <span class="zs-ops-usage-badge"><?php echo esc_html(sprintf(_n('%d order', '%d orders', $usageCount, 'zero-sense'), $usageCount)); ?></span>
                                 </td>
                                 <td>
-                                    <button type="button" class="button zs-ops-toggle-visibility" data-current-status="<?php echo esc_attr($status); ?>" title="<?php echo $isHidden ? esc_attr__('Unhide field', 'zero-sense') : esc_attr__('Hide field', 'zero-sense'); ?>">
-                                        <span class="dashicons <?php echo $isHidden ? 'dashicons-visibility' : 'dashicons-hidden'; ?>" style="vertical-align: middle;"></span>
-                                        <span class="zs-ops-toggle-text"><?php echo $isHidden ? esc_html__('Unhide', 'zero-sense') : esc_html__('Hide', 'zero-sense'); ?></span>
+                                    <button type="button" class="button zs-ops-toggle-visibility" data-current-status="<?php echo esc_attr($status); ?>" title="<?php esc_attr_e('Hide field', 'zero-sense'); ?>">
+                                        <span class="dashicons dashicons-hidden" style="vertical-align: middle;"></span>
+                                        <span class="zs-ops-toggle-text"><?php esc_html_e('Hide', 'zero-sense'); ?></span>
                                     </button>
-                                    <?php if ($isHidden && $usageCount === 0) : ?>
-                                        <button type="button" class="button zs-ops-delete-field" title="<?php esc_attr_e('Delete field permanently', 'zero-sense'); ?>" style="margin-left:4px;">
-                                            <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
-                                        </button>
-                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                
+                <?php
+                // Count hidden fields
+                $hiddenFields = array_filter($schema, function($row) {
+                    return isset($row['status']) && $row['status'] === 'hidden';
+                });
+                
+                if (!empty($hiddenFields)) : ?>
+                    <h3 style="margin-top: 30px;"><?php esc_html_e('Hidden Fields', 'zero-sense'); ?> <span style="color: #666; font-size: 13px; font-weight: normal;">(<?php echo count($hiddenFields); ?>)</span></h3>
+                    <table class="widefat" style="max-width:1100px; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 180px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
+                                <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
+                                <th style="width: 150px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
+                                <th style="width: 100px;"><?php esc_html_e('Usage', 'zero-sense'); ?></th>
+                                <th style="width: 120px;"><?php esc_html_e('Actions', 'zero-sense'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="zs-ops-schema-hidden-rows">
+                            <?php foreach ($hiddenFields as $row):
+                                $key = isset($row['key']) ? (string) $row['key'] : '';
+                                $label = isset($row['label']) ? (string) $row['label'] : '';
+                                $type = isset($row['type']) ? (string) $row['type'] : 'text';
+                                $status = 'hidden';
+                                $createdAt = isset($row['created_at']) ? (int) $row['created_at'] : time();
+                                $usageCount = $this->getFieldUsageCount($key);
+                                ?>
+                                <tr class="zs-ops-row-hidden" data-field-key="<?php echo esc_attr($key); ?>">
+                                    <td>
+                                        <span class="zs-ops-key-display"><?php echo esc_html($key); ?></span>
+                                        <input type="hidden" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="zs-ops-key-field">
+                                        <input type="hidden" name="zs_ops_material_schema[status][]" value="<?php echo esc_attr($status); ?>" class="zs-ops-status-field">
+                                        <input type="hidden" name="zs_ops_material_schema[created_at][]" value="<?php echo esc_attr($createdAt); ?>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="zs_ops_material_schema[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. Work tables">
+                                    </td>
+                                    <td>
+                                        <select name="zs_ops_material_schema[type][]" style="width:100%;">
+                                            <?php foreach ($allowedTypes as $typeValue => $typeLabel): ?>
+                                                <option value="<?php echo esc_attr($typeValue); ?>" <?php selected($type, $typeValue); ?>><?php echo esc_html($typeLabel); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td class="zs-ops-usage-count">
+                                        <span class="zs-ops-usage-badge"><?php echo esc_html(sprintf(_n('%d order', '%d orders', $usageCount, 'zero-sense'), $usageCount)); ?></span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="button zs-ops-toggle-visibility" data-current-status="<?php echo esc_attr($status); ?>" title="<?php esc_attr_e('Unhide field', 'zero-sense'); ?>">
+                                            <span class="dashicons dashicons-visibility" style="vertical-align: middle;"></span>
+                                            <span class="zs-ops-toggle-text"><?php esc_html_e('Unhide', 'zero-sense'); ?></span>
+                                        </button>
+                                        <?php if ($usageCount === 0) : ?>
+                                            <button type="button" class="button zs-ops-delete-field" title="<?php esc_attr_e('Delete field permanently', 'zero-sense'); ?>">
+                                                <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
+                                            </button>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
 
                 <div class="tablenav top" style="max-width:1100px;">
                     <div class="alignleft actions">
@@ -202,6 +263,9 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     function bindToggleVisibility(scope) {
                         var buttons = (scope || document).querySelectorAll('.zs-ops-toggle-visibility');
                         buttons.forEach(function(btn) {
+                            if (btn.dataset.bound) return;
+                            btn.dataset.bound = '1';
+                            
                             btn.addEventListener('click', function() {
                                 var tr = btn.closest('tr');
                                 var statusField = tr.querySelector('.zs-ops-status-field');
@@ -211,39 +275,28 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                 statusField.value = newStatus;
                                 btn.setAttribute('data-current-status', newStatus);
                                 
+                                // Update button appearance
                                 var icon = btn.querySelector('.dashicons');
                                 var text = btn.querySelector('.zs-ops-toggle-text');
-                                var actionsCell = btn.closest('td');
-                                var deleteBtn = actionsCell.querySelector('.zs-ops-delete-field');
-                                var usageCount = parseInt(tr.querySelector('.zs-ops-usage-badge').textContent.match(/\d+/)[0]) || 0;
                                 
                                 if (newStatus === 'hidden') {
+                                    // Moving to hidden - will be submitted with form
                                     icon.classList.remove('dashicons-hidden');
                                     icon.classList.add('dashicons-visibility');
                                     text.textContent = <?php echo json_encode(__('Unhide', 'zero-sense')); ?>;
                                     btn.setAttribute('title', <?php echo json_encode(__('Unhide field', 'zero-sense')); ?>);
                                     tr.classList.add('zs-ops-row-hidden');
                                     
-                                    if (usageCount === 0 && !deleteBtn) {
-                                        var newDeleteBtn = document.createElement('button');
-                                        newDeleteBtn.type = 'button';
-                                        newDeleteBtn.className = 'button zs-ops-delete-field';
-                                        newDeleteBtn.title = <?php echo json_encode(__('Delete field permanently', 'zero-sense')); ?>;
-                                        newDeleteBtn.style.marginLeft = '4px';
-                                        newDeleteBtn.innerHTML = '<span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>';
-                                        actionsCell.appendChild(newDeleteBtn);
-                                        bindDeleteButtons(tr);
-                                    }
+                                    // Add visual feedback
+                                    tr.style.opacity = '0.6';
                                 } else {
+                                    // Moving to active - will be submitted with form
                                     icon.classList.remove('dashicons-visibility');
                                     icon.classList.add('dashicons-hidden');
                                     text.textContent = <?php echo json_encode(__('Hide', 'zero-sense')); ?>;
                                     btn.setAttribute('title', <?php echo json_encode(__('Hide field', 'zero-sense')); ?>);
                                     tr.classList.remove('zs-ops-row-hidden');
-                                    
-                                    if (deleteBtn) {
-                                        deleteBtn.remove();
-                                    }
+                                    tr.style.opacity = '1';
                                 }
                             });
                         });
