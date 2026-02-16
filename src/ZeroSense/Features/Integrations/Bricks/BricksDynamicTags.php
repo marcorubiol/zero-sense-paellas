@@ -313,6 +313,12 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_intolerances}',
+            'label' => 'Intolerances & Allergies',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -440,6 +446,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderLanguage($post, true);
         }
 
+        if ($tag === '{woo_zs_intolerances}') {
+            return $this->getMetaBoxFieldValue('intolerances', $post);
+        }
+
         return $tag;
     }
 
@@ -493,6 +503,8 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_zs_order_language}', $this->getOrderLanguage($post), $content);
         $content = str_replace('{woo_zs_order_language_name}', $this->getOrderLanguage($post, true), $content);
+
+        $content = str_replace('{woo_zs_intolerances}', $this->getMetaBoxFieldValue('intolerances', $post), $content);
 
         return $content;
     }
