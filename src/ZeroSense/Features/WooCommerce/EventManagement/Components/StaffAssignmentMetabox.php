@@ -315,6 +315,17 @@ class StaffAssignmentMetabox
                                 'align-items': 'center'
                             });
                             
+                            // Destroy selectWoo before hiding
+                            if ($select.hasClass('select2-hidden-accessible')) {
+                                $select.selectWoo('destroy');
+                            }
+                            
+                            $select.addClass('zs-hidden');
+                            $display.removeClass('zs-hidden');
+                            
+                            // Show "Saving..." while saving
+                            $editBtn.text('<?php echo esc_js(__('Saving...', 'zero-sense')); ?>').prop('disabled', true);
+                            
                             // Save via AJAX
                             var orderId = $('#post_ID').val() || $('input[name="post_ID"]').val();
                             if (!orderId) {
@@ -346,21 +357,27 @@ class StaffAssignmentMetabox
                                         // Visual feedback
                                         $editBtn.text('<?php echo esc_js(__('Saved!', 'zero-sense')); ?>');
                                         setTimeout(function() {
-                                            $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
+                                            $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                                         }, 1500);
+                                    } else {
+                                        $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                                     }
+                                }).fail(function() {
+                                    $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                                 });
+                            } else {
+                                // No AJAX save needed
+                                $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                             }
+                        } else {
+                            // No selection, just hide select and show display
+                            if ($select.hasClass('select2-hidden-accessible')) {
+                                $select.selectWoo('destroy');
+                            }
+                            $select.addClass('zs-hidden');
+                            $display.removeClass('zs-hidden');
+                            $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
                         }
-                        
-                        // Destroy selectWoo before hiding
-                        if ($select.hasClass('select2-hidden-accessible')) {
-                            $select.selectWoo('destroy');
-                        }
-                        
-                        $select.addClass('zs-hidden');
-                        $display.removeClass('zs-hidden');
-                        $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
                     } else {
                         // Edit mode - show select, hide display
                         $display.addClass('zs-hidden');
