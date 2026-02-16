@@ -254,6 +254,9 @@ class EventDetailsMetabox
                                 🔄 <?php esc_html_e('Auto', 'zero-sense'); ?>
                             </button>
                         </div>
+                        <p class="description" style="margin-top: 4px; font-size: 12px; color: #646970;">
+                            <?php esc_html_e('Click Auto to set this 30 minutes before Paellas Service Time', 'zero-sense'); ?>
+                        </p>
                     </div>
                     
                     <div class="zs-field">
