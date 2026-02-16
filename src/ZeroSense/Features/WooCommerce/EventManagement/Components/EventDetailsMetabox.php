@@ -111,12 +111,12 @@ class EventDetailsMetabox
         <div class="zs-event-details-wrapper">
             <!-- Guest Information -->
             <div class="zs-field-group">
-                <h3><?php esc_html_e('Guest Information', 'zero-sense'); ?></h3>
+                <h3><?php esc_html_e('Guest information', 'zero-sense'); ?></h3>
                 
                 <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_total_guests">
-                            <?php esc_html_e('Total Guests', 'zero-sense'); ?>
+                            <?php esc_html_e('Total guests', 'zero-sense'); ?>
                         </label>
                         <input type="number" 
                                id="event_total_guests" 
@@ -154,7 +154,7 @@ class EventDetailsMetabox
                     
                     <div class="zs-field">
                         <label for="event_children_0_to_4">
-                            <?php esc_html_e('Children 0-4 years (FREE)', 'zero-sense'); ?>
+                            <?php esc_html_e('Children 0-4 years (free)', 'zero-sense'); ?>
                         </label>
                         <input type="number" 
                                id="event_children_0_to_4" 
@@ -167,7 +167,7 @@ class EventDetailsMetabox
 
                 <div class="zs-field">
                     <label for="event_intolerances">
-                        <?php esc_html_e('Allergies / intolerances', 'zero-sense'); ?>
+                        <?php esc_html_e('Allergies / Intolerances', 'zero-sense'); ?>
                     </label>
                     <textarea id="event_intolerances" name="event_intolerances" rows="4" class="widefat"><?php echo esc_textarea(is_string($intolerances) ? $intolerances : ''); ?></textarea>
                 </div>
@@ -175,11 +175,11 @@ class EventDetailsMetabox
 
             <!-- Service Location -->
             <div class="zs-field-group">
-                <h3><?php esc_html_e('Service Location', 'zero-sense'); ?></h3>
+                <h3><?php esc_html_e('Service location', 'zero-sense'); ?></h3>
                 
                 <div class="zs-field">
                     <label for="event_service_location">
-                        <?php esc_html_e('Service Location', 'zero-sense'); ?>
+                        <?php esc_html_e('Service location', 'zero-sense'); ?>
                     </label>
                     <select id="event_service_location" name="event_service_location">
                         <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
@@ -196,12 +196,12 @@ class EventDetailsMetabox
 
             <!-- Event Timing -->
             <div class="zs-field-group">
-                <h3><?php esc_html_e('Event Timing', 'zero-sense'); ?></h3>
+                <h3><?php esc_html_e('Event timing', 'zero-sense'); ?></h3>
                 
                 <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_date">
-                            <?php esc_html_e('Event Date', 'zero-sense'); ?>
+                            <?php esc_html_e('Event date', 'zero-sense'); ?>
                         </label>
                         <input type="date" 
                                id="event_date" 
@@ -249,12 +249,12 @@ class EventDetailsMetabox
 
             <!-- Event Details -->
             <div class="zs-field-group">
-                <h3><?php esc_html_e('Additional Details', 'zero-sense'); ?></h3>
+                <h3><?php esc_html_e('Additional details', 'zero-sense'); ?></h3>
                 
                 <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_type">
-                            <?php esc_html_e('Event Type', 'zero-sense'); ?>
+                            <?php esc_html_e('Event type', 'zero-sense'); ?>
                         </label>
                         <select id="event_type" name="event_type" class="widefat">
                             <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
@@ -268,7 +268,7 @@ class EventDetailsMetabox
                     
                     <div class="zs-field">
                         <label for="event_how_found_us">
-                            <?php esc_html_e('How Found Us', 'zero-sense'); ?>
+                            <?php esc_html_e('How found us', 'zero-sense'); ?>
                         </label>
                         <select id="event_how_found_us" name="event_how_found_us" class="widefat">
                             <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>

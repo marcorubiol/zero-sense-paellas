@@ -66,20 +66,20 @@ class MetaKeys
     public static function getLabels(): array
     {
         return [
-            self::TOTAL_GUESTS => __('Total Guests', 'zero-sense'),
+            self::TOTAL_GUESTS => __('Total guests', 'zero-sense'),
             self::ADULTS => __('Adults', 'zero-sense'),
             self::CHILDREN_5_TO_8 => __('Children 5-8 years (40%)', 'zero-sense'),
-            self::CHILDREN_0_TO_4 => __('Children 0-4 years (FREE)', 'zero-sense'),
-            self::SERVICE_LOCATION => __('Service Location', 'zero-sense'),
-            self::ADDRESS => __('Event Address', 'zero-sense'),
+            self::CHILDREN_0_TO_4 => __('Children 0-4 years (free)', 'zero-sense'),
+            self::SERVICE_LOCATION => __('Service location', 'zero-sense'),
+            self::ADDRESS => __('Event address', 'zero-sense'),
             self::CITY => __('City', 'zero-sense'),
-            self::LOCATION_LINK => __('Location Link', 'zero-sense'),
-            self::EVENT_DATE => __('Event Date', 'zero-sense'),
+            self::LOCATION_LINK => __('Location link', 'zero-sense'),
+            self::EVENT_DATE => __('Event date', 'zero-sense'),
             self::TEAM_ARRIVAL_TIME => __('Team arrival time', 'zero-sense'),
             self::SERVING_TIME => __('Service time', 'zero-sense'),
             self::START_TIME => __('Event start time', 'zero-sense'),
-            self::EVENT_TYPE => __('Event Type', 'zero-sense'),
-            self::HOW_FOUND_US => __('How Found Us', 'zero-sense'),
+            self::EVENT_TYPE => __('Event type', 'zero-sense'),
+            self::HOW_FOUND_US => __('How found us', 'zero-sense'),
             self::INTOLERANCES => __('Allergies / intolerances', 'zero-sense'),
         ];
     }

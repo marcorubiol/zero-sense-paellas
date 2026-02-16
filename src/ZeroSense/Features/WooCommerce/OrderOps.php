@@ -410,7 +410,7 @@ class OrderOps implements FeatureInterface
         $registry = MetaFieldRegistry::getInstance();
 
         $registry->register(self::META_OPS_NOTES, [
-            'label' => 'Operational Notes',
+            'label' => 'Operational notes',
             'type' => 'textarea',
             'translatable' => false,
             'legacy_keys' => [],
@@ -418,7 +418,7 @@ class OrderOps implements FeatureInterface
         ]);
 
         $registry->register(self::META_OPS_MATERIAL, [
-            'label' => 'Material & Logistics',
+            'label' => 'Material & logistics',
             'type' => 'json',
             'translatable' => false,
             'legacy_keys' => [],
@@ -426,7 +426,7 @@ class OrderOps implements FeatureInterface
         ]);
 
         $registry->register('wpml_language', [
-            'label' => 'Order Language',
+            'label' => 'Order language',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
@@ -434,7 +434,7 @@ class OrderOps implements FeatureInterface
         ]);
 
         $registry->register('zs_event_public_token', [
-            'label' => 'Event Public Token',
+            'label' => 'Event public token',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
@@ -442,7 +442,7 @@ class OrderOps implements FeatureInterface
         ]);
 
         $registry->register('_zs_event_media', [
-            'label' => 'Event Media',
+            'label' => 'Event media',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
@@ -450,7 +450,7 @@ class OrderOps implements FeatureInterface
         ]);
 
         $registry->register('_zs_last_modified', [
-            'label' => 'Last Modified',
+            'label' => 'Last modified',
             'type' => 'date',
             'translatable' => false,
             'legacy_keys' => [],
@@ -458,7 +458,7 @@ class OrderOps implements FeatureInterface
         ]);
 
         $registry->register('promo_code', [
-            'label' => 'Promo Code',
+            'label' => 'Promo code',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['zs_event_promo_code'],
