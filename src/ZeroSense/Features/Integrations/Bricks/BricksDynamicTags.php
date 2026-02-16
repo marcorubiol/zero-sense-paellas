@@ -159,6 +159,18 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $tags[] = [
+            'name' => '{woo_order_id}',
+            'label' => 'Order ID',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_order_number}',
+            'label' => 'Order Number',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
             'name' => '{woo_order_note}',
             'label' => 'Customer Note',
             'group' => 'WooCommerce',
@@ -245,6 +257,14 @@ class BricksDynamicTags implements FeatureInterface
             return $tag;
         }
 
+        if ($tag === '{woo_order_id}') {
+            return $this->getOrderId($post);
+        }
+
+        if ($tag === '{woo_order_number}') {
+            return $this->getOrderNumber($post);
+        }
+
         if ($tag === '{woo_order_note}') {
             return $this->getOrderNote($post);
         }
@@ -306,6 +326,8 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getShippingFieldValue($field, $post);
         });
 
+        $content = str_replace('{woo_order_id}', $this->getOrderId($post), $content);
+        $content = str_replace('{woo_order_number}', $this->getOrderNumber($post), $content);
         $content = str_replace('{woo_order_note}', $this->getOrderNote($post), $content);
 
         $content = $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
@@ -568,6 +590,31 @@ class BricksDynamicTags implements FeatureInterface
 
         $note = $order->get_customer_note();
         return is_string($note) ? $note : '';
+    }
+
+    private function getOrderId($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order ID');
+        }
+
+        return (string) $orderId;
+    }
+
+    private function getOrderNumber($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Number');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        return (string) $order->get_order_number();
     }
 
     private function getMetaBoxFieldValue(string $field, $post): string
