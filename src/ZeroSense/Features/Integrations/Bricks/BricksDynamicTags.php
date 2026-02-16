@@ -184,6 +184,12 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
+        $tags[] = [
+            'name' => '{woo_mb_event_service_location_name}',
+            'label' => 'Event Service Location (Name)',
+            'group' => 'WooCommerce',
+        ];
+
         foreach (self::OPS_FIELDS as $field => $label) {
             $tags[] = [
                 'name' => '{woo_ops_' . $field . '}',
@@ -279,6 +285,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getShippingFieldValue($field, $post);
         }
 
+        if ($tag === '{woo_mb_event_service_location_name}') {
+            return $this->getServiceLocationName($post);
+        }
+
         if (strpos($tag, '{woo_mb_') === 0) {
             $field = $this->stripTag($tag, 'woo_mb_');
             return $this->getMetaBoxFieldValue($field, $post);
@@ -329,6 +339,8 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{woo_order_id}', $this->getOrderId($post), $content);
         $content = str_replace('{woo_order_number}', $this->getOrderNumber($post), $content);
         $content = str_replace('{woo_order_note}', $this->getOrderNote($post), $content);
+
+        $content = str_replace('{woo_mb_event_service_location_name}', $this->getServiceLocationName($post), $content);
 
         $content = $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
             return $this->getMetaBoxFieldValue($field, $post);
@@ -615,6 +627,43 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return (string) $order->get_order_number();
+    }
+
+    private function getServiceLocationName($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Service Location Name');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $termId = $order->get_meta('zs_event_service_location', true);
+        if (!is_numeric($termId) || $termId <= 0) {
+            return '';
+        }
+
+        $term = get_term((int) $termId, 'service-area');
+        if (!$term instanceof \WP_Term) {
+            return '';
+        }
+
+        // Get translated term name if WPML is active
+        if (defined('ICL_SITEPRESS_VERSION')) {
+            $currentLang = apply_filters('wpml_current_language', null);
+            $translatedTermId = apply_filters('wpml_object_id', $term->term_id, 'service-area', false, $currentLang);
+            if ($translatedTermId && $translatedTermId !== $term->term_id) {
+                $translatedTerm = get_term($translatedTermId, 'service-area');
+                if ($translatedTerm instanceof \WP_Term) {
+                    return $translatedTerm->name;
+                }
+            }
+        }
+
+        return $term->name;
     }
 
     private function getMetaBoxFieldValue(string $field, $post): string
