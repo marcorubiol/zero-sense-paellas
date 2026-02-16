@@ -2124,7 +2124,7 @@ class BricksDynamicTags implements FeatureInterface
             :where(.zs-event-ingredients thead) { background: #333; color: white; }
             :where(.zs-event-ingredients th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
             :where(.zs-event-ingredients td) { padding: 8px; border: 1px solid #ddd; }
-            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #e3f2fd; }
+            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #e65100; }
             :where(.zs-event-ingredients .zs-col-adults),
             :where(.zs-event-ingredients .zs-col-children),
             :where(.zs-event-ingredients .zs-col-babies) { text-align: center; }
@@ -2146,6 +2146,12 @@ class BricksDynamicTags implements FeatureInterface
             $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('bebés (0-4 años)', 'zero-sense');
         }
         $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('pax equivalentes', 'zero-sense') . '</strong>';
+        $html .= '<br><small style="color: #666; margin-top: 5px; display: block;">';
+        $html .= esc_html__('Multiplicadores:', 'zero-sense') . ' ';
+        $html .= esc_html__('Adultos', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT));
+        $html .= ', ' . esc_html__('Niños', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT));
+        $html .= ', ' . esc_html__('Bebés', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::BABY_WEIGHT));
+        $html .= '</small>';
         $html .= '</div>';
 
         // Ingredients table
@@ -2154,12 +2160,12 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '<tr>';
         $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
         $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-adults">' . esc_html__('Adultos', 'zero-sense') . ' (' . esc_html($adults) . ')</th>';
+        $html .= '<th class="zs-col-adults">' . esc_html__('Adultos', 'zero-sense') . ' (' . esc_html($adults) . ') ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT)) . '</th>';
         if ($children > 0) {
-            $html .= '<th class="zs-col-children">' . esc_html__('Niños', 'zero-sense') . ' (' . esc_html($children) . ')</th>';
+            $html .= '<th class="zs-col-children">' . esc_html__('Niños', 'zero-sense') . ' (' . esc_html($children) . ') ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT)) . '</th>';
         }
         if ($babies > 0) {
-            $html .= '<th class="zs-col-babies">' . esc_html__('Bebés', 'zero-sense') . ' (' . esc_html($babies) . ')</th>';
+            $html .= '<th class="zs-col-babies">' . esc_html__('Bebés', 'zero-sense') . ' (' . esc_html($babies) . ') ×' . esc_html($this->formatNumber(self::BABY_WEIGHT)) . '</th>';
         }
         $html .= '</tr>';
         $html .= '</thead>';
