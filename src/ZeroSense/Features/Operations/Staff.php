@@ -50,6 +50,18 @@ class Staff implements FeatureInterface
         add_action('admin_enqueue_scripts', [$this, 'enqueueRoleOrderingAssets']);
         add_action('admin_print_footer_scripts', [$this, 'printRoleOrderingScript']);
         add_action('wp_ajax_zs_update_role_order', [$this, 'ajaxUpdateRoleOrder']);
+        add_filter('get_terms_args', [$this, 'orderRoleTerms'], 10, 2);
+    }
+    
+    public function orderRoleTerms(array $args, array $taxonomies): array
+    {
+        // Only apply to our staff role taxonomy
+        if (in_array(self::TAX_ROLE, $taxonomies, true)) {
+            $args['orderby'] = 'meta_value_num';
+            $args['meta_key'] = 'role_order';
+            $args['order'] = 'ASC';
+        }
+        return $args;
     }
     
     public function enqueueRoleOrderingAssets(string $hook): void

@@ -124,7 +124,6 @@ class StaffAssignmentMetabox
         }
 
         $roles = $this->getStaffRoles();
-        $allStaff = $this->getAllStaff();
 
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
         ?>
@@ -134,6 +133,9 @@ class StaffAssignmentMetabox
                 $assignedStaff = array_filter($staffAssignments, function($assignment) use ($roleSlug) {
                     return isset($assignment['role']) && $assignment['role'] === $roleSlug;
                 });
+                
+                // Get staff filtered by this specific role
+                $roleStaff = $this->getAllStaff($roleSlug);
                 ?>
                 
                 <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
@@ -428,16 +430,28 @@ class StaffAssignmentMetabox
         return $roles;
     }
 
-    private function getAllStaff(): array
+    private function getAllStaff(string $roleSlug = ''): array
     {
-        $staff = get_posts([
+        $args = [
             'post_type' => self::STAFF_CPT,
             'post_status' => 'publish',
             'numberposts' => -1,
             'orderby' => 'title',
             'order' => 'ASC',
-            'suppress_filters' => true,
-        ]);
+        ];
+        
+        // Filter by role if provided
+        if (!empty($roleSlug)) {
+            $args['tax_query'] = [
+                [
+                    'taxonomy' => self::STAFF_TAX,
+                    'field' => 'slug',
+                    'terms' => $roleSlug,
+                ],
+            ];
+        }
+
+        $staff = get_posts($args);
 
         return is_array($staff) ? $staff : [];
     }
