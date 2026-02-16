@@ -2064,12 +2064,42 @@ class BricksDynamicTags implements FeatureInterface
             return $ta <=> $tb;
         });
 
-        $html = '<table class="zs-event-ingredients">';
-        $html .= '<thead><tr>';
-        $html .= '<th>' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
-        $html .= '<th style="text-align:right;">' . esc_html__('Total', 'zero-sense') . '</th>';
-        $html .= '<th>' . esc_html__('Unidad', 'zero-sense') . '</th>';
-        $html .= '</tr></thead>';
+        // Get guest counts for header
+        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
+        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
+
+        $html = '<div class="zs-ingredients-wrapper">';
+        
+        // Info header with guest breakdown
+        $html .= '<div class="zs-ingredients-info" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px;">';
+        $html .= '<strong>' . esc_html__('Comensales:', 'zero-sense') . '</strong> ';
+        $html .= esc_html($adults) . ' ' . esc_html__('adultos', 'zero-sense');
+        if ($children > 0) {
+            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('niños (5-8 años)', 'zero-sense');
+        }
+        if ($babies > 0) {
+            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('bebés (0-4 años)', 'zero-sense');
+        }
+        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('pax equivalentes', 'zero-sense') . '</strong>';
+        $html .= '</div>';
+
+        // Ingredients table
+        $html .= '<table class="zs-event-ingredients" style="width: 100%; border-collapse: collapse;">';
+        $html .= '<thead>';
+        $html .= '<tr style="background: #333; color: white;">';
+        $html .= '<th style="padding: 12px; text-align: left; border: 1px solid #ddd;">' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
+        $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #2c5aa0;">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
+        $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd;">' . esc_html__('Unidad', 'zero-sense') . '</th>';
+        $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #f9f9f9; color: #666; font-size: 0.9em;">' . esc_html__('Adultos', 'zero-sense') . '<br>(' . esc_html($adults) . ')</th>';
+        if ($children > 0) {
+            $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #f9f9f9; color: #666; font-size: 0.9em;">' . esc_html__('Niños', 'zero-sense') . '<br>(' . esc_html($children) . ')</th>';
+        }
+        if ($babies > 0) {
+            $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #f9f9f9; color: #666; font-size: 0.9em;">' . esc_html__('Bebés', 'zero-sense') . '<br>(' . esc_html($babies) . ')</th>';
+        }
+        $html .= '</tr>';
+        $html .= '</thead>';
         $html .= '<tbody>';
 
         foreach ($totals as $t) {
@@ -2086,15 +2116,28 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
+            // Calculate per-person amounts for reference
+            $perAdult = $adults > 0 ? $qty / $eqTotal : 0;
+            $perChild = $children > 0 ? ($qty / $eqTotal) * self::CHILD_WEIGHT : 0;
+            $perBaby = $babies > 0 ? ($qty / $eqTotal) * self::BABY_WEIGHT : 0;
+
             $html .= '<tr>';
-            $html .= '<td>' . esc_html($termName) . '</td>';
-            $html .= '<td style="text-align:right;">' . esc_html($this->formatNumber($qty)) . '</td>';
-            $html .= '<td>' . esc_html($unit) . '</td>';
+            $html .= '<td style="padding: 10px; border: 1px solid #ddd;"><strong>' . esc_html($termName) . '</strong></td>';
+            $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #e3f2fd; font-weight: bold; font-size: 1.1em;">' . esc_html($this->formatNumber($qty)) . '</td>';
+            $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' . esc_html($unit) . '</td>';
+            $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #666; font-size: 0.9em;">' . esc_html($this->formatNumber($perAdult * $adults)) . '</td>';
+            if ($children > 0) {
+                $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #666; font-size: 0.9em;">' . esc_html($this->formatNumber($perChild * $children)) . '</td>';
+            }
+            if ($babies > 0) {
+                $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #666; font-size: 0.9em;">' . esc_html($this->formatNumber($perBaby * $babies)) . '</td>';
+            }
             $html .= '</tr>';
         }
 
         $html .= '</tbody>';
         $html .= '</table>';
+        $html .= '</div>';
 
         return $html;
     }
