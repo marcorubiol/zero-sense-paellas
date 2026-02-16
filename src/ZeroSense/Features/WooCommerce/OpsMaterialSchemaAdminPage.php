@@ -486,12 +486,32 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     {
         global $wpdb;
         
+        // Debug: Check what data exists
+        $sample = $wpdb->get_row($wpdb->prepare(
+            "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
+            WHERE meta_key = 'zs_ops_material' 
+            LIMIT 1"
+        ));
+        
+        if ($sample) {
+            error_log('[ZS Schema] Sample meta_value for debugging: ' . $sample->meta_value);
+            error_log('[ZS Schema] Looking for key: ' . $key);
+        }
+        
+        // The meta_value is serialized PHP array, need to search for the key in serialized format
+        // Format in serialized array: s:9:"field_key";a:1:{s:5:"value";...}
+        $search_pattern = '%' . $wpdb->esc_like('s:' . strlen($key) . ':"' . $key . '"') . '%';
+        
+        error_log('[ZS Schema] Search pattern: ' . $search_pattern);
+        
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
             WHERE meta_key = 'zs_ops_material' 
             AND meta_value LIKE %s",
-            '%' . $wpdb->esc_like('"' . $key . '"') . '%'
+            $search_pattern
         ));
+        
+        error_log('[ZS Schema] Count for key "' . $key . '": ' . $count);
         
         return (int) $count;
     }

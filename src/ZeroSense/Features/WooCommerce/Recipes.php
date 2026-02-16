@@ -71,8 +71,6 @@ class Recipes implements FeatureInterface
 
     public function registerContentTypes(): void
     {
-        error_log('[ZS Recipes] registerContentTypes called');
-        
         register_post_type(self::CPT, [
             'labels' => [
                 'name' => __('Recipes', 'zero-sense'),
@@ -93,8 +91,6 @@ class Recipes implements FeatureInterface
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ]);
-        
-        error_log('[ZS Recipes] CPT registered: ' . self::CPT);
 
         register_taxonomy(self::TAX_INGREDIENT, [self::CPT], [
             'labels' => [
@@ -113,14 +109,10 @@ class Recipes implements FeatureInterface
             'show_admin_column' => false,
             'hierarchical' => false,
         ]);
-        
-        error_log('[ZS Recipes] Taxonomy registered: ' . self::TAX_INGREDIENT);
     }
 
     public function addRecipeMetabox(): void
     {
-        error_log('[ZS Recipes] addRecipeMetabox called');
-        
         add_meta_box(
             'zs_recipe_ingredients',
             __('Recipe ingredients', 'zero-sense'),
@@ -129,31 +121,22 @@ class Recipes implements FeatureInterface
             'normal',
             'high'
         );
-        
-        error_log('[ZS Recipes] Metabox added for CPT: ' . self::CPT);
     }
 
     public function removeDefaultMetaboxes(): void
     {
         // Remove default tags metabox for our CPT
         remove_meta_box('tagsdiv-' . self::TAX_INGREDIENT, self::CPT, 'side');
-        error_log('[ZS Recipes] Removed default tags metabox for: ' . self::TAX_INGREDIENT);
     }
 
     public function renderRecipeMetabox(WP_Post $post): void
     {
-        error_log('[ZS Recipes] renderRecipeMetabox called for post: ' . $post->ID);
-        error_log('[ZS Recipes] Post type: ' . $post->post_type);
-        
         if (!current_user_can('edit_post', $post->ID)) {
-            error_log('[ZS Recipes] User cannot edit post');
             return;
         }
 
         $ingredients = get_post_meta($post->ID, self::META_INGREDIENTS, true);
         $ingredients = is_array($ingredients) ? $ingredients : [];
-        
-        error_log('[ZS Recipes] Found ingredients: ' . count($ingredients));
 
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
 
@@ -463,10 +446,6 @@ class Recipes implements FeatureInterface
         }
 
         if ($screen->post_type === self::CPT) {
-            // Debug logging
-            error_log('[ZS Recipes] enqueueAdminAssets called for screen: ' . $screen->id);
-            error_log('[ZS Recipes] Hook: ' . $hook);
-            
             // Force enqueue WooCommerce styles
             wp_enqueue_style('woocommerce_admin_styles');
             
@@ -477,50 +456,48 @@ class Recipes implements FeatureInterface
             wp_enqueue_script('jquery-ui-core');
             wp_enqueue_script('jquery-ui-widget');
             wp_enqueue_script('jquery-ui-autocomplete');
-            
-            // Check if scripts are actually enqueued
-            global $wp_scripts;
-            if (isset($wp_scripts->registered['selectWoo'])) {
-                error_log('[ZS Recipes] selectWoo script registered successfully');
-            } else {
-                error_log('[ZS Recipes] selectWoo script NOT registered - this is the problem!');
-            }
         }
     }
 
     public function ajaxIngredientSearch(): void
     {
-        // Debug logging
-        error_log('[ZS Recipes] ajaxIngredientSearch called');
-        error_log('[ZS Recipes] GET data: ' . print_r($_GET, true));
-
         if (!current_user_can('edit_posts')) {
-            error_log('[ZS Recipes] User cannot edit posts');
             wp_send_json(['results' => []]);
         }
 
         $nonce = isset($_GET['nonce']) ? sanitize_text_field(wp_unslash((string) $_GET['nonce'])) : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
-            error_log('[ZS Recipes] Invalid nonce: ' . $nonce);
             wp_send_json(['results' => []]);
         }
 
         $q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
 
-        error_log('[ZS Recipes] Search query: "' . $q . '"');
-
+        // Get all ingredients (we'll filter manually for case-insensitive search)
         $terms = get_terms([
             'taxonomy' => self::TAX_INGREDIENT,
             'hide_empty' => false,
-            'number' => 25,
-            'search' => $q,
+            'number' => 100,
             'suppress_filters' => true,
         ]);
 
-        error_log('[ZS Recipes] get_terms result: ' . print_r($terms, true));
-
         $results = [];
-        if (is_array($terms)) {
+        if (is_array($terms) && $q !== '') {
+            // Normalize search query
+            $normalizedQuery = $this->normalizeIngredientName($q);
+            
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    // Normalize term name for comparison
+                    $normalizedTermName = $this->normalizeIngredientName($term->name);
+                    
+                    // Case-insensitive search
+                    if (mb_strpos($normalizedTermName, $normalizedQuery, 0, 'UTF-8') !== false) {
+                        $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
+                    }
+                }
+            }
+        } elseif (is_array($terms) && $q === '') {
+            // Empty query - return all ingredients
             foreach ($terms as $term) {
                 if ($term instanceof WP_Term) {
                     $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
@@ -528,7 +505,8 @@ class Recipes implements FeatureInterface
             }
         }
 
-        error_log('[ZS Recipes] Final results: ' . print_r($results, true));
+        // Limit results to 25
+        $results = array_slice($results, 0, 25);
 
         wp_send_json([
             'results' => $results,
@@ -537,54 +515,70 @@ class Recipes implements FeatureInterface
 
     public function ajaxIngredientCreate(): void
     {
-        // Debug logging
-        error_log('[ZS Recipes] ajaxIngredientCreate called');
-        error_log('[ZS Recipes] POST data: ' . print_r($_POST, true));
-
         if (!current_user_can('edit_posts')) {
-            error_log('[ZS Recipes] User cannot edit posts');
             wp_send_json_error(['message' => 'forbidden']);
         }
 
         $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash((string) $_POST['nonce'])) : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
-            error_log('[ZS Recipes] Invalid nonce: ' . $nonce);
             wp_send_json_error(['message' => 'invalid_nonce']);
         }
 
-        $name = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
-        if ($name === '') {
-            error_log('[ZS Recipes] Empty name');
+        $rawName = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
+        if ($rawName === '') {
             wp_send_json_error(['message' => 'empty']);
         }
 
-        error_log('[ZS Recipes] Creating ingredient: "' . $name . '"');
-
-        $existing = term_exists($name, self::TAX_INGREDIENT);
-        error_log('[ZS Recipes] term_exists result: ' . print_r($existing, true));
+        // Normalize for searching (lowercase, trim, clean spaces)
+        $normalizedName = $this->normalizeIngredientName($rawName);
         
-        if (is_array($existing) && isset($existing['term_id'])) {
-            error_log('[ZS Recipes] Ingredient exists, returning existing ID: ' . $existing['term_id']);
-            wp_send_json_success(['id' => (int) $existing['term_id'], 'text' => $name]);
-        }
-        if (is_int($existing)) {
-            error_log('[ZS Recipes] Ingredient exists (int), returning existing ID: ' . $existing);
-            wp_send_json_success(['id' => $existing, 'text' => $name]);
-        }
+        // Capitalize for display (Title Case)
+        $displayName = $this->capitalizeIngredientName($rawName);
 
-        $created = wp_insert_term($name, self::TAX_INGREDIENT);
-        error_log('[ZS Recipes] wp_insert_term result: ' . print_r($created, true));
-        
-        if (is_wp_error($created) || !is_array($created) || !isset($created['term_id'])) {
-            error_log('[ZS Recipes] Failed to create ingredient');
-            if (is_wp_error($created)) {
-                error_log('[ZS Recipes] WP Error: ' . $created->get_error_message());
+        // Search for existing ingredient using normalized name
+        $terms = get_terms([
+            'taxonomy' => self::TAX_INGREDIENT,
+            'hide_empty' => false,
+            'number' => 100,
+            'suppress_filters' => true,
+        ]);
+
+        // Check if normalized version already exists
+        if (is_array($terms)) {
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    $existingNormalized = $this->normalizeIngredientName($term->name);
+                    if ($existingNormalized === $normalizedName) {
+                        wp_send_json_success(['id' => (int) $term->term_id, 'text' => $term->name]);
+                    }
+                }
             }
+        }
+
+        // Create new ingredient with capitalized name
+        $created = wp_insert_term($displayName, self::TAX_INGREDIENT);
+        
+        if (is_wp_error($created)) {
+            
+            // Check if error is because term already exists
+            if ($created->get_error_code() === 'term_exists') {
+                $termId = $created->get_error_data('term_exists');
+                if ($termId) {
+                    $term = get_term($termId, self::TAX_INGREDIENT);
+                    if ($term instanceof WP_Term) {
+                        wp_send_json_success(['id' => (int) $term->term_id, 'text' => $term->name]);
+                    }
+                }
+            }
+            
+            wp_send_json_error(['message' => 'create_failed']);
+        }
+        
+        if (!is_array($created) || !isset($created['term_id'])) {
             wp_send_json_error(['message' => 'create_failed']);
         }
 
-        error_log('[ZS Recipes] Successfully created ingredient with ID: ' . $created['term_id']);
-        wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $name]);
+        wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $displayName]);
     }
 
     public function renderProductRecipeField(): void
@@ -669,6 +663,28 @@ class Recipes implements FeatureInterface
         $defaultLang = apply_filters('wpml_default_language', null);
         $originalId  = apply_filters('wpml_object_id', $termId, self::TAX_INGREDIENT, true, $defaultLang);
         return $originalId ? (int) $originalId : $termId;
+    }
+
+    private function normalizeIngredientName(string $name): string
+    {
+        // Trim whitespace
+        $name = trim($name);
+        
+        // Remove multiple spaces
+        $name = preg_replace('/\s+/', ' ', $name);
+        
+        // Convert to lowercase for comparison
+        return mb_strtolower($name, 'UTF-8');
+    }
+
+    private function capitalizeIngredientName(string $name): string
+    {
+        // Trim and clean spaces first
+        $name = trim($name);
+        $name = preg_replace('/\s+/', ' ', $name);
+        
+        // Capitalize first letter of each word
+        return mb_convert_case($name, MB_CASE_TITLE, 'UTF-8');
     }
 
     private function getAllowedUnits(): array
