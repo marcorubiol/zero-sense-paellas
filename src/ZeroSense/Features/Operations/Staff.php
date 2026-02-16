@@ -128,7 +128,7 @@ class Staff implements FeatureInterface
             'show_ui' => true,
             'show_in_menu' => true,
             'show_admin_column' => true,
-            'hierarchical' => false,
+            'hierarchical' => true,
         ]);
     }
 
