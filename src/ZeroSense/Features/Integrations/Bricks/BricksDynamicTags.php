@@ -143,7 +143,16 @@ class BricksDynamicTags implements FeatureInterface
     
     public function trackOrderModification(int $orderId): void
     {
-        update_post_meta($orderId, '_zs_last_modified', current_time('mysql'));
+        $timestamp = current_time('mysql');
+        update_post_meta($orderId, '_zs_last_modified', $timestamp);
+        
+        // Debug log
+        error_log(sprintf(
+            '[ZS] Order %d modified at %s. Hook: %s',
+            $orderId,
+            $timestamp,
+            current_action()
+        ));
     }
 
     /**
@@ -867,6 +876,13 @@ class BricksDynamicTags implements FeatureInterface
         // Get our custom tracked modification date
         $modified = $order->get_meta('_zs_last_modified', true);
         
+        // Debug log
+        error_log(sprintf(
+            '[ZS] Reading last modified for order %d: _zs_last_modified = "%s"',
+            $orderId,
+            $modified ?: 'EMPTY'
+        ));
+        
         // Fallback to post_modified if our custom field doesn't exist yet
         if (!$modified || $modified === '') {
             $postData = get_post($orderId);
@@ -874,6 +890,7 @@ class BricksDynamicTags implements FeatureInterface
                 return '';
             }
             $modified = $postData->post_modified;
+            error_log(sprintf('[ZS] Using fallback post_modified: %s', $modified));
         }
 
         if (!$modified || $modified === '0000-00-00 00:00:00') {
