@@ -1577,7 +1577,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html = '<div class="zs-event-media-gallery" style="max-width: 500px;">';
+        $html = '<div class="zs-event-media-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 500px;">';
         foreach ($ids as $id) {
             $url = wp_get_attachment_url((int) $id);
             $type = get_post_mime_type((int) $id);
@@ -1586,10 +1586,10 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             if (is_string($type) && strpos($type, 'video') !== false) {
-                $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls style="max-width: 100%; height: auto;"></video></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-video" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9;"><video src="' . esc_url($url) . '" controls style="width: 100%; height: auto; display: block;"></video></div>';
             } else {
                 $thumb = wp_get_attachment_image_url((int) $id, 'medium');
-                $html .= '<div class="zs-gallery-item zs-gallery-image"><a href="' . esc_url($url) . '" target="_blank" rel="noopener"><img src="' . esc_url($thumb ?: $url) . '" alt="" style="max-width: 100%; height: auto;"></a></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-image" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9;"><a href="' . esc_url($url) . '" target="_blank" rel="noopener" style="display: block;"><img src="' . esc_url($thumb ?: $url) . '" alt="" style="width: 100%; height: auto; display: block;"></a></div>';
             }
         }
         $html .= '</div>';
