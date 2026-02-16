@@ -180,8 +180,8 @@ class StaffAssignmentMetabox
                                         </span>
                                     </div>
                                     
-                                    <select class="zs-staff-select" 
-                                            style="flex: 1; max-width: 300px; display: none;"
+                                    <select class="zs-staff-select zs-hidden" 
+                                            style="flex: 1; max-width: 300px;"
                                             data-role="<?php echo esc_attr($roleSlug); ?>">
                                         <option value=""><?php esc_html_e('Select staff member...', 'zero-sense'); ?></option>
                                         <?php foreach ($roleStaff as $staff): ?>
@@ -273,13 +273,13 @@ class StaffAssignmentMetabox
                             $select.selectWoo('destroy');
                         }
                         
-                        $select.hide();
-                        $display.show();
+                        $select.addClass('zs-hidden');
+                        $display.removeClass('zs-hidden');
                         $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
                     } else {
                         // Edit mode - show select, hide display
-                        $display.hide();
-                        $select.show();
+                        $display.addClass('zs-hidden');
+                        $select.removeClass('zs-hidden');
                         
                         // Destroy existing selectWoo if present
                         if ($select.hasClass('select2-hidden-accessible')) {
@@ -349,7 +349,7 @@ class StaffAssignmentMetabox
                     var $newRow = $('<div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;"></div>');
                     
                     var $hiddenInput = $('<input type="hidden" class="zs-staff-hidden-input" name="zs_event_staff[' + role + '][]" value="">');
-                    var $display = $('<div class="zs-staff-display" style="flex: 1; display: none; gap: 10px; align-items: center;"><strong style="min-width: 150px;"></strong><span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;"></span></div>');
+                    var $display = $('<div class="zs-staff-display zs-hidden" style="flex: 1; gap: 10px; align-items: center;"><strong style="min-width: 150px;"></strong><span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;"></span></div>');
                     
                     var $select = $('<select class="zs-staff-select" style="flex: 1; max-width: 300px;" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
@@ -399,6 +399,9 @@ class StaffAssignmentMetabox
             }
             .zs-staff-role-section {
                 margin-bottom: 8px;
+            }
+            .zs-hidden {
+                display: none !important;
             }
         </style>
         <?php
