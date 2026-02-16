@@ -51,8 +51,27 @@ class Staff implements FeatureInterface
     
     public function addRolesSubmenu(): void
     {
+        // Add Staff Members as submenu under Event Operations
         add_submenu_page(
-            'edit.php?post_type=' . self::CPT,
+            'event-operations',
+            __('Staff Members', 'zero-sense'),
+            __('Staff Members', 'zero-sense'),
+            'edit_posts',
+            'edit.php?post_type=' . self::CPT
+        );
+        
+        // Add "Add New" submenu
+        add_submenu_page(
+            'event-operations',
+            __('Add staff member', 'zero-sense'),
+            __('Add new', 'zero-sense'),
+            'edit_posts',
+            'post-new.php?post_type=' . self::CPT
+        );
+        
+        // Add Staff Roles submenu
+        add_submenu_page(
+            'event-operations',
             __('Staff Roles', 'zero-sense'),
             __('Staff Roles', 'zero-sense'),
             'manage_categories',
@@ -86,7 +105,7 @@ class Staff implements FeatureInterface
             ],
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => 'event-operations',
+            'show_in_menu' => false, // Will be added manually to Event Operations
             'menu_position' => 57,
             'supports' => ['title'],
             'capability_type' => 'post',
