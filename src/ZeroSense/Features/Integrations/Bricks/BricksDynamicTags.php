@@ -1287,6 +1287,19 @@ class BricksDynamicTags implements FeatureInterface
             return (int) $post->ID;
         }
 
+        if (isset($_GET['zs_event_token']) && is_string($_GET['zs_event_token'])) {
+            $token = sanitize_text_field($_GET['zs_event_token']);
+            $orders = wc_get_orders([
+                'limit' => 1,
+                'meta_key' => 'zs_event_token',
+                'meta_value' => $token,
+                'return' => 'ids',
+            ]);
+            if (!empty($orders) && is_array($orders)) {
+                return (int) $orders[0];
+            }
+        }
+
         if (isset($_GET['order']) && is_numeric($_GET['order'])) {
             return (int) $_GET['order'];
         }
