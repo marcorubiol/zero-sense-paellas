@@ -107,7 +107,7 @@ class AdminOrderEventSheetLink implements FeatureInterface
         echo '<style>
             .zs-event-sheet-link {
                 display: grid;
-  place-items: center;
+                place-items: center;
                 width: 24px;
                 height: 24px;
                 padding: 2px;
@@ -126,6 +126,9 @@ class AdminOrderEventSheetLink implements FeatureInterface
                 width: 18px;
                 height: 18px;
                 line-height: 1;
+            }
+            .order-preview {
+                display: none;
             }
         </style>';
     }
