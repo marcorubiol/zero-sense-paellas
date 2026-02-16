@@ -46,6 +46,38 @@ class Staff implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
+        add_action('admin_footer', [$this, 'addEditRolesLink']);
+    }
+    
+    public function addEditRolesLink(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || $screen->post_type !== self::CPT) {
+            return;
+        }
+        
+        $edit_roles_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_ROLE . '&post_type=' . self::CPT);
+        ?>
+        <script>
+        jQuery(document).ready(function($) {
+            // Find the Staff Roles taxonomy metabox
+            var $taxonomyDiv = $('#tagsdiv-<?php echo esc_js(self::TAX_ROLE); ?>');
+            if ($taxonomyDiv.length) {
+                // Add edit roles link after the "separate tags with commas" text
+                var $addButton = $taxonomyDiv.find('.tagadd');
+                if ($addButton.length) {
+                    $addButton.after(
+                        '<p style="margin-top: 8px;">' +
+                        '<a href="<?php echo esc_js($edit_roles_url); ?>" class="button button-secondary" style="text-decoration: none;">' +
+                        '<?php echo esc_js(__('Edit Roles', 'zero-sense')); ?>' +
+                        '</a>' +
+                        '</p>'
+                    );
+                }
+            }
+        });
+        </script>
+        <?php
     }
 
     public function getPriority(): int
@@ -74,9 +106,8 @@ class Staff implements FeatureInterface
             ],
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => true,
-            'menu_position' => 56.1, // Right after Event Operations (56)
-            'menu_icon' => 'dashicons-groups',
+            'show_in_menu' => 'event-operations',
+            'menu_position' => 57,
             'supports' => ['title'],
             'capability_type' => 'post',
             'map_meta_cap' => true,
