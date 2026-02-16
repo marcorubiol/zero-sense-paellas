@@ -228,27 +228,17 @@ class Recipes implements FeatureInterface
 
         <script>
         (function($) {
-            console.log('Zero Sense Recipes: Initializing...');
-            
             var ajaxUrl = '<?php echo $ajax_url; ?>';
             var nonce = '<?php echo $nonce; ?>';
             var rowCount = <?php echo max(0, count($ingredients)); ?>;
             
-            // Debug: Check if jQuery and selectWoo are available
-            console.log('Zero Sense Recipes: jQuery available:', typeof jQuery !== 'undefined');
-            console.log('Zero Sense Recipes: selectWoo available:', typeof jQuery.fn.selectWoo !== 'undefined');
-            console.log('Zero Sense Recipes: Found selects:', $('.zs-ingredient-select').length);
-            
             function initSelect(element) {
-                console.log('Zero Sense Recipes: initSelect called on:', element);
-                
                 if (typeof jQuery.fn.selectWoo === 'undefined') {
                     console.error('Zero Sense Recipes: selectWoo not available!');
                     return;
                 }
                 
                 if (!$(element).data('select2')) {
-                    console.log('Initializing selectWoo on:', element);
     $(element).selectWoo({
                         width: '100%',
                         tags: true,
@@ -258,7 +248,6 @@ class Recipes implements FeatureInterface
                             if (term === '') {
                                 return null;
                             }
-                            console.log('Zero Sense Recipes: Creating tag for:', term);
                             return {
                                 id: term,
                                 text: term + ' (crear nuevo)',
@@ -274,7 +263,6 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
-                                console.log('Zero Sense Recipes: Searching for:', params.term);
                                 return {
                                     action: 'zs_ingredient_search',
                                     nonce: nonce,
@@ -282,7 +270,6 @@ class Recipes implements FeatureInterface
                                 };
                             },
                             processResults: function(data) {
-                                console.log('Zero Sense Recipes: Search results:', data);
                                 return data;
                             },
                             error: function(xhr, status, error) {
@@ -297,23 +284,17 @@ class Recipes implements FeatureInterface
                     });
                     
                     $(element).on('select2:select', function(e) {
-                        console.log('Zero Sense Recipes: Item selected:', e.params.data);
                         var data = e.params.data;
                         
                         // Check if it's a new tag (not an existing ingredient)
                         if (data && (data.newTag || String(parseInt(data.id, 10)) !== String(data.id))) {
-                            console.log('Zero Sense Recipes: New ingredient detected, creating...');
                             createIngredient(data.id, element);
                         }
                     });
-                } else {
-                    console.log('Zero Sense Recipes: Select already initialized on:', element);
                 }
             }
             
             function createIngredient(name, selectElement) {
-                console.log('Zero Sense Recipes: Creating ingredient:', name);
-                
                 $.ajax({
                     url: ajaxUrl,
                     method: 'POST',
@@ -323,12 +304,9 @@ class Recipes implements FeatureInterface
                         name: name
                     },
                     success: function(resp) {
-                        console.log('Zero Sense Recipes: Create response:', resp);
                         if (resp && resp.success && resp.data) {
                             var newId = resp.data.id;
                             var text = resp.data.text;
-                            
-                            console.log('Zero Sense Recipes: New ingredient created:', {id: newId, text: text});
                             
                             // Clear all options and set the new one
                             $(selectElement).empty();
@@ -338,27 +316,17 @@ class Recipes implements FeatureInterface
                             // Trigger change to update select2
                             $(selectElement).trigger('change');
                             $(selectElement).trigger('change.select2');
-                            
-                            console.log('Zero Sense Recipes: Select updated with new ingredient');
                         } else {
-                            console.error('Zero Sense Recipes: Create failed:', resp);
                             alert('Error al crear el ingrediente. Por favor, inténtalo de nuevo.');
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.error('Zero Sense Recipes: Create AJAX Error:', {
-                            status: status,
-                            error: error,
-                            responseText: xhr.responseText,
-                            readyState: xhr.readyState
-                        });
+                    error: function() {
                         alert('Error de conexión al crear el ingrediente.');
                     }
                 });
             }
             
             function addNewRow() {
-                console.log('Zero Sense Recipes: Adding new row');
                 var units = <?php echo json_encode(array_keys($this->getAllowedUnits())); ?>;
                 var unitLabels = <?php echo json_encode(array_values($this->getAllowedUnits())); ?>;
                 
@@ -385,27 +353,19 @@ class Recipes implements FeatureInterface
             
             // Initialize existing selects
             $(document).ready(function() {
-                console.log('Zero Sense Recipes: DOM ready');
-                console.log('Zero Sense Recipes: jQuery version:', $.fn.jquery);
-                console.log('Zero Sense Recipes: selectWoo available:', typeof jQuery.fn.selectWoo !== 'undefined');
-                
-                // Initialize all existing selects
-                $('.zs-ingredient-select').each(function(index, element) {
-                    console.log('Zero Sense Recipes: Processing select #' + index, element);
-                    initSelect(element);
+                $('.zs-ingredient-select').each(function() {
+                    initSelect(this);
                 });
-                
-                // Add row button
-                $('#zs-recipe-add-row').on('click', function() {
-                    console.log('Zero Sense Recipes: Add row button clicked');
-                    addNewRow();
-                });
-                
-                // Remove buttons
-                $(document).on('click', '.zs-recipe-remove', function() {
-                    console.log('Zero Sense Recipes: Remove button clicked');
-                    $(this).closest('tr').remove();
-                });
+            });
+            
+            // Add row button
+            $('#zs-recipe-add-row').on('click', function() {
+                addNewRow();
+            });
+            
+            // Remove buttons
+            $(document).on('click', '.zs-recipe-remove', function() {
+                $(this).closest('tr').remove();
             });
             
         })(jQuery);
@@ -546,23 +506,17 @@ class Recipes implements FeatureInterface
 
     public function ajaxIngredientCreate(): void
     {
-        error_log('[ZS Recipes] ajaxIngredientCreate called');
-        error_log('[ZS Recipes] POST data: ' . print_r($_POST, true));
-        
         if (!current_user_can('edit_posts')) {
-            error_log('[ZS Recipes] Permission denied');
             wp_send_json_error(['message' => 'forbidden']);
         }
 
         $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash((string) $_POST['nonce'])) : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
-            error_log('[ZS Recipes] Invalid nonce');
             wp_send_json_error(['message' => 'invalid_nonce']);
         }
 
         $rawName = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
         if ($rawName === '') {
-            error_log('[ZS Recipes] Empty name');
             wp_send_json_error(['message' => 'empty']);
         }
 
@@ -571,8 +525,6 @@ class Recipes implements FeatureInterface
         
         // Capitalize for display (Title Case)
         $displayName = $this->capitalizeIngredientName($rawName);
-        
-        error_log('[ZS Recipes] Raw: "' . $rawName . '", Normalized: "' . $normalizedName . '", Display: "' . $displayName . '"');
 
         // Search for existing ingredient using normalized name
         $terms = get_terms([

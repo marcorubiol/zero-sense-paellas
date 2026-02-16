@@ -209,6 +209,17 @@ class EventDetailsMetabox
                                value="<?php echo esc_attr($eventDateForInput); ?>" 
                                class="short">
                     </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_start_time">
+                            <?php esc_html_e('Event start time', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_start_time" 
+                               name="event_start_time" 
+                               value="<?php echo esc_attr($startTime); ?>" 
+                               class="short">
+                    </div>
                 </div>
                 
                 <div class="zs-field-row">
@@ -231,17 +242,6 @@ class EventDetailsMetabox
                                id="event_serving_time" 
                                name="event_serving_time" 
                                value="<?php echo esc_attr($servingTime); ?>" 
-                               class="short">
-                    </div>
-                    
-                    <div class="zs-field">
-                        <label for="event_start_time">
-                            <?php esc_html_e('Event start time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_start_time" 
-                               name="event_start_time" 
-                               value="<?php echo esc_attr($startTime); ?>" 
                                class="short">
                     </div>
                 </div>

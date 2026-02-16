@@ -164,7 +164,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                 </td>
                                 <td>
                                     <button type="button" class="button zs-ops-toggle-visibility" data-current-status="<?php echo esc_attr($status); ?>" title="<?php esc_attr_e('Hide field', 'zero-sense'); ?>">
-                                        <span class="dashicons dashicons-hidden" style="vertical-align: middle;"></span>
+                                        <span class="dashicons dashicons-hidden"></span>
                                         <span class="zs-ops-toggle-text"><?php esc_html_e('Hide', 'zero-sense'); ?></span>
                                     </button>
                                 </td>
@@ -176,13 +176,13 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                 <div class="tablenav top" style="max-width:1100px;">
                     <div class="alignleft actions">
                         <button type="button" class="button" id="zs-ops-schema-add">
-                            <span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span>
+                            <span class="dashicons dashicons-plus-alt"></span>
                             <?php esc_html_e('Add field', 'zero-sense'); ?>
                         </button>
                     </div>
                     <div class="alignright">
                         <button type="submit" class="button button-primary">
-                            <span class="dashicons dashicons-saved" style="vertical-align: middle;"></span>
+                            <span class="dashicons dashicons-saved"></span>
                             <?php esc_html_e('Save', 'zero-sense'); ?>
                         </button>
                     </div>
@@ -238,12 +238,12 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                     </td>
                                     <td>
                                         <button type="button" class="button zs-ops-toggle-visibility" data-current-status="<?php echo esc_attr($status); ?>" title="<?php esc_attr_e('Unhide field', 'zero-sense'); ?>">
-                                            <span class="dashicons dashicons-visibility" style="vertical-align: middle;"></span>
+                                            <span class="dashicons dashicons-visibility"></span>
                                             <span class="zs-ops-toggle-text"><?php esc_html_e('Unhide', 'zero-sense'); ?></span>
                                         </button>
                                         <?php if ($usageCount === 0) : ?>
                                             <button type="button" class="button zs-ops-delete-field" title="<?php esc_attr_e('Delete field permanently', 'zero-sense'); ?>">
-                                                <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
+                                                <span class="dashicons dashicons-trash"></span>
                                             </button>
                                         <?php endif; ?>
                                     </td>
@@ -369,7 +369,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                             '<td class="zs-ops-usage-count"><span class="zs-ops-usage-badge"><?php echo esc_js(sprintf(_n('%d order', '%d orders', 0, 'zero-sense'), 0)); ?></span></td>' +
                             '<td>' +
                                 '<button type="button" class="button zs-ops-toggle-visibility" data-current-status="active" title="<?php echo esc_js(__('Hide field', 'zero-sense')); ?>">' +
-                                    '<span class="dashicons dashicons-hidden" style="vertical-align: middle;"></span>' +
+                                    '<span class="dashicons dashicons-hidden"></span>' +
                                     '<span class="zs-ops-toggle-text"><?php echo esc_js(__('Hide', 'zero-sense')); ?></span>' +
                                 '</button>' +
                             '</td>';

@@ -105,27 +105,7 @@
     gap: 4px;
 }
 
-/* Toggle visibility button */
-.zs-ops-toggle-visibility {
-    padding: 6px 10px;
-    font-size: 13px;
-    line-height: 1.4;
-    display: inline-block;
-    vertical-align: middle;
-}
-.zs-ops-toggle-visibility .dashicons {
-    font-size: 16px;
-}
-.zs-ops-toggle-text {
-    vertical-align: middle;
-}
-
-/* Delete button (only for hidden fields with no data) */
-.zs-ops-delete-field {
-    padding: 6px 10px;
-    font-size: 13px;
-    line-height: 1.4;
-}
+/* Delete button hover state */
 .zs-ops-delete-field:hover {
     background-color: #dc3232;
     border-color: #dc3232;
@@ -133,4 +113,14 @@
 }
 .zs-ops-delete-field:hover .dashicons {
     color: #fff;
+}
+
+/* Standardize dashicon alignment in all schema buttons */
+.zs-ops-toggle-visibility .dashicons,
+.zs-ops-delete-field .dashicons,
+#zs-ops-schema-add .dashicons,
+.button-primary .dashicons {
+    vertical-align: text-bottom;
+    margin-right: 4px;
+    line-height: 1;
 }
