@@ -21,22 +21,15 @@ class OrderTotals
 
     public function renderAdminTotals(int $orderId): void
     {
-        // Debug log
-        error_log('ZS Deposits: renderAdminTotals called for order ID: ' . $orderId);
-        
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
-            error_log('ZS Deposits: Order not found for ID: ' . $orderId);
             return;
         }
 
         $depositInfo = Utils::getDepositInfo($order);
         $isDepositStatus = in_array($order->get_status(), ['deposit-paid', 'fully-paid'], true);
 
-        error_log('ZS Deposits: Deposit info - ' . print_r($depositInfo, true));
-
         if (($depositInfo['has_deposit'] ?? false) === false && !$isDepositStatus) {
-            error_log('ZS Deposits: No deposit found, skipping display');
             return;
         }
 
