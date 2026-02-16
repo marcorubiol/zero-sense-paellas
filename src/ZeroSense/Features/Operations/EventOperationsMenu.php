@@ -52,39 +52,12 @@ class EventOperationsMenu implements FeatureInterface
             __('Event Operations', 'zero-sense'),
             'manage_woocommerce',
             'event-operations',
-            [$this, 'renderDashboard'],
+            '__return_null',
             'dashicons-admin-tools',
             56
         );
-
-        add_submenu_page(
-            'event-operations',
-            __('Dashboard', 'zero-sense'),
-            __('Dashboard', 'zero-sense'),
-            'manage_woocommerce',
-            'event-operations',
-            [$this, 'renderDashboard']
-        );
-    }
-
-    public function renderDashboard(): void
-    {
-        ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Event Operations', 'zero-sense'); ?></h1>
-            
-            <div class="card" style="max-width: 800px; margin-top: 20px;">
-                <h2><?php esc_html_e('Welcome to Event Operations', 'zero-sense'); ?></h2>
-                <p><?php esc_html_e('Manage all operational aspects of your events from this central hub.', 'zero-sense'); ?></p>
-                
-                <h3><?php esc_html_e('Available Tools', 'zero-sense'); ?></h3>
-                <ul>
-                    <li><strong><?php esc_html_e('Staff Members', 'zero-sense'); ?>:</strong> <?php esc_html_e('Manage your event staff and assign them to orders', 'zero-sense'); ?></li>
-                    <li><strong><?php esc_html_e('Material & Logistics', 'zero-sense'); ?>:</strong> <?php esc_html_e('Configure material and logistics fields for orders', 'zero-sense'); ?></li>
-                    <li><strong><?php esc_html_e('Work Experience & Access', 'zero-sense'); ?>:</strong> <?php esc_html_e('Manage work experience settings', 'zero-sense'); ?></li>
-                </ul>
-            </div>
-        </div>
-        <?php
+        
+        // Remove the auto-generated submenu item
+        remove_submenu_page('event-operations', 'event-operations');
     }
 }
