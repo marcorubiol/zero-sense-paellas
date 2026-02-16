@@ -416,19 +416,32 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
 
                 function bindDeleteButtons(scope) {
                     var buttons = (scope || document).querySelectorAll('.zs-ops-delete-field');
+                    console.log('[Schema] Found ' + buttons.length + ' delete buttons to bind');
+                    
                     buttons.forEach(function(btn) {
-                        if (btn.dataset.deletebound) return;
+                        if (btn.dataset.deletebound) {
+                            console.log('[Schema] Button already bound, skipping');
+                            return;
+                        }
                         btn.dataset.deletebound = 'true';
                         
                         btn.addEventListener('click', function(e) {
+                            console.log('[Schema] Delete button clicked');
                             e.preventDefault();
                             e.stopPropagation();
                             
                             if (confirm(<?php echo json_encode(__('Are you sure you want to permanently delete this field? This action cannot be undone.', 'zero-sense')); ?>)) {
                                 var tr = btn.closest('tr');
                                 if (tr) {
+                                    var fieldKey = tr.getAttribute('data-field-key');
+                                    console.log('[Schema] Removing field: ' + fieldKey);
                                     tr.parentNode.removeChild(tr);
+                                    console.log('[Schema] Field removed from DOM');
+                                } else {
+                                    console.error('[Schema] Could not find TR element');
                                 }
+                            } else {
+                                console.log('[Schema] Delete cancelled by user');
                             }
                             return false;
                         });
