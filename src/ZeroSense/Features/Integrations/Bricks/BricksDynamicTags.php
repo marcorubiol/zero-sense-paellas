@@ -66,13 +66,10 @@ class BricksDynamicTags implements FeatureInterface
         $fields = [];
         
         foreach ($registry->getAllFields() as $key => $metadata) {
-            $legacyKeys = $metadata['legacy_keys'] ?? [];
-            if (!empty($legacyKeys)) {
-                foreach ($legacyKeys as $legacyKey) {
-                    if (!str_starts_with($legacyKey, '_') && !str_starts_with($legacyKey, 'zs_')) {
-                        $fields[$legacyKey] = $metadata['label'] ?? $legacyKey;
-                    }
-                }
+            // Use the main key (zs_) and strip the prefix for the tag name
+            if (str_starts_with($key, 'zs_')) {
+                $tagName = substr($key, 3); // Remove 'zs_' prefix
+                $fields[$tagName] = $metadata['label'] ?? $tagName;
             }
         }
         
