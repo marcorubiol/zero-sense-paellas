@@ -136,11 +136,20 @@ class StaffAssignmentMetabox
                 
                 // Get staff filtered by this specific role
                 $roleStaff = $this->getAllStaff($roleSlug);
+                
+                // Debug: show what we got
+                $debugInfo = sprintf(
+                    'Role: %s (slug: %s) - Found %d staff members',
+                    $roleName,
+                    $roleSlug,
+                    count($roleStaff)
+                );
                 ?>
                 
                 <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
                     <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;">
                         <?php echo esc_html($roleName); ?>
+                        <small style="font-weight: normal; color: #999; margin-left: 8px;"><?php echo esc_html($debugInfo); ?></small>
                     </h4>
                     
                     <div class="zs-staff-role-section" data-role="<?php echo esc_attr($roleSlug); ?>">
