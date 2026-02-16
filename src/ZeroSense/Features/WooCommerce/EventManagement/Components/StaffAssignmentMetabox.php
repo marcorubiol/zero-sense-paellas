@@ -126,7 +126,25 @@ class StaffAssignmentMetabox
         $roles = $this->getStaffRoles();
 
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
+        
+        // Prepare staff data by role for JavaScript
+        $staffByRole = [];
+        foreach ($roles as $roleSlug => $roleName) {
+            $roleStaffList = $this->getAllStaff($roleSlug);
+            $staffByRole[$roleSlug] = [];
+            foreach ($roleStaffList as $staff) {
+                $staffByRole[$roleSlug][] = [
+                    'id' => $staff->ID,
+                    'name' => $staff->post_title,
+                    'phone' => get_post_meta($staff->ID, self::META_PHONE, true),
+                    'email' => get_post_meta($staff->ID, self::META_EMAIL, true),
+                ];
+            }
+        }
         ?>
+        <script>
+        var zsStaffByRole = <?php echo wp_json_encode($staffByRole); ?>;
+        </script>
         <div class="zs-staff-assignment-wrapper">
             <?php foreach ($roles as $roleSlug => $roleName): ?>
                 <?php
@@ -354,21 +372,16 @@ class StaffAssignmentMetabox
                     var $select = $('<select class="zs-staff-select" style="flex: 1; max-width: 300px;" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
                     
-                    // Get staff options for this specific role from existing select in the same section
-                    var $existingSelect = $section.find('.zs-staff-select').first();
-                    console.log('Existing select found:', $existingSelect.length);
-                    if ($existingSelect.length) {
-                        var optionCount = 0;
-                        $existingSelect.find('option').each(function() {
-                            console.log('Option:', $(this).val(), $(this).text());
-                            if ($(this).val()) {
-                                $select.append($(this).clone());
-                                optionCount++;
-                            }
+                    // Get staff options from the global data
+                    if (typeof zsStaffByRole !== 'undefined' && zsStaffByRole[role]) {
+                        $.each(zsStaffByRole[role], function(index, staff) {
+                            var $option = $('<option></option>')
+                                .val(staff.id)
+                                .text(staff.name)
+                                .data('phone', staff.phone)
+                                .data('email', staff.email);
+                            $select.append($option);
                         });
-                        console.log('Cloned', optionCount, 'options');
-                    } else {
-                        console.log('No existing select found in section');
                     }
                     
                     var $editBtn = $('<button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
@@ -482,6 +495,9 @@ class StaffAssignmentMetabox
             return [];
         }
         
+        // Debug logging
+        error_log('Zero Sense: Raw terms from get_terms: ' . print_r($terms, true));
+        
         // Sort by role_order, then by name for terms without order
         usort($terms, function($a, $b) {
             $order_a = get_term_meta($a->term_id, 'role_order', true);
@@ -489,6 +505,8 @@ class StaffAssignmentMetabox
             
             $order_a = $order_a !== '' ? (int)$order_a : 999;
             $order_b = $order_b !== '' ? (int)$order_b : 999;
+            
+            error_log("Zero Sense: Comparing roles - {$a->name} (order: {$order_a}) vs {$b->name} (order: {$order_b})");
             
             if ($order_a === $order_b) {
                 return strcmp($a->name, $b->name);
@@ -503,6 +521,8 @@ class StaffAssignmentMetabox
                 $roles[$term->slug] = $term->name;
             }
         }
+        
+        error_log('Zero Sense: Final ordered roles: ' . print_r($roles, true));
         
         return $roles;
     }
