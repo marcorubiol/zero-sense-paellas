@@ -238,6 +238,25 @@ class EventDetailsMetabox
                     </div>
                     
                     <div class="zs-field">
+                        <label for="event_starters_service_time">
+                            <?php esc_html_e('Starters Service Time', 'zero-sense'); ?>
+                        </label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="time" 
+                                   id="event_starters_service_time" 
+                                   name="event_starters_service_time" 
+                                   value="<?php echo esc_attr($startersServiceTime); ?>" 
+                                   class="short">
+                            <button type="button" 
+                                    id="zs-recalculate-starters-time" 
+                                    class="button button-secondary"
+                                    title="<?php esc_attr_e('Recalculate based on Paellas Service Time (30 min before)', 'zero-sense'); ?>">
+                                🔄 <?php esc_html_e('Auto', 'zero-sense'); ?>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="zs-field">
                         <label for="event_serving_time">
                             <?php esc_html_e('Paellas Service Time', 'zero-sense'); ?>
                         </label>
@@ -245,17 +264,6 @@ class EventDetailsMetabox
                                id="event_serving_time" 
                                name="event_serving_time" 
                                value="<?php echo esc_attr($servingTime); ?>" 
-                               class="short">
-                    </div>
-                    
-                    <div class="zs-field">
-                        <label for="event_starters_service_time">
-                            <?php esc_html_e('Starters Service Time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_starters_service_time" 
-                               name="event_starters_service_time" 
-                               value="<?php echo esc_attr($startersServiceTime); ?>" 
                                class="short">
                     </div>
                 </div>
@@ -347,6 +355,71 @@ class EventDetailsMetabox
                 width: 150px;
             }
         </style>
+        
+        <script>
+        (function() {
+            'use strict';
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                const recalcBtn = document.getElementById('zs-recalculate-starters-time');
+                const paellasTimeInput = document.getElementById('event_serving_time');
+                const startersTimeInput = document.getElementById('event_starters_service_time');
+                
+                if (!recalcBtn || !paellasTimeInput || !startersTimeInput) {
+                    return;
+                }
+                
+                recalcBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const paellasTime = paellasTimeInput.value;
+                    
+                    if (!paellasTime) {
+                        alert('<?php esc_js_e('Please set Paellas Service Time first', 'zero-sense'); ?>');
+                        paellasTimeInput.focus();
+                        return;
+                    }
+                    
+                    // Calculate 30 minutes before
+                    const timeParts = paellasTime.split(':');
+                    if (timeParts.length !== 2) {
+                        alert('<?php esc_js_e('Invalid time format', 'zero-sense'); ?>');
+                        return;
+                    }
+                    
+                    let hours = parseInt(timeParts[0], 10);
+                    let minutes = parseInt(timeParts[1], 10);
+                    
+                    // Subtract 30 minutes
+                    minutes -= 30;
+                    
+                    if (minutes < 0) {
+                        minutes += 60;
+                        hours -= 1;
+                    }
+                    
+                    if (hours < 0) {
+                        hours += 24;
+                    }
+                    
+                    // Format back to HH:MM
+                    const startersTime = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+                    
+                    startersTimeInput.value = startersTime;
+                    
+                    // Visual feedback
+                    const originalText = recalcBtn.innerHTML;
+                    recalcBtn.innerHTML = '✓ <?php esc_js_e('Done', 'zero-sense'); ?>';
+                    recalcBtn.disabled = true;
+                    
+                    setTimeout(function() {
+                        recalcBtn.innerHTML = originalText;
+                        recalcBtn.disabled = false;
+                    }, 1500);
+                });
+            });
+        })();
+        </script>
         <?php
     }
 
