@@ -490,6 +490,30 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         // Format in serialized array: s:9:"field_key";a:1:{s:5:"value";...}
         $search_pattern = '%' . $wpdb->esc_like('s:' . strlen($key) . ':"' . $key . '"') . '%';
         
+        // Temporary debug: show actual data for new fields
+        if (strpos($key, '_') !== false && preg_match('/_\d+$/', $key)) {
+            $sample = $wpdb->get_results($wpdb->prepare(
+                "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
+                WHERE meta_key = %s
+                LIMIT 3",
+                'zs_ops_material'
+            ));
+            
+            error_log('[ZS Schema] === Debugging key: ' . $key . ' ===');
+            error_log('[ZS Schema] Search pattern: ' . $search_pattern);
+            
+            if ($sample) {
+                foreach ($sample as $row) {
+                    $data = maybe_unserialize($row->meta_value);
+                    $hasKey = is_array($data) && isset($data[$key]);
+                    error_log('[ZS Schema] Post ' . $row->post_id . ' has key "' . $key . '": ' . ($hasKey ? 'YES' : 'NO'));
+                    if ($hasKey) {
+                        error_log('[ZS Schema] Value: ' . print_r($data[$key], true));
+                    }
+                }
+            }
+        }
+        
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
             WHERE meta_key = %s
@@ -498,9 +522,8 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             $search_pattern
         ));
         
-        // Temporary debug: show actual query for new fields
         if (strpos($key, '_') !== false && preg_match('/_\d+$/', $key)) {
-            error_log('[ZS Schema] Key: ' . $key . ' | Pattern: ' . $search_pattern . ' | Count: ' . $count);
+            error_log('[ZS Schema] Final count: ' . $count);
         }
         
         return (int) $count;
