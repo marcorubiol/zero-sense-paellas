@@ -66,43 +66,23 @@ class AdminSectionTitles implements FeatureInterface
         // JavaScript para modificar títulos de metaboxes
         $script = <<<'JAVASCRIPT'
             jQuery(document).ready(function($) {
-                console.log('Zero Sense: Admin Section Titles script loaded');
-                
-                // Función para cambiar títulos
                 function changeMetaboxTitles() {
-                    var changed = 0;
-                    
-                    // Buscar h3 dentro de #order_data (donde están Billing y Shipping)
                     $('#order_data h3').each(function() {
                         var elem = $(this);
-                        var text = elem.text().trim();
-                        var firstWord = text.split(/\s+/)[0];
+                        var html = elem.html();
                         
-                        console.log('Found #order_data h3:', firstWord, 'Full text:', text.substring(0, 50));
-                        
-                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            // Preservar el contenido después del título
-                            var restContent = elem.html().replace(/^Billing|^Facturación/, '');
-                            elem.html('<span>👤 Client</span>' + restContent);
-                            changed++;
-                            console.log('Changed Billing to Client');
+                        if (html.indexOf('Billing') === 0 || html.indexOf('Facturación') === 0) {
+                            var restContent = html.replace(/^Billing\s*/i, '').replace(/^Facturación\s*/i, '');
+                            elem.html('👤 Client ' + restContent);
                         }
-                        if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            // Preservar el contenido después del título
-                            var restContent = elem.html().replace(/^Shipping|^Envío/, '');
-                            elem.html('<span>📍 Venue/Wedding Planner</span>' + restContent);
-                            changed++;
-                            console.log('Changed Shipping to Venue/Wedding Planner');
+                        if (html.indexOf('Shipping') === 0 || html.indexOf('Envío') === 0) {
+                            var restContent = html.replace(/^Shipping\s*/i, '').replace(/^Envío\s*/i, '');
+                            elem.html('📍 Venue/Wedding Planner ' + restContent);
                         }
                     });
-                    
-                    console.log('Zero Sense: Changed ' + changed + ' titles');
                 }
                 
-                // Ejecutar al cargar
                 changeMetaboxTitles();
-                
-                // Ejecutar después de delays
                 setTimeout(changeMetaboxTitles, 500);
                 setTimeout(changeMetaboxTitles, 1000);
                 setTimeout(changeMetaboxTitles, 2000);
