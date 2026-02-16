@@ -447,9 +447,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if ($tag === '{woo_zs_intolerances}') {
-            $value = $this->getMetaBoxFieldValue('intolerances', $post);
-            error_log(sprintf('[ZS] Intolerances value: "%s"', $value));
-            return $value;
+            return $this->getMetaBoxFieldValue('intolerances', $post);
         }
 
         return $tag;
