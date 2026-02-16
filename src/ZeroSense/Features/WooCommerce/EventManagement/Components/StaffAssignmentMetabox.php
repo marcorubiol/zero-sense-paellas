@@ -307,6 +307,14 @@ class StaffAssignmentMetabox
                             }
                             $display.find('.zs-staff-info').html(infoHtml);
                             
+                            // Ensure display is properly styled
+                            $display.css({
+                                'display': 'flex',
+                                'flex': '1',
+                                'gap': '10px',
+                                'align-items': 'center'
+                            });
+                            
                             // Save via AJAX
                             var orderId = $('#post_ID').val() || $('input[name="post_ID"]').val();
                             if (!orderId) {
