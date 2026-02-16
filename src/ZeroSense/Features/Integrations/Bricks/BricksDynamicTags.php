@@ -135,8 +135,10 @@ class BricksDynamicTags implements FeatureInterface
         add_filter('bricks/frontend/render_data', [$this, 'renderContent'], 10, 2);
         add_action('wp', [$this, 'maybeResetMetaBoxTranslations']);
         
-        // Track order modifications
+        // Track order modifications (multiple hooks to cover all cases)
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
+        add_action('woocommerce_update_order', [$this, 'trackOrderModification'], 999);
+        add_action('woocommerce_new_order', [$this, 'trackOrderModification'], 999);
     }
     
     public function trackOrderModification(int $orderId): void
