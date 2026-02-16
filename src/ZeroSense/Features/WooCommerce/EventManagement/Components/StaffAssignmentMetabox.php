@@ -301,15 +301,25 @@ class StaffAssignmentMetabox
 
     private function getStaffRoles(): array
     {
-        return [
-            'jefe-voluntarios' => __('Jefe de voluntarios', 'zero-sense'),
-            'cocineros' => __('Cocineros', 'zero-sense'),
-            'ayudantes' => __('Ayudantes', 'zero-sense'),
-            'camareros' => __('Camareros', 'zero-sense'),
-            'barra' => __('Barra', 'zero-sense'),
-            'coqueteles' => __('Coqueteles', 'zero-sense'),
-            'tallador-pernil' => __('Tallador de pernil', 'zero-sense'),
-        ];
+        $terms = get_terms([
+            'taxonomy' => self::STAFF_TAX,
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ]);
+        
+        if (is_wp_error($terms) || empty($terms)) {
+            return [];
+        }
+        
+        $roles = [];
+        foreach ($terms as $term) {
+            if ($term instanceof \WP_Term) {
+                $roles[$term->slug] = $term->name;
+            }
+        }
+        
+        return $roles;
     }
 
     private function getAllStaff(): array
