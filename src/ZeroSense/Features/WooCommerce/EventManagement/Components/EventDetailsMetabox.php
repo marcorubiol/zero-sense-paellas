@@ -250,8 +250,10 @@ class EventDetailsMetabox
                             <button type="button" 
                                     id="zs-recalculate-starters-time" 
                                     class="button button-secondary"
+                                    style="display: flex; align-items: center; gap: 4px;"
                                     title="<?php esc_attr_e('Recalculate based on Paellas Service Time (30 min before)', 'zero-sense'); ?>">
-                                🔄 <?php esc_html_e('Auto', 'zero-sense'); ?>
+                                <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                <?php esc_html_e('Auto', 'zero-sense'); ?>
                             </button>
                         </div>
                         <p class="description" style="margin-top: 4px; font-size: 12px; color: #646970;">
@@ -412,7 +414,7 @@ class EventDetailsMetabox
                     
                     // Visual feedback
                     const originalText = recalcBtn.innerHTML;
-                    recalcBtn.innerHTML = '✓ <?php echo esc_js(__('Done', 'zero-sense')); ?>';
+                    recalcBtn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px;"></span> <?php echo esc_js(__('Done', 'zero-sense')); ?>';
                     recalcBtn.disabled = true;
                     
                     setTimeout(function() {
