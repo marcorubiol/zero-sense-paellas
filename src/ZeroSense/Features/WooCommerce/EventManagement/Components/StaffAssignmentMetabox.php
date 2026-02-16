@@ -159,7 +159,7 @@ class StaffAssignmentMetabox
                                             style="flex: 1; max-width: 300px;"
                                             data-role="<?php echo esc_attr($roleSlug); ?>">
                                         <option value=""><?php esc_html_e('Select staff member...', 'zero-sense'); ?></option>
-                                        <?php foreach ($allStaff as $staff): ?>
+                                        <?php foreach ($roleStaff as $staff): ?>
                                             <option value="<?php echo esc_attr((string) $staff->ID); ?>" 
                                                     <?php selected($staffId, $staff->ID); ?>
                                                     data-phone="<?php echo esc_attr(get_post_meta($staff->ID, self::META_PHONE, true)); ?>"
@@ -286,14 +286,15 @@ class StaffAssignmentMetabox
                     var $select = $('<select name="zs_event_staff[' + role + '][]" class="zs-staff-select" style="flex: 1; max-width: 300px;" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
                     
-                    <?php foreach ($allStaff as $staff): ?>
-                    $select.append($('<option></option>')
-                        .val('<?php echo esc_js((string) $staff->ID); ?>')
-                        .text('<?php echo esc_js($staff->post_title); ?>')
-                        .data('phone', '<?php echo esc_js(get_post_meta($staff->ID, self::META_PHONE, true)); ?>')
-                        .data('email', '<?php echo esc_js(get_post_meta($staff->ID, self::META_EMAIL, true)); ?>')
-                    );
-                    <?php endforeach; ?>
+                    // Get staff options for this specific role from existing select in the same section
+                    var $existingSelect = $section.find('.zs-staff-select').first();
+                    if ($existingSelect.length) {
+                        $existingSelect.find('option').each(function() {
+                            if ($(this).val()) {
+                                $select.append($(this).clone());
+                            }
+                        });
+                    }
                     
                     var $info = $('<span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;"></span>');
                     var $removeBtn = $('<button type="button" class="button zs-staff-remove" style="flex-shrink: 0;"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
