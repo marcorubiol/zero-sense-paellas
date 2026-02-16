@@ -47,7 +47,9 @@ class Recipes implements FeatureInterface
 
         add_action('add_meta_boxes', [$this, 'addRecipeMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveRecipeMetabox'], 10, 2);
-        add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
+        
+        // Higher priority to load before asset blockers
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets'], 5);
 
         add_action('wp_ajax_zs_ingredient_search', [$this, 'ajaxIngredientSearch']);
         add_action('wp_ajax_zs_ingredient_create', [$this, 'ajaxIngredientCreate']);
@@ -363,8 +365,38 @@ class Recipes implements FeatureInterface
         }
 
         if ($screen->post_type === self::CPT) {
+            // Debug logging
+            error_log('[ZS Recipes] enqueueAdminAssets called for screen: ' . $screen->id);
+            error_log('[ZS Recipes] Hook: ' . $hook);
+            
+            // Force enqueue WooCommerce styles
             wp_enqueue_style('woocommerce_admin_styles');
+            
+            // Force enqueue selectWoo with higher priority
             wp_enqueue_script('selectWoo');
+            
+            // Also enqueue jQuery UI (selectWoo dependency)
+            wp_enqueue_script('jquery-ui-core');
+            wp_enqueue_script('jquery-ui-widget');
+            wp_enqueue_script('jquery-ui-autocomplete');
+            
+            // Check if scripts are actually enqueued
+            global $wp_scripts;
+            if (isset($wp_scripts->registered['selectWoo'])) {
+                error_log('[ZS Recipes] selectWoo script registered successfully');
+            } else {
+                error_log('[ZS Recipes] selectWoo script NOT registered - this is the problem!');
+            }
+            
+            // Add inline script to force initialization
+            wp_add_inline_script('selectWoo', '
+                console.log("Zero Sense Recipes: selectWoo loaded");
+                if (typeof jQuery !== "undefined" && jQuery.fn.selectWoo) {
+                    console.log("Zero Sense Recipes: selectWoo available");
+                } else {
+                    console.error("Zero Sense Recipes: selectWoo NOT available");
+                }
+            ');
         }
     }
 
