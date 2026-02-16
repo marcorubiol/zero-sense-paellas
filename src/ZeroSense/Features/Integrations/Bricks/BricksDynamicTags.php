@@ -2124,7 +2124,7 @@ class BricksDynamicTags implements FeatureInterface
             :where(.zs-event-ingredients thead) { background: #333; color: white; }
             :where(.zs-event-ingredients th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
             :where(.zs-event-ingredients td) { padding: 8px; border: 1px solid #ddd; }
-            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #f57c00; }
+            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
             :where(.zs-event-ingredients .zs-col-adults),
             :where(.zs-event-ingredients .zs-col-children),
             :where(.zs-event-ingredients .zs-col-babies) { text-align: center; }
