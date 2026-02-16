@@ -38,6 +38,9 @@ class MetaKeys
     public const BUDGET_EMAIL_CONTENT = 'zs_budget_email_content';
     public const FINAL_DETAILS_EMAIL_CONTENT = 'zs_final_details_email_content';
     
+    // Staff Assignment
+    public const EVENT_STAFF = 'zs_event_staff';
+    
     // Customer Preferences
     public const MARKETING_CONSENT = 'zs_marketing_consent';
     
@@ -67,6 +70,7 @@ class MetaKeys
             'event_type' => self::EVENT_TYPE,
             'how_found_us' => self::HOW_FOUND_US,
             'intolerances' => self::INTOLERANCES,
+            'event_staff' => self::EVENT_STAFF,
         ];
     }
     
@@ -99,6 +103,7 @@ class MetaKeys
             self::EVENT_TYPE => __('Event type', 'zero-sense'),
             self::HOW_FOUND_US => __('How found us', 'zero-sense'),
             self::INTOLERANCES => __('Allergies / intolerances', 'zero-sense'),
+            self::EVENT_STAFF => __('Event staff', 'zero-sense'),
         ];
     }
 }

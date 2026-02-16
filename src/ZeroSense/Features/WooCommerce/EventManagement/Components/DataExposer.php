@@ -45,6 +45,14 @@ class DataExposer
                 'budget_email_content' => __('Budget Email Content', 'zero-sense'),
                 'final_details_email_content' => __('Final Details Email Content', 'zero-sense'),
                 'marketing_consent' => __('Marketing Consent', 'zero-sense'),
+                'staff_jefe_voluntarios' => __('Staff: Jefe de voluntarios', 'zero-sense'),
+                'staff_cocineros' => __('Staff: Cocineros', 'zero-sense'),
+                'staff_ayudantes' => __('Staff: Ayudantes', 'zero-sense'),
+                'staff_camareros' => __('Staff: Camareros', 'zero-sense'),
+                'staff_barra' => __('Staff: Barra', 'zero-sense'),
+                'staff_coqueteles' => __('Staff: Coqueteles', 'zero-sense'),
+                'staff_tallador_pernil' => __('Staff: Tallador de pernil', 'zero-sense'),
+                'staff_all_formatted' => __('Staff: All (Formatted)', 'zero-sense'),
             ],
         ];
         
@@ -102,6 +110,87 @@ class DataExposer
             'budget_email_content' => $order->get_meta(MetaKeys::BUDGET_EMAIL_CONTENT),
             'final_details_email_content' => $order->get_meta(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT),
             'marketing_consent' => $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no',
+            'staff_jefe_voluntarios' => self::getStaffByRole($order, 'jefe-voluntarios'),
+            'staff_cocineros' => self::getStaffByRole($order, 'cocineros'),
+            'staff_ayudantes' => self::getStaffByRole($order, 'ayudantes'),
+            'staff_camareros' => self::getStaffByRole($order, 'camareros'),
+            'staff_barra' => self::getStaffByRole($order, 'barra'),
+            'staff_coqueteles' => self::getStaffByRole($order, 'coqueteles'),
+            'staff_tallador_pernil' => self::getStaffByRole($order, 'tallador-pernil'),
+            'staff_all_formatted' => self::getAllStaffFormatted($order),
         ];
+    }
+
+    /**
+     * Get staff members by role for an order
+     */
+    private static function getStaffByRole(WC_Order $order, string $role): string
+    {
+        $staffAssignments = $order->get_meta(MetaKeys::EVENT_STAFF, true);
+        if (!is_array($staffAssignments)) {
+            return '';
+        }
+
+        $staffNames = [];
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+            
+            if ($assignment['role'] === $role) {
+                $staffId = (int) $assignment['staff_id'];
+                $staffPost = get_post($staffId);
+                if ($staffPost) {
+                    $name = $staffPost->post_title;
+                    $email = get_post_meta($staffId, 'zs_staff_email', true);
+                    $phone = get_post_meta($staffId, 'zs_staff_phone', true);
+                    
+                    $details = $name;
+                    if ($email || $phone) {
+                        $details .= ' (';
+                        if ($email) {
+                            $details .= $email;
+                        }
+                        if ($email && $phone) {
+                            $details .= ', ';
+                        }
+                        if ($phone) {
+                            $details .= $phone;
+                        }
+                        $details .= ')';
+                    }
+                    
+                    $staffNames[] = $details;
+                }
+            }
+        }
+
+        return implode(', ', $staffNames);
+    }
+
+    /**
+     * Get all staff formatted for display
+     */
+    private static function getAllStaffFormatted(WC_Order $order): string
+    {
+        $roles = [
+            'jefe-voluntarios' => __('Jefe de voluntarios', 'zero-sense'),
+            'cocineros' => __('Cocineros', 'zero-sense'),
+            'ayudantes' => __('Ayudantes', 'zero-sense'),
+            'camareros' => __('Camareros', 'zero-sense'),
+            'barra' => __('Barra', 'zero-sense'),
+            'coqueteles' => __('Coqueteles', 'zero-sense'),
+            'tallador-pernil' => __('Tallador de pernil', 'zero-sense'),
+        ];
+
+        $output = [];
+        foreach ($roles as $roleSlug => $roleName) {
+            $staff = self::getStaffByRole($order, $roleSlug);
+            if ($staff !== '') {
+                $output[] = $roleName . ': ' . $staff;
+            }
+        }
+
+        return implode("\n", $output);
     }
 }

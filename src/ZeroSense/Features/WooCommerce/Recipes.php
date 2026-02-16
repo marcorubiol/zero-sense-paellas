@@ -85,7 +85,7 @@ class Recipes implements FeatureInterface
             ],
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => 'woocommerce',
+            'show_in_menu' => 'edit.php?post_type=product',
             'menu_position' => 56,
             'supports' => ['title'],
             'capability_type' => 'post',

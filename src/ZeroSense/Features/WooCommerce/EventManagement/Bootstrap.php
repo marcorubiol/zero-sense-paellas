@@ -5,6 +5,7 @@ use ZeroSense\Core\MetaFieldRegistry;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\EventDetailsMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\EmailContentMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\CustomerPreferencesMetabox;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\StaffAssignmentMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\DataExposer;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\ServiceAreaAdminColumns;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
@@ -21,6 +22,7 @@ class Bootstrap
         (new EventDetailsMetabox())->register();
         (new EmailContentMetabox())->register();
         (new CustomerPreferencesMetabox())->register();
+        (new StaffAssignmentMetabox())->register();
         (new DataExposer())->register();
         (new ServiceAreaAdminColumns())->register();
     }
@@ -225,6 +227,14 @@ class Bootstrap
         $registry->register('_shipping_location_link', [
             'label' => 'Shipping location link',
             'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'EventManagement',
+        ]);
+
+        $registry->register(MetaKeys::EVENT_STAFF, [
+            'label' => $labels[MetaKeys::EVENT_STAFF] ?? 'Event staff',
+            'type' => 'array',
             'translatable' => false,
             'legacy_keys' => [],
             'feature' => 'EventManagement',

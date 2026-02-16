@@ -19,7 +19,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
 
     public function getCategory(): string
     {
-        return 'WooCommerce';
+        return 'Operations';
     }
 
     public function isToggleable(): bool
@@ -52,7 +52,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     public function enqueueStyles(): void
     {
         $screen = get_current_screen();
-        if ($screen && $screen->id === 'woocommerce_page_zs_ops_material_schema') {
+        if ($screen && ($screen->id === 'woocommerce_page_zs_ops_material_schema' || $screen->id === 'event-operations_page_zs_ops_material_schema')) {
             $css_path = plugin_dir_path(ZERO_SENSE_FILE) . 'assets/css/admin-material-logistics.css';
             $css_ver = file_exists($css_path) ? (string) filemtime($css_path) : ZERO_SENSE_VERSION;
             
@@ -69,8 +69,8 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     {
         global $submenu;
 
-        if (isset($submenu['woocommerce'])) {
-            foreach ($submenu['woocommerce'] as $menuItem) {
+        if (isset($submenu['event-operations'])) {
+            foreach ($submenu['event-operations'] as $menuItem) {
                 if (isset($menuItem[2]) && $menuItem[2] === 'zs_ops_material_schema') {
                     return;
                 }
@@ -78,7 +78,7 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         }
 
         add_submenu_page(
-            'woocommerce',
+            'event-operations',
             __('Material & Logistics Schema', 'zero-sense'),
             __('Material & Logistics', 'zero-sense'),
             'manage_options',
