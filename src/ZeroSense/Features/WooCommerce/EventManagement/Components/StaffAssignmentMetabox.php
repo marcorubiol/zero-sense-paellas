@@ -484,7 +484,36 @@ class StaffAssignmentMetabox
                 
                 // Remove staff member
                 $(document).on('click', '.zs-staff-remove', function() {
-                    $(this).closest('.zs-staff-row').remove();
+                    var $row = $(this).closest('.zs-staff-row');
+                    $row.remove();
+                    
+                    // Save via AJAX after removing
+                    var orderId = $('#post_ID').val() || $('input[name="post_ID"]').val();
+                    if (!orderId) {
+                        orderId = $('input[name="order_id"]').val();
+                    }
+                    
+                    if (orderId) {
+                        // Collect all remaining staff assignments
+                        var staffData = {};
+                        $('.zs-staff-role-section').each(function() {
+                            var role = $(this).data('role');
+                            staffData[role] = [];
+                            $(this).find('.zs-staff-hidden-input').each(function() {
+                                var staffId = $(this).val();
+                                if (staffId) {
+                                    staffData[role].push(staffId);
+                                }
+                            });
+                        });
+                        
+                        $.post(ajaxurl, {
+                            action: 'zs_save_staff_assignment',
+                            nonce: '<?php echo wp_create_nonce('zs_save_staff'); ?>',
+                            order_id: orderId,
+                            staff_data: staffData
+                        });
+                    }
                 });
             });
         })(jQuery);
