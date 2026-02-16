@@ -83,9 +83,10 @@ function zero_sense_init()
  * This runs once after the Operations directory was added to FeatureManager
  */
 add_action('admin_init', function() {
-    $flag = 'zs_operations_features_discovered';
+    $flag = 'zs_operations_features_discovered_v2';
     if (!get_option($flag, false)) {
         delete_transient('zs_feature_classes_v' . ZERO_SENSE_VERSION);
+        delete_option('zs_operations_features_discovered'); // Clear old flag
         update_option($flag, true, false);
     }
 }, 1);

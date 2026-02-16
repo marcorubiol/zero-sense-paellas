@@ -53,7 +53,7 @@ class EventOperationsMenu implements FeatureInterface
             'manage_woocommerce',
             'event-operations',
             [$this, 'renderDashboard'],
-            'dashicons-calendar-alt',
+            'dashicons-admin-tools',
             56
         );
 

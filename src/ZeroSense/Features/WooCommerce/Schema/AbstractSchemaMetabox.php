@@ -3,6 +3,7 @@ namespace ZeroSense\Features\WooCommerce\Schema;
 
 use WC_Order;
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker;
 
 /**
  * Abstract Schema Metabox
@@ -184,6 +185,17 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
             return;
         }
 
+        // Use WooCommerce order object to save meta data
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        $oldData = $order->get_meta($metaKey, true);
+        if (!is_array($oldData)) {
+            $oldData = [];
+        }
+
         $allFields = $this->getAllFields();
         $saved = [];
 
@@ -192,19 +204,17 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
             $rawValue = $incoming[$key] ?? '';
             $sanitizedValue = $this->sanitizeValue($rawValue, $type);
             $saved[$key] = ['value' => $sanitizedValue];
+
+            $oldValue = isset($oldData[$key]) && is_array($oldData[$key]) ? ($oldData[$key]['value'] ?? '') : '';
+            if ($oldValue !== $sanitizedValue) {
+                FieldChangeTracker::trackFieldChange($orderId, $metaKey . '_' . $key);
+            }
         }
         
-        // Use WooCommerce order object to save meta data
-        $order = wc_get_order($orderId);
-        if ($order instanceof WC_Order) {
-            $order->delete_meta_data($metaKey);
-            $order->update_meta_data($metaKey, $saved);
-            $order->save();
-            clean_post_cache($orderId);
-        } else {
-            delete_post_meta($orderId, $metaKey);
-            update_post_meta($orderId, $metaKey, $saved);
-        }
+        $order->delete_meta_data($metaKey);
+        $order->update_meta_data($metaKey, $saved);
+        $order->save();
+        clean_post_cache($orderId);
     }
 
     /**

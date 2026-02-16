@@ -72,7 +72,7 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
      */
     protected function getScreenId(): string
     {
-        return 'woocommerce_page_' . $this->getMenuSlug();
+        return 'event-operations_page_' . $this->getMenuSlug();
     }
     
     /**
@@ -105,7 +105,7 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
 
     public function getCategory(): string
     {
-        return 'WooCommerce';
+        return 'Operations';
     }
 
     public function isToggleable(): bool
@@ -166,8 +166,8 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         global $submenu;
 
         // Check if menu item already exists
-        if (isset($submenu['woocommerce'])) {
-            foreach ($submenu['woocommerce'] as $menuItem) {
+        if (isset($submenu['event-operations'])) {
+            foreach ($submenu['event-operations'] as $menuItem) {
                 if (isset($menuItem[2]) && $menuItem[2] === $this->getMenuSlug()) {
                     return;
                 }
@@ -175,7 +175,7 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         }
 
         add_submenu_page(
-            'woocommerce',
+            'event-operations',
             $this->getSchemaTitle(),
             $this->getMenuTitle(),
             'manage_options',
