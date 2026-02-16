@@ -618,6 +618,8 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
 
+        $content = str_replace('{woo_mb_event_staff_all}', $this->getEventStaffFormatted($post), $content);
+
         $content = $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
             return $this->getMetaBoxFieldValue($field, $post);
         });
