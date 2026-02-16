@@ -5,76 +5,53 @@ use WC_Order;
 use WC_Order_Item;
 use WP_REST_Request;
 use WP_REST_Response;
+use ZeroSense\Core\MetaFieldRegistry;
 
 class ApiExtension
 {
     /**
-     * @var array<string>
+     * Get exposed meta keys from registry
+     *
+     * @return array<int, string>
      */
-    private array $exposedMetaKeys = [
-        'total_guests',
-        'adults',
-        'children_5_to_8',
-        'children_0_to_4',
-        'event_city',
-        'location_link',
-        'event_date',
-        'event_address',
-        'serving_time',
-        'event_start_time',
-        'event_type',
-        'promo_code',
-        'how_found_us',
-        'intolerances',
-        'event_service_location',
-        'location',
-        'zs_event_total_guests',
-        'zs_event_adults',
-        'zs_event_children_5_to_8',
-        'zs_event_children_0_to_4',
-        'zs_event_service_location',
-        '_shipping_location_link',
-        'zs_event_date',
-        'zs_event_team_arrival_time',
-        'zs_event_serving_time',
-        'zs_event_start_time',
-        'zs_event_type',
-        'zs_event_how_found_us',
-        'zs_event_intolerances',
-        'zs_event_public_token',
-        'wpml_language',
-        'marketing_consent_checkbox',
-        'budget_email_content',
-        'final_details_email_content',
-        '_shipping_email',
-        'zs_ops_notes',
-        'zs_ops_material',
-        'zs_deposits_has_deposit',
-        'zs_deposits_deposit_amount',
-        'zs_deposits_deposit_percentage',
-        'zs_deposits_remaining_amount',
-        'zs_deposits_balance_amount',
-        'zs_deposits_is_manual_override',
-        'zs_deposits_is_deposit_paid',
-        'zs_deposits_deposit_payment_date',
-        'zs_deposits_is_balance_paid',
-        'zs_deposits_balance_payment_date',
-        'zs_deposits_payment_flow',
-        'zs_deposits_is_cancelled',
-        'zs_deposits_cancelled_date',
-        'zs_deposits_is_failed',
-        'zs_deposits_failed_code',
-        'zs_deposits_failed_date',
-    ];
+    private function getExposedMetaKeys(): array
+    {
+        $registry = MetaFieldRegistry::getInstance();
+        $keys = $registry->getAllKeys();
+        
+        // Add legacy aliases for backward compatibility
+        foreach ($registry->getAllFields() as $key => $metadata) {
+            $legacyKeys = $metadata['legacy_keys'] ?? [];
+            if (is_array($legacyKeys)) {
+                $keys = array_merge($keys, $legacyKeys);
+            }
+        }
+        
+        return array_unique($keys);
+    }
 
     /**
-     * @var array<string>
+     * Get translatable meta keys from registry
+     *
+     * @return array<int, string>
      */
-    private array $translatableMetaBoxFields = [
-        'event_type',
-        'event_service_location',
-        'how_found_us',
-    ];
+    private function getTranslatableKeys(): array
+    {
+        $registry = MetaFieldRegistry::getInstance();
+        $translatable = $registry->getTranslatableKeys();
+        
+        // Add legacy aliases for translatable fields
+        $result = [];
+        foreach ($translatable as $key) {
+            $result[] = $key;
+            $legacyKeys = $registry->getLegacyAliases($key);
+            if (!empty($legacyKeys)) {
+                $result = array_merge($result, $legacyKeys);
+            }
+        }
+        
+        return array_unique($result);
+    }
 
     public function register(): void
     {
@@ -208,10 +185,13 @@ class ApiExtension
             }
         }
 
-        foreach ($this->exposedMetaKeys as $key) {
+        $exposedKeys = $this->getExposedMetaKeys();
+        $translatableKeys = $this->getTranslatableKeys();
+        
+        foreach ($exposedKeys as $key) {
             $value = null;
 
-            if (in_array($key, $this->translatableMetaBoxFields, true) && function_exists('zero_sense_get_translated_meta')) {
+            if (in_array($key, $translatableKeys, true) && function_exists('zero_sense_get_translated_meta')) {
                 $value = zero_sense_get_translated_meta($orderId, $key);
             } else {
                 $value = $order->get_meta($key, true);

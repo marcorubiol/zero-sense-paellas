@@ -3,6 +3,7 @@ namespace ZeroSense\Features\WooCommerce;
 
 use WC_Order;
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Core\MetaFieldRegistry;
 
 class OrderOps implements FeatureInterface
 {
@@ -77,6 +78,8 @@ class OrderOps implements FeatureInterface
 
     public function init(): void
     {
+        $this->registerMetaFields();
+        
         add_action('add_meta_boxes', [$this, 'addMetaboxes']);
         add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingCustomFields'], 10, 3);
         add_action('admin_head', [$this, 'shippingFieldsCss']);
@@ -322,5 +325,66 @@ class OrderOps implements FeatureInterface
         }
 
         $order->save();
+    }
+
+    private function registerMetaFields(): void
+    {
+        $registry = MetaFieldRegistry::getInstance();
+
+        $registry->register(self::META_OPS_NOTES, [
+            'label' => 'Operational Notes',
+            'type' => 'textarea',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'OrderOps',
+        ]);
+
+        $registry->register(self::META_OPS_MATERIAL, [
+            'label' => 'Material & Logistics',
+            'type' => 'json',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'OrderOps',
+        ]);
+
+        $registry->register('wpml_language', [
+            'label' => 'Order Language',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'WPML',
+        ]);
+
+        $registry->register('zs_event_public_token', [
+            'label' => 'Event Public Token',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'EventPublicAccess',
+        ]);
+
+        $registry->register('_zs_event_media', [
+            'label' => 'Event Media',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'MediaUpload',
+        ]);
+
+        $registry->register('_zs_last_modified', [
+            'label' => 'Last Modified',
+            'type' => 'date',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'BricksDynamicTags',
+        ]);
+
+        $registry->register('promo_code', [
+            'label' => 'Promo Code',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['zs_event_promo_code'],
+            'feature' => 'EventManagement',
+        ]);
     }
 }

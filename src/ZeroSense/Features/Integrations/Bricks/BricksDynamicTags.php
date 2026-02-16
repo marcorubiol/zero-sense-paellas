@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ZeroSense\Features\Integrations\Bricks;
 
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Core\MetaFieldRegistry;
 use WC_Order;
 use WP_Post;
 
@@ -45,48 +46,49 @@ class BricksDynamicTags implements FeatureInterface
     private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
 
-    private const META_BOX_FIELDS = [
-        'total_guests' => 'Total Guests',
-        'adults' => 'Adults',
-        'children_5_to_8' => 'Children 5-8',
-        'children_0_to_4' => 'Children 0-4',
-        'event_service_location' => 'Event Service Location',
-        'event_city' => 'Event City',
-        'location_link' => 'Location Link',
-        'event_date' => 'Event Date',
-        'serving_time' => 'Serving Time',
-        'event_start_time' => 'Event Start Time',
-        'event_type' => 'Event Type',
-        'promo_code' => 'Promo Code',
-        'how_found_us' => 'How Found Us',
-        'intolerances' => 'Intolerances',
-        'event_address' => 'Event Address',
-    ];
+    /**
+     * Get MetaBox fields from registry
+     */
+    private function getMetaBoxFields(): array
+    {
+        $registry = MetaFieldRegistry::getInstance();
+        $fields = [];
+        
+        foreach ($registry->getAllFields() as $key => $metadata) {
+            $legacyKeys = $metadata['legacy_keys'] ?? [];
+            if (!empty($legacyKeys)) {
+                foreach ($legacyKeys as $legacyKey) {
+                    if (!str_starts_with($legacyKey, '_') && !str_starts_with($legacyKey, 'zs_')) {
+                        $fields[$legacyKey] = $metadata['label'] ?? $legacyKey;
+                    }
+                }
+            }
+        }
+        
+        return $fields;
+    }
 
-    private const SELECT_FIELDS = [
-        'event_type',
-        'how_found_us',
-    ];
-
-    // Map MetaBox field names to ZeroSense meta keys (same as in MetaBoxMigrator)
-    private const FIELD_MAPPING = [
-        'total_guests' => 'zs_event_total_guests',
-        'adults' => 'zs_event_adults',
-        'children_5_to_8' => 'zs_event_children_5_to_8',
-        'children_0_to_4' => 'zs_event_children_0_to_4',
-        'event_service_location' => 'zs_event_service_location',
-        'event_address' => 'zs_event_address',
-        'event_city' => 'zs_event_city',
-        'location_link' => 'zs_event_location_link',
-        'event_date' => 'zs_event_date',
-        'serving_time' => 'zs_event_serving_time',
-        'event_start_time' => 'zs_event_start_time',
-        'event_type' => 'zs_event_type',
-        'how_found_us' => 'zs_event_how_found_us',
-        'promo_code' => 'zs_event_promo_code',
-        'intolerances' => 'zs_event_intolerances',
-        'location' => 'zs_event_location',
-    ];
+    /**
+     * Get field mapping from registry
+     */
+    private function getFieldMapping(): array
+    {
+        $registry = MetaFieldRegistry::getInstance();
+        $mapping = [];
+        
+        foreach ($registry->getAllFields() as $key => $metadata) {
+            $legacyKeys = $metadata['legacy_keys'] ?? [];
+            if (!empty($legacyKeys)) {
+                foreach ($legacyKeys as $legacyKey) {
+                    if (!str_starts_with($legacyKey, '_')) {
+                        $mapping[$legacyKey] = $key;
+                    }
+                }
+            }
+        }
+        
+        return $mapping;
+    }
 
     public function getName(): string
     {
@@ -210,7 +212,7 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
-        foreach (self::META_BOX_FIELDS as $field => $label) {
+        foreach ($this->getMetaBoxFields() as $field => $label) {
             $tags[] = [
                 'name' => '{woo_mb_' . $field . '}',
                 'label' => $label,
@@ -1163,7 +1165,8 @@ class BricksDynamicTags implements FeatureInterface
         $value = '';
 
         // Map MetaBox field name to ZeroSense meta key
-        $metaKey = self::FIELD_MAPPING[$field] ?? $field;
+        $mapping = $this->getFieldMapping();
+        $metaKey = $mapping[$field] ?? $field;
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
