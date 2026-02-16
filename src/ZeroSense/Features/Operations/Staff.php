@@ -63,15 +63,13 @@ class Staff implements FeatureInterface
             // Find the Staff Roles taxonomy metabox (hierarchical style)
             var $taxonomyDiv = $('#<?php echo esc_js(self::TAX_ROLE); ?>div');
             if ($taxonomyDiv.length) {
-                // Add edit roles link at the bottom of the metabox
-                var $checklist = $taxonomyDiv.find('.categorychecklist');
-                if ($checklist.length) {
-                    $checklist.after(
-                        '<p style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd;">' +
-                        '<a href="<?php echo esc_js($edit_roles_url); ?>" class="button button-secondary" style="text-decoration: none;">' +
+                // Add edit roles link after the "Add new role" link
+                var $addNewLink = $taxonomyDiv.find('#<?php echo esc_js(self::TAX_ROLE); ?>-add-toggle');
+                if ($addNewLink.length) {
+                    $addNewLink.after(
+                        ' | <a href="<?php echo esc_js($edit_roles_url); ?>" style="text-decoration: none;">' +
                         '<?php echo esc_js(__('Edit Roles', 'zero-sense')); ?>' +
-                        '</a>' +
-                        '</p>'
+                        '</a>'
                     );
                 }
             }
