@@ -442,48 +442,6 @@ class Recipes implements FeatureInterface
             } else {
                 error_log('[ZS Recipes] selectWoo script NOT registered - this is the problem!');
             }
-            
-            // Add inline script to force initialization
-            wp_add_inline_script('selectWoo', '
-                var ajaxurl = "' . admin_url('admin-ajax.php') . '";
-                console.log("Zero Sense Recipes: selectWoo loaded");
-                if (typeof jQuery !== "undefined" && jQuery.fn.selectWoo) {
-                    console.log("Zero Sense Recipes: selectWoo available");
-                    // Force initialization after DOM is ready
-                    jQuery(document).ready(function($) {
-                        console.log("Zero Sense Recipes: DOM ready, initializing selects");
-                        setTimeout(function() {
-                            $(".zs-ingredient-select").each(function() {
-                                if (!$(this).data("select2")) {
-                                    console.log("Initializing selectWoo on:", this);
-                                    $(this).selectWoo({
-                                        width: "100%",
-                                        tags: true,
-                                        tokenSeparators: [","],
-                                        ajax: {
-                                            url: ajaxurl,
-                                            dataType: "json",
-                                            delay: 250,
-                                            data: function(params) {
-                                                return {
-                                                    action: "zs_ingredient_search",
-                                                    nonce: "' . wp_create_nonce('zs_ingredient_ajax') . '",
-                                                    q: params.term || ""
-                                                };
-                                            },
-                                            processResults: function(data) {
-                                                return data;
-                                            }
-                                        }
-                                    });
-                                }
-                            });
-                        }, 500);
-                    });
-                } else {
-                    console.error("Zero Sense Recipes: selectWoo NOT available");
-                }
-            ');
         }
     }
 
