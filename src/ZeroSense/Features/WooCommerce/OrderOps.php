@@ -400,18 +400,8 @@ class OrderOps implements FeatureInterface
                 }
             }
 
-            error_log('[ZS OrderOps] Saving with keys: ' . implode(', ', array_keys($saved)));
-            
             // Use update_post_meta directly to avoid timing issues with WooCommerce save process
             update_post_meta($orderId, self::META_OPS_MATERIAL, $saved);
-            
-            // Verify it was saved
-            $verifyData = get_post_meta($orderId, self::META_OPS_MATERIAL, true);
-            if (is_array($verifyData) && !empty($verifyData)) {
-                error_log('[ZS OrderOps] VERIFIED: Data saved successfully with keys: ' . implode(', ', array_keys($verifyData)));
-            } else {
-                error_log('[ZS OrderOps] ERROR: Data NOT saved!');
-            }
         }
     }
 
