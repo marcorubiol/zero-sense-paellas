@@ -2072,7 +2072,7 @@ class BricksDynamicTags implements FeatureInterface
         $html = '<div class="zs-ingredients-wrapper">';
         
         // Info header with guest breakdown
-        $html .= '<div class="zs-ingredients-info" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px;">';
+        $html .= '<div class="zs-ingredients-info">';
         $html .= '<strong>' . esc_html__('Comensales:', 'zero-sense') . '</strong> ';
         $html .= esc_html($adults) . ' ' . esc_html__('adultos', 'zero-sense');
         if ($children > 0) {
@@ -2085,18 +2085,18 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '</div>';
 
         // Ingredients table
-        $html .= '<table class="zs-event-ingredients" style="width: 100%; border-collapse: collapse;">';
+        $html .= '<table class="zs-event-ingredients">';
         $html .= '<thead>';
-        $html .= '<tr style="background: #333; color: white;">';
-        $html .= '<th style="padding: 12px; text-align: left; border: 1px solid #ddd;">' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
-        $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #2c5aa0;">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd;">' . esc_html__('Unidad', 'zero-sense') . '</th>';
-        $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #f9f9f9; color: #666; font-size: 0.9em;">' . esc_html__('Adultos', 'zero-sense') . '<br>(' . esc_html($adults) . ')</th>';
+        $html .= '<tr>';
+        $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-unit">' . esc_html__('Unidad', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-adults">' . esc_html__('Adultos', 'zero-sense') . ' (' . esc_html($adults) . ')</th>';
         if ($children > 0) {
-            $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #f9f9f9; color: #666; font-size: 0.9em;">' . esc_html__('Niños', 'zero-sense') . '<br>(' . esc_html($children) . ')</th>';
+            $html .= '<th class="zs-col-children">' . esc_html__('Niños', 'zero-sense') . ' (' . esc_html($children) . ')</th>';
         }
         if ($babies > 0) {
-            $html .= '<th style="padding: 12px; text-align: center; border: 1px solid #ddd; background: #f9f9f9; color: #666; font-size: 0.9em;">' . esc_html__('Bebés', 'zero-sense') . '<br>(' . esc_html($babies) . ')</th>';
+            $html .= '<th class="zs-col-babies">' . esc_html__('Bebés', 'zero-sense') . ' (' . esc_html($babies) . ')</th>';
         }
         $html .= '</tr>';
         $html .= '</thead>';
@@ -2122,15 +2122,15 @@ class BricksDynamicTags implements FeatureInterface
             $perBaby = $babies > 0 ? ($qty / $eqTotal) * self::BABY_WEIGHT : 0;
 
             $html .= '<tr>';
-            $html .= '<td style="padding: 10px; border: 1px solid #ddd;"><strong>' . esc_html($termName) . '</strong></td>';
-            $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; background: #e3f2fd; font-weight: bold; font-size: 1.1em;">' . esc_html($this->formatNumber($qty)) . '</td>';
-            $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd;">' . esc_html($unit) . '</td>';
-            $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #666; font-size: 0.9em;">' . esc_html($this->formatNumber($perAdult * $adults)) . '</td>';
+            $html .= '<td class="zs-col-ingredient">' . esc_html($termName) . '</td>';
+            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($qty)) . '</td>';
+            $html .= '<td class="zs-col-unit">' . esc_html($unit) . '</td>';
+            $html .= '<td class="zs-col-adults">' . esc_html($this->formatNumber($perAdult * $adults)) . '</td>';
             if ($children > 0) {
-                $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #666; font-size: 0.9em;">' . esc_html($this->formatNumber($perChild * $children)) . '</td>';
+                $html .= '<td class="zs-col-children">' . esc_html($this->formatNumber($perChild * $children)) . '</td>';
             }
             if ($babies > 0) {
-                $html .= '<td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #666; font-size: 0.9em;">' . esc_html($this->formatNumber($perBaby * $babies)) . '</td>';
+                $html .= '<td class="zs-col-babies">' . esc_html($this->formatNumber($perBaby * $babies)) . '</td>';
             }
             $html .= '</tr>';
         }
