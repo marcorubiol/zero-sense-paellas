@@ -586,6 +586,11 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_zs_intolerances}', $this->getMetaBoxFieldValue('intolerances', $post), $content);
 
+        $content = str_replace('{woo_zs_order_recipes}', $this->getOrderRecipes($post), $content);
+        $content = str_replace('{woo_zs_order_recipes_simple}', $this->getOrderRecipesSimple($post), $content);
+        $content = str_replace('{woo_zs_order_has_recipes}', $this->getOrderHasRecipes($post), $content);
+        $content = str_replace('{woo_zs_order_ingredients_total}', $this->getOrderIngredientsTotal($post), $content);
+
         return $content;
     }
 
@@ -1639,5 +1644,315 @@ class BricksDynamicTags implements FeatureInterface
     private function getTotalTagsCount(): int
     {
         return count(self::BILLING_FIELDS) + count(self::SHIPPING_FIELDS) + count($this->getMetaBoxFields()) + 1; // +1 for order_note
+    }
+
+    /**
+     * Calculate equivalent pax for an order
+     */
+    private function getEquivalentPax(WC_Order $order): float
+    {
+        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
+        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
+
+        $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
+        return $eq > 0 ? (float) $eq : 0.0;
+    }
+
+    /**
+     * Format number removing trailing zeros
+     */
+    private function formatNumber(float $n): string
+    {
+        $s = number_format($n, 3, '.', '');
+        $s = rtrim($s, '0');
+        $s = rtrim($s, '.');
+        return $s === '' ? '0' : $s;
+    }
+
+    /**
+     * Get translated recipe title
+     */
+    private function getTranslatedRecipeTitle(int $recipeId, string $orderLanguage): string
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            $recipe = get_post($recipeId);
+            return $recipe instanceof \WP_Post ? $recipe->post_title : '';
+        }
+
+        $translatedId = apply_filters('wpml_object_id', $recipeId, self::CPT_RECIPE, false, $orderLanguage);
+        if (!$translatedId) {
+            $translatedId = $recipeId;
+        }
+
+        $recipe = get_post($translatedId);
+        return $recipe instanceof \WP_Post ? $recipe->post_title : '';
+    }
+
+    /**
+     * Get translated ingredient name
+     */
+    private function getTranslatedIngredientName(int $termId, string $orderLanguage): string
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            $term = get_term($termId, self::TAX_INGREDIENT);
+            return $term instanceof \WP_Term ? $term->name : '';
+        }
+
+        $translatedId = apply_filters('wpml_object_id', $termId, self::TAX_INGREDIENT, false, $orderLanguage);
+        if (!$translatedId) {
+            $translatedId = $termId;
+        }
+
+        $term = get_term($translatedId, self::TAX_INGREDIENT);
+        return $term instanceof \WP_Term ? $term->name : '';
+    }
+
+    /**
+     * Get order language code
+     */
+    private function getOrderLanguageCode(WC_Order $order): string
+    {
+        $language = $order->get_meta('wpml_language', true);
+        if (!is_string($language) || $language === '') {
+            $language = defined('ICL_SITEPRESS_VERSION') ? apply_filters('wpml_default_language', 'es') : 'es';
+        }
+        return $language;
+    }
+
+    /**
+     * Check if order has any products with recipes
+     */
+    private function getOrderHasRecipes($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return '0';
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '0';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '0';
+        }
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId > 0) {
+                return '1';
+            }
+        }
+
+        return '0';
+    }
+
+    /**
+     * Get simple list of recipe names (comma-separated, no duplicates)
+     */
+    private function getOrderRecipesSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Recipes');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $recipeNames = [];
+        $seenRecipes = [];
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0 || isset($seenRecipes[$recipeId])) {
+                continue;
+            }
+
+            $seenRecipes[$recipeId] = true;
+            $recipeName = $this->getTranslatedRecipeTitle($recipeId, $orderLanguage);
+            if ($recipeName !== '') {
+                $recipeNames[] = $recipeName;
+            }
+        }
+
+        return implode(', ', $recipeNames);
+    }
+
+    /**
+     * Get detailed recipes with products and calculated ingredients
+     */
+    private function getOrderRecipes($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Recipes');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        // Group products by recipe
+        $recipeGroups = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            if (!isset($recipeGroups[$recipeId])) {
+                $recipeGroups[$recipeId] = [
+                    'recipe_title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage),
+                    'products' => [],
+                    'total_qty' => 0.0,
+                    'recipe_id' => $recipeId,
+                ];
+            }
+
+            $recipeGroups[$recipeId]['products'][] = [
+                'name' => $item->get_name(),
+                'qty' => $qty,
+            ];
+            $recipeGroups[$recipeId]['total_qty'] += $qty;
+            $sumQty += $qty;
+        }
+
+        if (empty($recipeGroups) || $sumQty <= 0) {
+            return '';
+        }
+
+        // Calculate ingredients for each recipe
+        foreach ($recipeGroups as $recipeId => &$group) {
+            $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+            
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            if (!is_array($recipeIngredients)) {
+                $group['ingredients'] = [];
+                continue;
+            }
+
+            $ingredients = [];
+            foreach ($recipeIngredients as $ingRow) {
+                if (!is_array($ingRow)) {
+                    continue;
+                }
+
+                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+
+                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
+                    continue;
+                }
+
+                $amount = $eqItem * $perPax;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $ingredients[] = [
+                    'term_id' => $termId,
+                    'name' => $this->getTranslatedIngredientName($termId, $orderLanguage),
+                    'qty' => $amount,
+                    'unit' => $unit,
+                ];
+            }
+
+            $group['ingredients'] = $ingredients;
+        }
+
+        // Generate HTML
+        $html = '<div class="zs-order-recipes">';
+
+        foreach ($recipeGroups as $group) {
+            $html .= '<div class="zs-recipe-item">';
+            
+            // Recipe title
+            $html .= '<h4 class="zs-recipe-name">' . esc_html($group['recipe_title']) . '</h4>';
+            
+            // Products list
+            $productsList = [];
+            foreach ($group['products'] as $prod) {
+                $productsList[] = esc_html($prod['name']) . ' (' . esc_html($this->formatNumber($prod['qty'])) . 'x)';
+            }
+            $html .= '<div class="zs-recipe-products"><strong>' . esc_html__('Productos:', 'zero-sense') . '</strong> ' . implode(', ', $productsList) . '</div>';
+            
+            // Ingredients
+            if (!empty($group['ingredients'])) {
+                $html .= '<div class="zs-recipe-ingredients">';
+                foreach ($group['ingredients'] as $ing) {
+                    $html .= '<div class="zs-ingredient-row">';
+                    $html .= '<span class="zs-ingredient-name">' . esc_html($ing['name']) . '</span> ';
+                    $html .= '<span class="zs-ingredient-qty">' . esc_html($this->formatNumber($ing['qty'])) . '</span>';
+                    $html .= '<span class="zs-ingredient-unit">' . esc_html($ing['unit']) . '</span>';
+                    $html .= '</div>';
+                }
+                $html .= '</div>';
+            }
+            
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
     }
 }

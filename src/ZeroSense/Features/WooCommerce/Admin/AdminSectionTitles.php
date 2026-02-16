@@ -66,41 +66,41 @@ class AdminSectionTitles implements FeatureInterface
         // JavaScript para modificar títulos de metaboxes
         $script = <<<'JAVASCRIPT'
             jQuery(document).ready(function($) {
+                console.log('Zero Sense: Admin Section Titles script loaded');
+                
                 // Función para cambiar títulos
                 function changeMetaboxTitles() {
-                    // Cambiar títulos de metaboxes (HPOS y Classic)
-                    $('#woocommerce-order-data h2.hndle, #woocommerce-order-data h3.hndle').each(function() {
+                    var changed = 0;
+                    
+                    // Buscar TODOS los h2 y h3 en la página
+                    $('h2, h3').each(function() {
                         var elem = $(this);
                         var text = elem.text().trim();
                         
-                        if (text === 'Billing' || text === 'Billing details') {
-                            elem.html('<span>👤 Client</span>');
+                        console.log('Found heading:', text, 'Classes:', elem.attr('class'), 'ID:', elem.attr('id'));
+                        
+                        if (text === 'Billing' || text === 'Billing details' || text === 'Facturación' || text === 'Detalles de facturación') {
+                            elem.html('<span>� Client</span>');
+                            changed++;
+                            console.log('Changed Billing to Client');
                         }
-                        if (text === 'Shipping' || text === 'Shipping details') {
-                            elem.html('<span>📍 Venue/Wedding Planner</span>');
+                        if (text === 'Shipping' || text === 'Shipping details' || text === 'Envío' || text === 'Detalles de envío') {
+                            elem.html('<span>� Venue/Wedding Planner</span>');
+                            changed++;
+                            console.log('Changed Shipping to Venue/Wedding Planner');
                         }
                     });
                     
-                    // Para HPOS - cambiar títulos en postbox
-                    $('.postbox h2, .postbox h3').each(function() {
-                        var elem = $(this);
-                        var text = elem.text().trim();
-                        
-                        if (text === 'Billing' || text === 'Billing details') {
-                            elem.html('<span>👤 Client</span>');
-                        }
-                        if (text === 'Shipping' || text === 'Shipping details') {
-                            elem.html('<span>📍 Venue/Wedding Planner</span>');
-                        }
-                    });
+                    console.log('Zero Sense: Changed ' + changed + ' titles');
                 }
                 
                 // Ejecutar al cargar
                 changeMetaboxTitles();
                 
-                // Ejecutar después de un pequeño delay por si hay carga dinámica
+                // Ejecutar después de delays
                 setTimeout(changeMetaboxTitles, 500);
                 setTimeout(changeMetaboxTitles, 1000);
+                setTimeout(changeMetaboxTitles, 2000);
             });
 JAVASCRIPT;
 
