@@ -27,6 +27,44 @@ class StaffAssignmentMetabox
         add_action('add_meta_boxes', [$this, 'addMetabox']);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 10, 1);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_action('wp_ajax_zs_create_staff_member', [$this, 'ajaxCreateStaffMember']);
+    }
+    
+    public function ajaxCreateStaffMember(): void
+    {
+        check_ajax_referer('zs_create_staff', 'nonce');
+        
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
+        $role = isset($_POST['role']) ? sanitize_text_field($_POST['role']) : '';
+        
+        if (empty($name)) {
+            wp_send_json_error('Name is required');
+        }
+        
+        // Create staff member
+        $post_id = wp_insert_post([
+            'post_title' => $name,
+            'post_type' => self::STAFF_CPT,
+            'post_status' => 'publish',
+        ]);
+        
+        if (is_wp_error($post_id)) {
+            wp_send_json_error($post_id->get_error_message());
+        }
+        
+        // Assign role if provided
+        if (!empty($role)) {
+            wp_set_object_terms($post_id, $role, self::STAFF_TAX);
+        }
+        
+        wp_send_json_success([
+            'id' => $post_id,
+            'name' => $name,
+        ]);
     }
 
     public function addMetabox(): void
@@ -63,6 +101,40 @@ class StaffAssignmentMetabox
 
         wp_enqueue_style('woocommerce_admin_styles');
         wp_enqueue_script('selectWoo');
+        
+        // Add inline script for creating new staff members
+        wp_add_inline_script('selectWoo', "
+            jQuery(document).ready(function($) {
+                // Handle create new staff member
+                $(document).on('click', '.zs-create-staff-btn', function(e) {
+                    e.preventDefault();
+                    var roleSlug = $(this).data('role');
+                    var roleName = $(this).data('role-name');
+                    var sectionId = $(this).data('section');
+                    
+                    var staffName = prompt('Enter staff member name:');
+                    if (!staffName) return;
+                    
+                    $.post(ajaxurl, {
+                        action: 'zs_create_staff_member',
+                        nonce: '" . wp_create_nonce('zs_create_staff') . "',
+                        name: staffName,
+                        role: roleSlug
+                    }, function(response) {
+                        if (response.success) {
+                            // Add new option to select
+                            var select = $('#zs_staff_' + sectionId);
+                            var newOption = new Option(staffName, response.data.id, true, true);
+                            select.append(newOption).trigger('change');
+                            
+                            alert('Staff member created successfully!');
+                        } else {
+                            alert('Error creating staff member: ' + (response.data || 'Unknown error'));
+                        }
+                    });
+                });
+            });
+        ");
     }
 
     public function render($post_or_order): void
@@ -148,12 +220,20 @@ class StaffAssignmentMetabox
                             <?php endforeach; ?>
                         <?php endif; ?>
                         
-                        <button type="button" 
-                                class="button zs-staff-add" 
-                                data-role="<?php echo esc_attr($roleSlug); ?>"
-                                style="margin-top: 4px;">
-                            <?php esc_html_e('Add staff member', 'zero-sense'); ?>
-                        </button>
+                        <div style="margin-top: 4px; display: flex; gap: 8px;">
+                            <button type="button" 
+                                    class="button zs-staff-add" 
+                                    data-role="<?php echo esc_attr($roleSlug); ?>">
+                                <?php esc_html_e('Add staff member', 'zero-sense'); ?>
+                            </button>
+                            <button type="button" 
+                                    class="button button-secondary zs-create-staff-btn" 
+                                    data-role="<?php echo esc_attr($roleSlug); ?>"
+                                    data-role-name="<?php echo esc_attr($roleName); ?>"
+                                    data-section="<?php echo esc_attr($roleSlug); ?>">
+                                <?php esc_html_e('+ Create new', 'zero-sense'); ?>
+                            </button>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
