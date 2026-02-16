@@ -849,13 +849,14 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Last Modified');
         }
 
-        $order = wc_get_order($orderId);
-        if (!$order instanceof WC_Order) {
+        // Get post modified date directly from database to avoid WC auto-updates
+        $postData = get_post($orderId);
+        if (!$postData || !isset($postData->post_modified)) {
             return '';
         }
 
-        $modified = $order->get_date_modified();
-        if (!$modified) {
+        $modified = $postData->post_modified;
+        if (!$modified || $modified === '0000-00-00 00:00:00') {
             return '';
         }
 
@@ -863,16 +864,19 @@ class BricksDynamicTags implements FeatureInterface
         $dateFormat = get_option('date_format', 'Y-m-d');
         $timeFormat = get_option('time_format', 'H:i:s');
 
+        // Convert to timestamp and format
+        $timestamp = strtotime($modified);
+        
         if ($format === 'date') {
-            return $modified->date_i18n($dateFormat);
+            return date_i18n($dateFormat, $timestamp);
         }
 
         if ($format === 'time') {
-            return $modified->date_i18n($timeFormat);
+            return date_i18n($timeFormat, $timestamp);
         }
 
         // Full format: date + time
-        return $modified->date_i18n($dateFormat . ' ' . $timeFormat);
+        return date_i18n($dateFormat . ' ' . $timeFormat, $timestamp);
     }
 
     private function getOrderProductsByCategory($post): string
