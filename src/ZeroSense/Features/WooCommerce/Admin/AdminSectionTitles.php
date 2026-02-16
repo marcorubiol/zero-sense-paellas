@@ -33,13 +33,13 @@ class AdminSectionTitles implements FeatureInterface
 
     public function init(): void
     {
-        // JavaScript para modificar títulos (funciona tanto en HPOS como Classic)
-        add_action('admin_enqueue_scripts', [$this, 'enqueueAdminScripts'], 10, 1);
+        // Filtro gettext para añadir segunda línea descriptiva
+        add_filter('gettext', [$this, 'addSubtitles'], 10, 3);
         
         // Register strings with WPML
         add_action('init', [$this, 'registerWpmlStrings'], 20);
         
-        // Admin CSS
+        // Admin CSS para estilos de subtítulos
         add_action('admin_head', [$this, 'addAdminStyles']);
     }
 
@@ -54,43 +54,32 @@ class AdminSectionTitles implements FeatureInterface
     }
 
     /**
-     * Enqueue admin scripts para modificar títulos
+     * Añadir subtítulos descriptivos a Billing y Shipping
      */
-    public function enqueueAdminScripts($hook): void
+    public function addSubtitles($translated, $text, $domain): string
     {
-        // Solo cargar en páginas de pedidos
-        if (!HposCompatibility::isOrderEditScreen()) {
-            return;
+        // Solo en WooCommerce admin
+        if ($domain !== 'woocommerce' || !is_admin()) {
+            return $translated;
         }
-
-        // JavaScript para modificar títulos de metaboxes
-        $script = <<<'JAVASCRIPT'
-            jQuery(document).ready(function($) {
-                function changeMetaboxTitles() {
-                    $('#order_data h3').each(function() {
-                        var elem = $(this);
-                        var html = elem.html();
-                        var text = elem.text().trim();
-                        var firstWord = text.split(/\s+/)[0];
-                        
-                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            var restContent = html.replace(/^[^<]*Billing\s*/i, '').replace(/^[^<]*Facturación\s*/i, '');
-                            elem.html('👤 Client ' + restContent);
-                        } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            var restContent = html.replace(/^[^<]*Shipping\s*/i, '').replace(/^[^<]*Envío\s*/i, '');
-                            elem.html('📍 Venue/Wedding Planner ' + restContent);
-                        }
-                    });
-                }
-                
-                changeMetaboxTitles();
-                setTimeout(changeMetaboxTitles, 100);
-                setTimeout(changeMetaboxTitles, 500);
-                setTimeout(changeMetaboxTitles, 1000);
-            });
-JAVASCRIPT;
-
-        wp_add_inline_script('jquery', $script);
+        
+        // Solo en páginas de pedidos
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return $translated;
+        }
+        
+        // Añadir segunda línea a Billing
+        if ($text === 'Billing') {
+            return 'Billing<br><span class="zs-subtitle">👤 Client</span>';
+        }
+        
+        // Añadir segunda línea a Shipping
+        if ($text === 'Shipping') {
+            return 'Shipping<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>';
+        }
+        
+        return $translated;
     }
 
     /**
@@ -126,7 +115,7 @@ JAVASCRIPT;
     }
 
     /**
-     * Add custom admin styles
+     * Add custom admin styles para subtítulos
      */
     public function addAdminStyles(): void
     {
@@ -138,12 +127,14 @@ JAVASCRIPT;
         }
         ?>
         <style>
-            /* Asegurar que los títulos de metabox sean visibles */
-            #woocommerce-order-data h2.hndle span,
-            #woocommerce-order-data h3.hndle span,
-            .postbox h2 span,
-            .postbox h3 span {
-                display: inline-block;
+            /* Estilos para los subtítulos descriptivos */
+            .zs-subtitle {
+                display: block;
+                font-size: 0.85em;
+                font-weight: normal;
+                color: #666;
+                margin-top: 2px;
+                line-height: 1.4;
             }
         </style>
         <?php

@@ -2069,7 +2069,24 @@ class BricksDynamicTags implements FeatureInterface
         $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
         $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
 
-        $html = '<div class="zs-ingredients-wrapper">';
+        $html = '<style>
+            :where(.zs-ingredients-wrapper) { margin: 20px 0; }
+            :where(.zs-ingredients-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+            :where(.zs-event-ingredients) { width: 100%; border-collapse: collapse; }
+            :where(.zs-event-ingredients thead) { background: #333; color: white; }
+            :where(.zs-event-ingredients th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
+            :where(.zs-event-ingredients td) { padding: 8px; border: 1px solid #ddd; }
+            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #e3f2fd; }
+            :where(.zs-event-ingredients .zs-col-unit),
+            :where(.zs-event-ingredients .zs-col-adults),
+            :where(.zs-event-ingredients .zs-col-children),
+            :where(.zs-event-ingredients .zs-col-babies) { text-align: center; }
+            :where(.zs-event-ingredients thead .zs-col-adults),
+            :where(.zs-event-ingredients thead .zs-col-children),
+            :where(.zs-event-ingredients thead .zs-col-babies) { background: #555; font-size: 0.9em; }
+        </style>';
+        
+        $html .= '<div class="zs-ingredients-wrapper">';
         
         // Info header with guest breakdown
         $html .= '<div class="zs-ingredients-info">';
