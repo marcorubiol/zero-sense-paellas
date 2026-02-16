@@ -139,6 +139,23 @@ class BricksDynamicTags implements FeatureInterface
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
         add_action('woocommerce_update_order', [$this, 'trackOrderModification'], 999);
         add_action('woocommerce_new_order', [$this, 'trackOrderModification'], 999);
+        add_action('save_post_shop_order', [$this, 'trackOrderModificationPost'], 999, 2);
+        
+        // Debug: Log when this class initializes
+        error_log('[ZS] BricksDynamicTags initialized - tracking hooks registered');
+    }
+    
+    public function trackOrderModificationPost(int $postId, \WP_Post $post): void
+    {
+        // Avoid autosaves and revisions
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+        if (wp_is_post_revision($postId)) {
+            return;
+        }
+        
+        $this->trackOrderModification($postId);
     }
     
     public function trackOrderModification(int $orderId): void
