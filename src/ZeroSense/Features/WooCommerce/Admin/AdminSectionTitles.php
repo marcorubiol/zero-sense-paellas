@@ -13,7 +13,7 @@ class AdminSectionTitles implements FeatureInterface
 
     public function getDescription(): string
     {
-        return 'Changes "Billing" to "Client" and "Shipping" to "Venue/Wedding Planner" in WooCommerce admin with WPML support.';
+        return 'Adds descriptive subtitles to Billing (👤 Client) and Shipping (📍 Venue/Wedding Planner) sections in WooCommerce admin orders.';
     }
 
     public function getCategory(): string
