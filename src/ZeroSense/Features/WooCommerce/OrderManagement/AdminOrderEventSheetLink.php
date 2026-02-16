@@ -96,6 +96,9 @@ class AdminOrderEventSheetLink implements FeatureInterface
 
     private function outputLink(WC_Order $order): void
     {
+        // Ensure order has a token (generate if missing)
+        $this->ensureOrderHasToken($order);
+        
         $token = $order->get_meta('zs_event_public_token', true);
         
         if (!is_string($token) || $token === '') {
@@ -103,21 +106,18 @@ class AdminOrderEventSheetLink implements FeatureInterface
             return;
         }
 
-        // Get the event sheet page URL
-        $pageId = $this->getEventSheetPageId();
-        if (!$pageId) {
+        // Use shortcode to get the link (if EventPublicAccess feature is active)
+        if (shortcode_exists('zs_event_public_link')) {
+            $url = do_shortcode('[zs_event_public_link order="' . $order->get_id() . '"]');
+        } else {
+            // Fallback: build URL manually
+            $url = $this->buildEventSheetUrl($order->get_id(), $token);
+        }
+
+        if (!$url || $url === '') {
             echo '<span style="color: #999;">—</span>';
             return;
         }
-
-        $url = get_permalink($pageId);
-        if (!$url) {
-            echo '<span style="color: #999;">—</span>';
-            return;
-        }
-
-        // Add token to URL
-        $url = add_query_arg('zs_event_token', $token, $url);
 
         printf(
             '<a href="%s" target="_blank" style="color: #2271b1; text-decoration: none;">
@@ -129,10 +129,31 @@ class AdminOrderEventSheetLink implements FeatureInterface
         );
     }
 
-    private function getEventSheetPageId(): ?int
+    private function ensureOrderHasToken(WC_Order $order): void
+    {
+        $existing = $order->get_meta('zs_event_public_token', true);
+        if (is_string($existing) && $existing !== '') {
+            return;
+        }
+
+        // Generate token for old orders
+        $token = $this->generateToken();
+        $order->update_meta_data('zs_event_public_token', $token);
+        $order->save();
+    }
+
+    private function generateToken(): string
+    {
+        try {
+            return bin2hex(random_bytes(16));
+        } catch (\Throwable $e) {
+            return wp_generate_password(32, false, false);
+        }
+    }
+
+    private function buildEventSheetUrl(int $orderId, string $token): string
     {
         // Try to find the event sheet page
-        // You can customize this to match your actual page slug or ID
         $page = get_page_by_path('event-sheet');
         
         if (!$page) {
@@ -143,6 +164,15 @@ class AdminOrderEventSheetLink implements FeatureInterface
             $page = get_page_by_path('event-information-sheet');
         }
 
-        return $page ? $page->ID : null;
+        if (!$page) {
+            return '';
+        }
+
+        $url = get_permalink($page->ID);
+        if (!$url) {
+            return '';
+        }
+
+        return add_query_arg('zs_event_token', $token, $url);
     }
 }
