@@ -89,6 +89,10 @@ class AdminSectionTitles implements FeatureInterface
             return;
         }
 
+        // Obtener traducciones primero
+        $clientLabel = $this->getTranslatedString('Client', 'billing_section_title', 'Client');
+        $venueLabel = $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner');
+
         // JavaScript para modificar dinámicamente los tabs en HPOS
         wp_add_inline_script('wc-orders', "
             jQuery(document).ready(function($) {
@@ -96,10 +100,10 @@ class AdminSectionTitles implements FeatureInterface
                 $('.wc-orders-tabs a').each(function() {
                     var $this = $(this);
                     if ($this.text().trim() === 'Billing') {
-                        $this.text('" . $this->getTranslatedString('Client', 'billing_section_title', 'Client') . "');
+                        $this.text('" . esc_js($clientLabel) . "');
                     }
                     if ($this.text().trim() === 'Shipping') {
-                        $this.text('" . $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner') . "');
+                        $this.text('" . esc_js($venueLabel) . "');
                     }
                 });
                 
@@ -107,10 +111,10 @@ class AdminSectionTitles implements FeatureInterface
                 $('.woocommerce-order-panel .panel-header h2').each(function() {
                     var $this = $(this);
                     if ($this.text().trim() === 'Billing') {
-                        $this.text('" . $this->getTranslatedString('Client', 'billing_section_title', 'Client') . "');
+                        $this.text('" . esc_js($clientLabel) . "');
                     }
                     if ($this.text().trim() === 'Shipping') {
-                        $this.text('" . $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner') . "');
+                        $this.text('" . esc_js($venueLabel) . "');
                     }
                 });
             });
