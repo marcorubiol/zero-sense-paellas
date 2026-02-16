@@ -849,14 +849,28 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Last Modified');
         }
 
-        // Get post modified date directly from database to avoid WC auto-updates
-        $postData = get_post($orderId);
-        if (!$postData || !isset($postData->post_modified)) {
-            return '';
+        global $wpdb;
+        
+        // Get the latest modification from order notes (system notes track all changes)
+        $lastNote = $wpdb->get_var($wpdb->prepare(
+            "SELECT comment_date FROM {$wpdb->comments} 
+            WHERE comment_post_ID = %d 
+            AND comment_type = 'order_note'
+            ORDER BY comment_date DESC 
+            LIMIT 1",
+            $orderId
+        ));
+
+        // If no notes, fall back to post_modified
+        if (!$lastNote) {
+            $postData = get_post($orderId);
+            if (!$postData || !isset($postData->post_modified)) {
+                return '';
+            }
+            $lastNote = $postData->post_modified;
         }
 
-        $modified = $postData->post_modified;
-        if (!$modified || $modified === '0000-00-00 00:00:00') {
+        if (!$lastNote || $lastNote === '0000-00-00 00:00:00') {
             return '';
         }
 
@@ -865,7 +879,7 @@ class BricksDynamicTags implements FeatureInterface
         $timeFormat = get_option('time_format', 'H:i:s');
 
         // Convert to timestamp and format
-        $timestamp = strtotime($modified);
+        $timestamp = strtotime($lastNote);
         
         if ($format === 'date') {
             return date_i18n($dateFormat, $timestamp);
