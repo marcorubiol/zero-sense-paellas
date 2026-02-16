@@ -361,11 +361,21 @@ class OrderOps implements FeatureInterface
         }
 
         $orderId = $order->get_id();
-        $items = $this->getMaterialItemsForOrder($orderId);
+        
+        // For saving, use all active fields (not just fields with data)
+        // This ensures new fields are saved even if they don't have previous data
+        $items = $this->getMaterialItems(true);
+        
         if ($items !== [] && isset($_POST['zs_ops_material']) && is_array($_POST['zs_ops_material'])) {
             $incoming = $_POST['zs_ops_material'];
+            
+            // Get existing data to preserve hidden fields with data
+            $existingData = $order->get_meta(self::META_OPS_MATERIAL, true);
+            $existingData = is_array($existingData) ? $existingData : [];
+            
             $saved = [];
 
+            // Save all active fields from the form
             foreach ($items as $key => $item) {
                 $type = $item['type'];
                 $raw = $incoming[$key] ?? null;
@@ -381,6 +391,13 @@ class OrderOps implements FeatureInterface
                 }
 
                 $saved[$key] = ['value' => $value];
+            }
+            
+            // Preserve hidden fields that have data but weren't in the form
+            foreach ($existingData as $key => $data) {
+                if (!isset($saved[$key]) && isset($data['value']) && $data['value'] !== '') {
+                    $saved[$key] = $data;
+                }
             }
 
             $order->update_meta_data(self::META_OPS_MATERIAL, $saved);

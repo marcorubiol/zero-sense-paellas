@@ -257,9 +257,13 @@ class Recipes implements FeatureInterface
                             console.log('Zero Sense Recipes: Creating tag for:', term);
                             return {
                                 id: term,
-                                text: term,
+                                text: term + ' (crear nuevo)',
                                 newTag: true
                             };
+                        },
+                        insertTag: function(data, tag) {
+                            // Insert the tag at the end of the results
+                            data.push(tag);
                         },
                         ajax: {
                             url: ajaxUrl,
