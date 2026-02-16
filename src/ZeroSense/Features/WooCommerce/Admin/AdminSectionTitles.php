@@ -67,13 +67,24 @@ class AdminSectionTitles implements FeatureInterface
                 function addSubtitles() {
                     $('#order_data h3').each(function() {
                         var elem = $(this);
-                        var text = elem.text().trim();
-                        var firstWord = text.split(/\s+/)[0];
                         
-                        if ((firstWord === 'Billing' || firstWord === 'Facturación') && !elem.find('.zs-subtitle').length) {
-                            elem.append('<br><span class="zs-subtitle">👤 Client</span>');
-                        } else if ((firstWord === 'Shipping' || firstWord === 'Envío') && !elem.find('.zs-subtitle').length) {
-                            elem.append('<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>');
+                        if (elem.find('.zs-subtitle').length) {
+                            return; // Ya tiene subtítulo
+                        }
+                        
+                        var html = elem.html();
+                        var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
+                        
+                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
+                            // Insertar subtítulo justo después del texto "Billing"
+                            var newHtml = html.replace(/^(\s*)Billing(\s*)/, '$1Billing<br><span class="zs-subtitle">👤 Client</span>$2');
+                            newHtml = newHtml.replace(/^(\s*)Facturación(\s*)/, '$1Facturación<br><span class="zs-subtitle">👤 Client</span>$2');
+                            elem.html(newHtml);
+                        } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
+                            // Insertar subtítulo justo después del texto "Shipping"
+                            var newHtml = html.replace(/^(\s*)Shipping(\s*)/, '$1Shipping<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>$2');
+                            newHtml = newHtml.replace(/^(\s*)Envío(\s*)/, '$1Envío<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>$2');
+                            elem.html(newHtml);
                         }
                     });
                     

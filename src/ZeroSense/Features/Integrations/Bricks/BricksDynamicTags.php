@@ -1671,6 +1671,51 @@ class BricksDynamicTags implements FeatureInterface
     }
 
     /**
+     * Normalize units: convert g/kg and ml/l automatically based on quantity
+     * Returns array with normalized quantity and unit
+     */
+    private function normalizeUnit(float $qty, string $unit): array
+    {
+        // Convert g to kg if >= 1000g
+        if ($unit === 'g' && $qty >= 1000) {
+            return [
+                'qty' => $qty / 1000,
+                'unit' => 'kg'
+            ];
+        }
+
+        // Convert kg to g if < 1kg (for consistency)
+        if ($unit === 'kg' && $qty < 1) {
+            return [
+                'qty' => $qty * 1000,
+                'unit' => 'g'
+            ];
+        }
+
+        // Convert ml to l if >= 1000ml
+        if ($unit === 'ml' && $qty >= 1000) {
+            return [
+                'qty' => $qty / 1000,
+                'unit' => 'l'
+            ];
+        }
+
+        // Convert l to ml if < 1l (for consistency)
+        if ($unit === 'l' && $qty < 1) {
+            return [
+                'qty' => $qty * 1000,
+                'unit' => 'ml'
+            ];
+        }
+
+        // Keep as is for other units (u, etc.)
+        return [
+            'qty' => $qty,
+            'unit' => $unit
+        ];
+    }
+
+    /**
      * Get translated recipe title
      */
     private function getTranslatedRecipeTitle(int $recipeId, string $orderLanguage): string
@@ -1939,10 +1984,13 @@ class BricksDynamicTags implements FeatureInterface
             if (!empty($group['ingredients'])) {
                 $html .= '<div class="zs-recipe-ingredients">';
                 foreach ($group['ingredients'] as $ing) {
+                    // Normalize units
+                    $normalized = $this->normalizeUnit($ing['qty'], $ing['unit']);
+                    
                     $html .= '<div class="zs-ingredient-row">';
                     $html .= '<span class="zs-ingredient-name">' . esc_html($ing['name']) . '</span> ';
-                    $html .= '<span class="zs-ingredient-qty">' . esc_html($this->formatNumber($ing['qty'])) . '</span>';
-                    $html .= '<span class="zs-ingredient-unit">' . esc_html($ing['unit']) . '</span>';
+                    $html .= '<span class="zs-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . '</span>';
+                    $html .= '<span class="zs-ingredient-unit">' . esc_html($normalized['unit']) . '</span>';
                     $html .= '</div>';
                 }
                 $html .= '</div>';
@@ -2133,15 +2181,20 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
+            // Normalize units (g/kg, ml/l)
+            $normalized = $this->normalizeUnit($qty, $unit);
+            $normalizedQty = $normalized['qty'];
+            $normalizedUnit = $normalized['unit'];
+
             // Calculate per-person amounts for reference
-            $perAdult = $adults > 0 ? $qty / $eqTotal : 0;
-            $perChild = $children > 0 ? ($qty / $eqTotal) * self::CHILD_WEIGHT : 0;
-            $perBaby = $babies > 0 ? ($qty / $eqTotal) * self::BABY_WEIGHT : 0;
+            $perAdult = $adults > 0 ? $normalizedQty / $eqTotal : 0;
+            $perChild = $children > 0 ? ($normalizedQty / $eqTotal) * self::CHILD_WEIGHT : 0;
+            $perBaby = $babies > 0 ? ($normalizedQty / $eqTotal) * self::BABY_WEIGHT : 0;
 
             $html .= '<tr>';
             $html .= '<td class="zs-col-ingredient">' . esc_html($termName) . '</td>';
-            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($qty)) . '</td>';
-            $html .= '<td class="zs-col-unit">' . esc_html($unit) . '</td>';
+            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($normalizedQty)) . '</td>';
+            $html .= '<td class="zs-col-unit">' . esc_html($normalizedUnit) . '</td>';
             $html .= '<td class="zs-col-adults">' . esc_html($this->formatNumber($perAdult * $adults)) . '</td>';
             if ($children > 0) {
                 $html .= '<td class="zs-col-children">' . esc_html($this->formatNumber($perChild * $children)) . '</td>';
