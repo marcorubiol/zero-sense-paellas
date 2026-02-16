@@ -476,6 +476,18 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                 bindDeleteButtons();
                 bindLabelChange();
                 updateSortable();
+                
+                // Debug form submission
+                var form = document.querySelector('form');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        var formData = new FormData(form);
+                        var keys = formData.getAll('<?php echo esc_js($formFieldName); ?>[key][]');
+                        var labels = formData.getAll('<?php echo esc_js($formFieldName); ?>[label][]');
+                        console.log('[Schema] Form submitting with keys:', keys);
+                        console.log('[Schema] Form submitting with labels:', labels);
+                    });
+                }
 
                 addBtn.addEventListener('click', function() {
                     var tr = document.createElement('tr');
