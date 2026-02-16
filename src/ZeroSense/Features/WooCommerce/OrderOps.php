@@ -400,21 +400,38 @@ class OrderOps implements FeatureInterface
                 }
             }
 
+            error_log('[ZS OrderOps] About to save with keys: ' . implode(', ', array_keys($saved)));
+            
+            // Update meta data
             $order->update_meta_data(self::META_OPS_MATERIAL, $saved);
             
-            error_log('[ZS OrderOps] About to save order with keys: ' . implode(', ', array_keys($saved)));
+            // Save the order
+            $order->save();
+            
+            // Force refresh from database
+            $order = wc_get_order($orderId);
+            
+            // Verify using WooCommerce method
+            $verifyData = $order->get_meta(self::META_OPS_MATERIAL, true);
+            if (is_array($verifyData) && !empty($verifyData)) {
+                error_log('[ZS OrderOps] VERIFIED via WC: Data saved with keys: ' . implode(', ', array_keys($verifyData)));
+            } else {
+                error_log('[ZS OrderOps] ERROR via WC: Data NOT saved!');
+                
+                // Try direct post meta as fallback
+                $directMeta = get_post_meta($orderId, 'zs_ops_material', true);
+                if (is_array($directMeta) && !empty($directMeta)) {
+                    error_log('[ZS OrderOps] BUT found via get_post_meta with keys: ' . implode(', ', array_keys($directMeta)));
+                } else {
+                    error_log('[ZS OrderOps] Also NOT found via get_post_meta');
+                }
+            }
+        } else {
+            error_log('[ZS OrderOps] No items to save or POST data missing');
         }
 
+        // Save order one more time to ensure everything is persisted
         $order->save();
-        
-        // Verify data was saved
-        $orderId = $order->get_id();
-        $verifyData = get_post_meta($orderId, 'zs_ops_material', true);
-        if (is_array($verifyData) && !empty($verifyData)) {
-            error_log('[ZS OrderOps] VERIFIED: Data saved successfully with keys: ' . implode(', ', array_keys($verifyData)));
-        } else {
-            error_log('[ZS OrderOps] ERROR: Data NOT saved! Meta is empty or not array');
-        }
     }
 
     private function registerMetaFields(): void
