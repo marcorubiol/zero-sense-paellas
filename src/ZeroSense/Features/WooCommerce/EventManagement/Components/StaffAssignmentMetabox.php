@@ -28,6 +28,50 @@ class StaffAssignmentMetabox
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 10, 1);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('wp_ajax_zs_create_staff_member', [$this, 'ajaxCreateStaffMember']);
+        add_action('wp_ajax_zs_save_staff_assignment', [$this, 'ajaxSaveStaffAssignment']);
+    }
+    
+    public function ajaxSaveStaffAssignment(): void
+    {
+        check_ajax_referer('zs_save_staff', 'nonce');
+        
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $orderId = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
+        $staffData = isset($_POST['staff_data']) ? $_POST['staff_data'] : [];
+        
+        if (!$orderId) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Convert staff data to the format expected by save method
+        $staffAssignments = [];
+        foreach ($staffData as $role => $staffIds) {
+            foreach ($staffIds as $staffId) {
+                $staffAssignments[] = [
+                    'role' => $role,
+                    'staff_id' => (int) $staffId,
+                ];
+            }
+        }
+        
+        // Save to order meta
+        if (empty($staffAssignments)) {
+            $order->delete_meta_data(self::META_KEY);
+        } else {
+            $order->update_meta_data(self::META_KEY, $staffAssignments);
+        }
+        
+        $order->save();
+        
+        wp_send_json_success(['message' => 'Staff assignment saved']);
     }
     
     public function ajaxCreateStaffMember(): void
@@ -262,6 +306,43 @@ class StaffAssignmentMetabox
                                 if (email) infoHtml += '✉️ ' + email;
                             }
                             $display.find('.zs-staff-info').html(infoHtml);
+                            
+                            // Save via AJAX
+                            var orderId = $('#post_ID').val() || $('input[name="post_ID"]').val();
+                            if (!orderId) {
+                                // Try HPOS order ID
+                                orderId = $('input[name="order_id"]').val();
+                            }
+                            
+                            if (orderId) {
+                                // Collect all staff assignments
+                                var staffData = {};
+                                $('.zs-staff-role-section').each(function() {
+                                    var role = $(this).data('role');
+                                    staffData[role] = [];
+                                    $(this).find('.zs-staff-hidden-input').each(function() {
+                                        var staffId = $(this).val();
+                                        if (staffId) {
+                                            staffData[role].push(staffId);
+                                        }
+                                    });
+                                });
+                                
+                                $.post(ajaxurl, {
+                                    action: 'zs_save_staff_assignment',
+                                    nonce: '<?php echo wp_create_nonce('zs_save_staff'); ?>',
+                                    order_id: orderId,
+                                    staff_data: staffData
+                                }, function(response) {
+                                    if (response.success) {
+                                        // Visual feedback
+                                        $editBtn.text('<?php echo esc_js(__('Saved!', 'zero-sense')); ?>');
+                                        setTimeout(function() {
+                                            $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
+                                        }, 1500);
+                                    }
+                                });
+                            }
                         }
                         
                         // Destroy selectWoo before hiding
