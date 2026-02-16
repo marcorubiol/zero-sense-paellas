@@ -168,7 +168,7 @@ JAVASCRIPT;
                 font-size: 0.88em;
                 font-weight: 600;
                 color: #3e5462;
-                background: linear-gradient(135deg, red 0%, #d4e9ff 100%);
+                background: linear-gradient(135deg, #e7f3ff 0%, #d4e9ff 100%);
                 padding: 3px 10px 3px 8px;
                 border-radius: 4px;
                 margin-top: 4px;
