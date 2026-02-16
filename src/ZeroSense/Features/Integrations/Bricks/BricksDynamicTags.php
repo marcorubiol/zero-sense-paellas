@@ -1444,8 +1444,8 @@ class BricksDynamicTags implements FeatureInterface
             ],
             [
                 'type' => 'list',
-                'title' => sprintf(__('Meta Box dynamic tags (%d)', 'zero-sense'), count(self::META_BOX_FIELDS)),
-                'items' => $this->generateDynamicTagsList('woo_mb_', self::META_BOX_FIELDS),
+                'title' => sprintf(__('Meta Box dynamic tags (%d)', 'zero-sense'), count($this->getMetaBoxFields())),
+                'items' => $this->generateDynamicTagsList('woo_mb_', $this->getMetaBoxFields()),
             ],
             [
                 'type' => 'list',
@@ -1457,7 +1457,7 @@ class BricksDynamicTags implements FeatureInterface
             [
                 'type' => 'text',
                 'title' => sprintf(__('Total tags available: %d', 'zero-sense'), $this->getTotalTagsCount()),
-                'content' => __('All tags are automatically generated from code constants. Add new fields to BILLING_FIELDS, SHIPPING_FIELDS, or META_BOX_FIELDS and they will appear here automatically.', 'zero-sense'),
+                'content' => __('All tags are automatically generated from code constants and MetaFieldRegistry. Add new fields to BILLING_FIELDS, SHIPPING_FIELDS, or register them in MetaFieldRegistry and they will appear here automatically.', 'zero-sense'),
             ],
             [
                 'type' => 'text',
@@ -1586,6 +1586,6 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function getTotalTagsCount(): int
     {
-        return count(self::BILLING_FIELDS) + count(self::SHIPPING_FIELDS) + count(self::META_BOX_FIELDS) + 1; // +1 for order_note
+        return count(self::BILLING_FIELDS) + count(self::SHIPPING_FIELDS) + count($this->getMetaBoxFields()) + 1; // +1 for order_note
     }
 }

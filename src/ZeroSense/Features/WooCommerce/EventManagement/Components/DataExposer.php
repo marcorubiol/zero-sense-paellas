@@ -14,11 +14,6 @@ class DataExposer
     {
         // Expose to Flowmattic dynamic tags
         add_filter('flowmattic_dynamic_tags', [$this, 'registerFlowmatticTags']);
-        
-        // Expose to Bricks dynamic data
-        add_filter('bricks/dynamic_tags_list', [$this, 'registerBricksTags']);
-        add_filter('bricks/dynamic_data/render_tag', [$this, 'renderBricksTag'], 10, 3);
-        add_filter('bricks/dynamic_data/render_content', [$this, 'renderBricksContent'], 10, 3);
     }
 
     /**
