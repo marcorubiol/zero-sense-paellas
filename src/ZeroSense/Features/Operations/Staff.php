@@ -47,6 +47,101 @@ class Staff implements FeatureInterface
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
         add_action('admin_footer', [$this, 'addEditRolesLink']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueRoleOrderingScripts']);
+        add_action('wp_ajax_zs_update_role_order', [$this, 'ajaxUpdateRoleOrder']);
+    }
+    
+    public function enqueueRoleOrderingScripts(string $hook): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || $screen->taxonomy !== self::TAX_ROLE) {
+            return;
+        }
+        
+        wp_enqueue_script('jquery-ui-sortable');
+        
+        wp_add_inline_script('jquery-ui-sortable', "
+            jQuery(document).ready(function($) {
+                var table = $('.wp-list-table tbody');
+                if (table.length) {
+                    table.sortable({
+                        items: 'tr',
+                        cursor: 'move',
+                        axis: 'y',
+                        handle: '.column-name',
+                        placeholder: 'ui-state-highlight',
+                        helper: function(e, tr) {
+                            var \$originals = tr.children();
+                            var \$helper = tr.clone();
+                            \$helper.children().each(function(index) {
+                                $(this).width(\$originals.eq(index).width());
+                            });
+                            return \$helper;
+                        },
+                        update: function(event, ui) {
+                            var order = [];
+                            table.find('tr').each(function(index) {
+                                var termId = $(this).attr('id');
+                                if (termId) {
+                                    termId = termId.replace('tag-', '');
+                                    order.push({
+                                        term_id: termId,
+                                        order: index
+                                    });
+                                }
+                            });
+                            
+                            $.post(ajaxurl, {
+                                action: 'zs_update_role_order',
+                                nonce: '" . wp_create_nonce('zs_role_order') . "',
+                                order: order
+                            }, function(response) {
+                                if (response.success) {
+                                    // Update order column values
+                                    table.find('tr').each(function(index) {
+                                        $(this).find('.column-role_order').text(index);
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Add cursor pointer to indicate draggable
+                    table.find('tr .column-name').css('cursor', 'move');
+                }
+            });
+        ");
+        
+        wp_add_inline_style('wp-admin', "
+            .wp-list-table tbody tr.ui-sortable-helper {
+                background-color: #f0f0f1;
+                opacity: 0.8;
+            }
+            .wp-list-table tbody .ui-state-highlight {
+                height: 50px;
+                background-color: #e5f5fa;
+                border: 2px dashed #2271b1;
+            }
+        ");
+    }
+    
+    public function ajaxUpdateRoleOrder(): void
+    {
+        check_ajax_referer('zs_role_order', 'nonce');
+        
+        if (!current_user_can('manage_categories')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $order = isset($_POST['order']) ? $_POST['order'] : [];
+        
+        foreach ($order as $item) {
+            if (isset($item['term_id']) && isset($item['order'])) {
+                update_term_meta((int)$item['term_id'], 'role_order', (int)$item['order']);
+            }
+        }
+        
+        wp_send_json_success();
     }
     
     public function addEditRolesLink(): void
