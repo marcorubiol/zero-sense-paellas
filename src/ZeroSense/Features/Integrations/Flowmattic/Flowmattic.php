@@ -1705,7 +1705,7 @@ class Flowmattic implements FeatureInterface
         $logs = [];
         
         foreach ($sends as $send) {
-            if ($send['order_id'] === $orderId) {
+            if ((int) ($send['order_id'] ?? 0) === $orderId) {
                 $logs[] = [
                     'workflow_id' => $send['workflow_id'],
                     'status' => $send['status'],
