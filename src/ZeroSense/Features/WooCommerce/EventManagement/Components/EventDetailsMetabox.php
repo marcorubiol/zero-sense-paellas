@@ -281,49 +281,6 @@ class EventDetailsMetabox
                     </div>
                 </div>
             </div>
-            
-            <?php
-            // Event Access Button
-            $orderId = $order->get_id();
-            if ($orderId > 0) {
-                // Get base URL dynamically based on current site
-                $siteUrl = home_url();
-                $baseUrl = '';
-                
-                if (strpos($siteUrl, 'dev.paellasencasa.com') !== false) {
-                    $baseUrl = 'https://dev.paellasencasa.com/fdr';
-                } elseif (strpos($siteUrl, 'localhost') !== false || strpos($siteUrl, '127.0.0.1') !== false) {
-                    $baseUrl = home_url('/fdr');
-                } else {
-                    $baseUrl = 'https://paellasencasa.com/fdr';
-                }
-                
-                $eventLink = do_shortcode('[zs_event_public_link order="' . $orderId . '" base_url="' . $baseUrl . '"]');
-                if (!empty($eventLink)) {
-                    ?>
-                    <div class="zs-field-group" style="background: #f0f0f1; padding: 16px; border-radius: 4px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div>
-                                <strong style="display: block; margin-bottom: 4px; font-size: 13px;">
-                                    <?php esc_html_e('Event Information Sheet', 'zero-sense'); ?>
-                                </strong>
-                                <span style="color: #646970; font-size: 12px;">
-                                    <?php esc_html_e('View complete event details in a new window', 'zero-sense'); ?>
-                                </span>
-                            </div>
-                            <a 
-                                href="<?php echo esc_url($eventLink); ?>" 
-                                target="_blank"
-                                class="button button-primary"
-                            >
-                                <?php esc_html_e('Open Event Sheet', 'zero-sense'); ?>
-                            </a>
-                        </div>
-                    </div>
-                    <?php
-                }
-            }
-            ?>
         </div>
 
         <style>
