@@ -89,22 +89,9 @@ class AdminSectionTitles implements FeatureInterface
             return;
         }
 
-        // Obtener traducciones primero con fallback simple
+        // Usar valores simples sin WPML para evitar errores
         $clientLabel = 'Client';
         $venueLabel = 'Venue/Wedding Planner';
-        
-        // Intentar obtener traducciones WPML si está disponible
-        if (function_exists('wpml_translate_string')) {
-            $clientTranslated = wpml_translate_string('zero-sense', 'billing_section_title', 'Client');
-            if (is_string($clientTranslated)) {
-                $clientLabel = $clientTranslated;
-            }
-            
-            $venueTranslated = wpml_translate_string('zero-sense', 'shipping_section_title', 'Venue/Wedding Planner');
-            if (is_string($venueTranslated)) {
-                $venueLabel = $venueTranslated;
-            }
-        }
 
         // JavaScript para modificar dinámicamente los tabs en HPOS
         wp_add_inline_script('wc-orders', "
