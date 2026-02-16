@@ -1654,9 +1654,12 @@ class BricksDynamicTags implements FeatureInterface
                 }
                 
                 document.addEventListener("DOMContentLoaded", function() {
-                    lightboxes = Array.from(document.querySelectorAll("." + galleryId + " .zs-lightbox"));
+                    lightboxes = Array.from(document.querySelectorAll(".zs-lightbox." + galleryId));
                     
-                    document.querySelectorAll("." + galleryId + " .zs-gallery-open").forEach(function(opener, idx) {
+                    var gallery = document.querySelector(".zs-event-media-gallery." + galleryId);
+                    if (!gallery) return;
+                    
+                    gallery.querySelectorAll(".zs-gallery-open").forEach(function(opener, idx) {
                         opener.addEventListener("click", function(e) {
                             e.preventDefault();
                             showLightbox(idx);
@@ -1672,15 +1675,15 @@ class BricksDynamicTags implements FeatureInterface
                         lightbox.addEventListener("touchend", handleTouchEnd, false);
                     });
                     
-                    document.querySelectorAll("." + galleryId + " .zs-lightbox-close").forEach(function(closeBtn) {
+                    document.querySelectorAll(".zs-lightbox." + galleryId + " .zs-lightbox-close").forEach(function(closeBtn) {
                         closeBtn.addEventListener("click", closeLightbox);
                     });
                     
-                    document.querySelectorAll("." + galleryId + " .zs-lightbox-prev").forEach(function(prevBtn) {
+                    document.querySelectorAll(".zs-lightbox." + galleryId + " .zs-lightbox-prev").forEach(function(prevBtn) {
                         prevBtn.addEventListener("click", prevImage);
                     });
                     
-                    document.querySelectorAll("." + galleryId + " .zs-lightbox-next").forEach(function(nextBtn) {
+                    document.querySelectorAll(".zs-lightbox." + galleryId + " .zs-lightbox-next").forEach(function(nextBtn) {
                         nextBtn.addEventListener("click", nextImage);
                     });
                     
