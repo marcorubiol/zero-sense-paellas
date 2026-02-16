@@ -134,6 +134,38 @@ class Bootstrap
             'feature' => 'EventManagement',
         ]);
 
+        $registry->register(MetaKeys::OPEN_BAR_START, [
+            'label' => $labels[MetaKeys::OPEN_BAR_START] ?? 'Open Bar Start',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['open_bar_start', '_event_open_bar_start'],
+            'feature' => 'EventManagement',
+        ]);
+
+        $registry->register(MetaKeys::OPEN_BAR_END, [
+            'label' => $labels[MetaKeys::OPEN_BAR_END] ?? 'Open Bar End',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['open_bar_end', '_event_open_bar_end'],
+            'feature' => 'EventManagement',
+        ]);
+
+        $registry->register(MetaKeys::COCKTAIL_START, [
+            'label' => $labels[MetaKeys::COCKTAIL_START] ?? 'Cocktail Start',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['cocktail_start', '_event_cocktail_start'],
+            'feature' => 'EventManagement',
+        ]);
+
+        $registry->register(MetaKeys::COCKTAIL_END, [
+            'label' => $labels[MetaKeys::COCKTAIL_END] ?? 'Cocktail End',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['cocktail_end', '_event_cocktail_end'],
+            'feature' => 'EventManagement',
+        ]);
+
         $registry->register(MetaKeys::EVENT_TYPE, [
             'label' => $labels[MetaKeys::EVENT_TYPE] ?? 'Event type',
             'type' => 'select',

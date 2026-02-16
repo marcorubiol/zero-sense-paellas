@@ -24,6 +24,10 @@ class MetaKeys
     public const SERVING_TIME = 'zs_event_serving_time';
     public const STARTERS_SERVICE_TIME = 'zs_event_starters_service_time';
     public const START_TIME = 'zs_event_start_time';
+    public const OPEN_BAR_START = 'zs_event_open_bar_start';
+    public const OPEN_BAR_END = 'zs_event_open_bar_end';
+    public const COCKTAIL_START = 'zs_event_cocktail_start';
+    public const COCKTAIL_END = 'zs_event_cocktail_end';
     
     // Event Details
     public const EVENT_TYPE = 'zs_event_type';
@@ -56,6 +60,10 @@ class MetaKeys
             'serving_time' => self::SERVING_TIME,
             'starters_service_time' => self::STARTERS_SERVICE_TIME,
             'start_time' => self::START_TIME,
+            'open_bar_start' => self::OPEN_BAR_START,
+            'open_bar_end' => self::OPEN_BAR_END,
+            'cocktail_start' => self::COCKTAIL_START,
+            'cocktail_end' => self::COCKTAIL_END,
             'event_type' => self::EVENT_TYPE,
             'how_found_us' => self::HOW_FOUND_US,
             'intolerances' => self::INTOLERANCES,
@@ -81,6 +89,10 @@ class MetaKeys
             self::SERVING_TIME => __('Paellas Service Time', 'zero-sense'),
             self::STARTERS_SERVICE_TIME => __('Starters Service Time', 'zero-sense'),
             self::START_TIME => __('Event start time', 'zero-sense'),
+            self::OPEN_BAR_START => __('Open Bar Start', 'zero-sense'),
+            self::OPEN_BAR_END => __('Open Bar End', 'zero-sense'),
+            self::COCKTAIL_START => __('Cocktail Start', 'zero-sense'),
+            self::COCKTAIL_END => __('Cocktail End', 'zero-sense'),
             self::EVENT_TYPE => __('Event type', 'zero-sense'),
             self::HOW_FOUND_US => __('How found us', 'zero-sense'),
             self::INTOLERANCES => __('Allergies / intolerances', 'zero-sense'),

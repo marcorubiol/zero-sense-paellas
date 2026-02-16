@@ -20,6 +20,10 @@ class EventDetailsMetabox
         MetaKeys::SERVING_TIME => 'serving_time',
         MetaKeys::STARTERS_SERVICE_TIME => 'starters_service_time',
         MetaKeys::START_TIME => 'event_start_time',
+        MetaKeys::OPEN_BAR_START => 'open_bar_start',
+        MetaKeys::OPEN_BAR_END => 'open_bar_end',
+        MetaKeys::COCKTAIL_START => 'cocktail_start',
+        MetaKeys::COCKTAIL_END => 'cocktail_end',
         MetaKeys::EVENT_TYPE => 'event_type',
         MetaKeys::HOW_FOUND_US => 'how_found_us',
     ];
@@ -37,6 +41,10 @@ class EventDetailsMetabox
         MetaKeys::SERVING_TIME => '_event_serving_time',
         MetaKeys::STARTERS_SERVICE_TIME => '_event_starters_service_time',
         MetaKeys::START_TIME => '_event_start_time',
+        MetaKeys::OPEN_BAR_START => '_event_open_bar_start',
+        MetaKeys::OPEN_BAR_END => '_event_open_bar_end',
+        MetaKeys::COCKTAIL_START => '_event_cocktail_start',
+        MetaKeys::COCKTAIL_END => '_event_cocktail_end',
         MetaKeys::EVENT_TYPE => '_event_type',
         MetaKeys::HOW_FOUND_US => '_event_how_found_us',
     ];
@@ -105,6 +113,10 @@ class EventDetailsMetabox
         $servingTime = $this->getOrderMetaWithFallback($order, MetaKeys::SERVING_TIME);
         $startersServiceTime = $this->getOrderMetaWithFallback($order, MetaKeys::STARTERS_SERVICE_TIME);
         $startTime = $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
+        $openBarStart = $this->getOrderMetaWithFallback($order, MetaKeys::OPEN_BAR_START);
+        $openBarEnd = $this->getOrderMetaWithFallback($order, MetaKeys::OPEN_BAR_END);
+        $cocktailStart = $this->getOrderMetaWithFallback($order, MetaKeys::COCKTAIL_START);
+        $cocktailEnd = $this->getOrderMetaWithFallback($order, MetaKeys::COCKTAIL_END);
         $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
         $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
         $intolerances = $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
@@ -269,6 +281,54 @@ class EventDetailsMetabox
                                id="event_serving_time" 
                                name="event_serving_time" 
                                value="<?php echo esc_attr($servingTime); ?>" 
+                               class="short">
+                    </div>
+                </div>
+                
+                <div class="zs-field-row">
+                    <div class="zs-field">
+                        <label for="event_open_bar_start">
+                            <?php esc_html_e('Open Bar Start', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_open_bar_start" 
+                               name="event_open_bar_start" 
+                               value="<?php echo esc_attr($openBarStart); ?>" 
+                               class="short">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_open_bar_end">
+                            <?php esc_html_e('Open Bar End', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_open_bar_end" 
+                               name="event_open_bar_end" 
+                               value="<?php echo esc_attr($openBarEnd); ?>" 
+                               class="short">
+                    </div>
+                </div>
+                
+                <div class="zs-field-row">
+                    <div class="zs-field">
+                        <label for="event_cocktail_start">
+                            <?php esc_html_e('Cocktail Start', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_cocktail_start" 
+                               name="event_cocktail_start" 
+                               value="<?php echo esc_attr($cocktailStart); ?>" 
+                               class="short">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_cocktail_end">
+                            <?php esc_html_e('Cocktail End', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_cocktail_end" 
+                               name="event_cocktail_end" 
+                               value="<?php echo esc_attr($cocktailEnd); ?>" 
                                class="short">
                     </div>
                 </div>
@@ -499,6 +559,18 @@ class EventDetailsMetabox
         }
         if (isset($_POST['event_start_time'])) {
             $order->update_meta_data(MetaKeys::START_TIME, sanitize_text_field($_POST['event_start_time']));
+        }
+        if (isset($_POST['event_open_bar_start'])) {
+            $order->update_meta_data(MetaKeys::OPEN_BAR_START, sanitize_text_field($_POST['event_open_bar_start']));
+        }
+        if (isset($_POST['event_open_bar_end'])) {
+            $order->update_meta_data(MetaKeys::OPEN_BAR_END, sanitize_text_field($_POST['event_open_bar_end']));
+        }
+        if (isset($_POST['event_cocktail_start'])) {
+            $order->update_meta_data(MetaKeys::COCKTAIL_START, sanitize_text_field($_POST['event_cocktail_start']));
+        }
+        if (isset($_POST['event_cocktail_end'])) {
+            $order->update_meta_data(MetaKeys::COCKTAIL_END, sanitize_text_field($_POST['event_cocktail_end']));
         }
 
         // Save event details
