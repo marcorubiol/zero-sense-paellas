@@ -72,20 +72,25 @@ class AdminSectionTitles implements FeatureInterface
                 function changeMetaboxTitles() {
                     var changed = 0;
                     
-                    // Buscar TODOS los h2 y h3 en la página
-                    $('h2, h3').each(function() {
+                    // Buscar h3 dentro de #order_data (donde están Billing y Shipping)
+                    $('#order_data h3').each(function() {
                         var elem = $(this);
                         var text = elem.text().trim();
+                        var firstWord = text.split(/\s+/)[0];
                         
-                        console.log('Found heading:', text, 'Classes:', elem.attr('class'), 'ID:', elem.attr('id'));
+                        console.log('Found #order_data h3:', firstWord, 'Full text:', text.substring(0, 50));
                         
-                        if (text === 'Billing' || text === 'Billing details' || text === 'Facturación' || text === 'Detalles de facturación') {
-                            elem.html('<span>� Client</span>');
+                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
+                            // Preservar el contenido después del título
+                            var restContent = elem.html().replace(/^Billing|^Facturación/, '');
+                            elem.html('<span>👤 Client</span>' + restContent);
                             changed++;
                             console.log('Changed Billing to Client');
                         }
-                        if (text === 'Shipping' || text === 'Shipping details' || text === 'Envío' || text === 'Detalles de envío') {
-                            elem.html('<span>� Venue/Wedding Planner</span>');
+                        if (firstWord === 'Shipping' || firstWord === 'Envío') {
+                            // Preservar el contenido después del título
+                            var restContent = elem.html().replace(/^Shipping|^Envío/, '');
+                            elem.html('<span>📍 Venue/Wedding Planner</span>' + restContent);
                             changed++;
                             console.log('Changed Shipping to Venue/Wedding Planner');
                         }

@@ -1955,4 +1955,147 @@ class BricksDynamicTags implements FeatureInterface
 
         return $html;
     }
+
+    /**
+     * Get total ingredients table (sum of all recipes)
+     */
+    private function getOrderIngredientsTotal($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Ingredients Total');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            if (!is_array($recipeIngredients)) {
+                continue;
+            }
+
+            foreach ($recipeIngredients as $ingRow) {
+                if (!is_array($ingRow)) {
+                    continue;
+                }
+
+                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+
+                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
+                    continue;
+                }
+
+                $amount = $eqItem * $perPax;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $k = $termId . '|' . $unit;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        usort($totals, function(array $a, array $b): int {
+            $ta = $a['term_id'] ?? 0;
+            $tb = $b['term_id'] ?? 0;
+            return $ta <=> $tb;
+        });
+
+        $html = '<table class="zs-event-ingredients">';
+        $html .= '<thead><tr>';
+        $html .= '<th>' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
+        $html .= '<th style="text-align:right;">' . esc_html__('Total', 'zero-sense') . '</th>';
+        $html .= '<th>' . esc_html__('Unidad', 'zero-sense') . '</th>';
+        $html .= '</tr></thead>';
+        $html .= '<tbody>';
+
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $unit = (string) ($t['unit'] ?? '');
+            $qty = (float) ($t['qty'] ?? 0);
+
+            if ($termId <= 0 || $qty <= 0 || $unit === '') {
+                continue;
+            }
+
+            $termName = $this->getTranslatedIngredientName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
+
+            $html .= '<tr>';
+            $html .= '<td>' . esc_html($termName) . '</td>';
+            $html .= '<td style="text-align:right;">' . esc_html($this->formatNumber($qty)) . '</td>';
+            $html .= '<td>' . esc_html($unit) . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody>';
+        $html .= '</table>';
+
+        return $html;
+    }
 }
