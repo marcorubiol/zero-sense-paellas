@@ -238,110 +238,116 @@ class EventDetailsMetabox
                 </div>
                 
                 <!-- Service Times -->
-                <h4 style="margin: 16px 0 8px 0; font-size: 13px; font-weight: 600; color: #50575e;"><?php esc_html_e('Service times', 'zero-sense'); ?></h4>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_team_arrival_time">
-                            <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_team_arrival_time" 
-                               name="event_team_arrival_time" 
-                               value="<?php echo esc_attr($teamArrivalTime); ?>" 
-                               class="short">
-                    </div>
-                    <div class="zs-field"></div>
-                </div>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_starters_service_time">
-                            <?php esc_html_e('Starters service time', 'zero-sense'); ?>
-                        </label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Service times', 'zero-sense'); ?></h4>
+                    
+                    <div class="zs-field-row">
+                        <div class="zs-field">
+                            <label for="event_team_arrival_time">
+                                <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
+                            </label>
                             <input type="time" 
-                                   id="event_starters_service_time" 
-                                   name="event_starters_service_time" 
-                                   value="<?php echo esc_attr($startersServiceTime); ?>" 
+                                   id="event_team_arrival_time" 
+                                   name="event_team_arrival_time" 
+                                   value="<?php echo esc_attr($teamArrivalTime); ?>" 
                                    class="short">
-                            <button type="button" 
-                                    id="zs-recalculate-starters-time" 
-                                    class="button button-secondary"
-                                    style="display: flex; align-items: center; gap: 4px;"
-                                    title="<?php esc_attr_e('Recalculate based on Paellas service time (30 min before)', 'zero-sense'); ?>">
-                                <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
-                                <?php esc_html_e('Auto', 'zero-sense'); ?>
-                            </button>
                         </div>
-                        <p class="description" style="margin-top: 4px; font-size: 12px; color: #646970;">
-                            <?php esc_html_e('Click Auto to set this 30 minutes before Paellas service time', 'zero-sense'); ?>
-                        </p>
+                        <div class="zs-field"></div>
                     </div>
                     
-                    <div class="zs-field">
-                        <label for="event_serving_time">
-                            <?php esc_html_e('Paellas service time', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_serving_time" 
-                               name="event_serving_time" 
-                               value="<?php echo esc_attr($servingTime); ?>" 
-                               class="short">
+                    <div class="zs-field-row">
+                        <div class="zs-field">
+                            <label for="event_starters_service_time">
+                                <?php esc_html_e('Starters service time', 'zero-sense'); ?>
+                            </label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="time" 
+                                       id="event_starters_service_time" 
+                                       name="event_starters_service_time" 
+                                       value="<?php echo esc_attr($startersServiceTime); ?>" 
+                                       class="short">
+                                <button type="button" 
+                                        id="zs-recalculate-starters-time" 
+                                        class="button button-secondary"
+                                        style="display: flex; align-items: center; gap: 4px;"
+                                        title="<?php esc_attr_e('Recalculate based on Paellas service time (30 min before)', 'zero-sense'); ?>">
+                                    <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                    <?php esc_html_e('Auto', 'zero-sense'); ?>
+                                </button>
+                            </div>
+                            <p class="description" style="margin-top: 4px; font-size: 11px; color: #646970;">
+                                <?php esc_html_e('Click Auto to set this 30 minutes before Paellas service time', 'zero-sense'); ?>
+                            </p>
+                        </div>
+                        
+                        <div class="zs-field">
+                            <label for="event_serving_time">
+                                <?php esc_html_e('Paellas service time', 'zero-sense'); ?>
+                            </label>
+                            <input type="time" 
+                                   id="event_serving_time" 
+                                   name="event_serving_time" 
+                                   value="<?php echo esc_attr($servingTime); ?>" 
+                                   class="short">
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Open Bar -->
-                <h4 style="margin: 16px 0 8px 0; font-size: 13px; font-weight: 600; color: #50575e;"><?php esc_html_e('Open bar', 'zero-sense'); ?></h4>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_open_bar_start">
-                            <?php esc_html_e('Open bar start', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_open_bar_start" 
-                               name="event_open_bar_start" 
-                               value="<?php echo esc_attr($openBarStart); ?>" 
-                               class="short">
-                    </div>
+                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Open bar', 'zero-sense'); ?></h4>
                     
-                    <div class="zs-field">
-                        <label for="event_open_bar_end">
-                            <?php esc_html_e('Open bar end', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_open_bar_end" 
-                               name="event_open_bar_end" 
-                               value="<?php echo esc_attr($openBarEnd); ?>" 
-                               class="short">
+                    <div class="zs-field-row">
+                        <div class="zs-field">
+                            <label for="event_open_bar_start">
+                                <?php esc_html_e('Open bar start', 'zero-sense'); ?>
+                            </label>
+                            <input type="time" 
+                                   id="event_open_bar_start" 
+                                   name="event_open_bar_start" 
+                                   value="<?php echo esc_attr($openBarStart); ?>" 
+                                   class="short">
+                        </div>
+                        
+                        <div class="zs-field">
+                            <label for="event_open_bar_end">
+                                <?php esc_html_e('Open bar end', 'zero-sense'); ?>
+                            </label>
+                            <input type="time" 
+                                   id="event_open_bar_end" 
+                                   name="event_open_bar_end" 
+                                   value="<?php echo esc_attr($openBarEnd); ?>" 
+                                   class="short">
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Cocktail -->
-                <h4 style="margin: 16px 0 8px 0; font-size: 13px; font-weight: 600; color: #50575e;"><?php esc_html_e('Cocktail', 'zero-sense'); ?></h4>
-                
-                <div class="zs-field-row">
-                    <div class="zs-field">
-                        <label for="event_cocktail_start">
-                            <?php esc_html_e('Cocktail start', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_cocktail_start" 
-                               name="event_cocktail_start" 
-                               value="<?php echo esc_attr($cocktailStart); ?>" 
-                               class="short">
-                    </div>
+                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Cocktail', 'zero-sense'); ?></h4>
                     
-                    <div class="zs-field">
-                        <label for="event_cocktail_end">
-                            <?php esc_html_e('Cocktail end', 'zero-sense'); ?>
-                        </label>
-                        <input type="time" 
-                               id="event_cocktail_end" 
-                               name="event_cocktail_end" 
-                               value="<?php echo esc_attr($cocktailEnd); ?>" 
-                               class="short">
+                    <div class="zs-field-row">
+                        <div class="zs-field">
+                            <label for="event_cocktail_start">
+                                <?php esc_html_e('Cocktail start', 'zero-sense'); ?>
+                            </label>
+                            <input type="time" 
+                                   id="event_cocktail_start" 
+                                   name="event_cocktail_start" 
+                                   value="<?php echo esc_attr($cocktailStart); ?>" 
+                                   class="short">
+                        </div>
+                        
+                        <div class="zs-field">
+                            <label for="event_cocktail_end">
+                                <?php esc_html_e('Cocktail end', 'zero-sense'); ?>
+                            </label>
+                            <input type="time" 
+                                   id="event_cocktail_end" 
+                                   name="event_cocktail_end" 
+                                   value="<?php echo esc_attr($cocktailEnd); ?>" 
+                                   class="short">
+                        </div>
                     </div>
                 </div>
             </div>
