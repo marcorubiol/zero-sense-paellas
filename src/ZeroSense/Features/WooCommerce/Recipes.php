@@ -326,12 +326,19 @@ class Recipes implements FeatureInterface
                             
                             console.log('Zero Sense Recipes: New ingredient created:', {id: newId, text: text});
                             
-                            // Remove the temporary option and add the real one
-                            $(selectElement).find('option[value="' + name.replace(/"/g, '\\"') + '"]').remove();
+                            // Clear all options and set the new one
+                            $(selectElement).empty();
                             var option = new Option(text, newId, true, true);
-                            $(selectElement).append(option).trigger('change');
+                            $(selectElement).append(option);
+                            
+                            // Trigger change to update select2
+                            $(selectElement).trigger('change');
+                            $(selectElement).trigger('change.select2');
+                            
+                            console.log('Zero Sense Recipes: Select updated with new ingredient');
                         } else {
                             console.error('Zero Sense Recipes: Create failed:', resp);
+                            alert('Error al crear el ingrediente. Por favor, inténtalo de nuevo.');
                         }
                     },
                     error: function(xhr, status, error) {
@@ -341,6 +348,7 @@ class Recipes implements FeatureInterface
                             responseText: xhr.responseText,
                             readyState: xhr.readyState
                         });
+                        alert('Error de conexión al crear el ingrediente.');
                     }
                 });
             }
