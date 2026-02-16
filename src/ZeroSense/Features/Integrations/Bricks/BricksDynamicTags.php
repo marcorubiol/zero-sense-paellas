@@ -1276,6 +1276,20 @@ class BricksDynamicTags implements FeatureInterface
 
     private function getMetaBoxFieldOptions(string $fieldId): array
     {
+        // Use Zero Sense FieldOptions for event fields
+        if ($fieldId === 'event_type') {
+            if (class_exists('ZeroSense\\Features\\WooCommerce\\EventManagement\\Support\\FieldOptions')) {
+                return \ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions::getEventTypeOptions();
+            }
+        }
+        
+        if ($fieldId === 'how_found_us') {
+            if (class_exists('ZeroSense\\Features\\WooCommerce\\EventManagement\\Support\\FieldOptions')) {
+                return \ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions::getHowFoundUsOptions();
+            }
+        }
+        
+        // Fallback to MetaBox for legacy fields
         $metaBoxes = apply_filters('rwmb_meta_boxes', []);
         
         foreach ($metaBoxes as $metaBox) {
