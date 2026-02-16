@@ -495,6 +495,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getServiceLocationName($post);
         }
 
+        if ($tag === '{woo_mb_event_staff_all}') {
+            return $this->getEventStaffFormatted($post);
+        }
+
         if (strpos($tag, '{woo_mb_') === 0) {
             $field = $this->stripTag($tag, 'woo_mb_');
             return $this->getMetaBoxFieldValue($field, $post);
@@ -2610,6 +2614,105 @@ class BricksDynamicTags implements FeatureInterface
 
         $html .= '</tbody>';
         $html .= '</table>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Get event staff formatted for display
+     */
+    private function getEventStaffFormatted($post): string
+    {
+        $order = $this->getOrder($post);
+        if (!$order) {
+            return '';
+        }
+
+        $staffAssignments = $order->get_meta('zs_event_staff', true);
+        if (!is_array($staffAssignments) || empty($staffAssignments)) {
+            return '';
+        }
+
+        // Group staff by role
+        $staffByRole = [];
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+
+            $role = $assignment['role'];
+            $staffId = (int) $assignment['staff_id'];
+            
+            if (!isset($staffByRole[$role])) {
+                $staffByRole[$role] = [];
+            }
+            
+            $staffByRole[$role][] = $staffId;
+        }
+
+        if (empty($staffByRole)) {
+            return '';
+        }
+
+        // Get role names
+        $roleTerms = get_terms([
+            'taxonomy' => 'zs_staff_role',
+            'hide_empty' => false,
+            'orderby' => 'meta_value_num',
+            'meta_key' => 'role_order',
+            'order' => 'ASC',
+        ]);
+
+        $roleNames = [];
+        foreach ($roleTerms as $term) {
+            $roleNames[$term->slug] = $term->name;
+        }
+
+        // Build HTML output
+        $html = '<div class="zs-event-staff-list">';
+        
+        foreach ($staffByRole as $roleSlug => $staffIds) {
+            $roleName = $roleNames[$roleSlug] ?? ucfirst(str_replace('-', ' ', $roleSlug));
+            
+            $html .= '<div class="zs-staff-role-group">';
+            $html .= '<h4 class="zs-staff-role-title">' . esc_html($roleName) . '</h4>';
+            $html .= '<ul class="zs-staff-members">';
+            
+            foreach ($staffIds as $staffId) {
+                $staffPost = get_post($staffId);
+                if (!$staffPost) {
+                    continue;
+                }
+                
+                $name = $staffPost->post_title;
+                $phone = get_post_meta($staffId, 'zs_staff_phone', true);
+                $email = get_post_meta($staffId, 'zs_staff_email', true);
+                
+                $html .= '<li class="zs-staff-member">';
+                $html .= '<span class="zs-staff-name">' . esc_html($name) . '</span>';
+                
+                if ($phone || $email) {
+                    $html .= ' <span class="zs-staff-contact">(';
+                    if ($phone) {
+                        $html .= '<a href="tel:' . esc_attr($phone) . '" class="zs-staff-phone">' . esc_html($phone) . '</a>';
+                    }
+                    if ($phone && $email) {
+                        $html .= ', ';
+                    }
+                    if ($email) {
+                        $html .= '<a href="mailto:' . esc_attr($email) . '" class="zs-staff-email">' . esc_html($email) . '</a>';
+                    }
+                    $html .= ')</span>';
+                }
+                
+                $html .= '</li>';
+            }
+            
+            $html .= '</ul>';
+            $html .= '</div>';
+        }
+        
         $html .= '</div>';
 
         return $html;
