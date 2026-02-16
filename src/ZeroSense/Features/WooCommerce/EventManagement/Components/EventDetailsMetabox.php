@@ -375,7 +375,7 @@ class EventDetailsMetabox
                     const paellasTime = paellasTimeInput.value;
                     
                     if (!paellasTime) {
-                        alert('<?php esc_js_e('Please set Paellas Service Time first', 'zero-sense'); ?>');
+                        alert('<?php echo esc_js(__('Please set Paellas Service Time first', 'zero-sense')); ?>');
                         paellasTimeInput.focus();
                         return;
                     }
@@ -383,7 +383,7 @@ class EventDetailsMetabox
                     // Calculate 30 minutes before
                     const timeParts = paellasTime.split(':');
                     if (timeParts.length !== 2) {
-                        alert('<?php esc_js_e('Invalid time format', 'zero-sense'); ?>');
+                        alert('<?php echo esc_js(__('Invalid time format', 'zero-sense')); ?>');
                         return;
                     }
                     
@@ -409,7 +409,7 @@ class EventDetailsMetabox
                     
                     // Visual feedback
                     const originalText = recalcBtn.innerHTML;
-                    recalcBtn.innerHTML = '✓ <?php esc_js_e('Done', 'zero-sense'); ?>';
+                    recalcBtn.innerHTML = '✓ <?php echo esc_js(__('Done', 'zero-sense')); ?>';
                     recalcBtn.disabled = true;
                     
                     setTimeout(function() {
