@@ -44,6 +44,18 @@ class BricksDynamicTags implements FeatureInterface
         'notes' => 'Ops Notes',
     ];
 
+    private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
+    private const META_RECIPE_INGREDIENTS = 'zs_recipe_ingredients';
+    private const TAX_INGREDIENT = 'zs_ingredient';
+    private const CPT_RECIPE = 'zs_recipe';
+    
+    private const META_EVENT_ADULTS = 'zs_event_adults';
+    private const META_EVENT_CHILDREN = 'zs_event_children_5_to_8';
+    private const META_EVENT_BABIES = 'zs_event_children_0_to_4';
+    
+    private const ADULT_WEIGHT = 1.0;
+    private const CHILD_WEIGHT = 0.4;
+    private const BABY_WEIGHT = 0.0;
 
     /**
      * Get MetaBox fields from registry
@@ -328,6 +340,30 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_order_recipes}',
+            'label' => 'Order Recipes (Detailed with Products)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_recipes_simple}',
+            'label' => 'Order Recipes (Simple List)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_has_recipes}',
+            'label' => 'Order Has Recipes (1/0)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_ingredients_total}',
+            'label' => 'Order Ingredients (Total Calculated)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -470,6 +506,22 @@ class BricksDynamicTags implements FeatureInterface
 
         if ($tag === '{woo_zs_intolerances}') {
             return $this->getMetaBoxFieldValue('intolerances', $post);
+        }
+
+        if ($tag === '{woo_zs_order_recipes}') {
+            return $this->getOrderRecipes($post);
+        }
+
+        if ($tag === '{woo_zs_order_recipes_simple}') {
+            return $this->getOrderRecipesSimple($post);
+        }
+
+        if ($tag === '{woo_zs_order_has_recipes}') {
+            return $this->getOrderHasRecipes($post);
+        }
+
+        if ($tag === '{woo_zs_order_ingredients_total}') {
+            return $this->getOrderIngredientsTotal($post);
         }
 
         return $tag;

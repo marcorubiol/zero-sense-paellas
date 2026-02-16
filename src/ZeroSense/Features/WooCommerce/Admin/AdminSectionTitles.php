@@ -33,23 +33,13 @@ class AdminSectionTitles implements FeatureInterface
 
     public function init(): void
     {
-        // Verificar si estamos en HPOS o Classic
-        if (HposCompatibility::isHposEnabled()) {
-            // Filtros para HPOS
-            add_action('admin_enqueue_scripts', [$this, 'addHposStyles'], 10, 1);
-            add_filter('woocommerce_order_admin_tabs', [$this, 'modifyHposOrderTabs'], 10, 1);
-            add_action('woocommerce_order_admin_header', [$this, 'addHposTabLabels'], 10, 1);
-        } else {
-            // Filtros para WooCommerce Classic
-            add_filter('woocommerce_admin_billing_fields', [$this, 'modifyBillingSectionTitle'], 10, 3);
-            add_filter('woocommerce_admin_shipping_fields', [$this, 'modifyShippingSectionTitle'], 10, 3);
-            add_filter('woocommerce_admin_order_data_tabs', [$this, 'modifyOrderDataTabs'], 10, 1);
-        }
+        // JavaScript para modificar títulos (funciona tanto en HPOS como Classic)
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAdminScripts'], 10, 1);
         
-        // Register strings with WPML (común para ambos)
+        // Register strings with WPML
         add_action('init', [$this, 'registerWpmlStrings'], 20);
         
-        // Admin CSS (común para ambos)
+        // Admin CSS
         add_action('admin_head', [$this, 'addAdminStyles']);
     }
 
@@ -64,105 +54,57 @@ class AdminSectionTitles implements FeatureInterface
     }
 
     /**
-     * Modificar tabs para HPOS
+     * Enqueue admin scripts para modificar títulos
      */
-    public function modifyHposOrderTabs($tabs): array
+    public function enqueueAdminScripts($hook): void
     {
-        if (isset($tabs['billing'])) {
-            $tabs['billing']['label'] = 'Client';
-        }
-        
-        if (isset($tabs['shipping'])) {
-            $tabs['shipping']['label'] = 'Venue/Wedding Planner';
-        }
-        
-        return $tabs;
-    }
-
-    /**
-     * Estilos específicos para HPOS
-     */
-    public function addHposStyles($hook): void
-    {
-        $screen = get_current_screen();
-        if (!$screen || $screen->id !== 'woocommerce_page_wc-orders') {
+        // Solo cargar en páginas de pedidos
+        if (!HposCompatibility::isOrderEditScreen()) {
             return;
         }
 
-        // JavaScript para modificar dinámicamente los tabs en HPOS
+        // JavaScript para modificar títulos de metaboxes
         $script = <<<'JAVASCRIPT'
             jQuery(document).ready(function($) {
-                // Modificar tabs de billing/shipping en HPOS
-                $('.wc-orders-tabs a').each(function() {
-                    var elem = $(this);
-                    if (elem.text().trim() === 'Billing') {
-                        elem.text('Client');
-                    }
-                    if (elem.text().trim() === 'Shipping') {
-                        elem.text('Venue/Wedding Planner');
-                    }
-                });
+                // Función para cambiar títulos
+                function changeMetaboxTitles() {
+                    // Cambiar títulos de metaboxes (HPOS y Classic)
+                    $('#woocommerce-order-data h2.hndle, #woocommerce-order-data h3.hndle').each(function() {
+                        var elem = $(this);
+                        var text = elem.text().trim();
+                        
+                        if (text === 'Billing' || text === 'Billing details') {
+                            elem.html('<span>👤 Client</span>');
+                        }
+                        if (text === 'Shipping' || text === 'Shipping details') {
+                            elem.html('<span>📍 Venue/Wedding Planner</span>');
+                        }
+                    });
+                    
+                    // Para HPOS - cambiar títulos en postbox
+                    $('.postbox h2, .postbox h3').each(function() {
+                        var elem = $(this);
+                        var text = elem.text().trim();
+                        
+                        if (text === 'Billing' || text === 'Billing details') {
+                            elem.html('<span>👤 Client</span>');
+                        }
+                        if (text === 'Shipping' || text === 'Shipping details') {
+                            elem.html('<span>📍 Venue/Wedding Planner</span>');
+                        }
+                    });
+                }
                 
-                // Modificar títulos de sección
-                $('.woocommerce-order-panel .panel-header h2').each(function() {
-                    var elem = $(this);
-                    if (elem.text().trim() === 'Billing') {
-                        elem.text('Client');
-                    }
-                    if (elem.text().trim() === 'Shipping') {
-                        elem.text('Venue/Wedding Planner');
-                    }
-                });
+                // Ejecutar al cargar
+                changeMetaboxTitles();
+                
+                // Ejecutar después de un pequeño delay por si hay carga dinámica
+                setTimeout(changeMetaboxTitles, 500);
+                setTimeout(changeMetaboxTitles, 1000);
             });
 JAVASCRIPT;
 
-        wp_add_inline_script('wc-orders', $script);
-    }
-
-    /**
-     * Añadir etiquetas de tabs para HPOS
-     */
-    public function addHposTabLabels($order): void
-    {
-        // Este método puede ser usado para modificaciones adicionales en el header de HPOS
-    }
-
-    /**
-     * Modify billing section title in order admin
-     */
-    public function modifyBillingSectionTitle($fields, $order, $context): array
-    {
-        // We don't modify the fields themselves, just the section title
-        // This is handled by the woocommerce_admin_order_data_tabs filter
-        return $fields;
-    }
-
-    /**
-     * Modify shipping section title in order admin
-     */
-    public function modifyShippingSectionTitle($fields, $order, $context): array
-    {
-        // We don't modify the fields themselves, just the section title
-        // This is handled by the woocommerce_admin_order_data_tabs filter
-        return $fields;
-    }
-
-    /**
-     * Modify order data tabs to change section titles
-     */
-    public function modifyOrderDataTabs($tabs): array
-    {
-        // Change Billing to Client
-        if (isset($tabs['billing'])) {
-            $tabs['billing']['label'] = 'Client';
-        }
-        
-        // Change Shipping to Venue/Wedding Planner
-        if (isset($tabs['shipping'])) {
-            $tabs['shipping']['label'] = 'Venue/Wedding Planner';
-        }
-        
-        return $tabs;
+        wp_add_inline_script('jquery', $script);
     }
 
     /**
@@ -198,43 +140,7 @@ JAVASCRIPT;
     }
 
     /**
-     * Get translated string using WPML or fallback
-     */
-    private function getTranslatedString(string $default, string $key, string $name): string
-    {
-        if (function_exists('wpml_translate_string')) {
-            return wpml_translate_string('zero-sense', $key, $default);
-        }
-        
-        // Fallback translations for common languages
-        $current_lang = function_exists('get_current_language') ? get_current_language() : get_locale();
-        
-        $translations = [
-            'billing_section_title' => [
-                'en' => 'Client',
-                'es' => 'Cliente',
-                'ca' => 'Client',
-                'default' => 'Client'
-            ],
-            'shipping_section_title' => [
-                'en' => 'Venue/Wedding Planner',
-                'es' => 'Recinto/Organizador de Bodas',
-                'ca' => 'Recinte/Organitzador de Bodas',
-                'default' => 'Venue/Wedding Planner'
-            ]
-        ];
-
-        $lang_key = substr($current_lang, 0, 2);
-        
-        if (isset($translations[$key][$lang_key])) {
-            return $translations[$key][$lang_key];
-        }
-        
-        return $translations[$key]['default'] ?? $default;
-    }
-
-    /**
-     * Add custom admin styles if needed
+     * Add custom admin styles
      */
     public function addAdminStyles(): void
     {
@@ -246,32 +152,12 @@ JAVASCRIPT;
         }
         ?>
         <style>
-            /* Estilos para ambos Classic y HPOS */
-            .woocommerce-order-data-tabs .tabs li a,
-            .wc-orders-tabs a {
-                font-weight: 600;
-            }
-            
-            /* Iconos para Classic */
-            .woocommerce-order-data-tabs .tabs li.billing_tab a:before {
-                content: "👤 ";
-                margin-right: 5px;
-            }
-            
-            .woocommerce-order-data-tabs .tabs li.shipping_tab a:before {
-                content: "📍 ";
-                margin-right: 5px;
-            }
-            
-            /* Iconos para HPOS */
-            .wc-orders-tabs li.billing a:before {
-                content: "👤 ";
-                margin-right: 5px;
-            }
-            
-            .wc-orders-tabs li.shipping a:before {
-                content: "📍 ";
-                margin-right: 5px;
+            /* Asegurar que los títulos de metabox sean visibles */
+            #woocommerce-order-data h2.hndle span,
+            #woocommerce-order-data h3.hndle span,
+            .postbox h2 span,
+            .postbox h3 span {
+                display: inline-block;
             }
         </style>
         <?php
