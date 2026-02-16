@@ -1577,7 +1577,20 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html = '<div class="zs-event-media-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 500px;">';
+        $html = '<style>
+            .zs-event-media-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-width: 650px; }
+            .zs-gallery-item { border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+            .zs-gallery-item img, .zs-gallery-item video { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+            .zs-gallery-item a { display: block; width: 100%; height: 100%; }
+            .zs-lightbox { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
+            .zs-lightbox:target { display: flex; }
+            .zs-lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+            .zs-lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; text-decoration: none; cursor: pointer; }
+            .zs-lightbox-close:hover { color: #ccc; }
+        </style>';
+        
+        $html .= '<div class="zs-event-media-gallery">';
+        $index = 0;
         foreach ($ids as $id) {
             $url = wp_get_attachment_url((int) $id);
             $type = get_post_mime_type((int) $id);
@@ -1586,10 +1599,18 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             if (is_string($type) && strpos($type, 'video') !== false) {
-                $html .= '<div class="zs-gallery-item zs-gallery-video" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9;"><video src="' . esc_url($url) . '" controls style="width: 100%; height: auto; display: block;"></video></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls></video></div>';
             } else {
                 $thumb = wp_get_attachment_image_url((int) $id, 'medium');
-                $html .= '<div class="zs-gallery-item zs-gallery-image" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9;"><a href="' . esc_url($url) . '" target="_blank" rel="noopener" style="display: block;"><img src="' . esc_url($thumb ?: $url) . '" alt="" style="width: 100%; height: auto; display: block;"></a></div>';
+                $lightboxId = 'zs-lightbox-' . $id . '-' . $index;
+                $html .= '<div class="zs-gallery-item zs-gallery-image">';
+                $html .= '<a href="#' . esc_attr($lightboxId) . '"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a>';
+                $html .= '</div>';
+                $html .= '<div id="' . esc_attr($lightboxId) . '" class="zs-lightbox">';
+                $html .= '<a href="#" class="zs-lightbox-close">&times;</a>';
+                $html .= '<img src="' . esc_url($url) . '" alt="">';
+                $html .= '</div>';
+                $index++;
             }
         }
         $html .= '</div>';
