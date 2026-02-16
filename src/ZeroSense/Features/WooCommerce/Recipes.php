@@ -46,6 +46,7 @@ class Recipes implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
 
         add_action('add_meta_boxes', [$this, 'addRecipeMetabox']);
+        add_action('add_meta_boxes', [$this, 'removeDefaultMetaboxes']);
         add_action('save_post_' . self::CPT, [$this, 'saveRecipeMetabox'], 10, 2);
         
         // Higher priority to load before asset blockers
@@ -70,6 +71,8 @@ class Recipes implements FeatureInterface
 
     public function registerContentTypes(): void
     {
+        error_log('[ZS Recipes] registerContentTypes called');
+        
         register_post_type(self::CPT, [
             'labels' => [
                 'name' => __('Recipes', 'zero-sense'),
@@ -90,6 +93,8 @@ class Recipes implements FeatureInterface
             'capability_type' => 'post',
             'map_meta_cap' => true,
         ]);
+        
+        error_log('[ZS Recipes] CPT registered: ' . self::CPT);
 
         register_taxonomy(self::TAX_INGREDIENT, [self::CPT], [
             'labels' => [
@@ -108,10 +113,14 @@ class Recipes implements FeatureInterface
             'show_admin_column' => false,
             'hierarchical' => false,
         ]);
+        
+        error_log('[ZS Recipes] Taxonomy registered: ' . self::TAX_INGREDIENT);
     }
 
     public function addRecipeMetabox(): void
     {
+        error_log('[ZS Recipes] addRecipeMetabox called');
+        
         add_meta_box(
             'zs_recipe_ingredients',
             __('Recipe ingredients', 'zero-sense'),
@@ -120,16 +129,31 @@ class Recipes implements FeatureInterface
             'normal',
             'high'
         );
+        
+        error_log('[ZS Recipes] Metabox added for CPT: ' . self::CPT);
+    }
+
+    public function removeDefaultMetaboxes(): void
+    {
+        // Remove default tags metabox for our CPT
+        remove_meta_box('tagsdiv-' . self::TAX_INGREDIENT, self::CPT, 'side');
+        error_log('[ZS Recipes] Removed default tags metabox for: ' . self::TAX_INGREDIENT);
     }
 
     public function renderRecipeMetabox(WP_Post $post): void
     {
+        error_log('[ZS Recipes] renderRecipeMetabox called for post: ' . $post->ID);
+        error_log('[ZS Recipes] Post type: ' . $post->post_type);
+        
         if (!current_user_can('edit_post', $post->ID)) {
+            error_log('[ZS Recipes] User cannot edit post');
             return;
         }
 
         $ingredients = get_post_meta($post->ID, self::META_INGREDIENTS, true);
         $ingredients = is_array($ingredients) ? $ingredients : [];
+        
+        error_log('[ZS Recipes] Found ingredients: ' . count($ingredients));
 
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
 
