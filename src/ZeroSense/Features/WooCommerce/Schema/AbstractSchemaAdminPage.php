@@ -557,6 +557,10 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         $statuses = isset($raw['status']) && is_array($raw['status']) ? $raw['status'] : [];
         $createdAts = isset($raw['created_at']) && is_array($raw['created_at']) ? $raw['created_at'] : [];
 
+        error_log("[Schema Save] Incoming keys: " . print_r($keys, true));
+        error_log("[Schema Save] Incoming labels: " . print_r($labels, true));
+        error_log("[Schema Save] Existing schema before save: " . print_r($existingSchema, true));
+
         $allowedTypeKeys = array_keys($this->getAllowedTypes());
 
         $schema = [];
@@ -619,6 +623,7 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
             $schema = [];
         }
 
+        error_log("[Schema Save] Final schema to save: " . print_r($schema, true));
         update_option($this->getOptionName(), $schema, false);
 
         // Register strings with WPML
