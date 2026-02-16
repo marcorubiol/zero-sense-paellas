@@ -127,6 +127,10 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         add_action('admin_menu', [$this, 'addAdminMenu']);
         add_action('admin_post_' . $this->getFormAction(), [$this, 'handleSave']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueStyles']);
+        
+        // AJAX actions for instant operations
+        add_action('wp_ajax_zs_schema_toggle_field_' . $this->getSchemaKey(), [$this, 'ajaxToggleField']);
+        add_action('wp_ajax_zs_schema_delete_field_' . $this->getSchemaKey(), [$this, 'ajaxDeleteField']);
     }
 
     public function getPriority(): int
@@ -383,33 +387,38 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                         if (btn.dataset.bound) return;
                         btn.dataset.bound = '1';
                         
-                        btn.addEventListener('click', function() {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
                             var tr = btn.closest('tr');
-                            var statusField = tr.querySelector('.zs-ops-status-field');
-                            var currentStatus = btn.getAttribute('data-current-status');
-                            var newStatus = currentStatus === 'hidden' ? 'active' : 'hidden';
+                            var fieldKey = tr.getAttribute('data-field-key');
                             
-                            statusField.value = newStatus;
-                            btn.setAttribute('data-current-status', newStatus);
+                            btn.disabled = true;
+                            btn.style.opacity = '0.5';
                             
-                            var icon = btn.querySelector('.dashicons');
-                            var text = btn.querySelector('.zs-ops-toggle-text');
-                            
-                            if (newStatus === 'hidden') {
-                                icon.classList.remove('dashicons-hidden');
-                                icon.classList.add('dashicons-visibility');
-                                text.textContent = <?php echo json_encode(__('Unhide', 'zero-sense')); ?>;
-                                btn.setAttribute('title', <?php echo json_encode(__('Unhide field', 'zero-sense')); ?>);
-                                tr.classList.add('zs-ops-row-hidden');
-                                tr.style.opacity = '0.6';
-                            } else {
-                                icon.classList.remove('dashicons-visibility');
-                                icon.classList.add('dashicons-hidden');
-                                text.textContent = <?php echo json_encode(__('Hide', 'zero-sense')); ?>;
-                                btn.setAttribute('title', <?php echo json_encode(__('Hide field', 'zero-sense')); ?>);
-                                tr.classList.remove('zs-ops-row-hidden');
-                                tr.style.opacity = '1';
-                            }
+                            fetch(ajaxurl, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                body: new URLSearchParams({
+                                    action: 'zs_schema_toggle_field_<?php echo esc_js($this->getSchemaKey()); ?>',
+                                    nonce: '<?php echo wp_create_nonce('zs_schema_ajax_' . $this->getSchemaKey()); ?>',
+                                    field_key: fieldKey
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    location.reload();
+                                } else {
+                                    alert(data.data.message || 'Error toggling field');
+                                    btn.disabled = false;
+                                    btn.style.opacity = '1';
+                                }
+                            })
+                            .catch(error => {
+                                alert('Error: ' + error.message);
+                                btn.disabled = false;
+                                btn.style.opacity = '1';
+                            });
                         });
                     });
                 }
@@ -424,12 +433,43 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                             e.preventDefault();
                             e.stopPropagation();
                             
-                            if (confirm(<?php echo json_encode(__('Are you sure you want to permanently delete this field? This action cannot be undone.', 'zero-sense')); ?>)) {
-                                var tr = btn.closest('tr');
-                                if (tr) {
-                                    tr.parentNode.removeChild(tr);
-                                }
+                            if (!confirm(<?php echo json_encode(__('Are you sure you want to permanently delete this field? This action cannot be undone.', 'zero-sense')); ?>)) {
+                                return false;
                             }
+                            
+                            var tr = btn.closest('tr');
+                            var fieldKey = tr.getAttribute('data-field-key');
+                            
+                            btn.disabled = true;
+                            btn.style.opacity = '0.5';
+                            
+                            fetch(ajaxurl, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                body: new URLSearchParams({
+                                    action: 'zs_schema_delete_field_<?php echo esc_js($this->getSchemaKey()); ?>',
+                                    nonce: '<?php echo wp_create_nonce('zs_schema_ajax_' . $this->getSchemaKey()); ?>',
+                                    field_key: fieldKey
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    tr.style.transition = 'opacity 0.3s';
+                                    tr.style.opacity = '0';
+                                    setTimeout(() => location.reload(), 300);
+                                } else {
+                                    alert(data.data.message || 'Error deleting field');
+                                    btn.disabled = false;
+                                    btn.style.opacity = '1';
+                                }
+                            })
+                            .catch(error => {
+                                alert('Error: ' + error.message);
+                                btn.disabled = false;
+                                btn.style.opacity = '1';
+                            });
+                            
                             return false;
                         });
                     });
@@ -727,6 +767,65 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         }
         
         return $migrated;
+    }
+    
+    public function ajaxToggleField(): void
+    {
+        check_ajax_referer('zs_schema_ajax_' . $this->getSchemaKey(), 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Insufficient permissions']);
+        }
+        
+        $fieldKey = isset($_POST['field_key']) ? sanitize_key($_POST['field_key']) : '';
+        if (empty($fieldKey)) {
+            wp_send_json_error(['message' => 'Invalid field key']);
+        }
+        
+        $schema = $this->getSchema();
+        $found = false;
+        
+        foreach ($schema as &$row) {
+            if (isset($row['key']) && $row['key'] === $fieldKey) {
+                $currentStatus = $row['status'] ?? 'active';
+                $row['status'] = $currentStatus === 'hidden' ? 'active' : 'hidden';
+                $found = true;
+                break;
+            }
+        }
+        
+        if (!$found) {
+            wp_send_json_error(['message' => 'Field not found']);
+        }
+        
+        update_option($this->getOptionName(), $schema, false);
+        wp_send_json_success(['message' => 'Field toggled successfully']);
+    }
+    
+    public function ajaxDeleteField(): void
+    {
+        check_ajax_referer('zs_schema_ajax_' . $this->getSchemaKey(), 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Insufficient permissions']);
+        }
+        
+        $fieldKey = isset($_POST['field_key']) ? sanitize_key($_POST['field_key']) : '';
+        if (empty($fieldKey)) {
+            wp_send_json_error(['message' => 'Invalid field key']);
+        }
+        
+        $schema = $this->getSchema();
+        $newSchema = [];
+        
+        foreach ($schema as $row) {
+            if (!isset($row['key']) || $row['key'] !== $fieldKey) {
+                $newSchema[] = $row;
+            }
+        }
+        
+        update_option($this->getOptionName(), $newSchema, false);
+        wp_send_json_success(['message' => 'Field deleted successfully']);
     }
     
     /**
