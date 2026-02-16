@@ -249,6 +249,24 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_order_last_modified}',
+            'label' => 'Order Last Modified (Date & Time)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_last_modified_date}',
+            'label' => 'Order Last Modified (Date Only)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_last_modified_time}',
+            'label' => 'Order Last Modified (Time Only)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -356,6 +374,18 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderProductsByCategory($post);
         }
 
+        if ($tag === '{woo_zs_order_last_modified}') {
+            return $this->getOrderLastModified($post);
+        }
+
+        if ($tag === '{woo_zs_order_last_modified_date}') {
+            return $this->getOrderLastModified($post, 'date');
+        }
+
+        if ($tag === '{woo_zs_order_last_modified_time}') {
+            return $this->getOrderLastModified($post, 'time');
+        }
+
         return $tag;
     }
 
@@ -402,6 +432,10 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{woo_zs_order_products_simple}', $this->getOrderProductsSimple($post), $content);
         $content = str_replace('{woo_zs_order_products_count}', $this->getOrderProductsCount($post), $content);
         $content = str_replace('{woo_zs_order_products_by_category}', $this->getOrderProductsByCategory($post), $content);
+
+        $content = str_replace('{woo_zs_order_last_modified}', $this->getOrderLastModified($post), $content);
+        $content = str_replace('{woo_zs_order_last_modified_date}', $this->getOrderLastModified($post, 'date'), $content);
+        $content = str_replace('{woo_zs_order_last_modified_time}', $this->getOrderLastModified($post, 'time'), $content);
 
         return $content;
     }
@@ -806,6 +840,39 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return (string) count($order->get_items());
+    }
+
+    private function getOrderLastModified($post, string $format = 'full'): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Last Modified');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $modified = $order->get_date_modified();
+        if (!$modified) {
+            return '';
+        }
+
+        // Get WordPress date and time formats
+        $dateFormat = get_option('date_format', 'Y-m-d');
+        $timeFormat = get_option('time_format', 'H:i:s');
+
+        if ($format === 'date') {
+            return $modified->date_i18n($dateFormat);
+        }
+
+        if ($format === 'time') {
+            return $modified->date_i18n($timeFormat);
+        }
+
+        // Full format: date + time
+        return $modified->date_i18n($dateFormat . ' ' . $timeFormat);
     }
 
     private function getOrderProductsByCategory($post): string
