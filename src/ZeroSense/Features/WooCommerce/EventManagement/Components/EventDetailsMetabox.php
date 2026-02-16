@@ -18,6 +18,7 @@ class EventDetailsMetabox
         MetaKeys::LOCATION_LINK => 'location_link',
         MetaKeys::EVENT_DATE => 'event_date',
         MetaKeys::SERVING_TIME => 'serving_time',
+        MetaKeys::STARTERS_SERVICE_TIME => 'starters_service_time',
         MetaKeys::START_TIME => 'event_start_time',
         MetaKeys::EVENT_TYPE => 'event_type',
         MetaKeys::HOW_FOUND_US => 'how_found_us',
@@ -34,6 +35,7 @@ class EventDetailsMetabox
         MetaKeys::LOCATION_LINK => '_event_location_link',
         MetaKeys::EVENT_DATE => '_event_date',
         MetaKeys::SERVING_TIME => '_event_serving_time',
+        MetaKeys::STARTERS_SERVICE_TIME => '_event_starters_service_time',
         MetaKeys::START_TIME => '_event_start_time',
         MetaKeys::EVENT_TYPE => '_event_type',
         MetaKeys::HOW_FOUND_US => '_event_how_found_us',
@@ -101,6 +103,7 @@ class EventDetailsMetabox
         $eventDateForInput = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
         $teamArrivalTime = $this->getOrderMetaWithFallback($order, MetaKeys::TEAM_ARRIVAL_TIME);
         $servingTime = $this->getOrderMetaWithFallback($order, MetaKeys::SERVING_TIME);
+        $startersServiceTime = $this->getOrderMetaWithFallback($order, MetaKeys::STARTERS_SERVICE_TIME);
         $startTime = $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
         $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
         $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
@@ -236,12 +239,23 @@ class EventDetailsMetabox
                     
                     <div class="zs-field">
                         <label for="event_serving_time">
-                            <?php esc_html_e('Service time', 'zero-sense'); ?>
+                            <?php esc_html_e('Paellas Service Time', 'zero-sense'); ?>
                         </label>
                         <input type="time" 
                                id="event_serving_time" 
                                name="event_serving_time" 
                                value="<?php echo esc_attr($servingTime); ?>" 
+                               class="short">
+                    </div>
+                    
+                    <div class="zs-field">
+                        <label for="event_starters_service_time">
+                            <?php esc_html_e('Starters Service Time', 'zero-sense'); ?>
+                        </label>
+                        <input type="time" 
+                               id="event_starters_service_time" 
+                               name="event_starters_service_time" 
+                               value="<?php echo esc_attr($startersServiceTime); ?>" 
                                class="short">
                     </div>
                 </div>
@@ -390,7 +404,20 @@ class EventDetailsMetabox
             $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, sanitize_text_field((string) $_POST['event_team_arrival_time']));
         }
         if (isset($_POST['event_serving_time'])) {
-            $order->update_meta_data(MetaKeys::SERVING_TIME, sanitize_text_field($_POST['event_serving_time']));
+            $servingTime = sanitize_text_field($_POST['event_serving_time']);
+            $order->update_meta_data(MetaKeys::SERVING_TIME, $servingTime);
+            
+            // Auto-calculate starters service time if not set and serving time is provided
+            $existingStartersTime = $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true);
+            if (($existingStartersTime === '' || $existingStartersTime === null) && $servingTime !== '') {
+                $startersTime = $this->calculateStartersTime($servingTime);
+                if ($startersTime !== '') {
+                    $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $startersTime);
+                }
+            }
+        }
+        if (isset($_POST['event_starters_service_time'])) {
+            $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, sanitize_text_field($_POST['event_starters_service_time']));
         }
         if (isset($_POST['event_start_time'])) {
             $order->update_meta_data(MetaKeys::START_TIME, sanitize_text_field($_POST['event_start_time']));
@@ -431,5 +458,24 @@ class EventDetailsMetabox
         }
 
         return '';
+    }
+
+    private function calculateStartersTime(string $paellasTime): string
+    {
+        if ($paellasTime === '') {
+            return '';
+        }
+
+        try {
+            $time = \DateTime::createFromFormat('H:i', $paellasTime);
+            if ($time === false) {
+                return '';
+            }
+            
+            $time->modify('-30 minutes');
+            return $time->format('H:i');
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 }

@@ -22,6 +22,7 @@ class MetaKeys
     public const EVENT_DATE = 'zs_event_date';
     public const TEAM_ARRIVAL_TIME = 'zs_event_team_arrival_time';
     public const SERVING_TIME = 'zs_event_serving_time';
+    public const STARTERS_SERVICE_TIME = 'zs_event_starters_service_time';
     public const START_TIME = 'zs_event_start_time';
     
     // Event Details
@@ -53,6 +54,7 @@ class MetaKeys
             'event_date' => self::EVENT_DATE,
             'team_arrival_time' => self::TEAM_ARRIVAL_TIME,
             'serving_time' => self::SERVING_TIME,
+            'starters_service_time' => self::STARTERS_SERVICE_TIME,
             'start_time' => self::START_TIME,
             'event_type' => self::EVENT_TYPE,
             'how_found_us' => self::HOW_FOUND_US,
@@ -76,7 +78,8 @@ class MetaKeys
             self::LOCATION_LINK => __('Location link', 'zero-sense'),
             self::EVENT_DATE => __('Event date', 'zero-sense'),
             self::TEAM_ARRIVAL_TIME => __('Team arrival time', 'zero-sense'),
-            self::SERVING_TIME => __('Service time', 'zero-sense'),
+            self::SERVING_TIME => __('Paellas Service Time', 'zero-sense'),
+            self::STARTERS_SERVICE_TIME => __('Starters Service Time', 'zero-sense'),
             self::START_TIME => __('Event start time', 'zero-sense'),
             self::EVENT_TYPE => __('Event type', 'zero-sense'),
             self::HOW_FOUND_US => __('How found us', 'zero-sense'),

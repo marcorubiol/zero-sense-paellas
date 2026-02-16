@@ -111,10 +111,18 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::SERVING_TIME, [
-            'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Service time',
+            'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Paellas Service Time',
             'type' => 'text',
             'translatable' => false,
-            'legacy_keys' => ['serving_time', '_event_serving_time'],
+            'legacy_keys' => ['serving_time', '_event_serving_time', 'paellas_service_time'],
+            'feature' => 'EventManagement',
+        ]);
+
+        $registry->register(MetaKeys::STARTERS_SERVICE_TIME, [
+            'label' => $labels[MetaKeys::STARTERS_SERVICE_TIME] ?? 'Starters Service Time',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['starters_service_time', '_event_starters_service_time'],
             'feature' => 'EventManagement',
         ]);
 
