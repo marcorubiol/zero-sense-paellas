@@ -190,36 +190,20 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
         foreach ($allFields as $key => $fieldConfig) {
             $type = $fieldConfig['type'] ?? 'text';
             $rawValue = $incoming[$key] ?? '';
-
             $sanitizedValue = $this->sanitizeValue($rawValue, $type);
-            
-            error_log("[Save Debug] {$schemaKey} - Field: {$key}, Raw: '{$rawValue}', Sanitized: '{$sanitizedValue}'");
-            
             $saved[$key] = ['value' => $sanitizedValue];
         }
-        
-        error_log("[Save Debug] {$schemaKey} - Final data to save: " . print_r($saved, true));
         
         // Use WooCommerce order object to save meta data
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
-            // Delete old meta first to ensure clean save
             $order->delete_meta_data($metaKey);
             $order->update_meta_data($metaKey, $saved);
             $order->save();
-            
-            // Force cache clear
-            wp_cache_delete($orderId, 'post_meta');
-            wp_cache_delete($orderId, 'posts');
             clean_post_cache($orderId);
-            
-            error_log("[Save Debug] {$schemaKey} - Saved via WC_Order and cache cleared");
         } else {
-            // Fallback to direct update_post_meta
             delete_post_meta($orderId, $metaKey);
             update_post_meta($orderId, $metaKey, $saved);
-            wp_cache_delete($orderId, 'post_meta');
-            error_log("[Save Debug] {$schemaKey} - Saved via update_post_meta");
         }
     }
 
