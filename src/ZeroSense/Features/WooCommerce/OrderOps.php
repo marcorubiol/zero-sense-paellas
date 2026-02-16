@@ -4,6 +4,7 @@ namespace ZeroSense\Features\WooCommerce;
 use WC_Order;
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Core\MetaFieldRegistry;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker;
 
 class OrderOps implements FeatureInterface
 {
@@ -162,7 +163,9 @@ class OrderOps implements FeatureInterface
         }
 
         if (isset($_POST['zs_ops_notes'])) {
-            $order->update_meta_data(self::META_OPS_NOTES, sanitize_textarea_field((string) $_POST['zs_ops_notes']));
+            $newValue = sanitize_textarea_field((string) $_POST['zs_ops_notes']);
+            FieldChangeTracker::compareAndTrack($orderId, self::META_OPS_NOTES, $order->get_meta(self::META_OPS_NOTES, true), $newValue);
+            $order->update_meta_data(self::META_OPS_NOTES, $newValue);
         }
     }
 

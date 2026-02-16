@@ -22,6 +22,7 @@ class FeatureManager
     private array $featureDirectories = [
         'WordPress',
         'WooCommerce',
+        'Operations',
         'Security', 
         'Utilities',
         'Integrations'

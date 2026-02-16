@@ -152,6 +152,9 @@ class BricksDynamicTags implements FeatureInterface
         add_action('woocommerce_update_order', [$this, 'trackOrderModification'], 999);
         add_action('woocommerce_new_order', [$this, 'trackOrderModification'], 999);
         add_action('save_post_shop_order', [$this, 'trackOrderModificationPost'], 999, 2);
+        
+        // Track billing and shipping field changes
+        add_action('woocommerce_before_order_object_save', [$this, 'trackBillingShippingChanges'], 10, 2);
     }
     
     public function trackOrderModificationPost(int $postId, \WP_Post $post): void
@@ -179,6 +182,38 @@ class BricksDynamicTags implements FeatureInterface
             [],
             '1.0.0'
         );
+    }
+
+    public function trackBillingShippingChanges(WC_Order $order, $dataStore): void
+    {
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        $orderId = $order->get_id();
+        if (!$orderId) {
+            return;
+        }
+
+        $changes = $order->get_changes();
+        if (empty($changes)) {
+            return;
+        }
+
+        $billingFields = ['first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'postcode', 'country', 'state', 'email', 'phone'];
+        $shippingFields = ['first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'postcode', 'country', 'state'];
+
+        foreach ($billingFields as $field) {
+            if (isset($changes['billing'][$field])) {
+                FieldChangeTracker::trackFieldChange($orderId, '_billing_' . $field);
+            }
+        }
+
+        foreach ($shippingFields as $field) {
+            if (isset($changes['shipping'][$field])) {
+                FieldChangeTracker::trackFieldChange($orderId, '_shipping_' . $field);
+            }
+        }
     }
 
     public function trackOrderModification(int $orderId): void
@@ -685,15 +720,13 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if ($field === 'country') {
-            return $this->formatCountry($value);
-        }
-
-        if ($field === 'state') {
+            $value = $this->formatCountry($value);
+        } elseif ($field === 'state') {
             $country = $order->get_billing_country();
-            return $this->formatState($value, $country);
+            $value = $this->formatState($value, $country);
         }
 
-        return $value;
+        return $this->wrapIfRecentlyChanged($value, '_billing_' . $field, $post);
     }
 
     private function getOpsNotesValue($post): string
@@ -709,8 +742,9 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $raw = $order->get_meta('zs_ops_notes', true);
+        $value = is_string($raw) ? $raw : '';
 
-        return is_string($raw) ? $raw : '';
+        return $this->wrapIfRecentlyChanged($value, 'zs_ops_notes', $post);
     }
 
     private function getSchemaList(string $schemaKey, $post): string
@@ -829,11 +863,13 @@ class BricksDynamicTags implements FeatureInterface
             $entry = $entry['value'];
         }
 
+        $value = '';
         if (is_scalar($entry)) {
-            return (string) $entry;
+            $value = (string) $entry;
         }
 
-        return '';
+        $fieldKey = $metaKey . '_' . $field;
+        return $this->wrapIfRecentlyChanged($value, $fieldKey, $post);
     }
 
     private function getShippingFieldValue(string $field, $post): string
@@ -850,12 +886,14 @@ class BricksDynamicTags implements FeatureInterface
 
         if ($field === 'phone') {
             $value = $order->get_meta('_shipping_phone', true);
-            return is_string($value) ? $value : '';
+            $value = is_string($value) ? $value : '';
+            return $this->wrapIfRecentlyChanged($value, '_shipping_phone', $post);
         }
 
         if ($field === 'email') {
             $raw = $order->get_meta('_shipping_email', true);
-            return is_string($raw) ? $raw : '';
+            $value = is_string($raw) ? $raw : '';
+            return $this->wrapIfRecentlyChanged($value, '_shipping_email', $post);
         }
 
         $method = 'get_shipping_' . $field;
@@ -869,15 +907,13 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if ($field === 'country') {
-            return $this->formatCountry($value);
-        }
-
-        if ($field === 'state') {
+            $value = $this->formatCountry($value);
+        } elseif ($field === 'state') {
             $country = $order->get_shipping_country();
-            return $this->formatState($value, $country);
+            $value = $this->formatState($value, $country);
         }
 
-        return $value;
+        return $this->wrapIfRecentlyChanged($value, '_shipping_' . $field, $post);
     }
 
     private function getOrderNote($post): string
@@ -1229,7 +1265,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder($field);
         }
 
-        return $this->getTranslatedMetaValue($orderId, $field);
+        $value = $this->getTranslatedMetaValue($orderId, $field);
+        
+        $fieldKey = 'zs_' . $field;
+        return $this->wrapIfRecentlyChanged($value, $fieldKey, $post);
     }
 
     private function resolveOrderId($contextPost = null): ?int

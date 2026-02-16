@@ -4,6 +4,7 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Components;
 use WC_Order;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker;
 
 class EventDetailsMetabox
 {
@@ -526,23 +527,32 @@ class EventDetailsMetabox
 
         // Save guest information
         if (isset($_POST['event_total_guests'])) {
-            $order->update_meta_data(MetaKeys::TOTAL_GUESTS, absint($_POST['event_total_guests']));
+            $newValue = absint($_POST['event_total_guests']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::TOTAL_GUESTS, $order->get_meta(MetaKeys::TOTAL_GUESTS, true), $newValue);
+            $order->update_meta_data(MetaKeys::TOTAL_GUESTS, $newValue);
         }
         if (isset($_POST['event_adults'])) {
-            $order->update_meta_data(MetaKeys::ADULTS, absint($_POST['event_adults']));
+            $newValue = absint($_POST['event_adults']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::ADULTS, $order->get_meta(MetaKeys::ADULTS, true), $newValue);
+            $order->update_meta_data(MetaKeys::ADULTS, $newValue);
         }
         if (isset($_POST['event_children_5_to_8'])) {
-            $order->update_meta_data(MetaKeys::CHILDREN_5_TO_8, absint($_POST['event_children_5_to_8']));
+            $newValue = absint($_POST['event_children_5_to_8']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::CHILDREN_5_TO_8, $order->get_meta(MetaKeys::CHILDREN_5_TO_8, true), $newValue);
+            $order->update_meta_data(MetaKeys::CHILDREN_5_TO_8, $newValue);
         }
         if (isset($_POST['event_children_0_to_4'])) {
-            $order->update_meta_data(MetaKeys::CHILDREN_0_TO_4, absint($_POST['event_children_0_to_4']));
+            $newValue = absint($_POST['event_children_0_to_4']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::CHILDREN_0_TO_4, $order->get_meta(MetaKeys::CHILDREN_0_TO_4, true), $newValue);
+            $order->update_meta_data(MetaKeys::CHILDREN_0_TO_4, $newValue);
         }
 
         // Save location information
         if (isset($_POST['event_service_location'])) {
             $raw = absint($_POST['event_service_location']);
+            $newValue = '';
             if ($raw <= 0) {
-                $order->update_meta_data(MetaKeys::SERVICE_LOCATION, '');
+                $newValue = '';
             } else {
                 $canonicalId = $raw;
                 if (defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters')) {
@@ -554,18 +564,25 @@ class EventDetailsMetabox
                         }
                     }
                 }
-                $order->update_meta_data(MetaKeys::SERVICE_LOCATION, (int) $canonicalId);
+                $newValue = (int) $canonicalId;
             }
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::SERVICE_LOCATION, $order->get_meta(MetaKeys::SERVICE_LOCATION, true), $newValue);
+            $order->update_meta_data(MetaKeys::SERVICE_LOCATION, $newValue);
         }
         // Save event timing (YYYY-MM-DD format, ISO 8601)
         if (isset($_POST['event_date'])) {
-            $order->update_meta_data(MetaKeys::EVENT_DATE, sanitize_text_field((string) $_POST['event_date']));
+            $newValue = sanitize_text_field((string) $_POST['event_date']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::EVENT_DATE, $order->get_meta(MetaKeys::EVENT_DATE, true), $newValue);
+            $order->update_meta_data(MetaKeys::EVENT_DATE, $newValue);
         }
         if (isset($_POST['event_team_arrival_time'])) {
-            $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, sanitize_text_field((string) $_POST['event_team_arrival_time']));
+            $newValue = sanitize_text_field((string) $_POST['event_team_arrival_time']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::TEAM_ARRIVAL_TIME, $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true), $newValue);
+            $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $newValue);
         }
         if (isset($_POST['event_serving_time'])) {
             $servingTime = sanitize_text_field($_POST['event_serving_time']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::SERVING_TIME, $order->get_meta(MetaKeys::SERVING_TIME, true), $servingTime);
             $order->update_meta_data(MetaKeys::SERVING_TIME, $servingTime);
             
             // Auto-calculate starters service time if not set and serving time is provided
@@ -578,33 +595,51 @@ class EventDetailsMetabox
             }
         }
         if (isset($_POST['event_starters_service_time'])) {
-            $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, sanitize_text_field($_POST['event_starters_service_time']));
+            $newValue = sanitize_text_field($_POST['event_starters_service_time']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::STARTERS_SERVICE_TIME, $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true), $newValue);
+            $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $newValue);
         }
         if (isset($_POST['event_start_time'])) {
-            $order->update_meta_data(MetaKeys::START_TIME, sanitize_text_field($_POST['event_start_time']));
+            $newValue = sanitize_text_field($_POST['event_start_time']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::START_TIME, $order->get_meta(MetaKeys::START_TIME, true), $newValue);
+            $order->update_meta_data(MetaKeys::START_TIME, $newValue);
         }
         if (isset($_POST['event_open_bar_start'])) {
-            $order->update_meta_data(MetaKeys::OPEN_BAR_START, sanitize_text_field($_POST['event_open_bar_start']));
+            $newValue = sanitize_text_field($_POST['event_open_bar_start']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::OPEN_BAR_START, $order->get_meta(MetaKeys::OPEN_BAR_START, true), $newValue);
+            $order->update_meta_data(MetaKeys::OPEN_BAR_START, $newValue);
         }
         if (isset($_POST['event_open_bar_end'])) {
-            $order->update_meta_data(MetaKeys::OPEN_BAR_END, sanitize_text_field($_POST['event_open_bar_end']));
+            $newValue = sanitize_text_field($_POST['event_open_bar_end']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::OPEN_BAR_END, $order->get_meta(MetaKeys::OPEN_BAR_END, true), $newValue);
+            $order->update_meta_data(MetaKeys::OPEN_BAR_END, $newValue);
         }
         if (isset($_POST['event_cocktail_start'])) {
-            $order->update_meta_data(MetaKeys::COCKTAIL_START, sanitize_text_field($_POST['event_cocktail_start']));
+            $newValue = sanitize_text_field($_POST['event_cocktail_start']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::COCKTAIL_START, $order->get_meta(MetaKeys::COCKTAIL_START, true), $newValue);
+            $order->update_meta_data(MetaKeys::COCKTAIL_START, $newValue);
         }
         if (isset($_POST['event_cocktail_end'])) {
-            $order->update_meta_data(MetaKeys::COCKTAIL_END, sanitize_text_field($_POST['event_cocktail_end']));
+            $newValue = sanitize_text_field($_POST['event_cocktail_end']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::COCKTAIL_END, $order->get_meta(MetaKeys::COCKTAIL_END, true), $newValue);
+            $order->update_meta_data(MetaKeys::COCKTAIL_END, $newValue);
         }
 
         // Save event details
         if (isset($_POST['event_type'])) {
-            $order->update_meta_data(MetaKeys::EVENT_TYPE, sanitize_text_field($_POST['event_type']));
+            $newValue = sanitize_text_field($_POST['event_type']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::EVENT_TYPE, $order->get_meta(MetaKeys::EVENT_TYPE, true), $newValue);
+            $order->update_meta_data(MetaKeys::EVENT_TYPE, $newValue);
         }
         if (isset($_POST['event_how_found_us'])) {
-            $order->update_meta_data(MetaKeys::HOW_FOUND_US, sanitize_text_field($_POST['event_how_found_us']));
+            $newValue = sanitize_text_field($_POST['event_how_found_us']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::HOW_FOUND_US, $order->get_meta(MetaKeys::HOW_FOUND_US, true), $newValue);
+            $order->update_meta_data(MetaKeys::HOW_FOUND_US, $newValue);
         }
         if (isset($_POST['event_intolerances'])) {
-            $order->update_meta_data(MetaKeys::INTOLERANCES, sanitize_textarea_field((string) $_POST['event_intolerances']));
+            $newValue = sanitize_textarea_field((string) $_POST['event_intolerances']);
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::INTOLERANCES, $order->get_meta(MetaKeys::INTOLERANCES, true), $newValue);
+            $order->update_meta_data(MetaKeys::INTOLERANCES, $newValue);
         }
 
         $order->save();

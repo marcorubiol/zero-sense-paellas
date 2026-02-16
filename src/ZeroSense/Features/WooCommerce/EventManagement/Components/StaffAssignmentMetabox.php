@@ -4,6 +4,7 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Components;
 use WC_Order;
 use WP_Post;
 use WP_Term;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker;
 
 class StaffAssignmentMetabox
 {
@@ -242,6 +243,11 @@ class StaffAssignmentMetabox
             return;
         }
 
+        $oldStaffAssignments = $order->get_meta(self::META_KEY, true);
+        if (!is_array($oldStaffAssignments)) {
+            $oldStaffAssignments = [];
+        }
+
         $rawStaff = isset($_POST['zs_event_staff']) && is_array($_POST['zs_event_staff']) ? $_POST['zs_event_staff'] : [];
         
         $staffAssignments = [];
@@ -264,6 +270,8 @@ class StaffAssignmentMetabox
                 ];
             }
         }
+
+        FieldChangeTracker::compareAndTrack($orderId, self::META_KEY, $oldStaffAssignments, $staffAssignments);
 
         if (empty($staffAssignments)) {
             $order->delete_meta_data(self::META_KEY);
