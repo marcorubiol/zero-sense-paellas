@@ -75,15 +75,27 @@ class AdminSectionTitles implements FeatureInterface
                         var html = elem.html();
                         var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
                         
+                        // Encontrar y extraer el botón Edit
+                        var editLink = elem.find('a.edit_address');
+                        var editHtml = editLink.length ? editLink[0].outerHTML : '';
+                        
                         if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            // Insertar subtítulo justo después del texto "Billing"
-                            var newHtml = html.replace(/^(\s*)Billing(\s*)/, '$1Billing<br><span class="zs-subtitle">👤 Client</span>$2');
-                            newHtml = newHtml.replace(/^(\s*)Facturación(\s*)/, '$1Facturación<br><span class="zs-subtitle">👤 Client</span>$2');
+                            // Remover el botón Edit del HTML original
+                            if (editLink.length) editLink.remove();
+                            
+                            // Insertar subtítulo con botón Edit dentro
+                            var subtitle = '<br><span class="zs-subtitle">👤 Client' + (editHtml ? ' ' + editHtml : '') + '</span>';
+                            var newHtml = elem.html().replace(/^(\s*)Billing(\s*)/, '$1Billing' + subtitle + '$2');
+                            newHtml = newHtml.replace(/^(\s*)Facturación(\s*)/, '$1Facturación' + subtitle + '$2');
                             elem.html(newHtml);
                         } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            // Insertar subtítulo justo después del texto "Shipping"
-                            var newHtml = html.replace(/^(\s*)Shipping(\s*)/, '$1Shipping<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>$2');
-                            newHtml = newHtml.replace(/^(\s*)Envío(\s*)/, '$1Envío<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>$2');
+                            // Remover el botón Edit del HTML original
+                            if (editLink.length) editLink.remove();
+                            
+                            // Insertar subtítulo con botón Edit dentro
+                            var subtitle = '<br><span class="zs-subtitle">📍 Venue/Wedding Planner' + (editHtml ? ' ' + editHtml : '') + '</span>';
+                            var newHtml = elem.html().replace(/^(\s*)Shipping(\s*)/, '$1Shipping' + subtitle + '$2');
+                            newHtml = newHtml.replace(/^(\s*)Envío(\s*)/, '$1Envío' + subtitle + '$2');
                             elem.html(newHtml);
                         }
                     });
@@ -155,7 +167,7 @@ JAVASCRIPT;
                 display: inline-block;
                 font-size: 0.88em;
                 font-weight: 600;
-                color: #135e96;
+                color: #1d2327;
                 background: linear-gradient(135deg, #e7f3ff 0%, #d4e9ff 100%);
                 padding: 3px 10px 3px 8px;
                 border-radius: 4px;
@@ -163,6 +175,20 @@ JAVASCRIPT;
                 line-height: 1.4;
                 border-left: 3px solid #2271b1;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            }
+            
+            /* Estilos para el botón Edit dentro del badge */
+            .zs-subtitle a.edit_address {
+                color: #2271b1;
+                text-decoration: none;
+                font-size: 0.95em;
+                margin-left: 8px;
+                opacity: 0.8;
+            }
+            
+            .zs-subtitle a.edit_address:hover {
+                opacity: 1;
+                text-decoration: underline;
             }
             
             /* Reducir espacio entre título y subtítulo */
