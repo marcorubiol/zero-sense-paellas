@@ -154,20 +154,11 @@ class StaffAssignmentMetabox
                 
                 // Get staff filtered by this specific role
                 $roleStaff = $this->getAllStaff($roleSlug);
-                
-                // Debug: show what we got
-                $debugInfo = sprintf(
-                    'Role: %s (slug: %s) - Found %d staff members',
-                    $roleName,
-                    $roleSlug,
-                    count($roleStaff)
-                );
                 ?>
                 
                 <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
                     <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;">
                         <?php echo esc_html($roleName); ?>
-                        <small style="font-weight: normal; color: #999; margin-left: 8px;"><?php echo esc_html($debugInfo); ?></small>
                     </h4>
                     
                     <div class="zs-staff-role-section" data-role="<?php echo esc_attr($roleSlug); ?>">
@@ -495,9 +486,6 @@ class StaffAssignmentMetabox
             return [];
         }
         
-        // Debug logging
-        error_log('Zero Sense: Raw terms from get_terms: ' . print_r($terms, true));
-        
         // Sort by role_order, then by name for terms without order
         usort($terms, function($a, $b) {
             $order_a = get_term_meta($a->term_id, 'role_order', true);
@@ -505,8 +493,6 @@ class StaffAssignmentMetabox
             
             $order_a = $order_a !== '' ? (int)$order_a : 999;
             $order_b = $order_b !== '' ? (int)$order_b : 999;
-            
-            error_log("Zero Sense: Comparing roles - {$a->name} (order: {$order_a}) vs {$b->name} (order: {$order_b})");
             
             if ($order_a === $order_b) {
                 return strcmp($a->name, $b->name);
@@ -521,8 +507,6 @@ class StaffAssignmentMetabox
                 $roles[$term->slug] = $term->name;
             }
         }
-        
-        error_log('Zero Sense: Final ordered roles: ' . print_r($roles, true));
         
         return $roles;
     }
