@@ -147,12 +147,6 @@ class Recipes implements FeatureInterface
         $manage_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_INGREDIENT . '&post_type=' . self::CPT);
         ?>
         <div class="zs-recipes-metabox">
-            <p style="margin: 0 0 10px 0;">
-                <a href="<?php echo esc_url($manage_url); ?>" target="_blank" style="text-decoration: none;">
-                    <span class="dashicons dashicons-admin-generic" style="vertical-align: middle;"></span>
-                    <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
-                </a>
-            </p>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
@@ -224,8 +218,11 @@ class Recipes implements FeatureInterface
                 </tbody>
             </table>
 
-            <p style="margin-top:10px;">
+            <p style="margin-top:10px; display: flex; justify-content: space-between; align-items: center;">
                 <button type="button" class="button" id="zs-recipe-add-row"><?php esc_html_e('Add ingredient', 'zero-sense'); ?></button>
+                <a href="<?php echo esc_url($manage_url); ?>" target="_blank" style="text-decoration: none; font-size: 13px;">
+                    <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
+                </a>
             </p>
         </div>
 

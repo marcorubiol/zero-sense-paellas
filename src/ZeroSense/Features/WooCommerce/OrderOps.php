@@ -401,9 +401,20 @@ class OrderOps implements FeatureInterface
             }
 
             $order->update_meta_data(self::META_OPS_MATERIAL, $saved);
+            
+            error_log('[ZS OrderOps] About to save order with keys: ' . implode(', ', array_keys($saved)));
         }
 
         $order->save();
+        
+        // Verify data was saved
+        $orderId = $order->get_id();
+        $verifyData = get_post_meta($orderId, 'zs_ops_material', true);
+        if (is_array($verifyData) && !empty($verifyData)) {
+            error_log('[ZS OrderOps] VERIFIED: Data saved successfully with keys: ' . implode(', ', array_keys($verifyData)));
+        } else {
+            error_log('[ZS OrderOps] ERROR: Data NOT saved! Meta is empty or not array');
+        }
     }
 
     private function registerMetaFields(): void
