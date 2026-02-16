@@ -2493,15 +2493,12 @@ class BricksDynamicTags implements FeatureInterface
         
         $html .= '<div class="zs-ingredients-wrapper">';
         
-        // Info header with guest breakdown
+        // Info header with guest breakdown (without babies)
         $html .= '<div class="zs-ingredients-info">';
         $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
         $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
         if ($children > 0) {
             $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
-        }
-        if ($babies > 0) {
-            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('babies (0-4 years)', 'zero-sense');
         }
         $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
         $html .= '</div>';
