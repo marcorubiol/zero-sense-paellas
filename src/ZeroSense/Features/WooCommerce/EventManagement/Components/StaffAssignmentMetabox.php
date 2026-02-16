@@ -356,12 +356,19 @@ class StaffAssignmentMetabox
                     
                     // Get staff options for this specific role from existing select in the same section
                     var $existingSelect = $section.find('.zs-staff-select').first();
+                    console.log('Existing select found:', $existingSelect.length);
                     if ($existingSelect.length) {
+                        var optionCount = 0;
                         $existingSelect.find('option').each(function() {
+                            console.log('Option:', $(this).val(), $(this).text());
                             if ($(this).val()) {
                                 $select.append($(this).clone());
+                                optionCount++;
                             }
                         });
+                        console.log('Cloned', optionCount, 'options');
+                    } else {
+                        console.log('No existing select found in section');
                     }
                     
                     var $editBtn = $('<button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
