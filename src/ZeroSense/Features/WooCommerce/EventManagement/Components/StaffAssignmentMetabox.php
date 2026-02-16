@@ -229,22 +229,9 @@ class StaffAssignmentMetabox
             'use strict';
             
             $(document).ready(function() {
-                // Initialize selectWoo on existing selects with tags functionality
-                $('.zs-staff-select').selectWoo({
-                    width: '100%',
-                    tags: true,
-                    createTag: function(params) {
-                        var term = $.trim(params.term);
-                        if (term === '') {
-                            return null;
-                        }
-                        return {
-                            id: 'new:' + term,
-                            text: term + ' (Create new)',
-                            newTag: true
-                        };
-                    }
-                });
+                // Don't initialize selectWoo on page load for hidden selects
+                // They will be initialized when the user clicks "Change"
+                // This prevents issues with hidden elements
                 
                 // Handle edit/change button
                 $(document).on('click', '.zs-staff-edit', function() {
@@ -319,6 +306,24 @@ class StaffAssignmentMetabox
                     var $select = $(this);
                     var value = $select.val();
                     var $row = $select.closest('.zs-staff-row');
+                    var $section = $row.closest('.zs-staff-role-section');
+                    
+                    // Check if this staff member is already assigned in this role
+                    if (value && value.indexOf('new:') !== 0) {
+                        var alreadyAssigned = false;
+                        $section.find('.zs-staff-hidden-input').each(function() {
+                            if ($(this).val() === value && $(this).closest('.zs-staff-row')[0] !== $row[0]) {
+                                alreadyAssigned = true;
+                                return false;
+                            }
+                        });
+                        
+                        if (alreadyAssigned) {
+                            alert('<?php echo esc_js(__('This staff member is already assigned to this role', 'zero-sense')); ?>');
+                            $select.val('').trigger('change');
+                            return;
+                        }
+                    }
                     
                     // Check if it's a new staff member
                     if (value && value.indexOf('new:') === 0) {
