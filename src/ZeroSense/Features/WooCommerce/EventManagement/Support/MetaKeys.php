@@ -72,6 +72,9 @@ class MetaKeys
     
     /**
      * Get field labels for display
+     * 
+     * NOTE: Use sentence case for all labels (only first word capitalized)
+     * Example: "Event date" not "Event Date"
      */
     public static function getLabels(): array
     {
@@ -86,13 +89,13 @@ class MetaKeys
             self::LOCATION_LINK => __('Location link', 'zero-sense'),
             self::EVENT_DATE => __('Event date', 'zero-sense'),
             self::TEAM_ARRIVAL_TIME => __('Team arrival time', 'zero-sense'),
-            self::SERVING_TIME => __('Paellas Service Time', 'zero-sense'),
-            self::STARTERS_SERVICE_TIME => __('Starters Service Time', 'zero-sense'),
+            self::SERVING_TIME => __('Paellas service time', 'zero-sense'),
+            self::STARTERS_SERVICE_TIME => __('Starters service time', 'zero-sense'),
             self::START_TIME => __('Event start time', 'zero-sense'),
-            self::OPEN_BAR_START => __('Open Bar Start', 'zero-sense'),
-            self::OPEN_BAR_END => __('Open Bar End', 'zero-sense'),
-            self::COCKTAIL_START => __('Cocktail Start', 'zero-sense'),
-            self::COCKTAIL_END => __('Cocktail End', 'zero-sense'),
+            self::OPEN_BAR_START => __('Open bar start', 'zero-sense'),
+            self::OPEN_BAR_END => __('Open bar end', 'zero-sense'),
+            self::COCKTAIL_START => __('Cocktail start', 'zero-sense'),
+            self::COCKTAIL_END => __('Cocktail end', 'zero-sense'),
             self::EVENT_TYPE => __('Event type', 'zero-sense'),
             self::HOW_FOUND_US => __('How found us', 'zero-sense'),
             self::INTOLERANCES => __('Allergies / intolerances', 'zero-sense'),

@@ -111,7 +111,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::SERVING_TIME, [
-            'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Paellas Service Time',
+            'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Paellas service time',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['serving_time', '_event_serving_time', 'paellas_service_time'],
@@ -119,7 +119,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::STARTERS_SERVICE_TIME, [
-            'label' => $labels[MetaKeys::STARTERS_SERVICE_TIME] ?? 'Starters Service Time',
+            'label' => $labels[MetaKeys::STARTERS_SERVICE_TIME] ?? 'Starters service time',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['starters_service_time', '_event_starters_service_time'],
@@ -135,7 +135,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::OPEN_BAR_START, [
-            'label' => $labels[MetaKeys::OPEN_BAR_START] ?? 'Open Bar Start',
+            'label' => $labels[MetaKeys::OPEN_BAR_START] ?? 'Open bar start',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['open_bar_start', '_event_open_bar_start'],
@@ -143,7 +143,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::OPEN_BAR_END, [
-            'label' => $labels[MetaKeys::OPEN_BAR_END] ?? 'Open Bar End',
+            'label' => $labels[MetaKeys::OPEN_BAR_END] ?? 'Open bar end',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['open_bar_end', '_event_open_bar_end'],
@@ -151,7 +151,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::COCKTAIL_START, [
-            'label' => $labels[MetaKeys::COCKTAIL_START] ?? 'Cocktail Start',
+            'label' => $labels[MetaKeys::COCKTAIL_START] ?? 'Cocktail start',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['cocktail_start', '_event_cocktail_start'],
@@ -159,7 +159,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::COCKTAIL_END, [
-            'label' => $labels[MetaKeys::COCKTAIL_END] ?? 'Cocktail End',
+            'label' => $labels[MetaKeys::COCKTAIL_END] ?? 'Cocktail end',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['cocktail_end', '_event_cocktail_end'],
