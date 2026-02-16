@@ -96,9 +96,9 @@ class AdminOrderEventSheetLink implements FeatureInterface
         }
 
         printf(
-            ' <a href="%s" target="_blank" title="%s" style="color: #2271b1; text-decoration: none; display: inline-block; margin-left: 4px;">
-                <span class="dashicons dashicons-media-document" style="font-size: 18px; width: 18px; height: 18px; vertical-align: middle;"></span>
-            </a>',
+            '<a href="%s" target="_blank" title="%s" style="color: #2271b1; text-decoration: none; display: inline-block; vertical-align: middle; line-height: 1;">
+                <span class="dashicons dashicons-media-document" style="font-size: 18px; width: 18px; height: 18px;"></span>
+            </a> ',
             esc_url($url),
             esc_attr__('View event sheet', 'zero-sense')
         );
