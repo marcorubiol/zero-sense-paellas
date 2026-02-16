@@ -53,6 +53,54 @@ Successfully refactored the Material & Logistics schema system into a reusable, 
   - `{woo_workspace_list}` - Complete list
 - Future schemas automatically get tags
 
+### Bricks Builder Integration
+
+#### Dynamic Tags Available
+
+**Material & Logistics:**
+- Complete list: `{woo_material_list}`
+- Individual fields: `{woo_material_[field_key]}`
+
+**Workspace & Access:**
+- Complete list: `{woo_workspace_list}`
+- Individual fields: `{woo_workspace_[field_key]}`
+
+#### How to Use
+
+1. **Find the field key:**
+   - Go to WooCommerce > Material & Logistics Schema (or Workspace & Access Schema)
+   - Look at the "Key" column to find the exact field key (e.g., `otra_prueba_1771244405`)
+
+2. **Use in Bricks:**
+   - For a complete list: `{woo_material_list}` or `{woo_workspace_list}`
+   - For individual field: `{woo_material_otra_prueba_1771244405}`
+
+3. **Pattern:**
+   - Format: `{woo_[schema_key]_[field_key]}`
+   - `schema_key` = `material` or `workspace`
+   - `field_key` = the key shown in the admin "Key" column
+
+#### Example
+
+If you have a field with key `tables_1771244405` in Material & Logistics:
+```
+{woo_material_tables_1771244405}
+```
+
+This will display the value of that field for the current order.
+
+#### List Display
+
+The `{woo_material_list}` tag displays all fields with data in a formatted list:
+```html
+<div class="zs-schema-list zs-material-list">
+    <div class="zs-schema-item">
+        <strong>Field Label:</strong> <span>Field Value</span>
+    </div>
+    ...
+</div>
+```
+
 **FlowMattic:**
 - Already compatible via `MetaFieldRegistry`
 - Schema data automatically exposed in API
