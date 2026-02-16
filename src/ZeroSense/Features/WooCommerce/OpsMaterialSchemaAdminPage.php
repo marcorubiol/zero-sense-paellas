@@ -115,8 +115,8 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                 <?php wp_nonce_field('zs_ops_material_schema_save'); ?>
                 <input type="hidden" name="action" value="zs_ops_material_schema_save">
 
-                <h3 style="margin-top: 20px;"><?php esc_html_e('Visible Fields', 'zero-sense'); ?></h3>
-                <p style="margin-top: 8px; color: #666;"><?php esc_html_e('These fields are visible in all orders. Drag to reorder them or click "Hide" to move them to the hidden section.', 'zero-sense'); ?></p>
+                <h3 style="margin-top: 20px; margin-bottom: 4px;"><?php esc_html_e('Visible Fields', 'zero-sense'); ?></h3>
+                <p style="margin-top: 0; margin-bottom: 12px; color: #666;"><?php esc_html_e('These fields are visible in all orders. Drag to reorder them or click "Hide" to move them to the hidden section.', 'zero-sense'); ?></p>
 
                 <table class="widefat striped" style="max-width: 1100px;">
                     <thead>
@@ -198,8 +198,8 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                 });
                 
                 if (!empty($hiddenFields)) : ?>
-                    <h3 style="margin-top: 30px;"><?php esc_html_e('Hidden Fields', 'zero-sense'); ?> <span style="color: #666; font-size: 13px; font-weight: normal;">(<?php echo count($hiddenFields); ?>)</span></h3>
-                    <p style="margin-top: 8px; color: #666;"><?php esc_html_e('These fields are hidden from new orders but remain visible in orders that already have data. Click "Unhide" to make them visible again, or "Delete" to permanently remove fields with no data.', 'zero-sense'); ?></p>
+                    <h3 style="margin-top: 30px; margin-bottom: 4px;"><?php esc_html_e('Hidden Fields', 'zero-sense'); ?> <span style="color: #666; font-size: 13px; font-weight: normal;">(<?php echo count($hiddenFields); ?>)</span></h3>
+                    <p style="margin-top: 0; margin-bottom: 12px; color: #666;"><?php esc_html_e('These fields are hidden from new orders but remain visible in orders that already have data. Click "Unhide" to make them visible again, or "Delete" to permanently remove fields with no data.', 'zero-sense'); ?></p>
                     <table class="widefat" style="max-width:1100px; margin-top: 12px;">
                         <thead>
                             <tr>

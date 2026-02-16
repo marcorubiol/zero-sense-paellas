@@ -31,7 +31,7 @@ class Bootstrap
         $labels = MetaKeys::getLabels();
 
         $registry->register(MetaKeys::TOTAL_GUESTS, [
-            'label' => $labels[MetaKeys::TOTAL_GUESTS] ?? 'Total Guests',
+            'label' => $labels[MetaKeys::TOTAL_GUESTS] ?? 'Total guests',
             'type' => 'number',
             'translatable' => false,
             'legacy_keys' => ['total_guests', '_event_total_guests'],
@@ -47,7 +47,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::CHILDREN_5_TO_8, [
-            'label' => $labels[MetaKeys::CHILDREN_5_TO_8] ?? 'Children 5-8',
+            'label' => $labels[MetaKeys::CHILDREN_5_TO_8] ?? 'Children 5-8 years (40%)',
             'type' => 'number',
             'translatable' => false,
             'legacy_keys' => ['children_5_to_8', '_event_children_5_to_8'],
@@ -55,7 +55,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::CHILDREN_0_TO_4, [
-            'label' => $labels[MetaKeys::CHILDREN_0_TO_4] ?? 'Children 0-4',
+            'label' => $labels[MetaKeys::CHILDREN_0_TO_4] ?? 'Children 0-4 years (free)',
             'type' => 'number',
             'translatable' => false,
             'legacy_keys' => ['children_0_to_4', '_event_children_0_to_4'],
@@ -63,7 +63,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::SERVICE_LOCATION, [
-            'label' => $labels[MetaKeys::SERVICE_LOCATION] ?? 'Service Location',
+            'label' => $labels[MetaKeys::SERVICE_LOCATION] ?? 'Service location',
             'type' => 'select',
             'translatable' => true,
             'legacy_keys' => ['event_service_location', '_event_service_location', 'location'],
@@ -71,7 +71,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::ADDRESS, [
-            'label' => $labels[MetaKeys::ADDRESS] ?? 'Event Address',
+            'label' => $labels[MetaKeys::ADDRESS] ?? 'Event address',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['event_address', '_event_address'],
@@ -87,7 +87,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::LOCATION_LINK, [
-            'label' => $labels[MetaKeys::LOCATION_LINK] ?? 'Location Link',
+            'label' => $labels[MetaKeys::LOCATION_LINK] ?? 'Location link',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['location_link', '_event_location_link'],
@@ -95,7 +95,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::EVENT_DATE, [
-            'label' => $labels[MetaKeys::EVENT_DATE] ?? 'Event Date',
+            'label' => $labels[MetaKeys::EVENT_DATE] ?? 'Event date',
             'type' => 'date',
             'translatable' => false,
             'legacy_keys' => ['event_date', '_event_date'],
@@ -103,7 +103,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::TEAM_ARRIVAL_TIME, [
-            'label' => $labels[MetaKeys::TEAM_ARRIVAL_TIME] ?? 'Team Arrival Time',
+            'label' => $labels[MetaKeys::TEAM_ARRIVAL_TIME] ?? 'Team arrival time',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
@@ -111,7 +111,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::SERVING_TIME, [
-            'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Serving Time',
+            'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Service time',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['serving_time', '_event_serving_time'],
@@ -119,7 +119,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::START_TIME, [
-            'label' => $labels[MetaKeys::START_TIME] ?? 'Event Start Time',
+            'label' => $labels[MetaKeys::START_TIME] ?? 'Event start time',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => ['event_start_time', '_event_start_time'],
@@ -127,7 +127,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::EVENT_TYPE, [
-            'label' => $labels[MetaKeys::EVENT_TYPE] ?? 'Event Type',
+            'label' => $labels[MetaKeys::EVENT_TYPE] ?? 'Event type',
             'type' => 'select',
             'translatable' => true,
             'legacy_keys' => ['event_type', '_event_type'],
@@ -135,7 +135,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::HOW_FOUND_US, [
-            'label' => $labels[MetaKeys::HOW_FOUND_US] ?? 'How Found Us',
+            'label' => $labels[MetaKeys::HOW_FOUND_US] ?? 'How found us',
             'type' => 'select',
             'translatable' => true,
             'legacy_keys' => ['how_found_us', '_event_how_found_us'],
@@ -143,7 +143,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::INTOLERANCES, [
-            'label' => $labels[MetaKeys::INTOLERANCES] ?? 'Intolerances',
+            'label' => $labels[MetaKeys::INTOLERANCES] ?? 'Allergies / intolerances',
             'type' => 'textarea',
             'translatable' => false,
             'legacy_keys' => ['intolerances'],
@@ -151,7 +151,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::BUDGET_EMAIL_CONTENT, [
-            'label' => 'Budget Email Content',
+            'label' => 'Budget email content',
             'type' => 'textarea',
             'translatable' => false,
             'legacy_keys' => ['budget_email_content'],
@@ -159,7 +159,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, [
-            'label' => 'Final Details Email Content',
+            'label' => 'Final details email content',
             'type' => 'textarea',
             'translatable' => false,
             'legacy_keys' => ['final_details_email_content'],
@@ -167,7 +167,7 @@ class Bootstrap
         ]);
 
         $registry->register(MetaKeys::MARKETING_CONSENT, [
-            'label' => 'Marketing Consent',
+            'label' => 'Marketing consent',
             'type' => 'bool',
             'translatable' => false,
             'legacy_keys' => ['marketing_consent_checkbox'],
@@ -175,7 +175,7 @@ class Bootstrap
         ]);
 
         $registry->register('_shipping_email', [
-            'label' => 'Shipping Email',
+            'label' => 'Shipping email',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
@@ -183,7 +183,7 @@ class Bootstrap
         ]);
 
         $registry->register('_shipping_location_link', [
-            'label' => 'Shipping Location Link',
+            'label' => 'Shipping location link',
             'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
