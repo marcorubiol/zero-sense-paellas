@@ -145,7 +145,6 @@ class BricksDynamicTags implements FeatureInterface
         add_filter('bricks/dynamic_data/render_content', [$this, 'renderContent'], 10, 3);
         add_filter('bricks/frontend/render_data', [$this, 'renderContent'], 10, 2);
         add_action('wp', [$this, 'maybeResetMetaBoxTranslations']);
-        add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendStyles']);
         
         // Track order modifications (multiple hooks to cover all cases)
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
@@ -168,20 +167,6 @@ class BricksDynamicTags implements FeatureInterface
         $this->trackOrderModification($postId);
     }
     
-    public function enqueueFrontendStyles(): void
-    {
-        if (is_admin()) {
-            return;
-        }
-
-        wp_enqueue_style(
-            'zs-recent-changes',
-            plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/css/frontend-recent-changes.css',
-            [],
-            '1.0.0'
-        );
-    }
-
     public function trackBillingShippingChangesOnSave(int $orderId): void
     {
         $order = wc_get_order($orderId);
