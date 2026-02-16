@@ -130,27 +130,6 @@ class Staff implements FeatureInterface
             'show_admin_column' => true,
             'hierarchical' => false,
         ]);
-
-        $this->createDefaultRoles();
-    }
-
-    private function createDefaultRoles(): void
-    {
-        $roles = [
-            'jefe-voluntarios' => __('Jefe de voluntarios', 'zero-sense'),
-            'cocineros' => __('Cocineros', 'zero-sense'),
-            'ayudantes' => __('Ayudantes', 'zero-sense'),
-            'camareros' => __('Camareros', 'zero-sense'),
-            'barra' => __('Barra', 'zero-sense'),
-            'coqueteles' => __('Coqueteles', 'zero-sense'),
-            'tallador-pernil' => __('Tallador de pernil', 'zero-sense'),
-        ];
-
-        foreach ($roles as $slug => $name) {
-            if (!term_exists($slug, self::TAX_ROLE)) {
-                wp_insert_term($name, self::TAX_ROLE, ['slug' => $slug]);
-            }
-        }
     }
 
     public function addStaffMetabox(): void
