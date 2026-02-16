@@ -237,9 +237,9 @@ class EventDetailsMetabox
                     </div>
                 </div>
                 
-                <!-- Service Times -->
+                <!-- Team Setup -->
                 <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Service times', 'zero-sense'); ?></h4>
+                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Team setup', 'zero-sense'); ?></h4>
                     
                     <div class="zs-field-row">
                         <div class="zs-field">
@@ -254,6 +254,11 @@ class EventDetailsMetabox
                         </div>
                         <div class="zs-field"></div>
                     </div>
+                </div>
+                
+                <!-- Service Times -->
+                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Service times', 'zero-sense'); ?></h4>
                     
                     <div class="zs-field-row">
                         <div class="zs-field">
