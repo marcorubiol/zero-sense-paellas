@@ -74,6 +74,9 @@ class Staff implements FeatureInterface
         }
         
         wp_enqueue_script('jquery-ui-sortable');
+        
+        // Debug logging
+        error_log('Zero Sense: Loading role ordering assets for screen: ' . $screen->id);
     }
     
     public function printRoleOrderingScript(): void
@@ -82,6 +85,9 @@ class Staff implements FeatureInterface
         if (!$screen || $screen->taxonomy !== self::TAX_ROLE) {
             return;
         }
+        
+        // Debug logging
+        error_log('Zero Sense: Printing role ordering script for screen: ' . $screen->id);
         ?>
         <style>
             .column-drag_handle {
@@ -116,10 +122,16 @@ class Staff implements FeatureInterface
             }
         </style>
         <script>
+        console.log('Zero Sense: Role ordering script loaded');
+        
         jQuery(document).ready(function($) {
+            console.log('Zero Sense: jQuery ready, checking for sortable table');
+            
             var table = $('.wp-list-table tbody');
+            console.log('Zero Sense: Table found:', table.length);
             
             if (table.length && $.fn.sortable) {
+                console.log('Zero Sense: Initializing sortable');
                 table.sortable({
                     items: 'tr',
                     cursor: 'move',
@@ -136,8 +148,10 @@ class Staff implements FeatureInterface
                     },
                     start: function(e, ui) {
                         ui.placeholder.height(ui.item.height());
+                        console.log('Zero Sense: Sort started');
                     },
                     update: function(event, ui) {
+                        console.log('Zero Sense: Sort updated');
                         var order = [];
                         table.find('tr').each(function(index) {
                             var termId = $(this).attr('id');
@@ -150,19 +164,30 @@ class Staff implements FeatureInterface
                             }
                         });
                         
+                        console.log('Zero Sense: Sending order data:', order);
+                        
                         $.post(ajaxurl, {
                             action: 'zs_update_role_order',
                             nonce: '<?php echo wp_create_nonce('zs_role_order'); ?>',
                             order: order
                         }, function(response) {
+                            console.log('Zero Sense: AJAX response:', response);
                             if (response.success) {
                                 table.find('tr').each(function(index) {
                                     $(this).find('.column-role_order').text(index);
                                 });
+                                console.log('Zero Sense: Order updated successfully');
+                            } else {
+                                console.error('Zero Sense: Failed to update order:', response.data);
                             }
+                        }).fail(function(xhr, status, error) {
+                            console.error('Zero Sense: AJAX request failed:', status, error);
+                            console.error('Zero Sense: Response text:', xhr.responseText);
                         });
                     }
                 });
+            } else {
+                console.log('Zero Sense: Cannot initialize sortable - table:', table.length, 'sortable:', typeof $.fn.sortable);
             }
         });
         </script>
