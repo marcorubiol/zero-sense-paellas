@@ -47,6 +47,10 @@ if (!function_exists('br_tag_accepted')) {
 
 // Load checkout debug logger only when WordPress debug logging is enabled - REMOVED
 
+// Load debug script for recent changes feature
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    require_once ZERO_SENSE_PATH . 'debug-recent-changes.php';
+}
 
 /**
  * Show autoloader error notice

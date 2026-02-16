@@ -65,9 +65,17 @@ class StaffAssignmentMetabox
         wp_enqueue_script('selectWoo');
     }
 
-    public function render(WP_Post $post): void
+    public function render($post_or_order): void
     {
-        $order = wc_get_order($post->ID);
+        // Support both classic (WP_Post) and HPOS (WC_Order) systems
+        if ($post_or_order instanceof WP_Post) {
+            $order = wc_get_order($post_or_order->ID);
+        } elseif ($post_or_order instanceof WC_Order) {
+            $order = $post_or_order;
+        } else {
+            return;
+        }
+        
         if (!$order instanceof WC_Order) {
             return;
         }
