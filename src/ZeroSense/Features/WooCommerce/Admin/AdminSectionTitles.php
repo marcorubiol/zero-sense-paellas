@@ -68,7 +68,7 @@ class AdminSectionTitles implements FeatureInterface
             jQuery(document).ready(function($) {
                 function changeMetaboxTitles() {
                     $('#order_data h3').each(function() {
-                        var elem = $(this);
+                        var elem = $(thdis);
                         var html = elem.html();
                         
                         if (html.indexOf('Billing') === 0 || html.indexOf('Facturación') === 0) {
