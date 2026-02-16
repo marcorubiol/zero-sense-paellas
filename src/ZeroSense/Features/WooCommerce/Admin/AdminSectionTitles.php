@@ -238,24 +238,36 @@ class AdminSectionTitles implements FeatureInterface
     {
         $screen = get_current_screen();
         
-        // Only load on order pages
-        if (!$screen || $screen->id !== 'shop_order') {
+        // Verificar si estamos en página de pedidos (Classic o HPOS)
+        if (!$screen || !HposCompatibility::isOrderEditScreen()) {
             return;
         }
         ?>
         <style>
-            /* Ensure proper display of modified section titles */
-            .woocommerce-order-data-tabs .tabs li a {
+            /* Estilos para ambos Classic y HPOS */
+            .woocommerce-order-data-tabs .tabs li a,
+            .wc-orders-tabs a {
                 font-weight: 600;
             }
             
-            /* Optional: Add icons to distinguish sections */
+            /* Iconos para Classic */
             .woocommerce-order-data-tabs .tabs li.billing_tab a:before {
                 content: "👤 ";
                 margin-right: 5px;
             }
             
             .woocommerce-order-data-tabs .tabs li.shipping_tab a:before {
+                content: "📍 ";
+                margin-right: 5px;
+            }
+            
+            /* Iconos para HPOS */
+            .wc-orders-tabs li.billing a:before {
+                content: "👤 ";
+                margin-right: 5px;
+            }
+            
+            .wc-orders-tabs li.shipping a:before {
                 content: "📍 ";
                 margin-right: 5px;
             }
