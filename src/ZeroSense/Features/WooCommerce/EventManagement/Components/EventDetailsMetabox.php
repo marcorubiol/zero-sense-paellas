@@ -281,6 +281,50 @@ class EventDetailsMetabox
                     </div>
                 </div>
             </div>
+            
+            <?php
+            // Event Access Button
+            $orderId = $order->get_id();
+            if ($orderId > 0) {
+                // Get base URL dynamically based on current site
+                $siteUrl = home_url();
+                $baseUrl = '';
+                
+                if (strpos($siteUrl, 'dev.paellasencasa.com') !== false) {
+                    $baseUrl = 'https://dev.paellasencasa.com/fdr';
+                } elseif (strpos($siteUrl, 'localhost') !== false || strpos($siteUrl, '127.0.0.1') !== false) {
+                    $baseUrl = home_url('/fdr');
+                } else {
+                    $baseUrl = 'https://paellasencasa.com/fdr';
+                }
+                
+                $eventLink = do_shortcode('[zs_event_public_link order="' . $orderId . '" base_url="' . $baseUrl . '"]');
+                if (!empty($eventLink)) {
+                    ?>
+                    <div class="zs-field-group" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="text-align: center;">
+                            <h3 style="color: #fff; margin: 0 0 12px 0; font-size: 15px; font-weight: 600;">
+                                🔗 <?php esc_html_e('Event Information Sheet', 'zero-sense'); ?>
+                            </h3>
+                            <p style="color: rgba(255,255,255,0.9); margin: 0 0 16px 0; font-size: 13px; line-height: 1.5;">
+                                <?php esc_html_e('Access complete event details, guest information, materials, and logistics.', 'zero-sense'); ?>
+                            </p>
+                            <a 
+                                href="<?php echo esc_url($eventLink); ?>" 
+                                target="_blank"
+                                class="button button-primary button-large"
+                                style="background: #fff; color: #667eea; border: none; padding: 12px 32px; font-size: 14px; font-weight: 600; text-shadow: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
+                            >
+                                <?php esc_html_e('Open Event Sheet', 'zero-sense'); ?> →
+                            </a>
+                        </div>
+                    </div>
+                    <?php
+                }
+            }
+            ?>
         </div>
 
         <style>
