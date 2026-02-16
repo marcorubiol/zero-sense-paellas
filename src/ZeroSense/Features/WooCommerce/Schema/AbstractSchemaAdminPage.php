@@ -653,6 +653,8 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         
         $metaKey = $this->getMetaKey();
         
+        error_log("[Usage Count] Checking usage for key: {$key} in meta: {$metaKey}");
+        
         // Get all orders that have this meta key
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
@@ -660,21 +662,31 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
             $metaKey
         ));
         
+        error_log("[Usage Count] Found " . count($results) . " orders with this meta key");
+        
         $count = 0;
         foreach ($results as $result) {
             $data = maybe_unserialize($result->meta_value);
             if (!is_array($data) || !isset($data[$key])) {
+                error_log("[Usage Count] Order {$result->post_id}: Field not found in data");
                 continue;
             }
             
             $fieldData = $data[$key];
             $value = is_array($fieldData) ? ($fieldData['value'] ?? '') : $fieldData;
             
+            error_log("[Usage Count] Order {$result->post_id}: Field value = " . var_export($value, true));
+            
             // Only count if value is not empty
             if ($value !== '' && $value !== '0' && $value !== 0 && $value !== null) {
                 $count++;
+                error_log("[Usage Count] Order {$result->post_id}: COUNTED (value is not empty)");
+            } else {
+                error_log("[Usage Count] Order {$result->post_id}: NOT counted (value is empty)");
             }
         }
+        
+        error_log("[Usage Count] Final count for {$key}: {$count}");
         
         return $count;
     }
