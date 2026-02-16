@@ -224,6 +224,25 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        // Order Products (Menu)
+        $tags[] = [
+            'name' => '{woo_zs_order_products}',
+            'label' => 'Order Products (Menu)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_products_simple}',
+            'label' => 'Order Products (Simple List)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_products_count}',
+            'label' => 'Order Products Count',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -315,6 +334,18 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getEventMediaUrls($post);
         }
 
+        if ($tag === '{woo_zs_order_products}') {
+            return $this->getOrderProducts($post);
+        }
+
+        if ($tag === '{woo_zs_order_products_simple}') {
+            return $this->getOrderProductsSimple($post);
+        }
+
+        if ($tag === '{woo_zs_order_products_count}') {
+            return $this->getOrderProductsCount($post);
+        }
+
         return $tag;
     }
 
@@ -356,6 +387,10 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_zs_event_media}', $this->getEventMediaGallery($post), $content);
         $content = str_replace('{woo_zs_event_media_urls}', $this->getEventMediaUrls($post), $content);
+
+        $content = str_replace('{woo_zs_order_products}', $this->getOrderProducts($post), $content);
+        $content = str_replace('{woo_zs_order_products_simple}', $this->getOrderProductsSimple($post), $content);
+        $content = str_replace('{woo_zs_order_products_count}', $this->getOrderProductsCount($post), $content);
 
         return $content;
     }
@@ -664,6 +699,102 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return $term->name;
+    }
+
+    private function getOrderProducts($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Products');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $html = '<div class="zs-order-products">';
+        
+        foreach ($order->get_items() as $item) {
+            if (!method_exists($item, 'get_product') || !$item->get_product()) {
+                continue;
+            }
+            
+            $product = $item->get_product();
+            $quantity = $item->get_quantity();
+            $name = $item->get_name();
+            
+            $html .= '<div class="zs-product-item">';
+            $html .= '<strong>' . esc_html($name) . '</strong>';
+            
+            if ($quantity > 1) {
+                $html .= ' <span class="zs-quantity">(' . esc_html($quantity) . 'x)</span>';
+            }
+            
+            // Show product attributes if it's a variable product
+            if ($product->is_type('variation')) {
+                $attributes = $product->get_variation_attributes();
+                if (!empty($attributes)) {
+                    $html .= '<div class="zs-attributes">';
+                    foreach ($attributes as $attr_name => $attr_value) {
+                        if ($attr_value) {
+                            $label = wc_attribute_label(str_replace('attribute_', '', $attr_name));
+                            $html .= '<small>' . esc_html($label) . ': ' . esc_html($attr_value) . '</small>';
+                        }
+                    }
+                    $html .= '</div>';
+                }
+            }
+            
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
+    }
+
+    private function getOrderProductsSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Products');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $products = [];
+        
+        foreach ($order->get_items() as $item) {
+            $name = $item->get_name();
+            $quantity = $item->get_quantity();
+            
+            if ($quantity > 1) {
+                $products[] = $name . ' (' . $quantity . 'x)';
+            } else {
+                $products[] = $name;
+            }
+        }
+        
+        return implode(', ', $products);
+    }
+
+    private function getOrderProductsCount($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Products Count');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '0';
+        }
+
+        return (string) count($order->get_items());
     }
 
     private function getMetaBoxFieldValue(string $field, $post): string
