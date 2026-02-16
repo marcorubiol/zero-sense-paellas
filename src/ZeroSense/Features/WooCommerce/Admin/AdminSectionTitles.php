@@ -89,36 +89,34 @@ class AdminSectionTitles implements FeatureInterface
             return;
         }
 
-        // Usar valores simples sin WPML para evitar errores
-        $clientLabel = 'Client';
-        $venueLabel = 'Venue/Wedding Planner';
-
         // JavaScript para modificar dinámicamente los tabs en HPOS
-        wp_add_inline_script('wc-orders', "
+        $script = <<<'JAVASCRIPT'
             jQuery(document).ready(function($) {
                 // Modificar tabs de billing/shipping en HPOS
                 $('.wc-orders-tabs a').each(function() {
-                    var $this = $(this);
-                    if ($this.text().trim() === 'Billing') {
-                        $this.text('" . esc_js($clientLabel) . "');
+                    var elem = $(this);
+                    if (elem.text().trim() === 'Billing') {
+                        elem.text('Client');
                     }
-                    if ($this.text().trim() === 'Shipping') {
-                        $this.text('" . esc_js($venueLabel) . "');
+                    if (elem.text().trim() === 'Shipping') {
+                        elem.text('Venue/Wedding Planner');
                     }
                 });
                 
                 // Modificar títulos de sección
                 $('.woocommerce-order-panel .panel-header h2').each(function() {
-                    var $this = $(this);
-                    if ($this.text().trim() === 'Billing') {
-                        $this.text('" . esc_js($clientLabel) . "');
+                    var elem = $(this);
+                    if (elem.text().trim() === 'Billing') {
+                        elem.text('Client');
                     }
-                    if ($this.text().trim() === 'Shipping') {
-                        $this.text('" . esc_js($venueLabel) . "');
+                    if (elem.text().trim() === 'Shipping') {
+                        elem.text('Venue/Wedding Planner');
                     }
                 });
             });
-        ");
+JAVASCRIPT;
+
+        wp_add_inline_script('wc-orders', $script);
     }
 
     /**
