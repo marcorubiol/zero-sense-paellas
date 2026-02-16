@@ -241,7 +241,13 @@ class BricksDynamicTags implements FeatureInterface
             return $value;
         }
 
-        if (!FieldChangeTracker::isFieldRecentlyChanged($orderId, $fieldKey)) {
+        $isRecent = FieldChangeTracker::isFieldRecentlyChanged($orderId, $fieldKey);
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("ZS Recent Changes - Field: $fieldKey, Order: $orderId, Is Recent: " . ($isRecent ? 'YES' : 'NO'));
+        }
+        
+        if (!$isRecent) {
             return $value;
         }
 
