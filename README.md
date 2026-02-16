@@ -1,4 +1,3 @@
-Test 1
 # Zerø Sense v3 — Technical Guide
 
 Modern, modular WordPress plugin for Paellas en Casa. PSR-4, auto-discovered features, zero external UI dependencies. Built for humans and AI agents to understand and extend quickly.
@@ -167,7 +166,8 @@ Below is the complete set of features implementing `FeatureInterface` with their
 2. Provide `getName()`, `getDescription()`, `getCategory()`, `getPriority()`, `getConditions()`, `isToggleable()`, `isEnabled()`, `init()`.
 3. If configurable, implement `hasConfiguration()` and `getConfigurationFields()`.
 4. Add `hasInformation()` + `getInformationBlocks()` with at least Code map, Hooks & filters, Testing notes.
-5. The dashboard will auto‑discover and render the card.
+5. **Register custom meta fields** (if your feature adds WooCommerce order meta fields) — see "Registering Custom Meta Fields" below.
+6. The dashboard will auto‑discover and render the card.
 
 Template snippet:
 
@@ -183,6 +183,108 @@ class MyFeature implements FeatureInterface {
   public function init(): void { if (!$this->isEnabled()) return; /* register hooks */ }
 }
 ```
+
+---
+
+## Registering Custom Meta Fields
+
+If your feature adds custom meta fields to WooCommerce orders, you **must register them** in the `MetaFieldRegistry` to make them automatically available in:
+- **FlowMattic** workflows (webhooks, REST API, triggers)
+- **Bricks Builder** dynamic tags
+- Any future integrations
+
+### How to Register Fields
+
+Add a `registerMetaFields()` method in your feature's Bootstrap or main class and call it from `init()` or `boot()`:
+
+```php
+use ZeroSense\Core\MetaFieldRegistry;
+
+private function registerMetaFields(): void
+{
+    $registry = MetaFieldRegistry::getInstance();
+
+    $registry->register('zs_my_custom_field', [
+        'label' => 'My Custom Field',
+        'type' => 'text',  // text|number|bool|select|date|textarea|json
+        'translatable' => false,  // true if WPML should translate this field
+        'legacy_keys' => ['my_field', '_my_old_field'],  // backward compatibility
+        'feature' => 'MyFeature',  // feature name for organization
+    ]);
+}
+```
+
+### Field Metadata
+
+- **`label`** (string): Human-readable label for admin/UI
+- **`type`** (string): Field type — `text`, `number`, `bool`, `select`, `date`, `textarea`, `json`
+- **`translatable`** (bool): Whether WPML should translate this field's value
+- **`legacy_keys`** (array): Old meta key names for backward compatibility
+- **`feature`** (string): Feature name for organization and debugging
+
+### Real Example
+
+From `EventManagement/Bootstrap.php`:
+
+```php
+private function registerMetaFields(): void
+{
+    $registry = MetaFieldRegistry::getInstance();
+    $labels = MetaKeys::getLabels();
+
+    $registry->register(MetaKeys::TOTAL_GUESTS, [
+        'label' => $labels[MetaKeys::TOTAL_GUESTS] ?? 'Total Guests',
+        'type' => 'number',
+        'translatable' => false,
+        'legacy_keys' => ['total_guests', '_event_total_guests'],
+        'feature' => 'EventManagement',
+    ]);
+
+    $registry->register(MetaKeys::EVENT_TYPE, [
+        'label' => $labels[MetaKeys::EVENT_TYPE] ?? 'Event Type',
+        'type' => 'select',
+        'translatable' => true,  // WPML will translate this
+        'legacy_keys' => ['event_type', '_event_type'],
+        'feature' => 'EventManagement',
+    ]);
+}
+```
+
+### What Happens Automatically
+
+Once registered, your fields are:
+1. **Exposed in FlowMattic** — Available in workflow triggers, webhooks, and REST API responses
+2. **Available in Bricks** — Can be used as dynamic tags (if legacy keys are provided)
+3. **Type-safe** — Metadata is available for validation and UI generation
+4. **Documented** — Registry can be queried to generate field documentation
+
+### Registry Query Methods
+
+```php
+$registry = MetaFieldRegistry::getInstance();
+
+// Get all registered keys
+$allKeys = $registry->getAllKeys();
+
+// Get only translatable keys
+$translatableKeys = $registry->getTranslatableKeys();
+
+// Get metadata for a specific field
+$metadata = $registry->getFieldMetadata('zs_my_field');
+
+// Get legacy aliases for a field
+$aliases = $registry->getLegacyAliases('zs_my_field');
+
+// Check if a key is registered
+$isRegistered = $registry->isRegistered('zs_my_field');
+```
+
+### Important Notes
+
+- **Always register fields** — If you don't register a custom field, it won't be exposed to FlowMattic or Bricks automatically
+- **Use consistent prefixes** — All Zero Sense fields should use `zs_` prefix
+- **Legacy keys are optional** — Only needed if you're migrating from old meta keys
+- **Call early** — Register fields in `init()` or `boot()` before other features need them
 
 ---
 

@@ -1202,7 +1202,9 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         // For select fields, get the label from Meta Box options and translate it
-        if (in_array($field, self::SELECT_FIELDS, true)) {
+        $registry = MetaFieldRegistry::getInstance();
+        $metadata = $registry->getFieldMetadata($metaKey);
+        if ($metadata && ($metadata['type'] ?? '') === 'select') {
             return $this->getTranslatedSelectLabel($field, $value);
         }
 
