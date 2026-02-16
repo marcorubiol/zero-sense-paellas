@@ -31,11 +31,15 @@ class StaffAssignmentMetabox
 
     public function addMetabox(): void
     {
+        $screen = wc_get_container()->get(\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class)->custom_orders_table_usage_is_enabled()
+            ? wc_get_page_screen_id('shop-order')
+            : 'shop_order';
+        
         add_meta_box(
             'zs_event_staff_assignment',
             __('Event Staff', 'zero-sense'),
             [$this, 'render'],
-            'shop_order',
+            $screen,
             'normal',
             'default'
         );
@@ -43,12 +47,17 @@ class StaffAssignmentMetabox
 
     public function enqueueAssets(string $hook): void
     {
-        if ($hook !== 'post.php' && $hook !== 'post-new.php') {
+        $screen = get_current_screen();
+        if (!$screen) {
             return;
         }
-
-        $screen = get_current_screen();
-        if (!$screen || $screen->post_type !== 'shop_order') {
+        
+        // Support both classic orders and HPOS
+        $is_order_screen = ($screen->post_type === 'shop_order') || 
+                          ($screen->id === 'woocommerce_page_wc-orders') ||
+                          ($screen->id === wc_get_page_screen_id('shop-order'));
+        
+        if (!$is_order_screen) {
             return;
         }
 

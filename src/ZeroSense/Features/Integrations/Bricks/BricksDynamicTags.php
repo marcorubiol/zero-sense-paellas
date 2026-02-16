@@ -149,12 +149,10 @@ class BricksDynamicTags implements FeatureInterface
         
         // Track order modifications (multiple hooks to cover all cases)
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
+        add_action('woocommerce_process_shop_order_meta', [$this, 'trackBillingShippingChangesOnSave'], 999);
         add_action('woocommerce_update_order', [$this, 'trackOrderModification'], 999);
         add_action('woocommerce_new_order', [$this, 'trackOrderModification'], 999);
         add_action('save_post_shop_order', [$this, 'trackOrderModificationPost'], 999, 2);
-        
-        // Track billing and shipping field changes
-        add_action('woocommerce_before_order_object_save', [$this, 'trackBillingShippingChanges'], 10, 2);
     }
     
     public function trackOrderModificationPost(int $postId, \WP_Post $post): void
@@ -184,34 +182,35 @@ class BricksDynamicTags implements FeatureInterface
         );
     }
 
-    public function trackBillingShippingChanges(WC_Order $order, $dataStore): void
+    public function trackBillingShippingChangesOnSave(int $orderId): void
     {
+        $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
             return;
         }
 
-        $orderId = $order->get_id();
-        if (!$orderId) {
-            return;
-        }
-
-        $changes = $order->get_changes();
-        if (empty($changes)) {
-            return;
-        }
-
         $billingFields = ['first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'postcode', 'country', 'state', 'email', 'phone'];
-        $shippingFields = ['first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'postcode', 'country', 'state'];
+        $shippingFields = ['first_name', 'last_name', 'company', 'address_1', 'address_2', 'city', 'postcode', 'country', 'state', 'phone', 'email'];
 
         foreach ($billingFields as $field) {
-            if (isset($changes['billing'][$field])) {
-                FieldChangeTracker::trackFieldChange($orderId, '_billing_' . $field);
+            $postKey = '_billing_' . $field;
+            if (isset($_POST[$postKey])) {
+                $oldValue = $order->{"get_billing_$field"}();
+                $newValue = sanitize_text_field((string) $_POST[$postKey]);
+                FieldChangeTracker::compareAndTrack($orderId, $postKey, $oldValue, $newValue);
             }
         }
 
         foreach ($shippingFields as $field) {
-            if (isset($changes['shipping'][$field])) {
-                FieldChangeTracker::trackFieldChange($orderId, '_shipping_' . $field);
+            $postKey = '_shipping_' . $field;
+            if (isset($_POST[$postKey])) {
+                if ($field === 'phone' || $field === 'email') {
+                    $oldValue = $order->get_meta($postKey, true);
+                } else {
+                    $oldValue = $order->{"get_shipping_$field"}();
+                }
+                $newValue = sanitize_text_field((string) $_POST[$postKey]);
+                FieldChangeTracker::compareAndTrack($orderId, $postKey, $oldValue, $newValue);
             }
         }
     }
