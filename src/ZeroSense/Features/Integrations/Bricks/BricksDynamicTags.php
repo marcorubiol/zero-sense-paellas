@@ -364,6 +364,12 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_order_ingredients_simple}',
+            'label' => 'Order Ingredients (Simple - Only Total)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -524,6 +530,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderIngredientsTotal($post);
         }
 
+        if ($tag === '{woo_zs_order_ingredients_simple}') {
+            return $this->getOrderIngredientsSimple($post);
+        }
+
         return $tag;
     }
 
@@ -590,6 +600,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{woo_zs_order_recipes_simple}', $this->getOrderRecipesSimple($post), $content);
         $content = str_replace('{woo_zs_order_has_recipes}', $this->getOrderHasRecipes($post), $content);
         $content = str_replace('{woo_zs_order_ingredients_total}', $this->getOrderIngredientsTotal($post), $content);
+        $content = str_replace('{woo_zs_order_ingredients_simple}', $this->getOrderIngredientsSimple($post), $content);
 
         return $content;
     }
@@ -2347,6 +2358,186 @@ class BricksDynamicTags implements FeatureInterface
             if ($babies > 0) {
                 $html .= '<td class="zs-col-babies">' . esc_html($this->formatNumber($perBaby * $babies)) . ' ' . esc_html($normalizedUnit) . '</td>';
             }
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody>';
+        $html .= '</table>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Get simplified ingredients total (only Ingredient and TOTAL columns)
+     */
+    private function getOrderIngredientsSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Ingredients Simple');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            if (!is_array($recipeIngredients)) {
+                continue;
+            }
+
+            foreach ($recipeIngredients as $ingRow) {
+                if (!is_array($ingRow)) {
+                    continue;
+                }
+
+                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+
+                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
+                    continue;
+                }
+
+                $amount = $eqItem * $perPax;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $k = $termId . '|' . $unit;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        usort($totals, function(array $a, array $b): int {
+            $ta = $a['term_id'] ?? 0;
+            $tb = $b['term_id'] ?? 0;
+            return $ta <=> $tb;
+        });
+
+        // Get guest counts for header
+        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
+        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
+
+        $html = '<style>
+            :where(.zs-ingredients-wrapper) { margin: 20px 0; }
+            :where(.zs-ingredients-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+            :where(.zs-event-ingredients) { width: 100%; border-collapse: collapse; }
+            :where(.zs-event-ingredients thead) { background: #333; color: white; }
+            :where(.zs-event-ingredients th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
+            :where(.zs-event-ingredients td) { padding: 8px; border: 1px solid #ddd; }
+            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
+        </style>';
+        
+        $html .= '<div class="zs-ingredients-wrapper">';
+        
+        // Info header with guest breakdown
+        $html .= '<div class="zs-ingredients-info">';
+        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
+        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
+        if ($children > 0) {
+            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
+        }
+        if ($babies > 0) {
+            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('babies (0-4 years)', 'zero-sense');
+        }
+        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
+        $html .= '</div>';
+
+        // Ingredients table (simplified - only Ingredient and TOTAL)
+        $html .= '<table class="zs-event-ingredients">';
+        $html .= '<thead>';
+        $html .= '<tr>';
+        $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingredient', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $unit = (string) ($t['unit'] ?? '');
+            $qty = (float) ($t['qty'] ?? 0);
+
+            if ($termId <= 0 || $qty <= 0 || $unit === '') {
+                continue;
+            }
+
+            $termName = $this->getTranslatedIngredientName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
+
+            // Normalize units (g/kg, ml/l)
+            $normalized = $this->normalizeUnit($qty, $unit);
+            $normalizedQty = $normalized['qty'];
+            $normalizedUnit = $normalized['unit'];
+
+            $html .= '<tr>';
+            $html .= '<td class="zs-col-ingredient">' . esc_html($termName) . '</td>';
+            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($normalizedQty)) . ' ' . esc_html($normalizedUnit) . '</td>';
             $html .= '</tr>';
         }
 
