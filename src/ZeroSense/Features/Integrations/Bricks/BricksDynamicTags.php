@@ -1293,7 +1293,7 @@ class BricksDynamicTags implements FeatureInterface
                 $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls></video></div>';
             } else {
                 $thumb = wp_get_attachment_image_url((int) $id, 'medium');
-                $html .= '<div class="zs-gallery-item zs-gallery-image"><a href="' . esc_url($url) . '" data-lightbox="event-media"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-image"><a href="' . esc_url($url) . '" target="_blank" rel="noopener"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a></div>';
             }
         }
         $html .= '</div>';
