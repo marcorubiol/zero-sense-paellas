@@ -60,14 +60,14 @@ class Staff implements FeatureInterface
         ?>
         <script>
         jQuery(document).ready(function($) {
-            // Find the Staff Roles taxonomy metabox
-            var $taxonomyDiv = $('#tagsdiv-<?php echo esc_js(self::TAX_ROLE); ?>');
+            // Find the Staff Roles taxonomy metabox (hierarchical style)
+            var $taxonomyDiv = $('#<?php echo esc_js(self::TAX_ROLE); ?>div');
             if ($taxonomyDiv.length) {
-                // Add edit roles link after the "separate tags with commas" text
-                var $addButton = $taxonomyDiv.find('.tagadd');
-                if ($addButton.length) {
-                    $addButton.after(
-                        '<p style="margin-top: 8px;">' +
+                // Add edit roles link at the bottom of the metabox
+                var $checklist = $taxonomyDiv.find('.categorychecklist');
+                if ($checklist.length) {
+                    $checklist.after(
+                        '<p style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd;">' +
                         '<a href="<?php echo esc_js($edit_roles_url); ?>" class="button button-secondary" style="text-decoration: none;">' +
                         '<?php echo esc_js(__('Edit Roles', 'zero-sense')); ?>' +
                         '</a>' +
@@ -130,6 +130,73 @@ class Staff implements FeatureInterface
             'show_admin_column' => true,
             'hierarchical' => true,
         ]);
+        
+        // Add order field to taxonomy
+        add_action(self::TAX_ROLE . '_add_form_fields', [$this, 'addOrderField']);
+        add_action(self::TAX_ROLE . '_edit_form_fields', [$this, 'editOrderField']);
+        add_action('created_' . self::TAX_ROLE, [$this, 'saveOrderField']);
+        add_action('edited_' . self::TAX_ROLE, [$this, 'saveOrderField']);
+        add_filter('manage_edit-' . self::TAX_ROLE . '_columns', [$this, 'addOrderColumn']);
+        add_filter('manage_' . self::TAX_ROLE . '_custom_column', [$this, 'renderOrderColumn'], 10, 3);
+    }
+    
+    public function addOrderField(): void
+    {
+        ?>
+        <div class="form-field">
+            <label for="role-order"><?php _e('Order', 'zero-sense'); ?></label>
+            <input type="number" name="role_order" id="role-order" value="0" min="0" step="1">
+            <p class="description"><?php _e('Order in which this role appears (lower numbers first)', 'zero-sense'); ?></p>
+        </div>
+        <?php
+    }
+    
+    public function editOrderField(\WP_Term $term): void
+    {
+        $order = get_term_meta($term->term_id, 'role_order', true);
+        if ($order === '') {
+            $order = 0;
+        }
+        ?>
+        <tr class="form-field">
+            <th scope="row">
+                <label for="role-order"><?php _e('Order', 'zero-sense'); ?></label>
+            </th>
+            <td>
+                <input type="number" name="role_order" id="role-order" value="<?php echo esc_attr($order); ?>" min="0" step="1">
+                <p class="description"><?php _e('Order in which this role appears (lower numbers first)', 'zero-sense'); ?></p>
+            </td>
+        </tr>
+        <?php
+    }
+    
+    public function saveOrderField(int $term_id): void
+    {
+        if (isset($_POST['role_order'])) {
+            $order = absint($_POST['role_order']);
+            update_term_meta($term_id, 'role_order', $order);
+        }
+    }
+    
+    public function addOrderColumn(array $columns): array
+    {
+        $new_columns = [];
+        foreach ($columns as $key => $value) {
+            $new_columns[$key] = $value;
+            if ($key === 'name') {
+                $new_columns['role_order'] = __('Order', 'zero-sense');
+            }
+        }
+        return $new_columns;
+    }
+    
+    public function renderOrderColumn(string $content, string $column_name, int $term_id): string
+    {
+        if ($column_name === 'role_order') {
+            $order = get_term_meta($term_id, 'role_order', true);
+            return $order !== '' ? esc_html($order) : '0';
+        }
+        return $content;
     }
 
     public function addStaffMetabox(): void

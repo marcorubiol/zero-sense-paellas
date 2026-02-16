@@ -304,13 +304,29 @@ class StaffAssignmentMetabox
         $terms = get_terms([
             'taxonomy' => self::STAFF_TAX,
             'hide_empty' => false,
-            'orderby' => 'name',
+            'orderby' => 'meta_value_num',
+            'meta_key' => 'role_order',
             'order' => 'ASC',
         ]);
         
         if (is_wp_error($terms) || empty($terms)) {
             return [];
         }
+        
+        // Sort by role_order, then by name for terms without order
+        usort($terms, function($a, $b) {
+            $order_a = get_term_meta($a->term_id, 'role_order', true);
+            $order_b = get_term_meta($b->term_id, 'role_order', true);
+            
+            $order_a = $order_a !== '' ? (int)$order_a : 999;
+            $order_b = $order_b !== '' ? (int)$order_b : 999;
+            
+            if ($order_a === $order_b) {
+                return strcmp($a->name, $b->name);
+            }
+            
+            return $order_a - $order_b;
+        });
         
         $roles = [];
         foreach ($terms as $term) {
