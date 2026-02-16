@@ -176,7 +176,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                 <div class="tablenav top" style="max-width:1100px;">
                     <div class="alignleft actions">
                         <button type="button" class="button" id="zs-ops-schema-add">
-                            <span class="dashicons dashicons-plus-alt"></span>
                             <?php esc_html_e('Add field', 'zero-sense'); ?>
                         </button>
                     </div>
