@@ -106,7 +106,8 @@ class AdminOrderEventSheetLink implements FeatureInterface
         // Add CSS with inline-block positioning
         echo '<style>
             .zs-event-sheet-link {
-                display: inline-block;
+                display: grid;
+  place-items: center;
                 width: 24px;
                 height: 24px;
                 padding: 2px;
