@@ -486,6 +486,29 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
     {
         global $wpdb;
         
+        // Debug: Check order 19622 specifically
+        if ($key === 'otra_prueba_1771244405') {
+            $raw = $wpdb->get_var($wpdb->prepare(
+                "SELECT meta_value FROM {$wpdb->postmeta} 
+                WHERE meta_key = %s AND post_id = %d",
+                'zs_ops_material',
+                19622
+            ));
+            
+            if ($raw) {
+                error_log('[ZS Schema DEBUG] Order 19622 raw meta_value: ' . substr($raw, 0, 500));
+                error_log('[ZS Schema DEBUG] Looking for key: ' . $key);
+                error_log('[ZS Schema DEBUG] Key length: ' . strlen($key));
+                
+                // Check if key exists in serialized string
+                $needle = 's:' . strlen($key) . ':"' . $key . '"';
+                error_log('[ZS Schema DEBUG] Searching for: ' . $needle);
+                error_log('[ZS Schema DEBUG] Found in string: ' . (strpos($raw, $needle) !== false ? 'YES' : 'NO'));
+            } else {
+                error_log('[ZS Schema DEBUG] Order 19622 has no zs_ops_material meta');
+            }
+        }
+        
         // The meta_value is serialized PHP array, need to search for the key in serialized format
         // Format in serialized array: s:9:"field_key";a:1:{s:5:"value";...}
         $search_pattern = '%' . $wpdb->esc_like('s:' . strlen($key) . ':"' . $key . '"') . '%';
@@ -497,6 +520,10 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             'zs_ops_material',
             $search_pattern
         ));
+        
+        if ($key === 'otra_prueba_1771244405') {
+            error_log('[ZS Schema DEBUG] Final count: ' . $count);
+        }
         
         return (int) $count;
     }

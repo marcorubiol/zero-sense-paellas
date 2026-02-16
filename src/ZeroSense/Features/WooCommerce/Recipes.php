@@ -144,8 +144,15 @@ class Recipes implements FeatureInterface
         $ajax_url = admin_url('admin-ajax.php');
         $nonce = wp_create_nonce('zs_ingredient_ajax');
 
+        $manage_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_INGREDIENT . '&post_type=' . self::CPT);
         ?>
         <div class="zs-recipes-metabox">
+            <p style="margin: 0 0 10px 0;">
+                <a href="<?php echo esc_url($manage_url); ?>" target="_blank" style="text-decoration: none;">
+                    <span class="dashicons dashicons-admin-generic" style="vertical-align: middle;"></span>
+                    <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
+                </a>
+            </p>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
