@@ -164,7 +164,7 @@ class EventDetailsMetabox
                                name="event_children_5_to_8" 
                                value="<?php echo esc_attr($children5to8); ?>" 
                                min="0"
-                               class="short">
+                               class="shorst">
                     </div>
                     
                     <div class="zs-field">
