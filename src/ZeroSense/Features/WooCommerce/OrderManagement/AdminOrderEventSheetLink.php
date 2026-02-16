@@ -103,19 +103,20 @@ class AdminOrderEventSheetLink implements FeatureInterface
             esc_attr__('View event sheet', 'zero-sense')
         );
         
-        // Add CSS matching the eye icon style
+        // Add CSS with inline-block positioning
         echo '<style>
             .zs-event-sheet-link {
-                float: right;
-                width: 16px;
-                padding: 20px 4px 4px 4px;
-                height: 0;
-                overflow: hidden;
-                position: relative;
+                display: inline-block;
+                width: 24px;
+                height: 24px;
+                padding: 2px;
                 border: 2px solid transparent;
                 border-radius: 4px;
                 color: #2271b1;
                 text-decoration: none;
+                vertical-align: middle;
+                line-height: 1;
+                margin-left: 2px;
             }
             .zs-event-sheet-link:hover {
                 border: 2px solid var(--wp-admin-theme-color, #00a0d2);
@@ -124,6 +125,7 @@ class AdminOrderEventSheetLink implements FeatureInterface
                 font-size: 18px;
                 width: 18px;
                 height: 18px;
+                line-height: 1;
             }
         </style>';
     }
