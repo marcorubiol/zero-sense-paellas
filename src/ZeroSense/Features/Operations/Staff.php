@@ -51,6 +51,38 @@ class Staff implements FeatureInterface
         add_action('admin_print_footer_scripts', [$this, 'printRoleOrderingScript']);
         add_action('wp_ajax_zs_update_role_order', [$this, 'ajaxUpdateRoleOrder']);
         add_filter('get_terms_args', [$this, 'orderRoleTerms'], 10, 2);
+        add_filter('get_terms', [$this, 'sortRoleTerms'], 10, 3);
+    }
+    
+    public function sortRoleTerms(array $terms, array $taxonomies, array $args): array
+    {
+        // Only apply to our staff role taxonomy
+        if (!in_array(self::TAX_ROLE, $taxonomies, true)) {
+            return $terms;
+        }
+        
+        if (empty($terms)) {
+            return $terms;
+        }
+        
+        error_log('Zero Sense: Sorting terms with fallback method');
+        
+        // Sort by role_order, then by name for terms without order
+        usort($terms, function($a, $b) {
+            $order_a = get_term_meta($a->term_id, 'role_order', true);
+            $order_b = get_term_meta($b->term_id, 'role_order', true);
+            
+            $order_a = $order_a !== '' ? (int)$order_a : 999;
+            $order_b = $order_b !== '' ? (int)$order_b : 999;
+            
+            if ($order_a === $order_b) {
+                return strcmp($a->name, $b->name);
+            }
+            
+            return $order_a - $order_b;
+        });
+        
+        return $terms;
     }
     
     public function orderRoleTerms(array $args, array $taxonomies): array
@@ -60,6 +92,9 @@ class Staff implements FeatureInterface
             $args['orderby'] = 'meta_value_num';
             $args['meta_key'] = 'role_order';
             $args['order'] = 'ASC';
+            
+            // Force cache invalidation
+            $args['cache_results'] = false;
             
             error_log('Zero Sense: Applying role order filter to args: ' . print_r($args, true));
         }
@@ -218,6 +253,15 @@ class Staff implements FeatureInterface
                 error_log("Zero Sense: Update result for term {$term_id}: " . ($result ? 'success' : 'failed'));
             }
         }
+        
+        // Clear WordPress term cache to force refresh
+        wp_cache_delete('zs_staff_role', 'terms');
+        wp_cache_delete('zs_staff_role', 'term_hierarchy');
+        
+        // Also clear the last_changed cache
+        wp_cache_set_last_changed('terms');
+        
+        error_log('Zero Sense: Cleared term cache for zs_staff_role');
         
         wp_send_json_success(['message' => 'Order updated successfully']);
     }

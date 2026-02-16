@@ -174,7 +174,7 @@ class StaffAssignmentMetabox
                                 <div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;" data-staff-id="<?php echo esc_attr($staffId); ?>">
                                     <input type="hidden" name="zs_event_staff[<?php echo esc_attr($roleSlug); ?>][]" value="<?php echo esc_attr($staffId); ?>" class="zs-staff-hidden-input">
                                     
-                                    <div class="zs-staff-display" style="flex: 1; display: flex; gap: 10px; align-items: center;">
+                                    <div class="zs-staff-display" style="flex: 1; gap: 10px; align-items: center; display: flex;">
                                         <strong style="min-width: 150px;"><?php echo esc_html($staffName); ?></strong>
                                         <span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;">
                                             <?php if ($phone || $email): ?>
