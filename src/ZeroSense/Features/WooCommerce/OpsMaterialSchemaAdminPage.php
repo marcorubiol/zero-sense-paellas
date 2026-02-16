@@ -550,10 +550,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             $search_pattern
         ));
         
-        if ($key === 'otra_prueba_1771244405') {
-            error_log('[ZS Schema DEBUG] Final count: ' . $count);
-        }
-        
         return (int) $count;
     }
 
