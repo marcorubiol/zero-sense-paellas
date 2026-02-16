@@ -307,19 +307,38 @@ class Recipes implements FeatureInterface
             
             function createIngredient(name, selectElement) {
                 console.log('Zero Sense Recipes: Creating ingredient:', name);
-                $.post(ajaxUrl, {
-                    action: 'zs_ingredient_create',
-                    nonce: nonce,
-                    name: name
-                }).done(function(resp) {
-                    console.log('Zero Sense Recipes: Create response:', resp);
-                    if (resp && resp.success && resp.data) {
-                        var newId = resp.data.id;
-                        var text = resp.data.text;
-                        
-                        var option = new Option(text, newId, true, true);
-                        $(selectElement).find('option[value="' + name.replace(/"/g, '\\"') + '"]').remove();
-                        $(selectElement).append(option).trigger('change');
+                
+                $.ajax({
+                    url: ajaxUrl,
+                    method: 'POST',
+                    data: {
+                        action: 'zs_ingredient_create',
+                        nonce: nonce,
+                        name: name
+                    },
+                    success: function(resp) {
+                        console.log('Zero Sense Recipes: Create response:', resp);
+                        if (resp && resp.success && resp.data) {
+                            var newId = resp.data.id;
+                            var text = resp.data.text;
+                            
+                            console.log('Zero Sense Recipes: New ingredient created:', {id: newId, text: text});
+                            
+                            // Remove the temporary option and add the real one
+                            $(selectElement).find('option[value="' + name.replace(/"/g, '\\"') + '"]').remove();
+                            var option = new Option(text, newId, true, true);
+                            $(selectElement).append(option).trigger('change');
+                        } else {
+                            console.error('Zero Sense Recipes: Create failed:', resp);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Zero Sense Recipes: Create AJAX Error:', {
+                            status: status,
+                            error: error,
+                            responseText: xhr.responseText,
+                            readyState: xhr.readyState
+                        });
                     }
                 });
             }
