@@ -492,25 +492,28 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         
         // Temporary debug: show actual data for new fields
         if (strpos($key, '_') !== false && preg_match('/_\d+$/', $key)) {
-            $sample = $wpdb->get_results($wpdb->prepare(
+            // Check specific order 19622
+            $specific = $wpdb->get_row($wpdb->prepare(
                 "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
-                WHERE meta_key = %s
-                LIMIT 3",
-                'zs_ops_material'
+                WHERE meta_key = %s AND post_id = %d",
+                'zs_ops_material',
+                19622
             ));
             
             error_log('[ZS Schema] === Debugging key: ' . $key . ' ===');
             error_log('[ZS Schema] Search pattern: ' . $search_pattern);
             
-            if ($sample) {
-                foreach ($sample as $row) {
-                    $data = maybe_unserialize($row->meta_value);
-                    $hasKey = is_array($data) && isset($data[$key]);
-                    error_log('[ZS Schema] Post ' . $row->post_id . ' has key "' . $key . '": ' . ($hasKey ? 'YES' : 'NO'));
-                    if ($hasKey) {
-                        error_log('[ZS Schema] Value: ' . print_r($data[$key], true));
-                    }
+            if ($specific) {
+                $data = maybe_unserialize($specific->meta_value);
+                $hasKey = is_array($data) && isset($data[$key]);
+                error_log('[ZS Schema] Order 19622 has key "' . $key . '": ' . ($hasKey ? 'YES' : 'NO'));
+                if ($hasKey) {
+                    error_log('[ZS Schema] Value: ' . print_r($data[$key], true));
+                } else {
+                    error_log('[ZS Schema] Order 19622 keys: ' . implode(', ', array_keys($data)));
                 }
+            } else {
+                error_log('[ZS Schema] Order 19622 has NO zs_ops_material meta at all');
             }
         }
         
