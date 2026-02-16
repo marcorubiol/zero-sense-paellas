@@ -675,7 +675,7 @@ class Integration
      */
     public function renderSentEmailsOrderColumnHpos(string $column, $order): void
     {
-        if ($column !== 'sent_emails') {
+        if ($column !== 'zs_email_logs') {
             return;
         }
 
