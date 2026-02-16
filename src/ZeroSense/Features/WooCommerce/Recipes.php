@@ -126,7 +126,7 @@ class Recipes implements FeatureInterface
             __('Recipe ingredients', 'zero-sense'),
             [$this, 'renderRecipeMetabox'],
             self::CPT,
-            'normal',
+            'side',
             'high'
         );
         
