@@ -270,14 +270,6 @@ class Recipes implements FeatureInterface
                             url: ajaxUrl,
                             dataType: 'json',
                             delay: 250,
-                            beforeSend: function(xhr) {
-                                console.log('Zero Sense Recipes: AJAX request to:', ajaxUrl);
-                                console.log('Zero Sense Recipes: Request data:', {
-                                    action: 'zs_ingredient_search',
-                                    nonce: nonce,
-                                    q: params.term || ''
-                                });
-                            },
                             data: function(params) {
                                 console.log('Zero Sense Recipes: Searching for:', params.term);
                                 return {
