@@ -57,6 +57,20 @@ class Recipes implements FeatureInterface
 
         add_action('woocommerce_product_options_general_product_data', [$this, 'renderProductRecipeField']);
         add_action('woocommerce_admin_process_product_object', [$this, 'saveProductRecipeField']);
+        
+        // Add ingredients submenu
+        add_action('admin_menu', [$this, 'addIngredientsSubmenu'], 99);
+    }
+    
+    public function addIngredientsSubmenu(): void
+    {
+        add_submenu_page(
+            'woocommerce',
+            __('Ingredients', 'zero-sense'),
+            __('Ingredients', 'zero-sense'),
+            'manage_woocommerce',
+            'edit-tags.php?taxonomy=' . self::TAX_INGREDIENT . '&post_type=' . self::CPT
+        );
     }
 
     public function getPriority(): int
