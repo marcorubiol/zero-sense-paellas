@@ -852,7 +852,7 @@ class BricksDynamicTags implements FeatureInterface
         // Get post modified date directly from database to avoid WC auto-updates
         $postData = get_post($orderId);
         if (!$postData || !isset($postData->post_modified)) {
-            returwn '';
+            return '';
         }
 
         $modified = $postData->post_modified;
