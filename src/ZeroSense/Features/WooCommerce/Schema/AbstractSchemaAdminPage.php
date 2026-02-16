@@ -19,37 +19,37 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
     /**
      * Get the schema key (e.g., 'material', 'workspace')
      */
-    abstract protected function getSchemaKey(): string;
+    abstract public function getSchemaKey(): string;
     
     /**
      * Get the schema title (e.g., 'Material & Logistics')
      */
-    abstract protected function getSchemaTitle(): string;
+    abstract public function getSchemaTitle(): string;
     
     /**
      * Get the schema description
      */
-    abstract protected function getSchemaDescription(): string;
+    abstract public function getSchemaDescription(): string;
     
     /**
      * Get the WordPress option name for storing schema
      */
-    abstract protected function getOptionName(): string;
+    abstract public function getOptionName(): string;
     
     /**
      * Get the order meta key for storing field data
      */
-    abstract protected function getMetaKey(): string;
+    abstract public function getMetaKey(): string;
     
     /**
      * Get the admin menu slug
      */
-    abstract protected function getMenuSlug(): string;
+    abstract public function getMenuSlug(): string;
     
     /**
      * Get the admin menu title (short version)
      */
-    abstract protected function getMenuTitle(): string;
+    abstract public function getMenuTitle(): string;
     
     /**
      * Get the form action name for saving

@@ -10,37 +10,37 @@ use ZeroSense\Features\WooCommerce\Schema\AbstractSchemaAdminPage;
  */
 class MaterialSchema extends AbstractSchemaAdminPage
 {
-    protected function getSchemaKey(): string
+    public function getSchemaKey(): string
     {
         return 'material';
     }
     
-    protected function getSchemaTitle(): string
+    public function getSchemaTitle(): string
     {
         return __('Material & Logistics Schema', 'zero-sense');
     }
     
-    protected function getSchemaDescription(): string
+    public function getSchemaDescription(): string
     {
         return __('Configure the Material & Logistics fields available on WooCommerce orders. You can reorder fields by dragging them, hide fields you no longer need, or permanently delete hidden fields that have no data.', 'zero-sense');
     }
     
-    protected function getOptionName(): string
+    public function getOptionName(): string
     {
         return 'zs_ops_material_schema';
     }
     
-    protected function getMetaKey(): string
+    public function getMetaKey(): string
     {
         return 'zs_ops_material';
     }
     
-    protected function getMenuSlug(): string
+    public function getMenuSlug(): string
     {
         return 'zs_ops_material_schema';
     }
     
-    protected function getMenuTitle(): string
+    public function getMenuTitle(): string
     {
         return __('Material & Logistics', 'zero-sense');
     }
