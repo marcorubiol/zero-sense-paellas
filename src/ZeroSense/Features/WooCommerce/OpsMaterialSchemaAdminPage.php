@@ -498,6 +498,11 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             $search_pattern
         ));
         
+        // Temporary debug: show actual query for new fields
+        if (strpos($key, '_') !== false && preg_match('/_\d+$/', $key)) {
+            error_log('[ZS Schema] Key: ' . $key . ' | Pattern: ' . $search_pattern . ' | Count: ' . $count);
+        }
+        
         return (int) $count;
     }
 
