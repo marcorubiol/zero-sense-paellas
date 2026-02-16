@@ -96,12 +96,21 @@ class AdminOrderEventSheetLink implements FeatureInterface
         }
 
         printf(
-            '<a href="%s" target="_blank" title="%s" style="color: #2271b1; text-decoration: none; display: inline-block; vertical-align: middle; line-height: 1;">
-                <span class="dashicons dashicons-media-document" style="font-size: 18px; width: 18px; height: 18px;"></span>
+            '<a href="%s" target="_blank" title="%s" class="zs-event-sheet-link" style="color: #2271b1; text-decoration: none; display: inline-block; vertical-align: middle; line-height: 1; padding: 2px; border-radius: 3px; transition: all 0.2s ease;">
+                <span class="dashicons dashicons-clipboard" style="font-size: 18px; width: 18px; height: 18px;"></span>
             </a> ',
             esc_url($url),
             esc_attr__('View event sheet', 'zero-sense')
         );
+        
+        // Add hover effect CSS
+        echo '<style>
+            .zs-event-sheet-link:hover {
+                background-color: #f0f0f1;
+                border: 1px solid #2271b1;
+                padding: 1px;
+            }
+        </style>';
     }
 
     private function ensureOrderHasToken(WC_Order $order): void
