@@ -157,6 +157,27 @@ class Recipes implements FeatureInterface
 
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
 
+        // Simple debug version
+        echo '<div style="background: #f9f9f9; border: 2px solid #0073aa; padding: 15px; margin: 10px 0;">';
+        echo '<h3>🍳 Zero Sense Recipes - Debug Mode</h3>';
+        echo '<p><strong>Found ingredients:</strong> ' . count($ingredients) . '</p>';
+        
+        if (!empty($ingredients)) {
+            echo '<ul>';
+            foreach ($ingredients as $ingredient) {
+                echo '<li>Ingredient ID: ' . $ingredient['ingredient'] . ', Qty: ' . $ingredient['qty'] . ' ' . $ingredient['unit'] . '</li>';
+            }
+            echo '</ul>';
+        }
+        
+        echo '<p><strong>Test field:</strong></p>';
+        echo '<input type="text" id="test-ingredient-field" placeholder="Type to test..." style="width: 100%; padding: 5px;">';
+        echo '<button type="button" id="test-add-btn" class="button" style="margin-top: 5px;">Test Add</button>';
+        
+        echo '</div>';
+        
+        // Original table (commented for now)
+        /*
         $units = $this->getAllowedUnits();
 
         ?>
@@ -219,6 +240,7 @@ class Recipes implements FeatureInterface
             console.log('Zero Sense Recipes: Original script disabled, using inline initialization');
         </script>
         <?php
+        */
     }
 
     public function saveRecipeMetabox(int $postId, WP_Post $post): void
