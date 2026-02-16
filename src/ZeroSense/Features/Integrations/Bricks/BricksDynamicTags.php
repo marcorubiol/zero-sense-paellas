@@ -2626,7 +2626,12 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function getEventStaffFormatted($post): string
     {
-        $order = $this->getOrder($post);
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return '';
+        }
+
+        $order = wc_get_order($orderId);
         if (!$order) {
             return '';
         }
