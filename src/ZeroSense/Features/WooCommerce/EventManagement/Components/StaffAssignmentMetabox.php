@@ -268,13 +268,26 @@ class StaffAssignmentMetabox
                             $display.find('.zs-staff-info').html(infoHtml);
                         }
                         
+                        // Destroy selectWoo before hiding
+                        if ($select.hasClass('select2-hidden-accessible')) {
+                            $select.selectWoo('destroy');
+                        }
+                        
                         $select.hide();
                         $display.show();
                         $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
                     } else {
                         // Edit mode - show select, hide display
                         $display.hide();
-                        $select.show().selectWoo({
+                        $select.show();
+                        
+                        // Destroy existing selectWoo if present
+                        if ($select.hasClass('select2-hidden-accessible')) {
+                            $select.selectWoo('destroy');
+                        }
+                        
+                        // Initialize selectWoo
+                        $select.selectWoo({
                             width: '100%',
                             tags: true,
                             createTag: function(params) {
@@ -286,7 +299,8 @@ class StaffAssignmentMetabox
                                     newTag: true
                                 };
                             }
-                        });
+                        }).selectWoo('open');
+                        
                         $editBtn.text('<?php echo esc_js(__('Save', 'zero-sense')); ?>');
                     }
                 });
