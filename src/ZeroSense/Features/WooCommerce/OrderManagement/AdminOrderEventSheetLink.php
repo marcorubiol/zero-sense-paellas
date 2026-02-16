@@ -154,14 +154,14 @@ class AdminOrderEventSheetLink implements FeatureInterface
     private function buildEventSheetUrl(int $orderId, string $token): string
     {
         // Try to find the event sheet page
-        $page = get_page_by_path('event-sheet');
+        $page = get_page_by_path('fdr');
         
         if (!$page) {
             $page = get_page_by_path('hoja-de-ruta');
         }
         
         if (!$page) {
-            $page = get_page_by_path('event-information-sheet');
+            $page = get_page_by_path('event-sheet');
         }
 
         if (!$page) {
