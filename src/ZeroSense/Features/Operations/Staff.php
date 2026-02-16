@@ -46,6 +46,18 @@ class Staff implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
+        add_action('admin_menu', [$this, 'addRolesSubmenu']);
+    }
+    
+    public function addRolesSubmenu(): void
+    {
+        add_submenu_page(
+            'edit.php?post_type=' . self::CPT,
+            __('Staff Roles', 'zero-sense'),
+            __('Staff Roles', 'zero-sense'),
+            'manage_categories',
+            'edit-tags.php?taxonomy=' . self::TAX_ROLE . '&post_type=' . self::CPT
+        );
     }
 
     public function getPriority(): int
