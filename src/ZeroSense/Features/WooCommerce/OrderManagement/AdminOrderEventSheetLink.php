@@ -117,6 +117,7 @@ class AdminOrderEventSheetLink implements FeatureInterface
                 vertical-align: middle;
                 line-height: 1;
                 margin-left: 2px;
+                float: right;
             }
             .zs-event-sheet-link:hover {
                 border: 2px solid var(--wp-admin-theme-color, #00a0d2);
