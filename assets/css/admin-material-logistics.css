@@ -97,6 +97,13 @@
     font-weight: 500;
 }
 
+/* Actions column - flex layout for horizontal buttons */
+#zs-ops-schema-rows td:last-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 /* Toggle visibility button */
 .zs-ops-toggle-visibility {
     padding: 6px 10px;
@@ -117,9 +124,6 @@
     padding: 6px 10px;
     font-size: 13px;
     line-height: 1.4;
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 4px;
 }
 .zs-ops-delete-field:hover {
     background-color: #dc3232;
