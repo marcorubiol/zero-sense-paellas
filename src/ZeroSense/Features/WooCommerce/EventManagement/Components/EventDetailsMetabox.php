@@ -251,7 +251,10 @@ class EventDetailsMetabox
                                value="<?php echo esc_attr($teamArrivalTime); ?>" 
                                class="short">
                     </div>
-                    
+                    <div class="zs-field"></div>
+                </div>
+                
+                <div class="zs-field-row">
                     <div class="zs-field">
                         <label for="event_starters_service_time">
                             <?php esc_html_e('Starters service time', 'zero-sense'); ?>
@@ -275,9 +278,7 @@ class EventDetailsMetabox
                             <?php esc_html_e('Click Auto to set this 30 minutes before Paellas service time', 'zero-sense'); ?>
                         </p>
                     </div>
-                </div>
-                
-                <div class="zs-field-row">
+                    
                     <div class="zs-field">
                         <label for="event_serving_time">
                             <?php esc_html_e('Paellas service time', 'zero-sense'); ?>
@@ -288,7 +289,6 @@ class EventDetailsMetabox
                                value="<?php echo esc_attr($servingTime); ?>" 
                                class="short">
                     </div>
-                    <div class="zs-field"></div>
                 </div>
                 
                 <!-- Open Bar -->
