@@ -106,13 +106,8 @@ class AdminOrderEventSheetLink implements FeatureInterface
             return;
         }
 
-        // Use shortcode to get the link (if EventPublicAccess feature is active)
-        if (shortcode_exists('zs_event_public_link')) {
-            $url = do_shortcode('[zs_event_public_link order="' . $order->get_id() . '"]');
-        } else {
-            // Fallback: build URL manually
-            $url = $this->buildEventSheetUrl($order->get_id(), $token);
-        }
+        // Build URL manually to ensure correct page
+        $url = $this->buildEventSheetUrl($order->get_id(), $token);
 
         if (!$url || $url === '') {
             echo '<span style="color: #999;">—</span>';
