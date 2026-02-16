@@ -153,10 +153,26 @@ class StaffAssignmentMetabox
                                 $phone = $staffId > 0 ? get_post_meta($staffId, self::META_PHONE, true) : '';
                                 $email = $staffId > 0 ? get_post_meta($staffId, self::META_EMAIL, true) : '';
                                 ?>
-                                <div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
-                                    <select name="zs_event_staff[<?php echo esc_attr($roleSlug); ?>][]" 
-                                            class="zs-staff-select" 
-                                            style="flex: 1; max-width: 300px;"
+                                <div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;" data-staff-id="<?php echo esc_attr($staffId); ?>">
+                                    <input type="hidden" name="zs_event_staff[<?php echo esc_attr($roleSlug); ?>][]" value="<?php echo esc_attr($staffId); ?>" class="zs-staff-hidden-input">
+                                    
+                                    <div class="zs-staff-display" style="flex: 1; display: flex; gap: 10px; align-items: center;">
+                                        <strong style="min-width: 150px;"><?php echo esc_html($staffName); ?></strong>
+                                        <span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;">
+                                            <?php if ($phone || $email): ?>
+                                                <?php if ($phone): ?>
+                                                    📞 <?php echo esc_html($phone); ?>
+                                                <?php endif; ?>
+                                                <?php if ($phone && $email): ?> | <?php endif; ?>
+                                                <?php if ($email): ?>
+                                                    ✉️ <?php echo esc_html($email); ?>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <select class="zs-staff-select" 
+                                            style="flex: 1; max-width: 300px; display: none;"
                                             data-role="<?php echo esc_attr($roleSlug); ?>">
                                         <option value=""><?php esc_html_e('Select staff member...', 'zero-sense'); ?></option>
                                         <?php foreach ($roleStaff as $staff): ?>
@@ -169,19 +185,10 @@ class StaffAssignmentMetabox
                                         <?php endforeach; ?>
                                     </select>
                                     
-                                    <span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;">
-                                        <?php if ($phone || $email): ?>
-                                            <?php if ($phone): ?>
-                                                📞 <?php echo esc_html($phone); ?>
-                                            <?php endif; ?>
-                                            <?php if ($phone && $email): ?> | <?php endif; ?>
-                                            <?php if ($email): ?>
-                                                ✉️ <?php echo esc_html($email); ?>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </span>
-                                    
-                                    <button type="button" class="button zs-staff-remove" style="flex-shrink: 0;">
+                                    <button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;">
+                                        <?php esc_html_e('Change', 'zero-sense'); ?>
+                                    </button>
+                                    <button type="button" class="button button-small zs-staff-remove" style="flex-shrink: 0;">
                                         <?php esc_html_e('Remove', 'zero-sense'); ?>
                                     </button>
                                 </div>
@@ -221,12 +228,65 @@ class StaffAssignmentMetabox
                     }
                 });
                 
+                // Handle edit/change button
+                $(document).on('click', '.zs-staff-edit', function() {
+                    var $row = $(this).closest('.zs-staff-row');
+                    var $display = $row.find('.zs-staff-display');
+                    var $select = $row.find('.zs-staff-select');
+                    var $editBtn = $(this);
+                    
+                    // Toggle between display and select mode
+                    if ($select.is(':visible')) {
+                        // Save mode - hide select, show display
+                        var selectedValue = $select.val();
+                        if (selectedValue) {
+                            var $option = $select.find('option:selected');
+                            var staffName = $option.text();
+                            var phone = $option.data('phone') || '';
+                            var email = $option.data('email') || '';
+                            
+                            // Update hidden input
+                            $row.find('.zs-staff-hidden-input').val(selectedValue);
+                            
+                            // Update display
+                            $display.find('strong').text(staffName);
+                            var infoHtml = '';
+                            if (phone || email) {
+                                if (phone) infoHtml += '📞 ' + phone;
+                                if (phone && email) infoHtml += ' | ';
+                                if (email) infoHtml += '✉️ ' + email;
+                            }
+                            $display.find('.zs-staff-info').html(infoHtml);
+                        }
+                        
+                        $select.hide();
+                        $display.show();
+                        $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
+                    } else {
+                        // Edit mode - show select, hide display
+                        $display.hide();
+                        $select.show().selectWoo({
+                            width: '100%',
+                            tags: true,
+                            createTag: function(params) {
+                                var term = $.trim(params.term);
+                                if (term === '') return null;
+                                return {
+                                    id: 'new:' + term,
+                                    text: term + ' (Create new)',
+                                    newTag: true
+                                };
+                            }
+                        });
+                        $editBtn.text('<?php echo esc_js(__('Save', 'zero-sense')); ?>');
+                    }
+                });
+                
                 // Handle selection change - create new staff if needed
                 $(document).on('change', '.zs-staff-select', function() {
                     var $select = $(this);
                     var value = $select.val();
                     var $row = $select.closest('.zs-staff-row');
-                    var $info = $row.find('.zs-staff-info');
                     
                     // Check if it's a new staff member
                     if (value && value.indexOf('new:') === 0) {
@@ -245,33 +305,15 @@ class StaffAssignmentMetabox
                                 $select.find('option[value="' + value + '"]').remove();
                                 var newOption = new Option(staffName, response.data.id, true, true);
                                 $select.append(newOption).trigger('change');
+                                
+                                // Auto-save after creating
+                                $row.find('.zs-staff-edit').click();
                             } else {
                                 alert('Error creating staff member: ' + (response.data || 'Unknown error'));
                                 $select.val('').trigger('change');
                             }
                         });
-                        return;
                     }
-                    
-                    // Update contact info display
-                    var $option = $select.find('option:selected');
-                    var phone = $option.data('phone') || '';
-                    var email = $option.data('email') || '';
-                    
-                    var infoHtml = '';
-                    if (phone || email) {
-                        if (phone) {
-                            infoHtml += '📞 ' + phone;
-                        }
-                        if (phone && email) {
-                            infoHtml += ' | ';
-                        }
-                        if (email) {
-                            infoHtml += '✉️ ' + email;
-                        }
-                    }
-                    
-                    $info.html(infoHtml);
                 });
                 
                 // Add staff member
@@ -283,7 +325,10 @@ class StaffAssignmentMetabox
                     
                     var $newRow = $('<div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;"></div>');
                     
-                    var $select = $('<select name="zs_event_staff[' + role + '][]" class="zs-staff-select" style="flex: 1; max-width: 300px;" data-role="' + role + '"></select>');
+                    var $hiddenInput = $('<input type="hidden" class="zs-staff-hidden-input" name="zs_event_staff[' + role + '][]" value="">');
+                    var $display = $('<div class="zs-staff-display" style="flex: 1; display: none; gap: 10px; align-items: center;"><strong style="min-width: 150px;"></strong><span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;"></span></div>');
+                    
+                    var $select = $('<select class="zs-staff-select" style="flex: 1; max-width: 300px;" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
                     
                     // Get staff options for this specific role from existing select in the same section
@@ -296,10 +341,10 @@ class StaffAssignmentMetabox
                         });
                     }
                     
-                    var $info = $('<span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;"></span>');
-                    var $removeBtn = $('<button type="button" class="button zs-staff-remove" style="flex-shrink: 0;"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
+                    var $editBtn = $('<button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
+                    var $removeBtn = $('<button type="button" class="button button-small zs-staff-remove" style="flex-shrink: 0;"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
                     
-                    $newRow.append($select).append($info).append($removeBtn);
+                    $newRow.append($hiddenInput).append($display).append($select).append($editBtn).append($removeBtn);
                     $btn.before($newRow);
                     
                     $select.selectWoo({
@@ -307,16 +352,14 @@ class StaffAssignmentMetabox
                         tags: true,
                         createTag: function(params) {
                             var term = $.trim(params.term);
-                            if (term === '') {
-                                return null;
-                            }
+                            if (term === '') return null;
                             return {
                                 id: 'new:' + term,
                                 text: term + ' (Create new)',
                                 newTag: true
                             };
                         }
-                    });
+                    }).selectWoo('open');
                 });
                 
                 // Remove staff member
