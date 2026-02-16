@@ -488,30 +488,42 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         
         // Debug: Check all orders with this meta
         if ($key === 'otra_prueba_1771244405') {
+            // Get ALL orders with this meta (no limit)
             $allOrders = $wpdb->get_results($wpdb->prepare(
                 "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
                 WHERE meta_key = %s
-                LIMIT 10",
+                ORDER BY post_id DESC",
                 'zs_ops_material'
             ));
             
-            error_log('[ZS Schema DEBUG] Found ' . count($allOrders) . ' orders with zs_ops_material meta');
-            error_log('[ZS Schema DEBUG] Looking for key: ' . $key);
+            error_log('[ZS Schema DEBUG] ===== SEARCHING FOR KEY: ' . $key . ' =====');
+            error_log('[ZS Schema DEBUG] Found ' . count($allOrders) . ' total orders with zs_ops_material meta');
             
+            $found = false;
             foreach ($allOrders as $row) {
                 $data = maybe_unserialize($row->meta_value);
                 if (is_array($data)) {
-                    $keys = array_keys($data);
-                    error_log('[ZS Schema DEBUG] Order ' . $row->post_id . ' has keys: ' . implode(', ', $keys));
-                    
                     if (isset($data[$key])) {
-                        error_log('[ZS Schema DEBUG] *** Order ' . $row->post_id . ' HAS the target key! ***');
-                        error_log('[ZS Schema DEBUG] Raw serialized (first 400 chars): ' . substr($row->meta_value, 0, 400));
+                        error_log('[ZS Schema DEBUG] *** FOUND! Order ' . $row->post_id . ' HAS the target key! ***');
+                        error_log('[ZS Schema DEBUG] Value: ' . print_r($data[$key], true));
+                        error_log('[ZS Schema DEBUG] Raw serialized (first 500 chars): ' . substr($row->meta_value, 0, 500));
                         
                         // Check what pattern we should search for
                         $needle = 's:' . strlen($key) . ':"' . $key . '"';
                         error_log('[ZS Schema DEBUG] Searching for pattern: ' . $needle);
                         error_log('[ZS Schema DEBUG] Pattern found in serialized: ' . (strpos($row->meta_value, $needle) !== false ? 'YES' : 'NO'));
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!$found) {
+                error_log('[ZS Schema DEBUG] Key NOT found in any order. Showing first 3 orders:');
+                for ($i = 0; $i < min(3, count($allOrders)); $i++) {
+                    $data = maybe_unserialize($allOrders[$i]->meta_value);
+                    if (is_array($data)) {
+                        error_log('[ZS Schema DEBUG] Order ' . $allOrders[$i]->post_id . ' keys: ' . implode(', ', array_keys($data)));
                     }
                 }
             }
