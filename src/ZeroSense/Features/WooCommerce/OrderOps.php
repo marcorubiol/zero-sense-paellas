@@ -362,12 +362,20 @@ class OrderOps implements FeatureInterface
 
         $orderId = $order->get_id();
         
+        error_log('[ZS OrderOps] save() called for order: ' . $orderId);
+        
         // For saving, use all active fields (not just fields with data)
         // This ensures new fields are saved even if they don't have previous data
         $items = $this->getMaterialItems(true);
         
+        error_log('[ZS OrderOps] Active items count: ' . count($items));
+        error_log('[ZS OrderOps] Active items keys: ' . implode(', ', array_keys($items)));
+        error_log('[ZS OrderOps] POST zs_ops_material isset: ' . (isset($_POST['zs_ops_material']) ? 'YES' : 'NO'));
+        
         if ($items !== [] && isset($_POST['zs_ops_material']) && is_array($_POST['zs_ops_material'])) {
             $incoming = $_POST['zs_ops_material'];
+            
+            error_log('[ZS OrderOps] Incoming POST keys: ' . implode(', ', array_keys($incoming)));
             
             // Get existing data to preserve hidden fields with data
             $existingData = $order->get_meta(self::META_OPS_MATERIAL, true);
@@ -400,7 +408,10 @@ class OrderOps implements FeatureInterface
                 }
             }
 
+            error_log('[ZS OrderOps] Saving data with keys: ' . implode(', ', array_keys($saved)));
             $order->update_meta_data(self::META_OPS_MATERIAL, $saved);
+        } else {
+            error_log('[ZS OrderOps] NOT saving - items empty or POST data missing');
         }
 
         $order->save();
