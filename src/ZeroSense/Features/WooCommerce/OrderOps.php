@@ -400,38 +400,19 @@ class OrderOps implements FeatureInterface
                 }
             }
 
-            error_log('[ZS OrderOps] About to save with keys: ' . implode(', ', array_keys($saved)));
+            error_log('[ZS OrderOps] Saving with keys: ' . implode(', ', array_keys($saved)));
             
-            // Update meta data
-            $order->update_meta_data(self::META_OPS_MATERIAL, $saved);
+            // Use update_post_meta directly to avoid timing issues with WooCommerce save process
+            update_post_meta($orderId, self::META_OPS_MATERIAL, $saved);
             
-            // Save the order
-            $order->save();
-            
-            // Force refresh from database
-            $order = wc_get_order($orderId);
-            
-            // Verify using WooCommerce method
-            $verifyData = $order->get_meta(self::META_OPS_MATERIAL, true);
+            // Verify it was saved
+            $verifyData = get_post_meta($orderId, self::META_OPS_MATERIAL, true);
             if (is_array($verifyData) && !empty($verifyData)) {
-                error_log('[ZS OrderOps] VERIFIED via WC: Data saved with keys: ' . implode(', ', array_keys($verifyData)));
+                error_log('[ZS OrderOps] VERIFIED: Data saved successfully with keys: ' . implode(', ', array_keys($verifyData)));
             } else {
-                error_log('[ZS OrderOps] ERROR via WC: Data NOT saved!');
-                
-                // Try direct post meta as fallback
-                $directMeta = get_post_meta($orderId, 'zs_ops_material', true);
-                if (is_array($directMeta) && !empty($directMeta)) {
-                    error_log('[ZS OrderOps] BUT found via get_post_meta with keys: ' . implode(', ', array_keys($directMeta)));
-                } else {
-                    error_log('[ZS OrderOps] Also NOT found via get_post_meta');
-                }
+                error_log('[ZS OrderOps] ERROR: Data NOT saved!');
             }
-        } else {
-            error_log('[ZS OrderOps] No items to save or POST data missing');
         }
-
-        // Save order one more time to ensure everything is persisted
-        $order->save();
     }
 
     private function registerMetaFields(): void
