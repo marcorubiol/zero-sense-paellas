@@ -61,17 +61,35 @@ class Staff implements FeatureInterface
         wp_enqueue_script('jquery-ui-sortable');
         ?>
         <style>
+            .column-drag_handle {
+                width: 40px;
+                text-align: center;
+                padding: 0 !important;
+            }
+            .zs-drag-handle {
+                cursor: move;
+                display: inline-block;
+                padding: 8px 10px;
+                font-size: 18px;
+                color: #8c8f94;
+                user-select: none;
+            }
+            .zs-drag-handle:hover {
+                color: #2271b1;
+            }
             .wp-list-table tbody tr.ui-sortable-helper {
                 background-color: #f0f0f1;
                 opacity: 0.8;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             }
             .wp-list-table tbody .ui-state-highlight {
                 height: 50px;
                 background-color: #e5f5fa;
                 border: 2px dashed #2271b1;
             }
-            .wp-list-table tbody tr {
-                cursor: move;
+            .wp-list-table thead .column-drag_handle,
+            .wp-list-table tfoot .column-drag_handle {
+                width: 40px;
             }
         </style>
         <script>
@@ -83,6 +101,7 @@ class Staff implements FeatureInterface
                     items: 'tr',
                     cursor: 'move',
                     axis: 'y',
+                    handle: '.zs-drag-handle',
                     placeholder: 'ui-state-highlight',
                     helper: function(e, tr) {
                         var $originals = tr.children();
@@ -91,6 +110,9 @@ class Staff implements FeatureInterface
                             $(this).width($originals.eq(index).width());
                         });
                         return $helper;
+                    },
+                    start: function(e, ui) {
+                        ui.placeholder.height(ui.item.height());
                     },
                     update: function(event, ui) {
                         var order = [];
@@ -273,6 +295,9 @@ class Staff implements FeatureInterface
     public function addOrderColumn(array $columns): array
     {
         $new_columns = [];
+        // Add drag handle as first column
+        $new_columns['drag_handle'] = '';
+        
         foreach ($columns as $key => $value) {
             $new_columns[$key] = $value;
             if ($key === 'name') {
@@ -284,6 +309,10 @@ class Staff implements FeatureInterface
     
     public function renderOrderColumn(string $content, string $column_name, int $term_id): string
     {
+        if ($column_name === 'drag_handle') {
+            return '<span class="zs-drag-handle" style="cursor: move; display: inline-block; padding: 5px;">☰</span>';
+        }
+        
         if ($column_name === 'role_order') {
             $order = get_term_meta($term_id, 'role_order', true);
             return $order !== '' ? esc_html($order) : '0';
