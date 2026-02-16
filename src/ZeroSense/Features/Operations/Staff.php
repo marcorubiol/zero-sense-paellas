@@ -59,60 +59,8 @@ class Staff implements FeatureInterface
         }
         
         wp_enqueue_script('jquery-ui-sortable');
-        
-        wp_add_inline_script('jquery-ui-sortable', "
-            jQuery(document).ready(function($) {
-                var table = $('.wp-list-table tbody');
-                if (table.length) {
-                    table.sortable({
-                        items: 'tr',
-                        cursor: 'move',
-                        axis: 'y',
-                        handle: '.column-name',
-                        placeholder: 'ui-state-highlight',
-                        helper: function(e, tr) {
-                            var \$originals = tr.children();
-                            var \$helper = tr.clone();
-                            \$helper.children().each(function(index) {
-                                $(this).width(\$originals.eq(index).width());
-                            });
-                            return \$helper;
-                        },
-                        update: function(event, ui) {
-                            var order = [];
-                            table.find('tr').each(function(index) {
-                                var termId = $(this).attr('id');
-                                if (termId) {
-                                    termId = termId.replace('tag-', '');
-                                    order.push({
-                                        term_id: termId,
-                                        order: index
-                                    });
-                                }
-                            });
-                            
-                            $.post(ajaxurl, {
-                                action: 'zs_update_role_order',
-                                nonce: '" . wp_create_nonce('zs_role_order') . "',
-                                order: order
-                            }, function(response) {
-                                if (response.success) {
-                                    // Update order column values
-                                    table.find('tr').each(function(index) {
-                                        $(this).find('.column-role_order').text(index);
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    
-                    // Add cursor pointer to indicate draggable
-                    table.find('tr .column-name').css('cursor', 'move');
-                }
-            });
-        ");
-        
-        wp_add_inline_style('wp-admin', "
+        ?>
+        <style>
             .wp-list-table tbody tr.ui-sortable-helper {
                 background-color: #f0f0f1;
                 opacity: 0.8;
@@ -122,7 +70,58 @@ class Staff implements FeatureInterface
                 background-color: #e5f5fa;
                 border: 2px dashed #2271b1;
             }
-        ");
+            .wp-list-table tbody tr {
+                cursor: move;
+            }
+        </style>
+        <script>
+        jQuery(document).ready(function($) {
+            var table = $('.wp-list-table tbody');
+            
+            if (table.length) {
+                table.sortable({
+                    items: 'tr',
+                    cursor: 'move',
+                    axis: 'y',
+                    placeholder: 'ui-state-highlight',
+                    helper: function(e, tr) {
+                        var $originals = tr.children();
+                        var $helper = tr.clone();
+                        $helper.children().each(function(index) {
+                            $(this).width($originals.eq(index).width());
+                        });
+                        return $helper;
+                    },
+                    update: function(event, ui) {
+                        var order = [];
+                        table.find('tr').each(function(index) {
+                            var termId = $(this).attr('id');
+                            if (termId) {
+                                termId = termId.replace('tag-', '');
+                                order.push({
+                                    term_id: termId,
+                                    order: index
+                                });
+                            }
+                        });
+                        
+                        $.post(ajaxurl, {
+                            action: 'zs_update_role_order',
+                            nonce: '<?php echo wp_create_nonce('zs_role_order'); ?>',
+                            order: order
+                        }, function(response) {
+                            if (response.success) {
+                                table.find('tr').each(function(index) {
+                                    $(this).find('.column-role_order').text(index);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        </script>
+        <?php
     }
     
     public function ajaxUpdateRoleOrder(): void
