@@ -101,40 +101,6 @@ class StaffAssignmentMetabox
 
         wp_enqueue_style('woocommerce_admin_styles');
         wp_enqueue_script('selectWoo');
-        
-        // Add inline script for creating new staff members
-        wp_add_inline_script('selectWoo', "
-            jQuery(document).ready(function($) {
-                // Handle create new staff member
-                $(document).on('click', '.zs-create-staff-btn', function(e) {
-                    e.preventDefault();
-                    var roleSlug = $(this).data('role');
-                    var roleName = $(this).data('role-name');
-                    var sectionId = $(this).data('section');
-                    
-                    var staffName = prompt('Enter staff member name:');
-                    if (!staffName) return;
-                    
-                    $.post(ajaxurl, {
-                        action: 'zs_create_staff_member',
-                        nonce: '" . wp_create_nonce('zs_create_staff') . "',
-                        name: staffName,
-                        role: roleSlug
-                    }, function(response) {
-                        if (response.success) {
-                            // Add new option to select
-                            var select = $('#zs_staff_' + sectionId);
-                            var newOption = new Option(staffName, response.data.id, true, true);
-                            select.append(newOption).trigger('change');
-                            
-                            alert('Staff member created successfully!');
-                        } else {
-                            alert('Error creating staff member: ' + (response.data || 'Unknown error'));
-                        }
-                    });
-                });
-            });
-        ");
     }
 
     public function render($post_or_order): void
@@ -220,20 +186,12 @@ class StaffAssignmentMetabox
                             <?php endforeach; ?>
                         <?php endif; ?>
                         
-                        <div style="margin-top: 4px; display: flex; gap: 8px;">
-                            <button type="button" 
-                                    class="button zs-staff-add" 
-                                    data-role="<?php echo esc_attr($roleSlug); ?>">
-                                <?php esc_html_e('Add staff member', 'zero-sense'); ?>
-                            </button>
-                            <button type="button" 
-                                    class="button button-secondary zs-create-staff-btn" 
-                                    data-role="<?php echo esc_attr($roleSlug); ?>"
-                                    data-role-name="<?php echo esc_attr($roleName); ?>"
-                                    data-section="<?php echo esc_attr($roleSlug); ?>">
-                                <?php esc_html_e('+ Create new', 'zero-sense'); ?>
-                            </button>
-                        </div>
+                        <a href="#" 
+                           class="zs-staff-add" 
+                           data-role="<?php echo esc_attr($roleSlug); ?>"
+                           style="display: inline-block; margin-top: 8px; text-decoration: none; font-size: 13px;">
+                            + <?php esc_html_e('Add staff member', 'zero-sense'); ?>
+                        </a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -244,18 +202,57 @@ class StaffAssignmentMetabox
             'use strict';
             
             $(document).ready(function() {
-                // Initialize selectWoo on existing selects
+                // Initialize selectWoo on existing selects with tags functionality
                 $('.zs-staff-select').selectWoo({
-                    width: '100%'
+                    width: '100%',
+                    tags: true,
+                    createTag: function(params) {
+                        var term = $.trim(params.term);
+                        if (term === '') {
+                            return null;
+                        }
+                        return {
+                            id: 'new:' + term,
+                            text: term + ' (Create new)',
+                            newTag: true
+                        };
+                    }
                 });
                 
-                // Update info when selection changes
+                // Handle selection change - create new staff if needed
                 $(document).on('change', '.zs-staff-select', function() {
                     var $select = $(this);
+                    var value = $select.val();
                     var $row = $select.closest('.zs-staff-row');
                     var $info = $row.find('.zs-staff-info');
-                    var $option = $select.find('option:selected');
                     
+                    // Check if it's a new staff member
+                    if (value && value.indexOf('new:') === 0) {
+                        var staffName = value.replace('new:', '');
+                        var role = $select.data('role');
+                        
+                        // Create the staff member via AJAX
+                        $.post(ajaxurl, {
+                            action: 'zs_create_staff_member',
+                            nonce: '<?php echo wp_create_nonce('zs_create_staff'); ?>',
+                            name: staffName,
+                            role: role
+                        }, function(response) {
+                            if (response.success) {
+                                // Replace the temporary option with the real one
+                                $select.find('option[value="' + value + '"]').remove();
+                                var newOption = new Option(staffName, response.data.id, true, true);
+                                $select.append(newOption).trigger('change');
+                            } else {
+                                alert('Error creating staff member: ' + (response.data || 'Unknown error'));
+                                $select.val('').trigger('change');
+                            }
+                        });
+                        return;
+                    }
+                    
+                    // Update contact info display
+                    var $option = $select.find('option:selected');
                     var phone = $option.data('phone') || '';
                     var email = $option.data('email') || '';
                     
@@ -276,7 +273,8 @@ class StaffAssignmentMetabox
                 });
                 
                 // Add staff member
-                $(document).on('click', '.zs-staff-add', function() {
+                $(document).on('click', '.zs-staff-add', function(e) {
+                    e.preventDefault();
                     var $btn = $(this);
                     var role = $btn.data('role');
                     var $section = $btn.closest('.zs-staff-role-section');
@@ -302,7 +300,19 @@ class StaffAssignmentMetabox
                     $btn.before($newRow);
                     
                     $select.selectWoo({
-                        width: '100%'
+                        width: '100%',
+                        tags: true,
+                        createTag: function(params) {
+                            var term = $.trim(params.term);
+                            if (term === '') {
+                                return null;
+                            }
+                            return {
+                                id: 'new:' + term,
+                                text: term + ' (Create new)',
+                                newTag: true
+                            };
+                        }
                     });
                 });
                 
