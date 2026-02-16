@@ -14,7 +14,7 @@ class OrderOps implements FeatureInterface
     private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
 
-    private function getMaterialItems(): array
+    private function getMaterialItems(bool $activeOnly = true): array
     {
         $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
         if (!is_array($schema) || $schema === []) {
@@ -32,8 +32,13 @@ class OrderOps implements FeatureInterface
             $key = isset($row['key']) ? sanitize_key((string) $row['key']) : '';
             $label = isset($row['label']) ? sanitize_text_field((string) $row['label']) : '';
             $type = isset($row['type']) ? sanitize_key((string) $row['type']) : 'text';
+            $status = isset($row['status']) ? (string) $row['status'] : 'active';
 
             if ($key === '' || $label === '') {
+                continue;
+            }
+            
+            if ($activeOnly && $status !== 'active') {
                 continue;
             }
 
@@ -45,10 +50,57 @@ class OrderOps implements FeatureInterface
             $translated = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
             $finalLabel = is_string($translated) && $translated !== '' ? $translated : $label;
 
-            $items[$key] = ['label' => $finalLabel, 'type' => $type];
+            $items[$key] = [
+                'label' => $finalLabel,
+                'type' => $type,
+                'status' => $status,
+            ];
         }
 
         return $items;
+    }
+
+    private function getMaterialItemsForOrder(int $orderId): array
+    {
+        $activeItems = $this->getMaterialItems(true);
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return $activeItems;
+        }
+        
+        $material = $order->get_meta(self::META_OPS_MATERIAL, true);
+        if (!is_array($material) || $material === []) {
+            return $activeItems;
+        }
+        
+        $allItems = $this->getMaterialItems(false);
+        
+        foreach ($allItems as $key => $item) {
+            if (isset($activeItems[$key])) {
+                continue;
+            }
+            
+            if (isset($material[$key])) {
+                $rawValue = $material[$key];
+                $value = is_array($rawValue) ? ($rawValue['value'] ?? '') : $rawValue;
+                
+                $hasData = false;
+                if ($item['type'] === 'bool') {
+                    $hasData = true;
+                } elseif ($item['type'] === 'qty_int') {
+                    $hasData = is_numeric($value) && $value > 0;
+                } else {
+                    $hasData = is_scalar($value) && $value !== '';
+                }
+                
+                if ($hasData) {
+                    $activeItems[$key] = $item;
+                }
+            }
+        }
+        
+        return $activeItems;
     }
 
     public function getName(): string
@@ -148,10 +200,11 @@ class OrderOps implements FeatureInterface
             return;
         }
 
+        $orderId = $order->get_id();
         $material = $order->get_meta(self::META_OPS_MATERIAL, true);
         $material = is_array($material) ? $material : [];
 
-        $items = $this->getMaterialItems();
+        $items = $this->getMaterialItemsForOrder($orderId);
 
         wp_nonce_field('zs_order_ops_save', 'zs_order_ops_nonce');
         ?>
@@ -171,10 +224,18 @@ class OrderOps implements FeatureInterface
                 $raw = $material[$key] ?? [];
                 $value = is_array($raw) ? ($raw['value'] ?? '') : $raw;
                 $type = $item['type'];
+                $status = isset($item['status']) ? $item['status'] : 'active';
+                $isHidden = $status === 'hidden';
+                $rowClass = $isHidden ? 'zs-ops-material-hidden-field' : '';
                 ?>
-                <tr>
+                <tr class="<?php echo esc_attr($rowClass); ?>">
                     <th style="width:260px;">
-                        <label for="zs_ops_material_<?php echo esc_attr($key); ?>"><?php echo esc_html($item['label']); ?></label>
+                        <label for="zs_ops_material_<?php echo esc_attr($key); ?>">
+                            <?php echo esc_html($item['label']); ?>
+                            <?php if ($isHidden) : ?>
+                                <span class="zs-ops-hidden-badge" title="<?php esc_attr_e('This field is hidden in schema but has data', 'zero-sense'); ?>"><?php esc_html_e('Hidden', 'zero-sense'); ?></span>
+                            <?php endif; ?>
+                        </label>
                     </th>
                     <td>
                         <?php if ($type === 'bool') : ?>
@@ -229,7 +290,7 @@ class OrderOps implements FeatureInterface
         if (!$screen || !in_array($screen->id, ['shop_order', wc_get_page_screen_id('shop-order')], true)) {
             return;
         }
-        echo '<style>#order_data .order_data_column ._shipping_phone_field{float:right;clear:right}#order_data .order_data_column ._shipping_email_field{margin-top:13px}#order_data .order_data_column ._shipping_location_link_field{width:100%;clear:both}</style>';
+        echo '<style>#order_data .order_data_column ._shipping_phone_field{float:right;clear:right}#order_data .order_data_column ._shipping_email_field{margin-top:13px}#order_data .order_data_column ._shipping_location_link_field{width:100%;clear:both}.zs-ops-material-hidden-field{background-color:#fffbf0;border-left:3px solid #f0b849;}.zs-ops-hidden-badge{display:inline-block;background:#f0b849;color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;margin-left:6px;text-transform:uppercase;}</style>';
     }
 
     public function registerShippingCustomFields(array $fields, $order = false, string $context = 'edit'): array
@@ -299,7 +360,8 @@ class OrderOps implements FeatureInterface
             $order->update_meta_data(self::META_OPS_NOTES, sanitize_textarea_field((string) $_POST['zs_ops_notes']));
         }
 
-        $items = $this->getMaterialItems();
+        $orderId = $order->get_id();
+        $items = $this->getMaterialItemsForOrder($orderId);
         if ($items !== [] && isset($_POST['zs_ops_material']) && is_array($_POST['zs_ops_material'])) {
             $incoming = $_POST['zs_ops_material'];
             $saved = [];

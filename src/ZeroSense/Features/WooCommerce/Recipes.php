@@ -370,16 +370,24 @@ class Recipes implements FeatureInterface
 
     public function ajaxIngredientSearch(): void
     {
+        // Debug logging
+        error_log('[ZS Recipes] ajaxIngredientSearch called');
+        error_log('[ZS Recipes] GET data: ' . print_r($_GET, true));
+
         if (!current_user_can('edit_posts')) {
+            error_log('[ZS Recipes] User cannot edit posts');
             wp_send_json(['results' => []]);
         }
 
         $nonce = isset($_GET['nonce']) ? sanitize_text_field(wp_unslash((string) $_GET['nonce'])) : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
+            error_log('[ZS Recipes] Invalid nonce: ' . $nonce);
             wp_send_json(['results' => []]);
         }
 
         $q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
+
+        error_log('[ZS Recipes] Search query: "' . $q . '"');
 
         $terms = get_terms([
             'taxonomy' => self::TAX_INGREDIENT,
@@ -388,6 +396,8 @@ class Recipes implements FeatureInterface
             'search' => $q,
             'suppress_filters' => true,
         ]);
+
+        error_log('[ZS Recipes] get_terms result: ' . print_r($terms, true));
 
         $results = [];
         if (is_array($terms)) {
@@ -398,6 +408,8 @@ class Recipes implements FeatureInterface
             }
         }
 
+        error_log('[ZS Recipes] Final results: ' . print_r($results, true));
+
         wp_send_json([
             'results' => $results,
         ]);
@@ -405,33 +417,53 @@ class Recipes implements FeatureInterface
 
     public function ajaxIngredientCreate(): void
     {
+        // Debug logging
+        error_log('[ZS Recipes] ajaxIngredientCreate called');
+        error_log('[ZS Recipes] POST data: ' . print_r($_POST, true));
+
         if (!current_user_can('edit_posts')) {
+            error_log('[ZS Recipes] User cannot edit posts');
             wp_send_json_error(['message' => 'forbidden']);
         }
 
         $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash((string) $_POST['nonce'])) : '';
         if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
+            error_log('[ZS Recipes] Invalid nonce: ' . $nonce);
             wp_send_json_error(['message' => 'invalid_nonce']);
         }
 
         $name = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
         if ($name === '') {
+            error_log('[ZS Recipes] Empty name');
             wp_send_json_error(['message' => 'empty']);
         }
 
+        error_log('[ZS Recipes] Creating ingredient: "' . $name . '"');
+
         $existing = term_exists($name, self::TAX_INGREDIENT);
+        error_log('[ZS Recipes] term_exists result: ' . print_r($existing, true));
+        
         if (is_array($existing) && isset($existing['term_id'])) {
+            error_log('[ZS Recipes] Ingredient exists, returning existing ID: ' . $existing['term_id']);
             wp_send_json_success(['id' => (int) $existing['term_id'], 'text' => $name]);
         }
         if (is_int($existing)) {
+            error_log('[ZS Recipes] Ingredient exists (int), returning existing ID: ' . $existing);
             wp_send_json_success(['id' => $existing, 'text' => $name]);
         }
 
         $created = wp_insert_term($name, self::TAX_INGREDIENT);
+        error_log('[ZS Recipes] wp_insert_term result: ' . print_r($created, true));
+        
         if (is_wp_error($created) || !is_array($created) || !isset($created['term_id'])) {
+            error_log('[ZS Recipes] Failed to create ingredient');
+            if (is_wp_error($created)) {
+                error_log('[ZS Recipes] WP Error: ' . $created->get_error_message());
+            }
             wp_send_json_error(['message' => 'create_failed']);
         }
 
+        error_log('[ZS Recipes] Successfully created ingredient with ID: ' . $created['term_id']);
         wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $name]);
     }
 

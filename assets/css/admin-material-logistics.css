@@ -68,3 +68,44 @@
 #zs-ops-schema-rows tr:hover {
     background-color: #f9f9f9;
 }
+
+/* Hidden row styles */
+.zs-ops-row-hidden {
+    background-color: #f5f5f5;
+    opacity: 0.7;
+}
+.zs-ops-row-hidden .zs-ops-key-display,
+.zs-ops-row-hidden .zs-ops-label-field {
+    font-style: italic;
+    color: #999;
+}
+.zs-ops-row-hidden:hover {
+    background-color: #ececec;
+}
+
+/* Usage count badge */
+.zs-ops-usage-count {
+    text-align: center;
+}
+.zs-ops-usage-badge {
+    display: inline-block;
+    background: #f0f0f0;
+    color: #666;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+/* Toggle visibility button */
+.zs-ops-toggle-visibility {
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.zs-ops-toggle-visibility .dashicons {
+    font-size: 16px;
+}
+.zs-ops-toggle-text {
+    vertical-align: middle;
+}

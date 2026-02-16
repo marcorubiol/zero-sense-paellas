@@ -97,6 +97,8 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         if (!is_array($schema)) {
             $schema = [];
         }
+        
+        $schema = $this->migrateSchema($schema);
 
         $allowedTypes = $this->getAllowedTypes();
 
@@ -117,10 +119,11 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     <thead>
                         <tr>
                             <th style="width: 40px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
-                            <th style="width: 120px;"><?php esc_html_e('Key (Informative)', 'zero-sense'); ?></th>
+                            <th style="width: 180px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
                             <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
-                            <th style="width: 220px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
-                            <th style="width: 90px;"></th>
+                            <th style="width: 150px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
+                            <th style="width: 100px;"><?php esc_html_e('Usage', 'zero-sense'); ?></th>
+                            <th style="width: 120px;"><?php esc_html_e('Actions', 'zero-sense'); ?></th>
                         </tr>
                     </thead>
                     <tbody id="zs-ops-schema-rows">
@@ -128,14 +131,21 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                             $key = isset($row['key']) ? (string) $row['key'] : '';
                             $label = isset($row['label']) ? (string) $row['label'] : '';
                             $type = isset($row['type']) ? (string) $row['type'] : 'text';
+                            $status = isset($row['status']) ? (string) $row['status'] : 'active';
+                            $createdAt = isset($row['created_at']) ? (int) $row['created_at'] : time();
+                            $usageCount = $this->getFieldUsageCount($key);
+                            $isHidden = $status === 'hidden';
+                            $rowClass = 'zs-ops-sortable-row' . ($isHidden ? ' zs-ops-row-hidden' : '');
                             ?>
-                            <tr class="zs-ops-sortable-row">
+                            <tr class="<?php echo esc_attr($rowClass); ?>" data-field-key="<?php echo esc_attr($key); ?>">
                                 <td>
                                     <span class="zs-ops-drag-handle dashicons dashicons-menu"></span>
                                 </td>
                                 <td>
                                     <span class="zs-ops-key-display"><?php echo esc_html($key); ?></span>
                                     <input type="hidden" name="zs_ops_material_schema[key][]" value="<?php echo esc_attr($key); ?>" class="zs-ops-key-field">
+                                    <input type="hidden" name="zs_ops_material_schema[status][]" value="<?php echo esc_attr($status); ?>" class="zs-ops-status-field">
+                                    <input type="hidden" name="zs_ops_material_schema[created_at][]" value="<?php echo esc_attr($createdAt); ?>">
                                 </td>
                                 <td>
                                     <input type="text" name="zs_ops_material_schema[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. Work tables">
@@ -147,10 +157,13 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                         <?php endforeach; ?>
                                     </select>
                                 </td>
+                                <td class="zs-ops-usage-count">
+                                    <span class="zs-ops-usage-badge"><?php echo esc_html(sprintf(_n('%d order', '%d orders', $usageCount, 'zero-sense'), $usageCount)); ?></span>
+                                </td>
                                 <td>
-                                    <button type="button" class="button zs-ops-schema-remove">
-                                        <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
-                                        <span class="screen-reader-text"><?php esc_html_e('Remove', 'zero-sense'); ?></span>
+                                    <button type="button" class="button zs-ops-toggle-visibility" data-current-status="<?php echo esc_attr($status); ?>" title="<?php echo $isHidden ? esc_attr__('Unhide field', 'zero-sense') : esc_attr__('Hide field', 'zero-sense'); ?>">
+                                        <span class="dashicons <?php echo $isHidden ? 'dashicons-visibility' : 'dashicons-hidden'; ?>" style="vertical-align: middle;"></span>
+                                        <span class="zs-ops-toggle-text"><?php echo $isHidden ? esc_html__('Unhide', 'zero-sense') : esc_html__('Hide', 'zero-sense'); ?></span>
                                     </button>
                                 </td>
                             </tr>
@@ -181,31 +194,34 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                     var addBtn = document.getElementById('zs-ops-schema-add');
                     if (!tbody || !addBtn) return;
 
-                    function generateKeyFromLabel(label) {
-                        return label.toLowerCase()
-                            .replace(/[^a-z0-9\s-]/g, '')
-                            .replace(/\s+/g, '_')
-                            .replace(/-+/g, '_')
-                            .replace(/^_+|_+$/g, '')
-                            .substring(0, 50);
-                    }
-
-                    function updateKeyDisplay(labelField, keyDisplay, keyField) {
-                        var label = labelField.value.trim();
-                        var generatedKey = '';
-                        if (label) {
-                            generatedKey = generateKeyFromLabel(label);
-                        }
-                        keyDisplay.textContent = generatedKey;
-                        keyField.value = generatedKey;
-                    }
-
-                    function bindRemoveButtons(scope) {
-                        var buttons = (scope || document).querySelectorAll('.zs-ops-schema-remove');
+                    function bindToggleVisibility(scope) {
+                        var buttons = (scope || document).querySelectorAll('.zs-ops-toggle-visibility');
                         buttons.forEach(function(btn) {
                             btn.addEventListener('click', function() {
                                 var tr = btn.closest('tr');
-                                if (tr) tr.remove();
+                                var statusField = tr.querySelector('.zs-ops-status-field');
+                                var currentStatus = btn.getAttribute('data-current-status');
+                                var newStatus = currentStatus === 'hidden' ? 'active' : 'hidden';
+                                
+                                statusField.value = newStatus;
+                                btn.setAttribute('data-current-status', newStatus);
+                                
+                                var icon = btn.querySelector('.dashicons');
+                                var text = btn.querySelector('.zs-ops-toggle-text');
+                                
+                                if (newStatus === 'hidden') {
+                                    icon.classList.remove('dashicons-hidden');
+                                    icon.classList.add('dashicons-visibility');
+                                    text.textContent = <?php echo json_encode(__('Unhide', 'zero-sense')); ?>;
+                                    btn.setAttribute('title', <?php echo json_encode(__('Unhide field', 'zero-sense')); ?>);
+                                    tr.classList.add('zs-ops-row-hidden');
+                                } else {
+                                    icon.classList.remove('dashicons-visibility');
+                                    icon.classList.add('dashicons-hidden');
+                                    text.textContent = <?php echo json_encode(__('Hide', 'zero-sense')); ?>;
+                                    btn.setAttribute('title', <?php echo json_encode(__('Hide field', 'zero-sense')); ?>);
+                                    tr.classList.remove('zs-ops-row-hidden');
+                                }
                             });
                         });
                     }
@@ -214,16 +230,27 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         var labelFields = (scope || document).querySelectorAll('.zs-ops-label-field');
                         labelFields.forEach(function(labelField) {
                             var tr = labelField.closest('tr');
-                            var keyDisplay = tr.querySelector('.zs-ops-key-display');
                             var keyField = tr.querySelector('.zs-ops-key-field');
                             
-                            labelField.addEventListener('input', function() {
-                                updateKeyDisplay(labelField, keyDisplay, keyField);
-                            });
+                            if (!keyField.value) {
+                                labelField.addEventListener('input', function() {
+                                    var label = labelField.value.trim();
+                                    if (label && !keyField.value) {
+                                        var baseKey = label.toLowerCase()
+                                            .replace(/[^a-z0-9\s-]/g, '')
+                                            .replace(/\s+/g, '_')
+                                            .replace(/-+/g, '_')
+                                            .replace(/^_+|_+$/g, '')
+                                            .substring(0, 40);
+                                        var keyDisplay = tr.querySelector('.zs-ops-key-display');
+                                        keyDisplay.textContent = baseKey + '_[new]';
+                                    }
+                                });
+                            }
                         });
                     }
 
-                    bindRemoveButtons();
+                    bindToggleVisibility();
                     bindLabelChange();
                     updateSortable();
 
@@ -232,7 +259,12 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         tr.className = 'zs-ops-sortable-row';
                         tr.innerHTML = '' +
                             '<td><span class="zs-ops-drag-handle dashicons dashicons-menu"></span></td>' +
-                            '<td><span class="zs-ops-key-display"></span><input type="hidden" name="zs_ops_material_schema[key][]" class="zs-ops-key-field"></td>' +
+                            '<td>' +
+                                '<span class="zs-ops-key-display"></span>' +
+                                '<input type="hidden" name="zs_ops_material_schema[key][]" class="zs-ops-key-field" value="">' +
+                                '<input type="hidden" name="zs_ops_material_schema[status][]" class="zs-ops-status-field" value="active">' +
+                                '<input type="hidden" name="zs_ops_material_schema[created_at][]" value="0">' +
+                            '</td>' +
                             '<td><input type="text" name="zs_ops_material_schema[label][]" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. New field"></td>' +
                             '<td>' +
                                 '<select name="zs_ops_material_schema[type][]" style="width:100%;">' +
@@ -245,10 +277,16 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                                     ?> +
                                 '</select>' +
                             '</td>' +
-                            '<td><button type="button" class="button zs-ops-schema-remove"><span class="dashicons dashicons-trash" style="vertical-align: middle;"></span><span class="screen-reader-text"><?php echo esc_js(__('Remove', 'zero-sense')); ?></span></button></td>';
+                            '<td class="zs-ops-usage-count"><span class="zs-ops-usage-badge"><?php echo esc_js(sprintf(_n('%d order', '%d orders', 0, 'zero-sense'), 0)); ?></span></td>' +
+                            '<td>' +
+                                '<button type="button" class="button zs-ops-toggle-visibility" data-current-status="active" title="<?php echo esc_js(__('Hide field', 'zero-sense')); ?>">' +
+                                    '<span class="dashicons dashicons-hidden" style="vertical-align: middle;"></span>' +
+                                    '<span class="zs-ops-toggle-text"><?php echo esc_js(__('Hide', 'zero-sense')); ?></span>' +
+                                '</button>' +
+                            '</td>';
 
                         tbody.appendChild(tr);
-                        bindRemoveButtons(tr);
+                        bindToggleVisibility(tr);
                         bindLabelChange(tr);
                         updateSortable();
                     });
@@ -295,44 +333,80 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             exit;
         }
 
+        $existingSchema = get_option(self::OPTION_SCHEMA, []);
+        if (!is_array($existingSchema)) {
+            $existingSchema = [];
+        }
+        
+        $existingByKey = [];
+        foreach ($existingSchema as $row) {
+            if (is_array($row) && isset($row['key'])) {
+                $existingByKey[$row['key']] = $row;
+            }
+        }
+
         $keys = isset($raw['key']) && is_array($raw['key']) ? $raw['key'] : [];
         $labels = isset($raw['label']) && is_array($raw['label']) ? $raw['label'] : [];
         $types = isset($raw['type']) && is_array($raw['type']) ? $raw['type'] : [];
+        $statuses = isset($raw['status']) && is_array($raw['status']) ? $raw['status'] : [];
+        $createdAts = isset($raw['created_at']) && is_array($raw['created_at']) ? $raw['created_at'] : [];
 
         $allowedTypeKeys = array_keys($this->getAllowedTypes());
 
         $schema = [];
-        $seen = [];
+        $seenKeys = [];
 
-        $count = max(count($labels), count($types));
+        $count = max(count($keys), count($labels), count($types));
         for ($i = 0; $i < $count; $i++) {
             $label = isset($labels[$i]) ? sanitize_text_field((string) $labels[$i]) : '';
             $type = isset($types[$i]) ? sanitize_key((string) $types[$i]) : 'text';
+            $incomingKey = isset($keys[$i]) ? sanitize_key((string) $keys[$i]) : '';
+            $status = isset($statuses[$i]) ? sanitize_text_field((string) $statuses[$i]) : 'active';
+            $createdAt = isset($createdAts[$i]) ? absint($createdAts[$i]) : 0;
 
             if ($label === '') {
                 continue;
             }
 
-            // Generate key from label
-            $key = strtolower($label);
-            $key = preg_replace('/[^a-z0-9\s-]/', '', $key);
-            $key = preg_replace('/\s+/', '_', $key);
-            $key = preg_replace('/-+/', '_', $key);
-            $key = preg_replace('/^_+|_+$/', '', $key);
-            $key = substr($key, 0, 50);
-            $key = sanitize_key($key);
-
             if (!in_array($type, $allowedTypeKeys, true)) {
                 $type = 'text';
             }
-
-            if (isset($seen[$key])) {
-                $schema[$seen[$key]] = ['key' => $key, 'label' => $label, 'type' => $type];
-                continue;
+            
+            if (!in_array($status, ['active', 'hidden'], true)) {
+                $status = 'active';
             }
 
-            $seen[$key] = count($schema);
-            $schema[] = ['key' => $key, 'label' => $label, 'type' => $type];
+            if ($incomingKey !== '' && isset($existingByKey[$incomingKey])) {
+                $key = $incomingKey;
+                $createdAt = isset($existingByKey[$incomingKey]['created_at']) ? (int) $existingByKey[$incomingKey]['created_at'] : time();
+            } else {
+                $baseKey = strtolower($label);
+                $baseKey = preg_replace('/[^a-z0-9\s-]/', '', $baseKey);
+                $baseKey = preg_replace('/\s+/', '_', $baseKey);
+                $baseKey = preg_replace('/-+/', '_', $baseKey);
+                $baseKey = preg_replace('/^_+|_+$/', '', $baseKey);
+                $baseKey = substr($baseKey, 0, 40);
+                $baseKey = sanitize_key($baseKey);
+                
+                $timestamp = time();
+                $key = $baseKey . '_' . $timestamp;
+                $createdAt = $timestamp;
+                
+                $counter = 1;
+                while (isset($seenKeys[$key])) {
+                    $key = $baseKey . '_' . $timestamp . '_' . $counter;
+                    $counter++;
+                }
+            }
+
+            $seenKeys[$key] = true;
+            $schema[] = [
+                'key' => $key,
+                'label' => $label,
+                'type' => $type,
+                'status' => $status,
+                'created_at' => $createdAt,
+            ];
         }
 
         if ($schema === []) {
@@ -370,5 +444,54 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             'qty_int' => __('Quantity', 'zero-sense'),
             'bool' => __('Checkbox', 'zero-sense'),
         ];
+    }
+
+    private function getFieldUsageCount(string $key): int
+    {
+        global $wpdb;
+        
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
+            WHERE meta_key = 'zs_ops_material' 
+            AND meta_value LIKE %s",
+            '%' . $wpdb->esc_like('"' . $key . '"') . '%'
+        ));
+        
+        return (int) $count;
+    }
+
+    private function migrateSchema(array $schema): array
+    {
+        $migrated = [];
+        
+        foreach ($schema as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            
+            $key = isset($row['key']) ? (string) $row['key'] : '';
+            $label = isset($row['label']) ? (string) $row['label'] : '';
+            $type = isset($row['type']) ? (string) $row['type'] : 'text';
+            $status = isset($row['status']) ? (string) $row['status'] : 'active';
+            $createdAt = isset($row['created_at']) ? (int) $row['created_at'] : time();
+            
+            if ($key === '' || $label === '') {
+                continue;
+            }
+            
+            if (!in_array($status, ['active', 'hidden'], true)) {
+                $status = 'active';
+            }
+            
+            $migrated[] = [
+                'key' => $key,
+                'label' => $label,
+                'type' => $type,
+                'status' => $status,
+                'created_at' => $createdAt,
+            ];
+        }
+        
+        return $migrated;
     }
 }
