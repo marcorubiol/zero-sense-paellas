@@ -5,6 +5,31 @@ use ZeroSense\Core\FeatureInterface;
 
 class AdminSectionTitles implements FeatureInterface
 {
+    public function getName(): string
+    {
+        return 'Admin Section Titles';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Changes "Billing" to "Client" and "Shipping" to "Venue/Wedding Planner" in WooCommerce admin with WPML support.';
+    }
+
+    public function getCategory(): string
+    {
+        return 'WooCommerce';
+    }
+
+    public function isToggleable(): bool
+    {
+        return false; // Always-on feature
+    }
+
+    public function isEnabled(): bool
+    {
+        return true; // Always enabled
+    }
+
     public function init(): void
     {
         // Backend order page section titles
