@@ -47,11 +47,12 @@ class Staff implements FeatureInterface
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
         add_action('admin_footer', [$this, 'addEditRolesLink']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueueRoleOrderingScripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueRoleOrderingAssets']);
+        add_action('admin_print_footer_scripts', [$this, 'printRoleOrderingScript']);
         add_action('wp_ajax_zs_update_role_order', [$this, 'ajaxUpdateRoleOrder']);
     }
     
-    public function enqueueRoleOrderingScripts(string $hook): void
+    public function enqueueRoleOrderingAssets(string $hook): void
     {
         $screen = get_current_screen();
         if (!$screen || $screen->taxonomy !== self::TAX_ROLE) {
@@ -59,6 +60,14 @@ class Staff implements FeatureInterface
         }
         
         wp_enqueue_script('jquery-ui-sortable');
+    }
+    
+    public function printRoleOrderingScript(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || $screen->taxonomy !== self::TAX_ROLE) {
+            return;
+        }
         ?>
         <style>
             .column-drag_handle {
@@ -96,7 +105,7 @@ class Staff implements FeatureInterface
         jQuery(document).ready(function($) {
             var table = $('.wp-list-table tbody');
             
-            if (table.length) {
+            if (table.length && $.fn.sortable) {
                 table.sortable({
                     items: 'tr',
                     cursor: 'move',
