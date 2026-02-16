@@ -217,6 +217,54 @@ class OrderOps implements FeatureInterface
             <?php endforeach; ?>
             </tbody>
         </table>
+        
+        <?php
+        // Event Access Link Section
+        $orderId = $order->get_id();
+        if ($orderId > 0) {
+            $eventLink = do_shortcode('[zs_event_public_link order="' . $orderId . '" base_url="https://paellasencasa.com/fdr"]');
+            if (!empty($eventLink)) {
+                ?>
+                <div class="zs-event-access-section" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                    <h4 style="margin: 0 0 10px 0; color: #23282d; font-size: 13px;">
+                        🔗 <?php esc_html_e('Access for Kitchen Staff', 'zero-sense'); ?>
+                    </h4>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input 
+                            type="text" 
+                            readonly 
+                            value="<?php echo esc_url($eventLink); ?>" 
+                            style="flex: 1; padding: 6px 8px; border: 1px solid #ccc; background: #fff; font-family: monospace; font-size: 12px;"
+                            onclick="this.select()"
+                        >
+                        <button 
+                            type="button" 
+                            class="button button-small" 
+                            onclick="navigator.clipboard.writeText('<?php echo esc_js($eventLink); ?>').then(function() {
+                                var btn = event.target;
+                                var originalText = btn.textContent;
+                                btn.textContent = '<?php esc_html_e('Copied!', 'zero-sense'); ?>';
+                                btn.style.backgroundColor = '#46b450';
+                                btn.style.color = '#fff';
+                                setTimeout(function() {
+                                    btn.textContent = originalText;
+                                    btn.style.backgroundColor = '';
+                                    btn.style.color = '';
+                                }, 2000);
+                            })"
+                            style="flex-shrink: 0;"
+                        >
+                            <?php esc_html_e('Copy Link', 'zero-sense'); ?>
+                        </button>
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 11px; color: #666; line-height: 1.4;">
+                        <?php esc_html_e('Share this link with kitchen staff for real-time event information access without login requirements.', 'zero-sense'); ?>
+                    </p>
+                </div>
+                <?php
+            }
+        }
+        ?>
         <?php
     }
 
