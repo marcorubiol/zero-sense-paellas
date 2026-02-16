@@ -243,6 +243,12 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_order_products_by_category}',
+            'label' => 'Order Products (Grouped by Category)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -346,6 +352,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderProductsCount($post);
         }
 
+        if ($tag === '{woo_zs_order_products_by_category}') {
+            return $this->getOrderProductsByCategory($post);
+        }
+
         return $tag;
     }
 
@@ -391,6 +401,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{woo_zs_order_products}', $this->getOrderProducts($post), $content);
         $content = str_replace('{woo_zs_order_products_simple}', $this->getOrderProductsSimple($post), $content);
         $content = str_replace('{woo_zs_order_products_count}', $this->getOrderProductsCount($post), $content);
+        $content = str_replace('{woo_zs_order_products_by_category}', $this->getOrderProductsByCategory($post), $content);
 
         return $content;
     }
@@ -795,6 +806,95 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return (string) count($order->get_items());
+    }
+
+    private function getOrderProductsByCategory($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Products by Category');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        // Group products by category
+        $categorizedProducts = [];
+        
+        foreach ($order->get_items() as $item) {
+            if (!method_exists($item, 'get_product') || !$item->get_product()) {
+                continue;
+            }
+            
+            $product = $item->get_product();
+            $productId = $product->get_parent_id() ? $product->get_parent_id() : $product->get_id();
+            
+            // Get product categories
+            $terms = get_the_terms($productId, 'product_cat');
+            
+            if ($terms && !is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    // Skip uncategorized
+                    if ($term->slug === 'uncategorized') {
+                        continue;
+                    }
+                    
+                    if (!isset($categorizedProducts[$term->term_id])) {
+                        $categorizedProducts[$term->term_id] = [
+                            'name' => $term->name,
+                            'slug' => $term->slug,
+                            'products' => [],
+                        ];
+                    }
+                    
+                    $categorizedProducts[$term->term_id]['products'][] = [
+                        'name' => $item->get_name(),
+                        'quantity' => $item->get_quantity(),
+                    ];
+                }
+            } else {
+                // Products without category
+                if (!isset($categorizedProducts[0])) {
+                    $categorizedProducts[0] = [
+                        'name' => __('Other', 'zero-sense'),
+                        'slug' => 'other',
+                        'products' => [],
+                    ];
+                }
+                
+                $categorizedProducts[0]['products'][] = [
+                    'name' => $item->get_name(),
+                    'quantity' => $item->get_quantity(),
+                ];
+            }
+        }
+
+        // Generate HTML
+        $html = '<div class="zs-menu-table">';
+        
+        foreach ($categorizedProducts as $category) {
+            $html .= '<div class="zs-menu-category">';
+            $html .= '<div class="zs-menu-category-name">' . esc_html(strtoupper($category['name'])) . '</div>';
+            $html .= '<div class="zs-menu-products">';
+            
+            foreach ($category['products'] as $product) {
+                $html .= '<div class="zs-menu-product">';
+                $html .= esc_html($product['name']);
+                if ($product['quantity'] > 1) {
+                    $html .= ' <span class="zs-menu-quantity">(' . esc_html($product['quantity']) . 'x)</span>';
+                }
+                $html .= '</div>';
+            }
+            
+            $html .= '</div>';
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
 
     private function getMetaBoxFieldValue(string $field, $post): string
