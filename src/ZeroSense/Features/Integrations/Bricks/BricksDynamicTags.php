@@ -457,17 +457,22 @@ class BricksDynamicTags implements FeatureInterface
                 $yesText = apply_filters('wpml_translate_single_string', 'Yes', 'zero-sense', 'material_yes');
                 $noText = apply_filters('wpml_translate_single_string', 'No', 'zero-sense', 'material_no');
                 $displayValue = ($value === '1' || $value === 1) ? $yesText : $noText;
+                $isEmpty = false; // Checkboxes always show
             } elseif ($type === 'qty_int') {
                 $displayValue = is_numeric($value) && $value > 0 ? (string) $value : '-';
+                $isEmpty = ($displayValue === '-');
             } else {
                 $displayValue = is_scalar($value) && $value !== '' ? (string) $value : '-';
+                $isEmpty = ($displayValue === '-');
             }
 
-            // Show all fields (even empty ones)
-            $html .= '<div class="zs-material-item">';
-            $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
-            $html .= '<span>' . esc_html($displayValue) . '</span>';
-            $html .= '</div>';
+            // Show field if not empty OR if it's a checkbox (always show checkboxes)
+            if (!$isEmpty || $type === 'bool') {
+                $html .= '<div class="zs-material-item">';
+                $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
+                $html .= '<span>' . esc_html($displayValue) . '</span>';
+                $html .= '</div>';
+            }
         }
         
         $html .= '</div>';
