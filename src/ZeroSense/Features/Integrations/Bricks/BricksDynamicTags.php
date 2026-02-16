@@ -7,6 +7,7 @@ namespace ZeroSense\Features\Integrations\Bricks;
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Core\MetaFieldRegistry;
 use ZeroSense\Features\WooCommerce\Schema\SchemaRegistry;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker;
 use WC_Order;
 use WP_Post;
 
@@ -144,6 +145,7 @@ class BricksDynamicTags implements FeatureInterface
         add_filter('bricks/dynamic_data/render_content', [$this, 'renderContent'], 10, 3);
         add_filter('bricks/frontend/render_data', [$this, 'renderContent'], 10, 2);
         add_action('wp', [$this, 'maybeResetMetaBoxTranslations']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueFrontendStyles']);
         
         // Track order modifications (multiple hooks to cover all cases)
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
@@ -165,6 +167,20 @@ class BricksDynamicTags implements FeatureInterface
         $this->trackOrderModification($postId);
     }
     
+    public function enqueueFrontendStyles(): void
+    {
+        if (is_admin()) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'zs-recent-changes',
+            plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/css/frontend-recent-changes.css',
+            [],
+            '1.0.0'
+        );
+    }
+
     public function trackOrderModification(int $orderId): void
     {
         $timestamp = current_time('mysql');
@@ -178,6 +194,27 @@ class BricksDynamicTags implements FeatureInterface
         
         // Also save as post meta for fallback
         update_post_meta($orderId, '_zs_last_modified', $timestamp);
+    }
+
+    private function wrapIfRecentlyChanged(string $value, string $fieldKey, $post): string
+    {
+        if ($value === '' || $value === null) {
+            return $value;
+        }
+
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $value;
+        }
+
+        if (!FieldChangeTracker::isFieldRecentlyChanged($orderId, $fieldKey)) {
+            return $value;
+        }
+
+        $timestamp = FieldChangeTracker::getFieldChangeTimestamp($orderId, $fieldKey);
+        $timestampAttr = $timestamp ? ' data-changed="' . esc_attr($timestamp) . '"' : '';
+        
+        return '<span class="zs-recent-change" data-field="' . esc_attr($fieldKey) . '"' . $timestampAttr . '>' . $value . '</span>';
     }
 
     /**
