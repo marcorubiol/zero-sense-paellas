@@ -142,11 +142,16 @@ JAVASCRIPT;
             /* Estilos para los subtítulos descriptivos */
             .zs-subtitle {
                 display: block;
-                font-size: 0.85em;
-                font-weight: normal;
-                color: #666;
-                margin-top: 2px;
-                line-height: 1.4;
+                font-size: 0.92em;
+                font-weight: 600;
+                color: #2271b1;
+                margin-top: 0;
+                line-height: 1.3;
+            }
+            
+            /* Reducir espacio entre título y subtítulo */
+            #order_data h3 br {
+                line-height: 0.3;
             }
         </style>
         <?php
