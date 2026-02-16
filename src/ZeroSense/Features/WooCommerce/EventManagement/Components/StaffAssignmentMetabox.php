@@ -491,11 +491,18 @@ class StaffAssignmentMetabox
                     'taxonomy' => self::STAFF_TAX,
                     'field' => 'slug',
                     'terms' => $roleSlug,
+                    'operator' => 'IN',
                 ],
             ];
         }
 
         $staff = get_posts($args);
+        
+        // If no staff found with this role, return all staff (so user can assign roles)
+        if (empty($staff) && !empty($roleSlug)) {
+            unset($args['tax_query']);
+            $staff = get_posts($args);
+        }
 
         return is_array($staff) ? $staff : [];
     }
