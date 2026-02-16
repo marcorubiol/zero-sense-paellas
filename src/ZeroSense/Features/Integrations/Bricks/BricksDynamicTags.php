@@ -189,6 +189,12 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $tags[] = [
+            'name' => '{woo_ops_material_list}',
+            'label' => 'Material & Logistics (Complete List)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
             'name' => '{woo_event_media}',
             'label' => 'Event Media Gallery',
             'group' => 'WooCommerce',
@@ -262,6 +268,10 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOpsNotesValue($post);
         }
 
+        if ($tag === '{woo_ops_material_list}') {
+            return $this->getOpsMaterialList($post);
+        }
+
         if (strpos($tag, '{woo_ops_material_') === 0) {
             $field = $this->stripTag($tag, 'woo_ops_material_');
             return $this->getOpsMaterialFieldValue($field, $post);
@@ -303,6 +313,8 @@ class BricksDynamicTags implements FeatureInterface
         });
 
         $content = str_replace('{woo_ops_notes}', $this->getOpsNotesValue($post), $content);
+
+        $content = str_replace('{woo_ops_material_list}', $this->getOpsMaterialList($post), $content);
 
         $content = $this->replaceTagsInContent($content, $post, 'woo_ops_material_', function (string $field) use ($post): string {
             return $this->getOpsMaterialFieldValue($field, $post);
@@ -386,6 +398,81 @@ class BricksDynamicTags implements FeatureInterface
         $raw = $order->get_meta('zs_ops_notes', true);
 
         return is_string($raw) ? $raw : '';
+    }
+
+    private function getOpsMaterialList($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Material & Logistics List');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        // Get schema to get labels
+        $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
+        if (!is_array($schema) || $schema === []) {
+            return '';
+        }
+
+        // Get saved material data
+        $materialData = $order->get_meta('zs_ops_material', true);
+        if (!is_array($materialData)) {
+            $materialData = [];
+        }
+
+        $html = '<div class="zs-material-list">';
+        
+        foreach ($schema as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            
+            $key = isset($row['key']) ? sanitize_key((string) $row['key']) : '';
+            $label = isset($row['label']) ? sanitize_text_field((string) $row['label']) : '';
+            $type = isset($row['type']) ? sanitize_key((string) $row['type']) : 'text';
+            
+            if ($key === '' || $label === '') {
+                continue;
+            }
+
+            // Get translated label
+            $name = 'ops_material_label_' . $key;
+            $translatedLabel = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
+            $finalLabel = is_string($translatedLabel) && $translatedLabel !== '' ? $translatedLabel : $label;
+
+            // Get value
+            $entry = $materialData[$key] ?? null;
+            if (is_array($entry) && array_key_exists('value', $entry)) {
+                $value = $entry['value'];
+            } else {
+                $value = $entry;
+            }
+
+            // Format value based on type
+            if ($type === 'bool') {
+                $displayValue = ($value === '1' || $value === 1) ? __('Yes', 'zero-sense') : __('No', 'zero-sense');
+            } elseif ($type === 'qty_int') {
+                $displayValue = is_numeric($value) && $value > 0 ? (string) $value : '-';
+            } else {
+                $displayValue = is_scalar($value) && $value !== '' ? (string) $value : '-';
+            }
+
+            // Only show if has value (not empty or not "No" for booleans)
+            if ($displayValue !== '-' && !($type === 'bool' && $displayValue === __('No', 'zero-sense'))) {
+                $html .= '<div class="zs-material-item">';
+                $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
+                $html .= '<span>' . esc_html($displayValue) . '</span>';
+                $html .= '</div>';
+            }
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
 
     private function getOpsMaterialFieldValue(string $field, $post): string
