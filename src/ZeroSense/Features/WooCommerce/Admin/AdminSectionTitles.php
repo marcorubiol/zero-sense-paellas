@@ -70,22 +70,23 @@ class AdminSectionTitles implements FeatureInterface
                     $('#order_data h3').each(function() {
                         var elem = $(this);
                         var html = elem.html();
+                        var text = elem.text().trim();
+                        var firstWord = text.split(/\s+/)[0];
                         
-                        if (html.indexOf('Billing') === 0 || html.indexOf('Facturación') === 0) {
-                            var restContent = html.replace(/^Billing\s*/i, '').replace(/^Facturación\s*/i, '');
+                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
+                            var restContent = html.replace(/^[^<]*Billing\s*/i, '').replace(/^[^<]*Facturación\s*/i, '');
                             elem.html('👤 Client ' + restContent);
-                        }
-                        if (html.indexOf('Shipping') === 0 || html.indexOf('Envío') === 0) {
-                            var restContent = html.replace(/^Shipping\s*/i, '').replace(/^Envío\s*/i, '');
+                        } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
+                            var restContent = html.replace(/^[^<]*Shipping\s*/i, '').replace(/^[^<]*Envío\s*/i, '');
                             elem.html('📍 Venue/Wedding Planner ' + restContent);
                         }
                     });
                 }
                 
                 changeMetaboxTitles();
+                setTimeout(changeMetaboxTitles, 100);
                 setTimeout(changeMetaboxTitles, 500);
                 setTimeout(changeMetaboxTitles, 1000);
-                setTimeout(changeMetaboxTitles, 2000);
             });
 JAVASCRIPT;
 
