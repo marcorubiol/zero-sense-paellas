@@ -159,13 +159,13 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $tags[] = [
-            'name' => '{woo_order_id}',
+            'name' => '{woo_zs_order_id}',
             'label' => 'Order ID',
             'group' => 'WooCommerce',
         ];
 
         $tags[] = [
-            'name' => '{woo_order_number}',
+            'name' => '{woo_zs_order_number}',
             'label' => 'Order Number',
             'group' => 'WooCommerce',
         ];
@@ -185,7 +185,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $tags[] = [
-            'name' => '{woo_mb_event_service_location_name}',
+            'name' => '{woo_zs_event_service_location_name}',
             'label' => 'Event Service Location (Name)',
             'group' => 'WooCommerce',
         ];
@@ -207,19 +207,19 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $tags[] = [
-            'name' => '{woo_ops_material_list}',
+            'name' => '{woo_zs_material_list}',
             'label' => 'Material & Logistics (Complete List)',
             'group' => 'WooCommerce',
         ];
 
         $tags[] = [
-            'name' => '{woo_event_media}',
+            'name' => '{woo_zs_event_media}',
             'label' => 'Event Media Gallery',
             'group' => 'WooCommerce',
         ];
 
         $tags[] = [
-            'name' => '{woo_event_media_urls}',
+            'name' => '{woo_zs_event_media_urls}',
             'label' => 'Event Media URLs (comma-separated)',
             'group' => 'WooCommerce',
         ];
@@ -263,11 +263,11 @@ class BricksDynamicTags implements FeatureInterface
             return $tag;
         }
 
-        if ($tag === '{woo_order_id}') {
+        if ($tag === '{woo_zs_order_id}') {
             return $this->getOrderId($post);
         }
 
-        if ($tag === '{woo_order_number}') {
+        if ($tag === '{woo_zs_order_number}') {
             return $this->getOrderNumber($post);
         }
 
@@ -285,7 +285,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getShippingFieldValue($field, $post);
         }
 
-        if ($tag === '{woo_mb_event_service_location_name}') {
+        if ($tag === '{woo_zs_event_service_location_name}') {
             return $this->getServiceLocationName($post);
         }
 
@@ -298,7 +298,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOpsNotesValue($post);
         }
 
-        if ($tag === '{woo_ops_material_list}') {
+        if ($tag === '{woo_zs_material_list}') {
             return $this->getOpsMaterialList($post);
         }
 
@@ -307,11 +307,11 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOpsMaterialFieldValue($field, $post);
         }
 
-        if ($tag === '{woo_event_media}') {
+        if ($tag === '{woo_zs_event_media}') {
             return $this->getEventMediaGallery($post);
         }
 
-        if ($tag === '{woo_event_media_urls}') {
+        if ($tag === '{woo_zs_event_media_urls}') {
             return $this->getEventMediaUrls($post);
         }
 
@@ -336,11 +336,11 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getShippingFieldValue($field, $post);
         });
 
-        $content = str_replace('{woo_order_id}', $this->getOrderId($post), $content);
-        $content = str_replace('{woo_order_number}', $this->getOrderNumber($post), $content);
+        $content = str_replace('{woo_zs_order_id}', $this->getOrderId($post), $content);
+        $content = str_replace('{woo_zs_order_number}', $this->getOrderNumber($post), $content);
         $content = str_replace('{woo_order_note}', $this->getOrderNote($post), $content);
 
-        $content = str_replace('{woo_mb_event_service_location_name}', $this->getServiceLocationName($post), $content);
+        $content = str_replace('{woo_zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
 
         $content = $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
             return $this->getMetaBoxFieldValue($field, $post);
@@ -348,14 +348,14 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_ops_notes}', $this->getOpsNotesValue($post), $content);
 
-        $content = str_replace('{woo_ops_material_list}', $this->getOpsMaterialList($post), $content);
+        $content = str_replace('{woo_zs_material_list}', $this->getOpsMaterialList($post), $content);
 
         $content = $this->replaceTagsInContent($content, $post, 'woo_ops_material_', function (string $field) use ($post): string {
             return $this->getOpsMaterialFieldValue($field, $post);
         });
 
-        $content = str_replace('{woo_event_media}', $this->getEventMediaGallery($post), $content);
-        $content = str_replace('{woo_event_media_urls}', $this->getEventMediaUrls($post), $content);
+        $content = str_replace('{woo_zs_event_media}', $this->getEventMediaGallery($post), $content);
+        $content = str_replace('{woo_zs_event_media_urls}', $this->getEventMediaUrls($post), $content);
 
         return $content;
     }
