@@ -115,11 +115,11 @@
     color: #fff;
 }
 
-/* Flex layout for all buttons */
-.zs-ops-toggle-visibility,
-.zs-ops-delete-field,
-.button-primary {
-    display: flex;
+/* Flex layout for all buttons - increased specificity */
+button.zs-ops-toggle-visibility,
+button.zs-ops-delete-field,
+button.button-primary {
+    display: flex !important;
     align-items: center;
 }
 
