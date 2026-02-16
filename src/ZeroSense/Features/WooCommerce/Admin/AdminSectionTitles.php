@@ -2,6 +2,7 @@
 namespace ZeroSense\Features\WooCommerce\Admin;
 
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Utilities\HposCompatibility;
 
 class AdminSectionTitles implements FeatureInterface
 {
@@ -32,17 +33,23 @@ class AdminSectionTitles implements FeatureInterface
 
     public function init(): void
     {
-        // Backend order page section titles
-        add_filter('woocommerce_admin_billing_fields', [$this, 'modifyBillingSectionTitle'], 10, 3);
-        add_filter('woocommerce_admin_shipping_fields', [$this, 'modifyShippingSectionTitle'], 10, 3);
+        // Verificar si estamos en HPOS o Classic
+        if (HposCompatibility::isHposEnabled()) {
+            // Filtros para HPOS
+            add_action('admin_enqueue_scripts', [$this, 'addHposStyles'], 10, 1);
+            add_filter('woocommerce_order_admin_tabs', [$this, 'modifyHposOrderTabs'], 10, 1);
+            add_action('woocommerce_order_admin_header', [$this, 'addHposTabLabels'], 10, 1);
+        } else {
+            // Filtros para WooCommerce Classic
+            add_filter('woocommerce_admin_billing_fields', [$this, 'modifyBillingSectionTitle'], 10, 3);
+            add_filter('woocommerce_admin_shipping_fields', [$this, 'modifyShippingSectionTitle'], 10, 3);
+            add_filter('woocommerce_admin_order_data_tabs', [$this, 'modifyOrderDataTabs'], 10, 1);
+        }
         
-        // Order data tabs
-        add_filter('woocommerce_admin_order_data_tabs', [$this, 'modifyOrderDataTabs'], 10, 1);
-        
-        // Register strings with WPML
+        // Register strings with WPML (común para ambos)
         add_action('init', [$this, 'registerWpmlStrings'], 20);
         
-        // Admin CSS for additional styling if needed
+        // Admin CSS (común para ambos)
         add_action('admin_head', [$this, 'addAdminStyles']);
     }
 
@@ -54,6 +61,68 @@ class AdminSectionTitles implements FeatureInterface
     public function getConditions(): array
     {
         return ['class_exists:WooCommerce', 'is_admin'];
+    }
+
+    /**
+     * Modificar tabs para HPOS
+     */
+    public function modifyHposOrderTabs($tabs): array
+    {
+        if (isset($tabs['billing'])) {
+            $tabs['billing']['label'] = $this->getTranslatedString('Client', 'billing_section_title', 'Client');
+        }
+        
+        if (isset($tabs['shipping'])) {
+            $tabs['shipping']['label'] = $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner');
+        }
+        
+        return $tabs;
+    }
+
+    /**
+     * Estilos específicos para HPOS
+     */
+    public function addHposStyles($hook): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || $screen->id !== 'woocommerce_page_wc-orders') {
+            return;
+        }
+
+        // JavaScript para modificar dinámicamente los tabs en HPOS
+        wp_add_inline_script('wc-orders', "
+            jQuery(document).ready(function($) {
+                // Modificar tabs de billing/shipping en HPOS
+                $('.wc-orders-tabs a').each(function() {
+                    var $this = $(this);
+                    if ($this.text().trim() === 'Billing') {
+                        $this.text('" . $this->getTranslatedString('Client', 'billing_section_title', 'Client') . "');
+                    }
+                    if ($this.text().trim() === 'Shipping') {
+                        $this.text('" . $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner') . "');
+                    }
+                });
+                
+                // Modificar títulos de sección
+                $('.woocommerce-order-panel .panel-header h2').each(function() {
+                    var $this = $(this);
+                    if ($this.text().trim() === 'Billing') {
+                        $this.text('" . $this->getTranslatedString('Client', 'billing_section_title', 'Client') . "');
+                    }
+                    if ($this.text().trim() === 'Shipping') {
+                        $this.text('" . $this->getTranslatedString('Venue/Wedding Planner', 'shipping_section_title', 'Venue/Wedding Planner') . "');
+                    }
+                });
+            });
+        ");
+    }
+
+    /**
+     * Añadir etiquetas de tabs para HPOS
+     */
+    public function addHposTabLabels($order): void
+    {
+        // Este método puede ser usado para modificaciones adicionales en el header de HPOS
     }
 
     /**
