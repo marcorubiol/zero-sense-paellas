@@ -490,33 +490,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
         // Format in serialized array: s:9:"field_key";a:1:{s:5:"value";...}
         $search_pattern = '%' . $wpdb->esc_like('s:' . strlen($key) . ':"' . $key . '"') . '%';
         
-        // Temporary debug: show actual data for new fields
-        if (strpos($key, '_') !== false && preg_match('/_\d+$/', $key)) {
-            // Check specific order 19622
-            $specific = $wpdb->get_row($wpdb->prepare(
-                "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
-                WHERE meta_key = %s AND post_id = %d",
-                'zs_ops_material',
-                19622
-            ));
-            
-            error_log('[ZS Schema] === Debugging key: ' . $key . ' ===');
-            error_log('[ZS Schema] Search pattern: ' . $search_pattern);
-            
-            if ($specific) {
-                $data = maybe_unserialize($specific->meta_value);
-                $hasKey = is_array($data) && isset($data[$key]);
-                error_log('[ZS Schema] Order 19622 has key "' . $key . '": ' . ($hasKey ? 'YES' : 'NO'));
-                if ($hasKey) {
-                    error_log('[ZS Schema] Value: ' . print_r($data[$key], true));
-                } else {
-                    error_log('[ZS Schema] Order 19622 keys: ' . implode(', ', array_keys($data)));
-                }
-            } else {
-                error_log('[ZS Schema] Order 19622 has NO zs_ops_material meta at all');
-            }
-        }
-        
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
             WHERE meta_key = %s
@@ -524,10 +497,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
             'zs_ops_material',
             $search_pattern
         ));
-        
-        if (strpos($key, '_') !== false && preg_match('/_\d+$/', $key)) {
-            error_log('[ZS Schema] Final count: ' . $count);
-        }
         
         return (int) $count;
     }
