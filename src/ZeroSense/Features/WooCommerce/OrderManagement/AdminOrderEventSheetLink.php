@@ -160,34 +160,25 @@ class AdminOrderEventSheetLink implements FeatureInterface
         // Try to find the event sheet page
         $page = get_page_by_path('fdr');
         
-        // Debug log
-        error_log('AdminOrderEventSheetLink: Looking for page with slug "fdr"');
-        error_log('AdminOrderEventSheetLink: Page found: ' . ($page ? 'YES (ID: ' . $page->ID . ')' : 'NO'));
-        
         if (!$page) {
             $page = get_page_by_path('hoja-de-ruta');
-            error_log('AdminOrderEventSheetLink: Trying "hoja-de-ruta": ' . ($page ? 'YES' : 'NO'));
         }
         
         if (!$page) {
             $page = get_page_by_path('event-sheet');
-            error_log('AdminOrderEventSheetLink: Trying "event-sheet": ' . ($page ? 'YES' : 'NO'));
         }
 
         if (!$page) {
-            error_log('AdminOrderEventSheetLink: No page found, returning empty');
             return '';
         }
 
         $url = get_permalink($page->ID);
-        error_log('AdminOrderEventSheetLink: Permalink: ' . $url);
         
         if (!$url) {
             return '';
         }
 
         $finalUrl = add_query_arg('zs_event_token', $token, $url);
-        error_log('AdminOrderEventSheetLink: Final URL: ' . $finalUrl);
         
         return $finalUrl;
     }
