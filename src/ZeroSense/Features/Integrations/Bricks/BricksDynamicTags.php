@@ -6,6 +6,7 @@ namespace ZeroSense\Features\Integrations\Bricks;
 
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Core\MetaFieldRegistry;
+use ZeroSense\Features\WooCommerce\Schema\SchemaRegistry;
 use WC_Order;
 use WP_Post;
 
@@ -42,8 +43,6 @@ class BricksDynamicTags implements FeatureInterface
     private const OPS_FIELDS = [
         'notes' => 'Ops Notes',
     ];
-
-    private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
 
     /**
@@ -234,19 +233,27 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
-        foreach ($this->getOpsMaterialFields() as $field => $label) {
+        // Dynamic schema tags - auto-generated from SchemaRegistry
+        $schemaRegistry = SchemaRegistry::getInstance();
+        foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
+            $schemaTitle = $schema->getSchemaTitle();
+            
+            // Individual field tags
+            foreach ($this->getSchemaFields($schemaKey) as $field => $label) {
+                $tags[] = [
+                    'name' => '{woo_' . $schemaKey . '_' . $field . '}',
+                    'label' => $label . ' (' . $schemaTitle . ')',
+                    'group' => 'WooCommerce',
+                ];
+            }
+            
+            // Complete list tag
             $tags[] = [
-                'name' => '{woo_ops_material_' . $field . '}',
-                'label' => $label,
+                'name' => '{woo_' . $schemaKey . '_list}',
+                'label' => $schemaTitle . ' (Complete List)',
                 'group' => 'WooCommerce',
             ];
         }
-
-        $tags[] = [
-            'name' => '{woo_zs_material_list}',
-            'label' => 'Material & Logistics (Complete List)',
-            'group' => 'WooCommerce',
-        ];
 
         $tags[] = [
             'name' => '{woo_zs_event_media}',
@@ -324,15 +331,22 @@ class BricksDynamicTags implements FeatureInterface
         return $tags;
     }
 
-    private function getOpsMaterialFields(): array
+    private function getSchemaFields(string $schemaKey): array
     {
-        $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
-        if (!is_array($schema) || $schema === []) {
+        $schemaRegistry = SchemaRegistry::getInstance();
+        $schema = $schemaRegistry->get($schemaKey);
+        
+        if ($schema === null) {
+            return [];
+        }
+        
+        $schemaData = $schema->getSchema();
+        if (!is_array($schemaData) || $schemaData === []) {
             return [];
         }
 
         $fields = [];
-        foreach ($schema as $row) {
+        foreach ($schemaData as $row) {
             if (!is_array($row)) {
                 continue;
             }
@@ -342,7 +356,7 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            $name = 'ops_material_label_' . $key;
+            $name = 'ops_' . $schemaKey . '_label_' . $key;
             $translated = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
             $fields[$key] = is_string($translated) && $translated !== '' ? $translated : $label;
         }
@@ -395,13 +409,19 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOpsNotesValue($post);
         }
 
-        if ($tag === '{woo_zs_material_list}') {
-            return $this->getOpsMaterialList($post);
-        }
-
-        if (strpos($tag, '{woo_ops_material_') === 0) {
-            $field = $this->stripTag($tag, 'woo_ops_material_');
-            return $this->getOpsMaterialFieldValue($field, $post);
+        // Dynamic schema tag handling
+        $schemaRegistry = SchemaRegistry::getInstance();
+        foreach ($schemaRegistry->getKeys() as $schemaKey) {
+            // List tag: {woo_material_list}, {woo_workspace_list}
+            if ($tag === '{woo_' . $schemaKey . '_list}') {
+                return $this->getSchemaList($schemaKey, $post);
+            }
+            
+            // Individual field tags: {woo_material_field_name}, {woo_workspace_field_name}
+            if (strpos($tag, '{woo_' . $schemaKey . '_') === 0) {
+                $field = $this->stripTag($tag, 'woo_' . $schemaKey . '_');
+                return $this->getSchemaFieldValue($schemaKey, $field, $post);
+            }
         }
 
         if ($tag === '{woo_zs_event_media}') {
@@ -485,11 +505,17 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{woo_ops_notes}', $this->getOpsNotesValue($post), $content);
 
-        $content = str_replace('{woo_zs_material_list}', $this->getOpsMaterialList($post), $content);
-
-        $content = $this->replaceTagsInContent($content, $post, 'woo_ops_material_', function (string $field) use ($post): string {
-            return $this->getOpsMaterialFieldValue($field, $post);
-        });
+        // Dynamic schema content replacement
+        $schemaRegistry = SchemaRegistry::getInstance();
+        foreach ($schemaRegistry->getKeys() as $schemaKey) {
+            // Replace list tags
+            $content = str_replace('{woo_' . $schemaKey . '_list}', $this->getSchemaList($schemaKey, $post), $content);
+            
+            // Replace individual field tags
+            $content = $this->replaceTagsInContent($content, $post, 'woo_' . $schemaKey . '_', function (string $field) use ($post, $schemaKey): string {
+                return $this->getSchemaFieldValue($schemaKey, $field, $post);
+            });
+        }
 
         $content = str_replace('{woo_zs_event_media}', $this->getEventMediaGallery($post), $content);
         $content = str_replace('{woo_zs_event_media_urls}', $this->getEventMediaUrls($post), $content);
@@ -585,11 +611,14 @@ class BricksDynamicTags implements FeatureInterface
         return is_string($raw) ? $raw : '';
     }
 
-    private function getOpsMaterialList($post): string
+    private function getSchemaList(string $schemaKey, $post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
-            return $this->builderPlaceholder('Material & Logistics List');
+            $schemaRegistry = SchemaRegistry::getInstance();
+            $schema = $schemaRegistry->get($schemaKey);
+            $title = $schema ? $schema->getSchemaTitle() : ucfirst($schemaKey);
+            return $this->builderPlaceholder($title . ' List');
         }
 
         $order = wc_get_order($orderId);
@@ -597,21 +626,27 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // Get schema to get labels
-        $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
-        if (!is_array($schema) || $schema === []) {
+        $schemaRegistry = SchemaRegistry::getInstance();
+        $schema = $schemaRegistry->get($schemaKey);
+        
+        if ($schema === null) {
+            return '';
+        }
+        
+        $schemaData = $schema->getSchema();
+        if (!is_array($schemaData) || $schemaData === []) {
             return '';
         }
 
-        // Get saved material data
-        $materialData = $order->get_meta('zs_ops_material', true);
-        if (!is_array($materialData)) {
-            $materialData = [];
+        $metaKey = $schema->getMetaKey();
+        $savedData = $order->get_meta($metaKey, true);
+        if (!is_array($savedData)) {
+            $savedData = [];
         }
 
-        $html = '<div class="zs-material-list">';
+        $html = '<div class="zs-schema-list zs-' . esc_attr($schemaKey) . '-list">';
         
-        foreach ($schema as $row) {
+        foreach ($schemaData as $row) {
             if (!is_array($row)) {
                 continue;
             }
@@ -624,25 +659,22 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            // Get translated label
-            $name = 'ops_material_label_' . $key;
+            $name = 'ops_' . $schemaKey . '_label_' . $key;
             $translatedLabel = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
             $finalLabel = is_string($translatedLabel) && $translatedLabel !== '' ? $translatedLabel : $label;
 
-            // Get value
-            $entry = $materialData[$key] ?? null;
+            $entry = $savedData[$key] ?? null;
             if (is_array($entry) && array_key_exists('value', $entry)) {
                 $value = $entry['value'];
             } else {
                 $value = $entry;
             }
 
-            // Format value based on type
             if ($type === 'bool') {
-                $yesText = apply_filters('wpml_translate_single_string', 'Yes', 'zero-sense', 'material_yes');
-                $noText = apply_filters('wpml_translate_single_string', 'No', 'zero-sense', 'material_no');
+                $yesText = apply_filters('wpml_translate_single_string', 'Yes', 'zero-sense', $schemaKey . '_yes');
+                $noText = apply_filters('wpml_translate_single_string', 'No', 'zero-sense', $schemaKey . '_no');
                 $displayValue = ($value === '1' || $value === 1) ? $yesText : $noText;
-                $isEmpty = false; // Checkboxes always show
+                $isEmpty = false;
             } elseif ($type === 'qty_int') {
                 $displayValue = is_numeric($value) && $value > 0 ? (string) $value : '-';
                 $isEmpty = ($displayValue === '-');
@@ -651,9 +683,8 @@ class BricksDynamicTags implements FeatureInterface
                 $isEmpty = ($displayValue === '-');
             }
 
-            // Show field if not empty OR if it's a checkbox (always show checkboxes)
             if (!$isEmpty || $type === 'bool') {
-                $html .= '<div class="zs-material-item">';
+                $html .= '<div class="zs-schema-item">';
                 $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
                 $html .= '<span>' . esc_html($displayValue) . '</span>';
                 $html .= '</div>';
@@ -665,11 +696,11 @@ class BricksDynamicTags implements FeatureInterface
         return $html;
     }
 
-    private function getOpsMaterialFieldValue(string $field, $post): string
+    private function getSchemaFieldValue(string $schemaKey, string $field, $post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
-            return $this->builderPlaceholder('Ops material ' . $field);
+            return $this->builderPlaceholder(ucfirst($schemaKey) . ' ' . $field);
         }
 
         $order = wc_get_order($orderId);
@@ -677,7 +708,15 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $raw = $order->get_meta('zs_ops_material', true);
+        $schemaRegistry = SchemaRegistry::getInstance();
+        $schema = $schemaRegistry->get($schemaKey);
+        
+        if ($schema === null) {
+            return '';
+        }
+        
+        $metaKey = $schema->getMetaKey();
+        $raw = $order->get_meta($metaKey, true);
 
         if (!is_array($raw)) {
             return '';

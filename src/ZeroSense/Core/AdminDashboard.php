@@ -1,6 +1,8 @@
 <?php
 namespace ZeroSense\Core;
 
+use ZeroSense\Core\Logger;
+
 /**
  * Admin Dashboard
  * 
@@ -656,9 +658,7 @@ class AdminDashboard
                 try {
                     $feature->init();
                 } catch (\Exception $e) {
-                    if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log("Zero Sense: Error re-initializing feature {$feature->getName()}: " . $e->getMessage());
-                    }
+                    Logger::error("Error re-initializing feature {$feature->getName()}", $e->getMessage());
                 }
                 break;
             }
@@ -729,9 +729,7 @@ class AdminDashboard
         try {
             $targetFeature->init();
         } catch (\Exception $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("Zero Sense: Error re-initializing feature {$targetFeature->getName()}: " . $e->getMessage());
-            }
+            Logger::error("Error re-initializing feature {$targetFeature->getName()}", $e->getMessage());
         }
 
         wp_send_json_success([

@@ -288,6 +288,67 @@ $isRegistered = $registry->isRegistered('zs_my_field');
 
 ---
 
+## Centralized Logging System
+
+The plugin includes a centralized logging system (`src/ZeroSense/Core/Logger.php`) that provides consistent, structured logging across all components.
+
+### 📋 Logger Features
+
+- **Multiple log levels**: `debug()`, `error()`, `info()`, `warning()`, `migration()`
+- **WP_DEBUG aware**: Debug/info/warning logs only appear when `WP_DEBUG` is enabled
+- **Standardized format**: All logs include timestamp, level, and consistent prefix
+- **Migration-specific logging**: Controlled verbosity for bulk operations
+- **Context support**: Optional context parameter for additional information
+
+### 🔧 Usage Examples
+
+```php
+use ZeroSense\Core\Logger;
+
+// Basic logging
+Logger::error('Failed to process order', $errorMessage);
+Logger::info('Feature initialized successfully');
+
+// Debug logging (only when WP_DEBUG is enabled)
+Logger::debug('Processing workflow trigger', "Workflow ID: {$wid}");
+
+// Migration operations with controlled verbosity
+Logger::migration('Starting bulk migration process');  // Always logged
+Logger::migration('Processing batch details', false); // Only when verbose=true
+Logger::migration('Migration completed successfully', true); // Important results always shown
+```
+
+### 📝 Log Format
+
+All logs follow this standardized format:
+```
+[2025-02-16 14:40:22] [ERROR] [Zero Sense] Failed to initialize feature FeatureName: Error message
+[2025-02-16 14:40:22] [MIGRATION] [Zero Sense] Migration completed successfully
+```
+
+### 🎯 Best Practices
+
+- **Use appropriate levels**: `error()` for failures, `debug()` for troubleshooting, `migration()` for bulk operations
+- **Provide context**: Include relevant IDs, counts, or error details
+- **Keep it concise**: Avoid logging every single iteration in loops (use progress indicators)
+- **Migration verbosity**: Use `Logger::migration()` with `verbose=false` for routine operations, `verbose=true` for important results
+
+### 🔄 Migration from Direct error_log
+
+Replace direct `error_log()` calls:
+
+```php
+// ❌ Old approach
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    error_log("Zero Sense: Some message " . $context);
+}
+
+// ✅ New centralized approach
+Logger::debug('Some message', $context);
+```
+
+---
+
 ## Performance & stability
 
 - Prefer early guards to avoid unnecessary work.

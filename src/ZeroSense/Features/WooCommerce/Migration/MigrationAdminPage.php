@@ -2,6 +2,7 @@
 namespace ZeroSense\Features\WooCommerce\Migration;
 
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Core\Logger;
 
 class MigrationAdminPage implements FeatureInterface
 {
@@ -388,16 +389,15 @@ class MigrationAdminPage implements FeatureInterface
 
     public function handleMigration(): void
     {
-        error_log('[ZS Migration] handleMigration() called');
+        Logger::migration('Starting migration process');
         
         if (!current_user_can('manage_options')) {
-            error_log('[ZS Migration] User lacks manage_options permission');
+            Logger::error('User lacks manage_options permission for migration');
             wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
         }
 
-        error_log('[ZS Migration] Checking nonce...');
         check_admin_referer('zs_metabox_migrate');
-        error_log('[ZS Migration] Nonce verified, starting migration...');
+        Logger::migration('Nonce verified, executing migration');
 
         $results = $this->migrator->migrateAll();
         $message = sprintf(
@@ -407,13 +407,13 @@ class MigrationAdminPage implements FeatureInterface
             $results['skipped']
         );
 
-        error_log('[ZS Migration] Migration results: ' . json_encode($results));
+        Logger::migration('Migration results: ' . json_encode($results));
         
         if ($results['errors'] > 0) {
-            error_log('[ZS Migration] Migration completed with errors');
+            Logger::migration('Migration completed with errors', true);
             add_settings_error('zs_metabox_migration', 'migration_error', $message, 'error');
         } else {
-            error_log('[ZS Migration] Migration completed successfully');
+            Logger::migration('Migration completed successfully', true);
             add_settings_error('zs_metabox_migration', 'migration_success', $message, 'success');
         }
 
@@ -425,16 +425,15 @@ class MigrationAdminPage implements FeatureInterface
 
     public function handleReset(): void
     {
-        error_log('[ZS Migration] handleReset() called');
+        Logger::migration('Starting migration reset process');
         
         if (!current_user_can('manage_options')) {
-            error_log('[ZS Migration] User lacks manage_options permission');
+            Logger::error('User lacks manage_options permission for migration reset');
             wp_die(__('You do not have permission to perform this action.', 'zero-sense'));
         }
 
-        error_log('[ZS Migration] Checking nonce...');
         check_admin_referer('zs_metabox_reset');
-        error_log('[ZS Migration] Nonce verified, resetting migration status...');
+        Logger::migration('Nonce verified, resetting migration status');
 
         $results = $this->migrator->resetMigrationStatus();
         $message = sprintf(
@@ -442,11 +441,10 @@ class MigrationAdminPage implements FeatureInterface
             $results['reset_count']
         );
 
-        error_log('[ZS Migration] Reset results: ' . json_encode($results));
+        Logger::migration('Reset results: ' . json_encode($results));
         
         add_settings_error('zs_metabox_migration', 'reset_success', $message, 'success');
 
-        error_log('[ZS Migration] Redirecting back to referrer...');
         wp_safe_redirect(wp_get_referer());
         exit;
     }

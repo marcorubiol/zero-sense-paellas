@@ -2,6 +2,7 @@
 namespace ZeroSense\Features\WooCommerce\Migration;
 
 use WC_Order;
+use ZeroSense\Core\Logger;
 
 /**
  * MetaBox to Plugin Fields Migrator
@@ -522,7 +523,7 @@ class MetaBoxMigrator
 
     public function migrateAll(): array
     {
-        error_log('[ZS Migration] migrateAll() called');
+        Logger::migration('Starting bulk migration process');
         $start_time = microtime(true);
         
         $results = [
@@ -533,17 +534,18 @@ class MetaBoxMigrator
         ];
 
         if ($this->isHposEnabled()) {
-            error_log('[ZS Migration] Using HPOS query for migration');
             $order_ids = $this->getPendingOrdersHpos(0); // 0 = no limit
-            error_log('[ZS Migration] HPOS found ' . count($order_ids) . ' orders to migrate');
+            Logger::migration('Using HPOS query, found ' . count($order_ids) . ' orders to migrate');
         } else {
-            error_log('[ZS Migration] Using legacy query for migration');
             $order_ids = $this->getPendingOrdersLegacy(0);
-            error_log('[ZS Migration] Legacy found ' . count($order_ids) . ' orders to migrate');
+            Logger::migration('Using legacy query, found ' . count($order_ids) . ' orders to migrate');
         }
 
         foreach ($order_ids as $order_id) {
-            error_log('[ZS Migration] Processing order ID: ' . $order_id);
+            if ($order_id % 100 === 0) {
+                Logger::migration("Processed {$order_id} orders...");
+            }
+            
             $order = wc_get_order($order_id);
 
                 if (!$order instanceof WC_Order) {
@@ -579,7 +581,7 @@ class MetaBoxMigrator
      */
     public function resetMigrationStatus(): array
     {
-        error_log('[ZS Migration] resetMigrationStatus() called');
+        Logger::migration('Starting migration status reset');
         $start_time = microtime(true);
         
         $results = [
@@ -588,7 +590,7 @@ class MetaBoxMigrator
         ];
 
         if ($this->isHposEnabled()) {
-            error_log('[ZS Migration] Resetting HPOS migration status');
+            Logger::migration('Resetting HPOS migration status');
             global $wpdb;
             
             $tables = $this->getHposTables();

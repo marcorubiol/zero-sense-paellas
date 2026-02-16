@@ -97,9 +97,9 @@
     font-weight: 500;
 }
 
-/* Actions column - flex layout for horizontal buttons */
-#zs-ops-schema-rows td:last-child,
-#zs-ops-schema-hidden-rows td:last-child {
+/* Schema-agnostic selectors using data attributes */
+[data-schema-admin] #zs-ops-schema-rows td:last-child,
+[data-schema-admin] #zs-ops-schema-hidden-rows td:last-child {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -129,4 +129,22 @@ button.button-primary {
 .button-primary .dashicons {
     margin-right: 4px;
     line-height: 1;
+}
+
+/* Hidden field styling in order metaboxes */
+[data-schema-metabox] .zs-ops-schema-hidden-field {
+    background-color: #fffbf0;
+    border-left: 3px solid #f0b849;
+}
+
+[data-schema-metabox] .zs-ops-hidden-badge {
+    display: inline-block;
+    background: #f0b849;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    text-transform: uppercase;
 }
