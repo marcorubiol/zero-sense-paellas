@@ -33,6 +33,7 @@ class EventOperationsMenu implements FeatureInterface
     public function init(): void
     {
         add_action('admin_menu', [$this, 'registerMenu'], 5);
+        add_action('admin_menu', [$this, 'removeDefaultSubmenu'], 999);
     }
 
     public function getPriority(): int
@@ -56,8 +57,10 @@ class EventOperationsMenu implements FeatureInterface
             'dashicons-admin-tools',
             56
         );
-        
-        // Remove the auto-generated submenu item
+    }
+    
+    public function removeDefaultSubmenu(): void
+    {
         remove_submenu_page('event-operations', 'event-operations');
     }
 }
