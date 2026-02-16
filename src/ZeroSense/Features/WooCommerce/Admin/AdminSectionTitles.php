@@ -167,13 +167,13 @@ JAVASCRIPT;
                 display: inline-block;
                 font-size: 0.88em;
                 font-weight: 600;
-                color: #1d2327;
-                background: linear-gradient(135deg, #e7f3ff 0%, #d4e9ff 100%);
+                color: #3e5462;
+                background: linear-gradient(135deg, red 0%, #d4e9ff 100%);
                 padding: 3px 10px 3px 8px;
                 border-radius: 4px;
                 margin-top: 4px;
                 line-height: 1.4;
-                border-left: 3px solid #2271b1;
+                border-left: 3px solid #3e5462;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
             

@@ -2125,7 +2125,6 @@ class BricksDynamicTags implements FeatureInterface
             :where(.zs-event-ingredients th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
             :where(.zs-event-ingredients td) { padding: 8px; border: 1px solid #ddd; }
             :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #e3f2fd; }
-            :where(.zs-event-ingredients .zs-col-unit),
             :where(.zs-event-ingredients .zs-col-adults),
             :where(.zs-event-ingredients .zs-col-children),
             :where(.zs-event-ingredients .zs-col-babies) { text-align: center; }
@@ -2155,7 +2154,6 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '<tr>';
         $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
         $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-unit">' . esc_html__('Unidad', 'zero-sense') . '</th>';
         $html .= '<th class="zs-col-adults">' . esc_html__('Adultos', 'zero-sense') . ' (' . esc_html($adults) . ')</th>';
         if ($children > 0) {
             $html .= '<th class="zs-col-children">' . esc_html__('Niños', 'zero-sense') . ' (' . esc_html($children) . ')</th>';
@@ -2193,14 +2191,13 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<tr>';
             $html .= '<td class="zs-col-ingredient">' . esc_html($termName) . '</td>';
-            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($normalizedQty)) . '</td>';
-            $html .= '<td class="zs-col-unit">' . esc_html($normalizedUnit) . '</td>';
-            $html .= '<td class="zs-col-adults">' . esc_html($this->formatNumber($perAdult * $adults)) . '</td>';
+            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($normalizedQty)) . ' ' . esc_html($normalizedUnit) . '</td>';
+            $html .= '<td class="zs-col-adults">' . esc_html($this->formatNumber($perAdult * $adults)) . ' ' . esc_html($normalizedUnit) . '</td>';
             if ($children > 0) {
-                $html .= '<td class="zs-col-children">' . esc_html($this->formatNumber($perChild * $children)) . '</td>';
+                $html .= '<td class="zs-col-children">' . esc_html($this->formatNumber($perChild * $children)) . ' ' . esc_html($normalizedUnit) . '</td>';
             }
             if ($babies > 0) {
-                $html .= '<td class="zs-col-babies">' . esc_html($this->formatNumber($perBaby * $babies)) . '</td>';
+                $html .= '<td class="zs-col-babies">' . esc_html($this->formatNumber($perBaby * $babies)) . ' ' . esc_html($normalizedUnit) . '</td>';
             }
             $html .= '</tr>';
         }
