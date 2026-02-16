@@ -655,18 +655,29 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
         
         error_log("[Usage Count] Checking usage for key: {$key} in meta: {$metaKey}");
         
-        // Get all orders that have this meta key
+        // Get all orders that have this meta key - bypass cache
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
             WHERE meta_key = %s",
             $metaKey
-        ));
+        ), OBJECT);
         
         error_log("[Usage Count] Found " . count($results) . " orders with this meta key");
         
         $count = 0;
         foreach ($results as $result) {
-            $data = maybe_unserialize($result->meta_value);
+            // Clear cache for this specific order to get fresh data
+            wp_cache_delete($result->post_id, 'post_meta');
+            clean_post_cache($result->post_id);
+            
+            // Re-fetch fresh data from database
+            $freshOrder = wc_get_order($result->post_id);
+            if (!$freshOrder) {
+                error_log("[Usage Count] Order {$result->post_id}: Could not load order");
+                continue;
+            }
+            
+            $data = $freshOrder->get_meta($metaKey, true);
             if (!is_array($data) || !isset($data[$key])) {
                 error_log("[Usage Count] Order {$result->post_id}: Field not found in data");
                 continue;
