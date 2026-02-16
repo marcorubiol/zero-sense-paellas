@@ -484,8 +484,17 @@ class StaffAssignmentMetabox
                 
                 // Remove staff member
                 $(document).on('click', '.zs-staff-remove', function() {
-                    var $row = $(this).closest('.zs-staff-row');
-                    $row.remove();
+                    var $btn = $(this);
+                    var $row = $btn.closest('.zs-staff-row');
+                    
+                    // Disable button and show feedback
+                    $btn.prop('disabled', true).text('<?php echo esc_js(__('Removing...', 'zero-sense')); ?>');
+                    
+                    // Add visual feedback - fade out
+                    $row.css({
+                        'opacity': '0.5',
+                        'transition': 'opacity 0.3s ease'
+                    });
                     
                     // Save via AJAX after removing
                     var orderId = $('#post_ID').val() || $('input[name="post_ID"]').val();
@@ -494,15 +503,19 @@ class StaffAssignmentMetabox
                     }
                     
                     if (orderId) {
-                        // Collect all remaining staff assignments
+                        // Collect all remaining staff assignments (excluding current row)
                         var staffData = {};
                         $('.zs-staff-role-section').each(function() {
                             var role = $(this).data('role');
                             staffData[role] = [];
                             $(this).find('.zs-staff-hidden-input').each(function() {
-                                var staffId = $(this).val();
-                                if (staffId) {
-                                    staffData[role].push(staffId);
+                                var $input = $(this);
+                                // Skip the row being removed
+                                if ($input.closest('.zs-staff-row')[0] !== $row[0]) {
+                                    var staffId = $input.val();
+                                    if (staffId) {
+                                        staffData[role].push(staffId);
+                                    }
                                 }
                             });
                         });
@@ -512,6 +525,28 @@ class StaffAssignmentMetabox
                             nonce: '<?php echo wp_create_nonce('zs_save_staff'); ?>',
                             order_id: orderId,
                             staff_data: staffData
+                        }, function(response) {
+                            if (response.success) {
+                                // Animate removal after save confirmation
+                                $row.slideUp(300, function() {
+                                    $row.remove();
+                                });
+                            } else {
+                                // Restore on error
+                                $row.css('opacity', '1');
+                                $btn.prop('disabled', false).text('<?php echo esc_js(__('Remove', 'zero-sense')); ?>');
+                                alert('<?php echo esc_js(__('Error removing staff member', 'zero-sense')); ?>');
+                            }
+                        }).fail(function() {
+                            // Restore on error
+                            $row.css('opacity', '1');
+                            $btn.prop('disabled', false).text('<?php echo esc_js(__('Remove', 'zero-sense')); ?>');
+                            alert('<?php echo esc_js(__('Error removing staff member', 'zero-sense')); ?>');
+                        });
+                    } else {
+                        // No order ID, just remove locally
+                        $row.slideUp(300, function() {
+                            $row.remove();
                         });
                     }
                 });
