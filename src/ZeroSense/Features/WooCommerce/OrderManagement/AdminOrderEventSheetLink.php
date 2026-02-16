@@ -113,8 +113,6 @@ class AdminOrderEventSheetLink implements FeatureInterface
                 border: 2px solid transparent;
                 border-radius: 4px;
                 color: #2271b1;
-                text-decoration: none;
-                vertical-align: middle;
                 line-height: 1;
                 margin-left: 2px;
                 float: right;
