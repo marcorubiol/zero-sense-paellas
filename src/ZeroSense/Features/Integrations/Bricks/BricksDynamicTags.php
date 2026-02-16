@@ -140,9 +140,6 @@ class BricksDynamicTags implements FeatureInterface
         add_action('woocommerce_update_order', [$this, 'trackOrderModification'], 999);
         add_action('woocommerce_new_order', [$this, 'trackOrderModification'], 999);
         add_action('save_post_shop_order', [$this, 'trackOrderModificationPost'], 999, 2);
-        
-        // Debug: Log when this class initializes
-        error_log('[ZS] BricksDynamicTags initialized - tracking hooks registered');
     }
     
     public function trackOrderModificationPost(int $postId, \WP_Post $post): void
@@ -171,15 +168,6 @@ class BricksDynamicTags implements FeatureInterface
         
         // Also save as post meta for fallback
         update_post_meta($orderId, '_zs_last_modified', $timestamp);
-        
-        // Debug log
-        error_log(sprintf(
-            '[ZS] Order %d modified at %s. Hook: %s. Saved via WC: %s',
-            $orderId,
-            $timestamp,
-            current_action(),
-            $order ? 'YES' : 'NO'
-        ));
     }
 
     /**
@@ -313,6 +301,18 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_order_language}',
+            'label' => 'Order Language',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_language_name}',
+            'label' => 'Order Language (Full Name)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -432,6 +432,14 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderLastModified($post, 'time');
         }
 
+        if ($tag === '{woo_zs_order_language}') {
+            return $this->getOrderLanguage($post);
+        }
+
+        if ($tag === '{woo_zs_order_language_name}') {
+            return $this->getOrderLanguage($post, true);
+        }
+
         return $tag;
     }
 
@@ -482,6 +490,9 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{woo_zs_order_last_modified}', $this->getOrderLastModified($post), $content);
         $content = str_replace('{woo_zs_order_last_modified_date}', $this->getOrderLastModified($post, 'date'), $content);
         $content = str_replace('{woo_zs_order_last_modified_time}', $this->getOrderLastModified($post, 'time'), $content);
+
+        $content = str_replace('{woo_zs_order_language}', $this->getOrderLanguage($post), $content);
+        $content = str_replace('{woo_zs_order_language_name}', $this->getOrderLanguage($post, true), $content);
 
         return $content;
     }
@@ -888,6 +899,37 @@ class BricksDynamicTags implements FeatureInterface
         return (string) count($order->get_items());
     }
 
+    private function getOrderLanguage($post, bool $fullName = false): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Language');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $language = $order->get_meta('wpml_language', true);
+        if (!$language || $language === '') {
+            return '';
+        }
+
+        if (!$fullName) {
+            return strtoupper((string) $language);
+        }
+
+        // Return full language name
+        $languageNames = [
+            'es' => 'Español',
+            'en' => 'English',
+            'ca' => 'Català',
+        ];
+
+        return $languageNames[$language] ?? strtoupper((string) $language);
+    }
+
     private function getOrderLastModified($post, string $format = 'full'): string
     {
         $orderId = $this->resolveOrderId($post);
@@ -903,13 +945,6 @@ class BricksDynamicTags implements FeatureInterface
         // Get our custom tracked modification date
         $modified = $order->get_meta('_zs_last_modified', true);
         
-        // Debug log
-        error_log(sprintf(
-            '[ZS] Reading last modified for order %d: _zs_last_modified = "%s"',
-            $orderId,
-            $modified ?: 'EMPTY'
-        ));
-        
         // Fallback to post_modified if our custom field doesn't exist yet
         if (!$modified || $modified === '') {
             $postData = get_post($orderId);
@@ -917,7 +952,6 @@ class BricksDynamicTags implements FeatureInterface
                 return '';
             }
             $modified = $postData->post_modified;
-            error_log(sprintf('[ZS] Using fallback post_modified: %s', $modified));
         }
 
         if (!$modified || $modified === '0000-00-00 00:00:00') {
