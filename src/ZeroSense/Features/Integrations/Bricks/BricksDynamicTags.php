@@ -1594,8 +1594,10 @@ class BricksDynamicTags implements FeatureInterface
                 function closeLightbox(e) {
                     if (e) e.preventDefault();
                     var scrollY = window.scrollY;
-                    history.pushState("", document.title, window.location.pathname + window.location.search);
-                    window.scrollTo(0, scrollY);
+                    window.location.hash = "";
+                    setTimeout(function() {
+                        window.scrollTo(0, scrollY);
+                    }, 1);
                 }
                 
                 document.addEventListener("DOMContentLoaded", function() {
