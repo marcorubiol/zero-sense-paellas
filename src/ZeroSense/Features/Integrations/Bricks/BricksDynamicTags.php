@@ -1577,7 +1577,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html = '<div class="zs-event-media-gallery">';
+        $html = '<div class="zs-event-media-gallery" style="max-width: 500px;">';
         foreach ($ids as $id) {
             $url = wp_get_attachment_url((int) $id);
             $type = get_post_mime_type((int) $id);
@@ -1586,10 +1586,10 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             if (is_string($type) && strpos($type, 'video') !== false) {
-                $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls></video></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls style="max-width: 100%; height: auto;"></video></div>';
             } else {
                 $thumb = wp_get_attachment_image_url((int) $id, 'medium');
-                $html .= '<div class="zs-gallery-item zs-gallery-image"><a href="' . esc_url($url) . '" target="_blank" rel="noopener"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-image"><a href="' . esc_url($url) . '" target="_blank" rel="noopener"><img src="' . esc_url($thumb ?: $url) . '" alt="" style="max-width: 100%; height: auto;"></a></div>';
             }
         }
         $html .= '</div>';
@@ -1978,7 +1978,7 @@ class BricksDynamicTags implements FeatureInterface
             foreach ($group['products'] as $prod) {
                 $productsList[] = esc_html($prod['name']) . ' (' . esc_html($this->formatNumber($prod['qty'])) . 'x)';
             }
-            $html .= '<div class="zs-recipe-products"><strong>' . esc_html__('Productos:', 'zero-sense') . '</strong> ' . implode(', ', $productsList) . '</div>';
+            $html .= '<div class="zs-recipe-products"><strong>' . esc_html__('Products:', 'zero-sense') . '</strong> ' . implode(', ', $productsList) . '</div>';
             
             // Ingredients
             if (!empty($group['ingredients'])) {
@@ -2137,20 +2137,20 @@ class BricksDynamicTags implements FeatureInterface
         
         // Info header with guest breakdown
         $html .= '<div class="zs-ingredients-info">';
-        $html .= '<strong>' . esc_html__('Comensales:', 'zero-sense') . '</strong> ';
-        $html .= esc_html($adults) . ' ' . esc_html__('adultos', 'zero-sense');
+        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
+        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
         if ($children > 0) {
-            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('niños (5-8 años)', 'zero-sense');
+            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
         }
         if ($babies > 0) {
-            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('bebés (0-4 años)', 'zero-sense');
+            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('babies (0-4 years)', 'zero-sense');
         }
-        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('pax equivalentes', 'zero-sense') . '</strong>';
+        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
         $html .= '<br><small style="color: #666; margin-top: 5px; display: block;">';
-        $html .= esc_html__('Multiplicadores:', 'zero-sense') . ' ';
-        $html .= esc_html__('Adultos', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT));
-        $html .= ', ' . esc_html__('Niños', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT));
-        $html .= ', ' . esc_html__('Bebés', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::BABY_WEIGHT));
+        $html .= esc_html__('Multipliers:', 'zero-sense') . ' ';
+        $html .= esc_html__('Adults', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT));
+        $html .= ', ' . esc_html__('Children', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT));
+        $html .= ', ' . esc_html__('Babies', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::BABY_WEIGHT));
         $html .= '</small>';
         $html .= '</div>';
 
@@ -2158,14 +2158,14 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '<table class="zs-event-ingredients">';
         $html .= '<thead>';
         $html .= '<tr>';
-        $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingrediente', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingredient', 'zero-sense') . '</th>';
         $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-adults">' . esc_html__('Adultos', 'zero-sense') . ' (' . esc_html($adults) . ') ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT)) . '</th>';
+        $html .= '<th class="zs-col-adults">' . esc_html__('Adults', 'zero-sense') . ' (' . esc_html($adults) . ') ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT)) . '</th>';
         if ($children > 0) {
-            $html .= '<th class="zs-col-children">' . esc_html__('Niños', 'zero-sense') . ' (' . esc_html($children) . ') ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT)) . '</th>';
+            $html .= '<th class="zs-col-children">' . esc_html__('Children', 'zero-sense') . ' (' . esc_html($children) . ') ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT)) . '</th>';
         }
         if ($babies > 0) {
-            $html .= '<th class="zs-col-babies">' . esc_html__('Bebés', 'zero-sense') . ' (' . esc_html($babies) . ') ×' . esc_html($this->formatNumber(self::BABY_WEIGHT)) . '</th>';
+            $html .= '<th class="zs-col-babies">' . esc_html__('Babies', 'zero-sense') . ' (' . esc_html($babies) . ') ×' . esc_html($this->formatNumber(self::BABY_WEIGHT)) . '</th>';
         }
         $html .= '</tr>';
         $html .= '</thead>';
