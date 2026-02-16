@@ -172,6 +172,22 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <div class="tablenav top" style="max-width:1100px;">
+                    <div class="alignleft actions">
+                        <button type="button" class="button" id="zs-ops-schema-add">
+                            <span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Add field', 'zero-sense'); ?>
+                        </button>
+                    </div>
+                    <div class="alignright">
+                        <button type="submit" class="button button-primary">
+                            <span class="dashicons dashicons-saved" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Save', 'zero-sense'); ?>
+                        </button>
+                    </div>
+                    <br class="clear">
+                </div>
                 
                 <?php
                 // Count hidden fields
@@ -236,22 +252,6 @@ class OpsMaterialSchemaAdminPage implements FeatureInterface
                         </tbody>
                     </table>
                 <?php endif; ?>
-
-                <div class="tablenav top" style="max-width:1100px;">
-                    <div class="alignleft actions">
-                        <button type="button" class="button" id="zs-ops-schema-add">
-                            <span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span>
-                            <?php esc_html_e('Add field', 'zero-sense'); ?>
-                        </button>
-                    </div>
-                    <div class="alignright">
-                        <button type="submit" class="button button-primary">
-                            <span class="dashicons dashicons-saved" style="vertical-align: middle;"></span>
-                            <?php esc_html_e('Save', 'zero-sense'); ?>
-                        </button>
-                    </div>
-                    <br class="clear">
-                </div>
             </form>
 
             <script>

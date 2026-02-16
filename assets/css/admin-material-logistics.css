@@ -98,7 +98,8 @@
 }
 
 /* Actions column - flex layout for horizontal buttons */
-#zs-ops-schema-rows td:last-child {
+#zs-ops-schema-rows td:last-child,
+#zs-ops-schema-hidden-rows td:last-child {
     display: flex;
     align-items: center;
     gap: 4px;
