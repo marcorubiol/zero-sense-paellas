@@ -195,6 +195,22 @@ class Recipes implements FeatureInterface
                                     <?php if ($termId > 0 && $termName !== ''): ?>
                                         <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
                                     <?php endif; ?>
+                                    <?php 
+                                    // Add existing ingredients as fallback options
+                                    $existing_ingredients = get_terms([
+                                        'taxonomy' => self::TAX_INGREDIENT,
+                                        'hide_empty' => false,
+                                        'number' => 50,
+                                        'suppress_filters' => true,
+                                    ]);
+                                    if (is_array($existing_ingredients)) {
+                                        foreach ($existing_ingredients as $ingredient) {
+                                            if ($ingredient instanceof WP_Term && $ingredient->term_id != $termId) {
+                                                echo '<option value="' . esc_attr((string) $ingredient->term_id) . '">' . esc_html($ingredient->name) . '</option>';
+                                            }
+                                        }
+                                    }
+                                    ?>
                                 </select>
                             </td>
                             <td>
@@ -254,6 +270,14 @@ class Recipes implements FeatureInterface
                             url: ajaxUrl,
                             dataType: 'json',
                             delay: 250,
+                            beforeSend: function(xhr) {
+                                console.log('Zero Sense Recipes: AJAX request to:', ajaxUrl);
+                                console.log('Zero Sense Recipes: Request data:', {
+                                    action: 'zs_ingredient_search',
+                                    nonce: nonce,
+                                    q: params.term || ''
+                                });
+                            },
                             data: function(params) {
                                 console.log('Zero Sense Recipes: Searching for:', params.term);
                                 return {
@@ -265,6 +289,14 @@ class Recipes implements FeatureInterface
                             processResults: function(data) {
                                 console.log('Zero Sense Recipes: Search results:', data);
                                 return data;
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Zero Sense Recipes: AJAX Error:', {
+                                    status: status,
+                                    error: error,
+                                    responseText: xhr.responseText,
+                                    readyState: xhr.readyState
+                                });
                             }
                         }
                     });
