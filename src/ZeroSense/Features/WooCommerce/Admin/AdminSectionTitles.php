@@ -33,13 +33,13 @@ class AdminSectionTitles implements FeatureInterface
 
     public function init(): void
     {
-        // Filtro gettext para añadir segunda línea descriptiva
-        add_filter('gettext', [$this, 'addSubtitles'], 10, 3);
+        // JavaScript para añadir subtítulos (sin salto visual usando CSS)
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAdminScripts'], 10, 1);
         
         // Register strings with WPML
         add_action('init', [$this, 'registerWpmlStrings'], 20);
         
-        // Admin CSS para estilos de subtítulos
+        // Admin CSS para estilos de subtítulos y ocultar inicialmente
         add_action('admin_head', [$this, 'addAdminStyles']);
     }
 
@@ -54,32 +54,39 @@ class AdminSectionTitles implements FeatureInterface
     }
 
     /**
-     * Añadir subtítulos descriptivos a Billing y Shipping
+     * Enqueue admin scripts para añadir subtítulos
      */
-    public function addSubtitles($translated, $text, $domain): string
+    public function enqueueAdminScripts($hook): void
     {
-        // Solo en WooCommerce admin
-        if ($domain !== 'woocommerce' || !is_admin()) {
-            return $translated;
+        if (!HposCompatibility::isOrderEditScreen()) {
+            return;
         }
-        
-        // Solo en páginas de pedidos
-        $screen = get_current_screen();
-        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
-            return $translated;
-        }
-        
-        // Añadir segunda línea a Billing
-        if ($text === 'Billing') {
-            return 'Billing<br><span class="zs-subtitle">👤 Client</span>';
-        }
-        
-        // Añadir segunda línea a Shipping
-        if ($text === 'Shipping') {
-            return 'Shipping<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>';
-        }
-        
-        return $translated;
+
+        $script = <<<'JAVASCRIPT'
+            jQuery(document).ready(function($) {
+                function addSubtitles() {
+                    $('#order_data h3').each(function() {
+                        var elem = $(this);
+                        var text = elem.text().trim();
+                        var firstWord = text.split(/\s+/)[0];
+                        
+                        if ((firstWord === 'Billing' || firstWord === 'Facturación') && !elem.find('.zs-subtitle').length) {
+                            elem.append('<br><span class="zs-subtitle">👤 Client</span>');
+                        } else if ((firstWord === 'Shipping' || firstWord === 'Envío') && !elem.find('.zs-subtitle').length) {
+                            elem.append('<br><span class="zs-subtitle">📍 Venue/Wedding Planner</span>');
+                        }
+                    });
+                    
+                    // Mostrar títulos después de modificar
+                    $('#order_data h3').css('visibility', 'visible');
+                }
+                
+                addSubtitles();
+                setTimeout(addSubtitles, 100);
+            });
+JAVASCRIPT;
+
+        wp_add_inline_script('jquery', $script);
     }
 
     /**
@@ -127,6 +134,11 @@ class AdminSectionTitles implements FeatureInterface
         }
         ?>
         <style>
+            /* Ocultar títulos inicialmente para evitar salto visual */
+            #order_data h3 {
+                visibility: hidden;
+            }
+            
             /* Estilos para los subtítulos descriptivos */
             .zs-subtitle {
                 display: block;
