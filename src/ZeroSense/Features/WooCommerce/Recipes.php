@@ -157,90 +157,17 @@ class Recipes implements FeatureInterface
 
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
 
-        // Simple debug version
-        echo '<div style="background: #f9f9f9; border: 2px solid #0073aa; padding: 15px; margin: 10px 0;">';
-        echo '<h3>🍳 Zero Sense Recipes - Debug Mode</h3>';
-        echo '<p><strong>Found ingredients:</strong> ' . count($ingredients) . '</p>';
-        
-        if (!empty($ingredients)) {
-            echo '<ul>';
-            foreach ($ingredients as $ingredient) {
-                echo '<li>Ingredient ID: ' . $ingredient['ingredient'] . ', Qty: ' . $ingredient['qty'] . ' ' . $ingredient['unit'] . '</li>';
-            }
-            echo '</ul>';
-        }
-        
-        echo '<p><strong>Test field:</strong></p>';
-        echo '<input type="text" id="test-ingredient-field" placeholder="Type to test..." style="width: 100%; padding: 5px;">';
-        echo '<button type="button" id="test-add-btn" class="button" style="margin-top: 5px;">Test Add</button>';
-        
+        // Ultra simple debug - just text
+        echo '<div style="background: red; color: white; font-size: 20px; padding: 20px; border: 5px solid black;">';
+        echo '🍳 ZERO SENSE RECIPES METABOX 🍳<br>';
+        echo 'INGREDIENTS FOUND: ' . count($ingredients) . '<br>';
+        echo 'POST ID: ' . $post->ID . '<br>';
+        echo 'POST TYPE: ' . $post->post_type . '<br>';
+        echo 'TIME: ' . date('H:i:s') . '<br>';
         echo '</div>';
         
-        // Original table (commented for now)
-        /*
-        $units = $this->getAllowedUnits();
-
-        ?>
-        <table class="widefat striped" style="margin-top:8px;">
-            <thead>
-                <tr>
-                    <th style="width: 45%;"><?php esc_html_e('Ingredient', 'zero-sense'); ?></th>
-                    <th style="width: 20%;"><?php esc_html_e('Qty per pax', 'zero-sense'); ?></th>
-                    <th style="width: 20%;"><?php esc_html_e('Unit', 'zero-sense'); ?></th>
-                    <th style="width: 15%;"></th>
-                </tr>
-            </thead>
-            <tbody id="zs-recipe-rows">
-                <?php foreach ($ingredients as $row):
-                    $termId = isset($row['ingredient']) ? (int) $row['ingredient'] : 0;
-                    $qty = isset($row['qty']) ? (string) $row['qty'] : '';
-                    $unit = isset($row['unit']) ? (string) $row['unit'] : 'u';
-
-                    $termName = '';
-                    if ($termId > 0) {
-                        $resolvedId = $this->resolveOriginalTermId($termId);
-                        $term = get_term($resolvedId, self::TAX_INGREDIENT);
-                        if ($term instanceof WP_Term) {
-                            $termName = $term->name;
-                        }
-                    }
-                    ?>
-                    <tr>
-                        <td>
-                            <select name="zs_recipe_ingredients[ingredient][]" class="wc-enhanced-select zs-ingredient-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
-                                <?php if ($termId > 0 && $termName !== ''): ?>
-                                    <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
-                                <?php endif; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="number" step="0.001" min="0" name="zs_recipe_ingredients[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
-                        </td>
-                        <td>
-                            <select name="zs_recipe_ingredients[unit][]" style="width:100%;">
-                                <?php foreach ($units as $u => $label): ?>
-                                    <option value="<?php echo esc_attr($u); ?>" <?php selected($unit, $u); ?>><?php echo esc_html($label); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <button type="button" class="button zs-recipe-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-
-        <p style="margin-top:10px;">
-            <button type="button" class="button" id="zs-recipe-add-row"><?php esc_html_e('Add ingredient', 'zero-sense'); ?></button>
-        </p>
-
-        <script>
-            // Disable original script - we're using inline initialization
-            console.log('Zero Sense Recipes: Original script disabled, using inline initialization');
-        </script>
-        <?php
-        */
+        // Also add some hidden content to check in source
+        echo '<!-- ZS RECIPES DEBUG: ' . json_encode(['post_id' => $post->ID, 'ingredients_count' => count($ingredients)]) . ' -->';
     }
 
     public function saveRecipeMetabox(int $postId, WP_Post $post): void
