@@ -12,14 +12,20 @@ use ZeroSense\Features\WooCommerce\Schema\SchemaRegistry;
  */
 class MaterialMetabox extends AbstractSchemaMetabox
 {
+    private ?AbstractSchemaAdminPage $schema = null;
+    
     protected function getSchemaAdminPage(): AbstractSchemaAdminPage
     {
-        $schema = SchemaRegistry::getInstance()->get('material');
-        
-        if ($schema === null) {
-            throw new \RuntimeException('Material schema not registered');
+        if ($this->schema === null) {
+            $this->schema = SchemaRegistry::getInstance()->get('material');
+            
+            if ($this->schema === null) {
+                // If still not registered, create it directly
+                $this->schema = new MaterialSchema();
+                $this->schema->init();
+            }
         }
         
-        return $schema;
+        return $this->schema;
     }
 }

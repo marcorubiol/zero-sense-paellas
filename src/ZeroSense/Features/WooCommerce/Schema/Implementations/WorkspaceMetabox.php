@@ -12,14 +12,20 @@ use ZeroSense\Features\WooCommerce\Schema\SchemaRegistry;
  */
 class WorkspaceMetabox extends AbstractSchemaMetabox
 {
+    private ?AbstractSchemaAdminPage $schema = null;
+    
     protected function getSchemaAdminPage(): AbstractSchemaAdminPage
     {
-        $schema = SchemaRegistry::getInstance()->get('workspace');
-        
-        if ($schema === null) {
-            throw new \RuntimeException('Workspace schema not registered');
+        if ($this->schema === null) {
+            $this->schema = SchemaRegistry::getInstance()->get('workspace');
+            
+            if ($this->schema === null) {
+                // If still not registered, create it directly
+                $this->schema = new WorkspaceSchema();
+                $this->schema->init();
+            }
         }
         
-        return $schema;
+        return $this->schema;
     }
 }
