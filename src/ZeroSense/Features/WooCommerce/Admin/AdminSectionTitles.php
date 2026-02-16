@@ -150,19 +150,24 @@ JAVASCRIPT;
                 visibility: hidden;
             }
             
-            /* Estilos para los subtítulos descriptivos */
+            /* Estilos para los subtítulos descriptivos - Badge style */
             .zs-subtitle {
-                display: block;
-                font-size: 0.92em;
+                display: inline-block;
+                font-size: 0.88em;
                 font-weight: 600;
-                color: #2271b1;
-                margin-top: 0;
-                line-height: 1.3;
+                color: #135e96;
+                background: linear-gradient(135deg, #e7f3ff 0%, #d4e9ff 100%);
+                padding: 3px 10px 3px 8px;
+                border-radius: 4px;
+                margin-top: 4px;
+                line-height: 1.4;
+                border-left: 3px solid #2271b1;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
             
             /* Reducir espacio entre título y subtítulo */
             #order_data h3 br {
-                line-height: 0.3;
+                line-height: 0.5;
             }
         </style>
         <?php
