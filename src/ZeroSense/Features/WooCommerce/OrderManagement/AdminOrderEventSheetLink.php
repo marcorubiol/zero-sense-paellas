@@ -45,49 +45,30 @@ class AdminOrderEventSheetLink implements FeatureInterface
 
     public function init(): void
     {
-        // Classic orders list
-        add_filter('manage_edit-shop_order_columns', [$this, 'addColumn']);
-        add_action('manage_shop_order_posts_custom_column', [$this, 'renderColumn'], 10, 2);
+        // Classic orders list - add icon to order column
+        add_action('manage_shop_order_posts_custom_column', [$this, 'renderInOrderColumn'], 10, 2);
 
-        // HPOS orders list
-        add_filter('woocommerce_shop_order_list_table_columns', [$this, 'addColumn']);
-        add_action('woocommerce_shop_order_list_table_custom_column', [$this, 'renderColumnHpos'], 10, 2);
+        // HPOS orders list - add icon to order column
+        add_action('woocommerce_shop_order_list_table_custom_column', [$this, 'renderInOrderColumnHpos'], 10, 2);
     }
 
-    public function addColumn(array $columns): array
+    public function renderInOrderColumn(string $column, int $postId): void
     {
-        $newColumns = [];
-        
-        foreach ($columns as $key => $label) {
-            $newColumns[$key] = $label;
-            
-            // Add after order_number column
-            if ($key === 'order_number') {
-                $newColumns['event_sheet'] = __('Event Sheet', 'zero-sense');
-            }
-        }
-        
-        return $newColumns;
-    }
-
-    public function renderColumn(string $column, int $postId): void
-    {
-        if ($column !== 'event_sheet') {
+        if ($column !== 'order_number') {
             return;
         }
 
         $order = wc_get_order($postId);
         if (!$order instanceof WC_Order) {
-            echo '—';
             return;
         }
 
         $this->outputLink($order);
     }
 
-    public function renderColumnHpos(string $column, WC_Order $order): void
+    public function renderInOrderColumnHpos(string $column, WC_Order $order): void
     {
-        if ($column !== 'event_sheet') {
+        if ($column !== 'order_number') {
             return;
         }
 
