@@ -131,13 +131,9 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
         
         $orderId = $order->get_id();
         $savedData = $order->get_meta($metaKey, true);
-        error_log("[Schema Debug] RENDER - Schema: {$schemaKey}, Order: {$orderId}");
-        error_log("[Schema Debug] RENDER - Meta key: {$metaKey}");
-        error_log("[Schema Debug] RENDER - Saved data from DB: " . print_r($savedData, true));
         $savedData = is_array($savedData) ? $savedData : [];
 
         $fields = $this->getFieldsForOrder($orderId);
-        error_log("[Schema Debug] RENDER - Fields to display: " . print_r(array_keys($fields), true));
 
         wp_nonce_field('zs_schema_save_' . $schemaKey, 'zs_schema_nonce_' . $schemaKey);
         ?>
@@ -173,32 +169,22 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
         $nonceField = 'zs_schema_nonce_' . $schemaKey;
         $nonceAction = 'zs_schema_save_' . $schemaKey;
         
-        error_log("[Schema Debug] Save called for schema: {$schemaKey}, order: {$orderId}");
-        error_log("[Schema Debug] Looking for nonce field: {$nonceField}");
-        error_log("[Schema Debug] Nonce exists: " . (isset($_POST[$nonceField]) ? 'yes' : 'no'));
-        
         if (!isset($_POST[$nonceField]) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonceField])), $nonceAction)) {
-            error_log("[Schema Debug] Nonce verification failed for {$schemaKey}");
             return;
         }
 
         if (!current_user_can('edit_shop_order', $orderId)) {
-            error_log("[Schema Debug] User cannot edit shop order");
             return;
         }
 
         $postKey = 'zs_schema_' . $schemaKey;
         $incoming = $_POST[$postKey] ?? [];
-        error_log("[Schema Debug] Post key: {$postKey}");
-        error_log("[Schema Debug] Incoming data: " . print_r($incoming, true));
         
         if (!is_array($incoming)) {
-            error_log("[Schema Debug] Incoming data is not an array");
             return;
         }
 
         $allFields = $this->getAllFields();
-        error_log("[Schema Debug] All fields count: " . count($allFields));
         $saved = [];
 
         foreach ($allFields as $key => $fieldConfig) {
@@ -209,20 +195,15 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
             
             $saved[$key] = ['value' => $sanitizedValue];
         }
-
-        error_log("[Schema Debug] Saving to meta key: {$metaKey}");
-        error_log("[Schema Debug] Data to save: " . print_r($saved, true));
         
         // Use WooCommerce order object to save meta data
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
             $order->update_meta_data($metaKey, $saved);
             $order->save();
-            error_log("[Schema Debug] Data saved via WC_Order->save()");
         } else {
             // Fallback to direct update_post_meta
             update_post_meta($orderId, $metaKey, $saved);
-            error_log("[Schema Debug] Data saved via update_post_meta()");
         }
     }
 

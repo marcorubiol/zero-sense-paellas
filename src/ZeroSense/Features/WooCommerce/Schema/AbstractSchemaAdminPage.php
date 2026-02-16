@@ -651,17 +651,32 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
     {
         global $wpdb;
         
-        $search_pattern = '%' . $wpdb->esc_like('s:' . strlen($key) . ':"' . $key . '"') . '%';
+        $metaKey = $this->getMetaKey();
         
-        $count = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
-            WHERE meta_key = %s
-            AND meta_value LIKE %s",
-            $this->getMetaKey(),
-            $search_pattern
+        // Get all orders that have this meta key
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT post_id, meta_value FROM {$wpdb->postmeta} 
+            WHERE meta_key = %s",
+            $metaKey
         ));
         
-        return (int) $count;
+        $count = 0;
+        foreach ($results as $result) {
+            $data = maybe_unserialize($result->meta_value);
+            if (!is_array($data) || !isset($data[$key])) {
+                continue;
+            }
+            
+            $fieldData = $data[$key];
+            $value = is_array($fieldData) ? ($fieldData['value'] ?? '') : $fieldData;
+            
+            // Only count if value is not empty
+            if ($value !== '' && $value !== '0' && $value !== 0 && $value !== null) {
+                $count++;
+            }
+        }
+        
+        return $count;
     }
 
     protected function migrateSchema(array $schema): array
