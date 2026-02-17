@@ -357,14 +357,26 @@ class InventoryMetabox
                     align-items: center;
                     cursor: pointer;
                     user-select: none;
-                    padding: 15px;
-                    transition: background-color 0.2s ease;
+                    padding: 12px 15px;
+                    transition: all 0.2s ease;
                 }
                 .zs-stock-alerts-header:hover {
                     background-color: #f8f9fa;
                 }
                 .zs-stock-alerts-banner:not(.collapsed) .zs-stock-alerts-header {
-                    margin-bottom: 10px;
+                    padding: 15px;
+                    border-bottom: 1px solid #f0f0f1;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-header {
+                    border-bottom: none;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title {
+                    font-size: 13px;
+                    font-weight: 500;
+                    opacity: 0.85;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-summary {
+                    font-size: 12px;
                 }
                 .zs-stock-alerts-title {
                     font-weight: 600;
@@ -413,9 +425,11 @@ class InventoryMetabox
                 .zs-alert-count .dashicons.alert-low-stock {
                     color: #ffc107;
                 }
+                .zs-alert-count .dashicons.alert-resolved {
+                    color: #46b450;
+                }
                 .zs-alert-details {
-                    padding: 0 15px 15px 15px;
-                    border-top: 1px solid #f0f0f1;
+                    padding: 10px 15px 15px 15px;
                 }
                 .zs-alert-item {
                     padding: 8px 0;
