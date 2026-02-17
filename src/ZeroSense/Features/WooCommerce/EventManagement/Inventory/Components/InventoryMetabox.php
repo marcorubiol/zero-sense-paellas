@@ -398,7 +398,15 @@ class InventoryMetabox
                                                     <input 
                                                         type="number" 
                                                         name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
-                                                        value="<?php echo esc_attr(($hasOverride ? $overrideValue : $autoValue) ?: ''); ?>"
+                                                        value="<?php 
+                                                            $displayValue = $hasOverride ? $overrideValue : $autoValue;
+                                                            // Show 0 explicitly if it's a manual override, otherwise empty if 0
+                                                            if ($hasOverride && $displayValue == 0) {
+                                                                echo '0';
+                                                            } else {
+                                                                echo esc_attr($displayValue ?: '');
+                                                            }
+                                                        ?>"
                                                         data-auto="<?php echo esc_attr($autoValue); ?>"
                                                         min="0"
                                                         class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
@@ -564,6 +572,11 @@ class InventoryMetabox
                 if (normalizedValue != normalizedAuto) {
                     // User set a value different from auto (including 0 when auto is non-zero)
                     $input.addClass('zs-inventory-override');
+                    
+                    // Show '0' explicitly if manual override is 0
+                    if (normalizedValue === 0) {
+                        $input.val('0');
+                    }
                     
                     // Update badge to manual
                     var $container = $td.find('.zs-inventory-badge-container');
