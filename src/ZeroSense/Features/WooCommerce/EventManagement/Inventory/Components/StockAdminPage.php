@@ -220,10 +220,15 @@ class StockAdminPage
         }
         
         $changesJson = $_POST['changes'] ?? '';
-        error_log('Changes JSON: ' . $changesJson);
+        error_log('Changes JSON (raw): ' . $changesJson);
+        
+        // WordPress escapes slashes, need to strip them
+        $changesJson = stripslashes($changesJson);
+        error_log('Changes JSON (after stripslashes): ' . $changesJson);
         
         $changes = json_decode($changesJson, true);
         error_log('Decoded changes: ' . print_r($changes, true));
+        error_log('JSON decode error: ' . json_last_error_msg());
         
         if (empty($changes)) {
             error_log('Changes is empty!');
