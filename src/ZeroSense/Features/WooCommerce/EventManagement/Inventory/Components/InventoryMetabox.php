@@ -303,7 +303,7 @@ class InventoryMetabox
                                 <input 
                                     type="number" 
                                     name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
-                                    value="<?php echo esc_attr($hasOverride ? $overrideValue : $autoValue); ?>"
+                                    value="<?php echo esc_attr(($hasOverride ? $overrideValue : $autoValue) ?: ''); ?>"
                                     data-auto="<?php echo esc_attr($autoValue); ?>"
                                     min="0"
                                     class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
@@ -372,7 +372,9 @@ class InventoryMetabox
                 var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
                 var autoValue = $input.data('auto');
                 
-                $input.val(autoValue).removeClass('zs-inventory-override');
+                // Set to empty if auto is 0
+                var displayValue = (autoValue == '0') ? '' : autoValue;
+                $input.val(displayValue).removeClass('zs-inventory-override');
                 
                 // Update badge
                 var $td = $input.parent();
@@ -391,7 +393,9 @@ class InventoryMetabox
                 $('.zs-inventory-input').each(function() {
                     var $input = $(this);
                     var autoValue = $input.data('auto');
-                    $input.val(autoValue).removeClass('zs-inventory-override');
+                    // Set to empty if auto is 0
+                    var displayValue = (autoValue == '0') ? '' : autoValue;
+                    $input.val(displayValue).removeClass('zs-inventory-override');
                     
                     // Update badges
                     var $td = $input.parent();
@@ -420,7 +424,11 @@ class InventoryMetabox
                 // Track dirty field
                 dirtyFields.add(materialKey);
                 
-                if (currentValue !== '' && currentValue != autoValue) {
+                // Treat 0 as empty
+                var normalizedValue = (currentValue === '' || currentValue == '0') ? '' : currentValue;
+                var normalizedAuto = (autoValue == '0') ? '' : autoValue;
+                
+                if (normalizedValue !== '' && normalizedValue != normalizedAuto) {
                     $input.addClass('zs-inventory-override');
                     
                     // Update badge to manual
