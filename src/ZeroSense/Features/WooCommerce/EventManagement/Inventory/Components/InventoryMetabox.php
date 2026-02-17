@@ -473,6 +473,10 @@ class InventoryMetabox
             $('.zs-inventory-recalc-btn').on('click', function(e) {
                 e.preventDefault();
                 
+                if (!confirm('<?php echo esc_js(__('Are you sure you want to recalculate all materials?', 'zero-sense')); ?>')) {
+                    return;
+                }
+                
                 $('.zs-inventory-input').each(function() {
                     var $input = $(this);
                     var autoValue = $input.data('auto');
