@@ -151,6 +151,12 @@ class InventoryMetabox
                 .zs-inventory-lock-btn[data-locked="false"] {
                     color: #2271b1;
                 }
+                .zs-inventory-save-btn {
+                    color: #00a32a;
+                }
+                .zs-inventory-save-btn:hover {
+                    color: #008a20;
+                }
                 .zs-inventory-metabox table th:nth-child(2),
                 .zs-inventory-metabox table td:nth-child(2) {
                     width: 200px;
