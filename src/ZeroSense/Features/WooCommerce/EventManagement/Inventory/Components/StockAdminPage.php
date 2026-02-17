@@ -168,14 +168,6 @@ class StockAdminPage
                     <div class="zs-stock-accordion-content">
                         <div class="zs-stock-table-wrapper">
                             <table class="widefat striped zs-stock-table">
-                                <thead>
-                                    <tr>
-                                        <th class="zs-sticky-col"><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                                        <?php foreach ($serviceAreas as $area): ?>
-                                            <th><?php echo esc_html($area->name); ?></th>
-                                        <?php endforeach; ?>
-                                    </tr>
-                                </thead>
                                 <tbody>
                                     <?php 
                                     $currentCategory = '';
@@ -186,9 +178,10 @@ class StockAdminPage
                                             $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
                                     ?>
                                         <tr class="zs-category-header">
-                                            <td colspan="<?php echo count($serviceAreas) + 1; ?>">
-                                                <?php echo esc_html($categoryLabel); ?>
-                                            </td>
+                                            <td style="font-weight: 300;"><?php echo esc_html($categoryLabel); ?></td>
+                                            <?php foreach ($serviceAreas as $area): ?>
+                                                <td style="text-align: center; font-weight: 300;"><?php echo esc_html($area->name); ?></td>
+                                            <?php endforeach; ?>
                                         </tr>
                                     <?php endif; ?>
                                     
