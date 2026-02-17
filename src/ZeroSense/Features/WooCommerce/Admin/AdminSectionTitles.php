@@ -80,13 +80,9 @@ class AdminSectionTitles implements FeatureInterface
                         var editHtml = editLink.length ? editLink[0].outerHTML : '';
                         
                         if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            if (editLink.length) editLink.remove();
-                            var subtitle = '<span class="zs-subtitle">👤 Client' + (editHtml ? ' ' + editHtml : '') + '</span><br>';
-                            elem.prepend(subtitle);
+                            elem.append('<span class="zs-badge zs-badge-auto zs-section-badge">Client</span>');
                         } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            if (editLink.length) editLink.remove();
-                            var subtitle = '<span class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? ' ' + editHtml : '') + '</span><br>';
-                            elem.prepend(subtitle);
+                            elem.append('<span class="zs-badge zs-section-badge zs-section-badge-venue">Venue</span>');
                         }
                     });
                     
@@ -147,47 +143,21 @@ JAVASCRIPT;
         }
         ?>
         <style>
-            /* Hide titles initially to avoid visual jump */
+            /* Hide initially, flex row with badge right-aligned */
             #order_data h3 {
                 visibility: hidden;
-            }
-
-            /* Log-style left border card — same pattern as action items */
-            .zs-subtitle {
-                display: inline-flex;
+                display: flex;
                 align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                font-weight: 600;
-                color: var(--zs-mb-label-color, #1d2327);
-                background: var(--zs-bg-auto, #dbeafe);
-                padding: 4px 10px;
-                border-radius: 0 var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px) 0;
-                margin-top: 5px;
-                line-height: 1.4;
-                border-left: 3px solid var(--zs-color-auto, #2271b1);
+                justify-content: space-between;
             }
 
-            .zs-subtitle-venue {
-                background: var(--zs-bg-status, #ede9fe);
-                border-left-color: var(--zs-color-status, #7C3AED);
+            .zs-section-badge {
+                margin-left: auto;
             }
 
-            .zs-subtitle a.edit_address {
-                color: var(--zs-color-auto, #2271b1);
-                text-decoration: none;
-                font-size: 11px;
-                opacity: 0.75;
-                margin-left: 4px;
-            }
-
-            .zs-subtitle a.edit_address:hover {
-                opacity: 1;
-                text-decoration: underline;
-            }
-
-            #order_data h3 br {
-                line-height: 0.5;
+            .zs-section-badge-venue {
+                background: color-mix(in srgb, #7C3AED 12%, white 88%);
+                color: #7C3AED;
             }
         </style>
         <?php
