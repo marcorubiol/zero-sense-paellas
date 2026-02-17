@@ -518,7 +518,18 @@ button.zs-mb-link {
 
 /* Badge colors - shared across all metaboxes */
 
-/* Badge base styling for metaboxes */
+/* Badge base — sizing and shape, usable anywhere */
+.zs-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 3px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+/* Badge base styling for metaboxes (absolute positioning in log wrappers) */
 .zs-deposits-logs-metabox .zs-badge,
 .zs-email-logs-metabox .zs-badge,
 .zs-email-logs-metabox .zs-badge-type,
@@ -527,12 +538,6 @@ button.zs-mb-link {
     position: absolute;
     top: 8px;
     right: 8px;
-    padding: 2px 6px;
-    font-size: 10px;
-    font-weight: 600;
-    border-radius: 3px;
-    text-transform: uppercase;
-    line-height: 1;
 }
 
 /* Adjust calculator wrapper for badge positioning */
