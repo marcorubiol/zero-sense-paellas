@@ -125,13 +125,6 @@ class InventoryMetabox
                     margin: 0;
                 }
                 
-                .zs-inventory-category-header {
-                    background: #f0f0f1;
-                    font-weight: 600;
-                    font-size: 13px;
-                    text-transform: uppercase;
-                    color: #1d2327;
-                }
                 .zs-inventory-header {
                     display: flex;
                     justify-content: flex-end;
