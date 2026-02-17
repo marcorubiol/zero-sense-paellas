@@ -536,22 +536,23 @@ class InventoryMetabox
                                     <span><?php echo esc_html($materialLabel); ?>:</span>
                                     <span>
                                         <?php if ($alert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
-                                            <?php printf(__('Insufficient stock (need %d, have %d)', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
+                                            <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
                                         <?php elseif ($alert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
-                                            <?php printf(__('Max capacity used (%d/%d)', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
+                                            <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
                                         <?php else: ?>
-                                            <?php printf(__('Low stock (%d%% used)', 'zero-sense'), $alert['usage_percent']); ?>
+                                            <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $alert['usage_percent']); ?>
                                         <?php endif; ?>
                                     </span>
                                 </div>
                                 <?php if (!empty($alert['conflicts'])): ?>
                                     <div class="zs-alert-item-details">
-                                        <?php _e('Conflicts with:', 'zero-sense'); ?>
-                                        <?php foreach ($alert['conflicts'] as $conflict): ?>
+                                        <?php _e('Conflicts with other orders:', 'zero-sense'); ?>
+                                        <?php foreach ($alert['conflicts'] as $idx => $conflict): ?>
+                                            <?php if ($idx > 0) echo ', '; ?>
                                             <a href="<?php echo esc_url(admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')); ?>" 
-                                               class="zs-alert-conflict-link" 
-                                               target="_blank">
-                                                <?php printf(__('Order #%d (%d units)', 'zero-sense'), $conflict['order_id'], $conflict['quantity']); ?>
+                                               target="_blank" 
+                                               style="color: #2271b1;">
+                                                #<?php echo $conflict['order_id']; ?>
                                             </a>
                                         <?php endforeach; ?>
                                     </div>
@@ -656,16 +657,16 @@ class InventoryMetabox
                                                     <?php else: ?>
                                                         <div style="margin-top: 8px; font-size: 12px; color: #666;">
                                                             <?php if ($materialAlert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
-                                                                <?php printf(__('⚠️ Insufficient stock: need %d, have %d', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
+                                                                <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
                                                             <?php elseif ($materialAlert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
-                                                                <?php printf(__('⚠️ Max capacity: %d/%d used', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
+                                                                <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
                                                             <?php else: ?>
-                                                                <?php printf(__('⚠️ Low stock: %d%% used', 'zero-sense'), $materialAlert['usage_percent']); ?>
+                                                                <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $materialAlert['usage_percent']); ?>
                                                             <?php endif; ?>
                                                             
                                                             <?php if (!empty($materialAlert['conflicts'])): ?>
                                                                 <div style="margin-top: 4px;">
-                                                                    <?php _e('Conflicts:', 'zero-sense'); ?>
+                                                                    <?php _e('Conflicts with other orders:', 'zero-sense'); ?>
                                                                     <?php foreach ($materialAlert['conflicts'] as $idx => $conflict): ?>
                                                                         <?php if ($idx > 0) echo ', '; ?>
                                                                         <a href="<?php echo esc_url(admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')); ?>" 
