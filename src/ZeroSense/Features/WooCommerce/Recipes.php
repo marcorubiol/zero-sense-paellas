@@ -456,10 +456,20 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
+                                // Get already selected ingredient IDs
+                                var selectedIds = [];
+                                $('.zs-ingredient-select').each(function() {
+                                    var val = $(this).val();
+                                    if (val && !isNaN(val)) {
+                                        selectedIds.push(val);
+                                    }
+                                });
+                                
                                 return {
                                     action: 'zs_ingredient_search',
                                     nonce: nonce,
-                                    q: params.term || ''
+                                    q: params.term || '',
+                                    exclude: selectedIds.join(',')
                                 };
                             },
                             processResults: function(data) {
@@ -584,10 +594,20 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
+                                // Get already selected utensil IDs
+                                var selectedIds = [];
+                                $('.zs-utensil-select').each(function() {
+                                    var val = $(this).val();
+                                    if (val && !isNaN(val)) {
+                                        selectedIds.push(val);
+                                    }
+                                });
+                                
                                 return {
                                     action: 'zs_utensil_search',
                                     nonce: nonce,
-                                    q: params.term || ''
+                                    q: params.term || '',
+                                    exclude: selectedIds.join(',')
                                 };
                             },
                             processResults: function(data) {
@@ -817,6 +837,10 @@ class Recipes implements FeatureInterface
         }
 
         $q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
+        
+        // Get excluded IDs (already selected)
+        $exclude = isset($_GET['exclude']) ? sanitize_text_field(wp_unslash((string) $_GET['exclude'])) : '';
+        $excludeIds = array_filter(array_map('intval', explode(',', $exclude)));
 
         // Get all ingredients (we'll filter manually for case-insensitive search)
         $terms = get_terms([
@@ -833,6 +857,11 @@ class Recipes implements FeatureInterface
             
             foreach ($terms as $term) {
                 if ($term instanceof WP_Term) {
+                    // Skip if already selected
+                    if (in_array($term->term_id, $excludeIds, true)) {
+                        continue;
+                    }
+                    
                     // Normalize term name for comparison
                     $normalizedTermName = $this->normalizeIngredientName($term->name);
                     
@@ -846,6 +875,11 @@ class Recipes implements FeatureInterface
             // Empty query - return all ingredients
             foreach ($terms as $term) {
                 if ($term instanceof WP_Term) {
+                    // Skip if already selected
+                    if (in_array($term->term_id, $excludeIds, true)) {
+                        continue;
+                    }
+                    
                     $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
                 }
             }
@@ -939,6 +973,10 @@ class Recipes implements FeatureInterface
         }
 
         $q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
+        
+        // Get excluded IDs (already selected)
+        $exclude = isset($_GET['exclude']) ? sanitize_text_field(wp_unslash((string) $_GET['exclude'])) : '';
+        $excludeIds = array_filter(array_map('intval', explode(',', $exclude)));
 
         $terms = get_terms([
             'taxonomy' => self::TAX_UTENSIL,
@@ -953,6 +991,11 @@ class Recipes implements FeatureInterface
             
             foreach ($terms as $term) {
                 if ($term instanceof WP_Term) {
+                    // Skip if already selected
+                    if (in_array($term->term_id, $excludeIds, true)) {
+                        continue;
+                    }
+                    
                     $normalizedTermName = $this->normalizeIngredientName($term->name);
                     
                     if (mb_strpos($normalizedTermName, $normalizedQuery, 0, 'UTF-8') !== false) {
@@ -963,6 +1006,11 @@ class Recipes implements FeatureInterface
         } elseif (is_array($terms) && $q === '') {
             foreach ($terms as $term) {
                 if ($term instanceof WP_Term) {
+                    // Skip if already selected
+                    if (in_array($term->term_id, $excludeIds, true)) {
+                        continue;
+                    }
+                    
                     $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
                 }
             }
@@ -1181,21 +1229,33 @@ class Recipes implements FeatureInterface
         $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
         $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
 
-        $args = [
+        // Get all recipes
+        $recipes = get_posts([
             'post_type' => self::CPT,
             'posts_per_page' => -1,
             'fields' => 'ids',
-            'meta_query' => [
-                [
-                    'key' => $meta_key,
-                    'value' => sprintf(':"%d";', $term_id),
-                    'compare' => 'LIKE',
-                ],
-            ],
-        ];
+        ]);
 
-        $query = new \WP_Query($args);
-        $count = $query->post_count;
+        // Count manually by checking the meta
+        $count = 0;
+        foreach ($recipes as $recipe_id) {
+            $items = get_post_meta($recipe_id, $meta_key, true);
+            if (!is_array($items)) {
+                continue;
+            }
+            
+            foreach ($items as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                
+                $item_id = isset($item[$field_name]) ? (int) $item[$field_name] : 0;
+                if ($item_id === $term_id) {
+                    $count++;
+                    break; // Count each recipe only once
+                }
+            }
+        }
 
         if ($count === 0) {
             return '<span style="color:#999;">—</span>';
@@ -1221,23 +1281,36 @@ class Recipes implements FeatureInterface
         }
 
         $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
+        $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
         $term_name = get_term($term_id)->name ?? '';
 
-        $args = [
+        // Get all recipes
+        $recipes = get_posts([
             'post_type' => self::CPT,
             'posts_per_page' => -1,
             'fields' => 'ids',
-            'meta_query' => [
-                [
-                    'key' => $meta_key,
-                    'value' => sprintf(':"%d";', $term_id),
-                    'compare' => 'LIKE',
-                ],
-            ],
-        ];
+        ]);
 
-        $query = new \WP_Query($args);
-        $count = $query->post_count;
+        // Count manually by checking the meta
+        $count = 0;
+        foreach ($recipes as $recipe_id) {
+            $items = get_post_meta($recipe_id, $meta_key, true);
+            if (!is_array($items)) {
+                continue;
+            }
+            
+            foreach ($items as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                
+                $item_id = isset($item[$field_name]) ? (int) $item[$field_name] : 0;
+                if ($item_id === $term_id) {
+                    $count++;
+                    break; // Count each recipe only once
+                }
+            }
+        }
 
         if ($count > 0) {
             $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
