@@ -61,8 +61,15 @@
     border: 1px solid #ccd0d4;
     box-shadow: 0 1px 1px rgba(0,0,0,.04);
     margin-bottom: 60px;
-    overflow-x: visible;
+    overflow-x: auto;
     overflow-y: visible;
+}
+
+/* Remove border and shadow for tables inside accordions */
+.zs-stock-accordion .zs-stock-table-wrapper {
+    border: none;
+    box-shadow: none;
+    margin-bottom: 0;
 }
 
 .zs-stock-table {
@@ -80,6 +87,10 @@
     font-weight: 600;
     font-size: 13px;
     letter-spacing: 0.3px;
+}
+
+/* Only apply sticky to tables NOT inside accordions */
+.zs-stock-table-wrapper:not(.zs-stock-accordion .zs-stock-table-wrapper) .zs-stock-table thead th {
     position: sticky;
     top: 32px;
     z-index: 5;
@@ -119,6 +130,7 @@
 
 .zs-stock-table td.zs-sticky-col {
     position: sticky;
+    left: 0;
     z-index: 10;
     transform: translateZ(0);
 }
@@ -133,11 +145,15 @@
 
 .zs-stock-table th.zs-sticky-col {
     background: #f9f9f9;
-    z-index: 15;
     border-bottom: 2px solid #2271b1;
+}
+
+/* Only apply sticky to sticky columns NOT inside accordions */
+.zs-stock-table-wrapper:not(.zs-stock-accordion .zs-stock-table-wrapper) .zs-stock-table th.zs-sticky-col {
     position: sticky;
     top: 32px;
     left: 0;
+    z-index: 15;
     transform: translateZ(0);
 }
 
