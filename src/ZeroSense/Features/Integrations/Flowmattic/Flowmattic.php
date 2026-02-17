@@ -478,19 +478,19 @@ class Flowmattic implements FeatureInterface
             if ($emailStatus) {
                 switch ($emailStatus) {
                     case self::EMAIL_STATUS_AUTO:
-                        $badgeHtml = '<span class="zs-badge-type zs-badge-auto">AUTO</span>';
+                        $badgeHtml = '<span class="zs-badge zs-badge-auto">AUTO</span>';
                         $statusAttr = 'auto';
                         break;
                     case self::EMAIL_STATUS_MANUAL:
-                        $badgeHtml = '<span class="zs-badge-type zs-badge-man">MANUAL</span>';
+                        $badgeHtml = '<span class="zs-badge zs-badge-manual">MAN</span>';
                         $statusAttr = 'manual';
                         break;
                     case self::EMAIL_STATUS_ERROR:
-                        $badgeHtml = '<span class="zs-badge-type zs-badge-error">ERROR</span>';
+                        $badgeHtml = '<span class="zs-badge zs-badge-error">ERROR</span>';
                         $statusAttr = 'error';
                         break;
                     case self::EMAIL_STATUS_SKIPPED:
-                        $badgeHtml = '<span class="zs-badge-type zs-badge-skipped">SKIPPED</span>';
+                        $badgeHtml = '<span class="zs-badge zs-badge-skipped">SKIP</span>';
                         $statusAttr = 'skipped';
                         break;
                 }
