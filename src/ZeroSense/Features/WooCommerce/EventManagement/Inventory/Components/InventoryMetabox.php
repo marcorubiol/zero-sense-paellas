@@ -22,6 +22,7 @@ class InventoryMetabox
         // Priority 50: Run AFTER WooCommerce saves order items (priority 10-40)
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 50, 2);
         add_action('wp_ajax_zs_save_inventory', [$this, 'ajaxSave']);
+        add_action('wp_ajax_zs_clear_inventory_overrides', [$this, 'ajaxClearOverrides']);
     }
     
     /**
@@ -485,25 +486,52 @@ class InventoryMetabox
                     return;
                 }
                 
-                $('.zs-inventory-input').each(function() {
-                    var $input = $(this);
-                    var autoValue = $input.data('auto');
-                    // Set to empty if auto is 0
-                    var displayValue = (autoValue == '0') ? '' : autoValue;
-                    $input.val(displayValue).removeClass('zs-inventory-override');
-                    
-                    // Update badges
-                    var $td = $input.parent();
-                    var $container = $td.find('.zs-inventory-badge-container');
-                    if (autoValue > 0) {
-                        $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
-                    } else {
-                        $container.html('');
+                var $btn = $(this);
+                $btn.prop('disabled', true);
+                
+                // Clear all overrides from database via AJAX
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'zs_clear_inventory_overrides',
+                        nonce: nonce,
+                        order_id: orderId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Update UI
+                            $('.zs-inventory-input').each(function() {
+                                var $input = $(this);
+                                var autoValue = $input.data('auto');
+                                var displayValue = (autoValue == '0') ? '' : autoValue;
+                                $input.val(displayValue).removeClass('zs-inventory-override');
+                                
+                                // Update badges
+                                var $td = $input.parent();
+                                var $container = $td.find('.zs-inventory-badge-container');
+                                if (autoValue > 0) {
+                                    $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                                } else {
+                                    $container.html('');
+                                }
+                            });
+                            
+                            // Remove all reset icons
+                            $('.zs-inventory-reset-icon').remove();
+                            
+                            showToast('<?php echo esc_js(__('All materials recalculated', 'zero-sense')); ?>', 'success');
+                        } else {
+                            showToast('<?php echo esc_js(__('Error clearing overrides', 'zero-sense')); ?>', 'error');
+                        }
+                    },
+                    error: function() {
+                        showToast('<?php echo esc_js(__('Connection error', 'zero-sense')); ?>', 'error');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
                     }
                 });
-                
-                // Remove all reset icons
-                $('.zs-inventory-reset-icon').remove();
             });
             
             // Track manual changes
@@ -734,5 +762,40 @@ class InventoryMetabox
         ReservationManager::createOrUpdate($orderId, $final);
         
         wp_send_json_success(['message' => 'Inventory saved successfully']);
+    }
+    
+    /**
+     * Elimina todos los overrides manuales (Recalculate All)
+     */
+    public function ajaxClearOverrides(): void
+    {
+        check_ajax_referer('zs_inventory_ajax', 'nonce');
+        
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error(['message' => 'Insufficient permissions']);
+        }
+        
+        $orderId = (int) ($_POST['order_id'] ?? 0);
+        
+        if (!$orderId) {
+            wp_send_json_error(['message' => 'Invalid order ID']);
+        }
+        
+        $order = wc_get_order($orderId);
+        
+        if (!$order) {
+            wp_send_json_error(['message' => 'Order not found']);
+        }
+        
+        // Eliminar todos los overrides
+        ManualOverride::removeAll($orderId);
+        
+        // Recalcular materiales finales (solo automáticos)
+        $calculated = MaterialCalculator::calculate($order);
+        
+        // Actualizar reservas con valores automáticos
+        ReservationManager::createOrUpdate($orderId, $calculated);
+        
+        wp_send_json_success(['message' => 'All overrides cleared successfully']);
     }
 }
