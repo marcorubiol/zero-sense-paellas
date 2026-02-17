@@ -247,11 +247,24 @@ class EventDetailsMetabox
                             <label for="event_team_arrival_time">
                                 <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
                             </label>
-                            <input type="time" 
-                                   id="event_team_arrival_time" 
-                                   name="event_team_arrival_time" 
-                                   value="<?php echo esc_attr($teamArrivalTime); ?>" 
-                                   class="short">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="time" 
+                                       id="event_team_arrival_time" 
+                                       name="event_team_arrival_time" 
+                                       value="<?php echo esc_attr($teamArrivalTime); ?>" 
+                                       class="short">
+                                <button type="button" 
+                                        id="zs-recalculate-team-arrival-time" 
+                                        class="button button-secondary"
+                                        style="display: flex; align-items: center; gap: 4px;"
+                                        title="<?php esc_attr_e('Recalculate based on Paellas service time (3 hours before)', 'zero-sense'); ?>">
+                                    <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                    <?php esc_html_e('Auto', 'zero-sense'); ?>
+                                </button>
+                            </div>
+                            <p class="description" style="margin-top: 4px; font-size: 11px; color: #646970;">
+                                <?php esc_html_e('Click Auto to set this 3 hours before Paellas service time', 'zero-sense'); ?>
+                            </p>
                         </div>
                         <div class="zs-field"></div>
                     </div>
@@ -450,62 +463,47 @@ class EventDetailsMetabox
             'use strict';
             
             document.addEventListener('DOMContentLoaded', function() {
-                const recalcBtn = document.getElementById('zs-recalculate-starters-time');
                 const paellasTimeInput = document.getElementById('event_serving_time');
-                const startersTimeInput = document.getElementById('event_starters_service_time');
-                
-                if (!recalcBtn || !paellasTimeInput || !startersTimeInput) {
-                    return;
+
+                function subtractMinutes(timeStr, totalMinutes) {
+                    const parts = timeStr.split(':');
+                    if (parts.length !== 2) return null;
+                    let hours = parseInt(parts[0], 10);
+                    let minutes = parseInt(parts[1], 10);
+                    minutes -= totalMinutes % 60;
+                    hours -= Math.floor(totalMinutes / 60);
+                    if (minutes < 0) { minutes += 60; hours -= 1; }
+                    if (hours < 0) { hours += 24; }
+                    return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
                 }
-                
-                recalcBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const paellasTime = paellasTimeInput.value;
-                    
-                    if (!paellasTime) {
-                        alert('<?php echo esc_js(__('Please set Paellas Service Time first', 'zero-sense')); ?>');
-                        paellasTimeInput.focus();
-                        return;
-                    }
-                    
-                    // Calculate 30 minutes before
-                    const timeParts = paellasTime.split(':');
-                    if (timeParts.length !== 2) {
-                        alert('<?php echo esc_js(__('Invalid time format', 'zero-sense')); ?>');
-                        return;
-                    }
-                    
-                    let hours = parseInt(timeParts[0], 10);
-                    let minutes = parseInt(timeParts[1], 10);
-                    
-                    // Subtract 30 minutes
-                    minutes -= 30;
-                    
-                    if (minutes < 0) {
-                        minutes += 60;
-                        hours -= 1;
-                    }
-                    
-                    if (hours < 0) {
-                        hours += 24;
-                    }
-                    
-                    // Format back to HH:MM
-                    const startersTime = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
-                    
-                    startersTimeInput.value = startersTime;
-                    
-                    // Visual feedback
-                    const originalText = recalcBtn.innerHTML;
-                    recalcBtn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px;"></span> <?php echo esc_js(__('Done', 'zero-sense')); ?>';
-                    recalcBtn.disabled = true;
-                    
-                    setTimeout(function() {
-                        recalcBtn.innerHTML = originalText;
-                        recalcBtn.disabled = false;
-                    }, 1500);
-                });
+
+                function setupRecalcBtn(btnId, targetInputId, offsetMinutes) {
+                    const btn = document.getElementById(btnId);
+                    const targetInput = document.getElementById(targetInputId);
+                    if (!btn || !paellasTimeInput || !targetInput) return;
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const paellasTime = paellasTimeInput.value;
+                        if (!paellasTime) {
+                            alert('<?php echo esc_js(__('Please set Paellas Service Time first', 'zero-sense')); ?>');
+                            paellasTimeInput.focus();
+                            return;
+                        }
+                        const result = subtractMinutes(paellasTime, offsetMinutes);
+                        if (!result) {
+                            alert('<?php echo esc_js(__('Invalid time format', 'zero-sense')); ?>');
+                            return;
+                        }
+                        targetInput.value = result;
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<span class="dashicons dashicons-yes" style="font-size: 16px; width: 16px; height: 16px;"></span> <?php echo esc_js(__('Done', 'zero-sense')); ?>';
+                        btn.disabled = true;
+                        setTimeout(function() { btn.innerHTML = originalText; btn.disabled = false; }, 1500);
+                    });
+                }
+
+                setupRecalcBtn('zs-recalculate-starters-time', 'event_starters_service_time', 30);
+                setupRecalcBtn('zs-recalculate-team-arrival-time', 'event_team_arrival_time', 180);
             });
         })();
         </script>
@@ -591,6 +589,15 @@ class EventDetailsMetabox
                 $startersTime = $this->calculateStartersTime($servingTime);
                 if ($startersTime !== '') {
                     $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $startersTime);
+                }
+            }
+            
+            // Auto-calculate team arrival time if not set and serving time is provided
+            $existingTeamArrivalTime = $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true);
+            if (($existingTeamArrivalTime === '' || $existingTeamArrivalTime === null) && $servingTime !== '') {
+                $teamArrivalTime = $this->calculateTeamArrivalTime($servingTime);
+                if ($teamArrivalTime !== '') {
+                    $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $teamArrivalTime);
                 }
             }
         }
@@ -681,6 +688,25 @@ class EventDetailsMetabox
             }
             
             $time->modify('-30 minutes');
+            return $time->format('H:i');
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
+
+    private function calculateTeamArrivalTime(string $paellasTime): string
+    {
+        if ($paellasTime === '') {
+            return '';
+        }
+
+        try {
+            $time = \DateTime::createFromFormat('H:i', $paellasTime);
+            if ($time === false) {
+                return '';
+            }
+            
+            $time->modify('-3 hours');
             return $time->format('H:i');
         } catch (\Exception $e) {
             return '';
