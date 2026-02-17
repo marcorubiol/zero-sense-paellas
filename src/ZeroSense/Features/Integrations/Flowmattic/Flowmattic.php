@@ -503,9 +503,8 @@ class Flowmattic implements FeatureInterface
         
         // Show unavailable triggers section
         if (!empty($unavailableTriggers)) {
-            echo '<div class="zs-email-section-sep">';
-            echo '<button type="button" class="zs-mb-link" id="zs-toggle-unavailable">';
-            echo '<span class="dashicons dashicons-arrow-right" style="font-size:12px;line-height:1;margin-right:4px;"></span>';
+            echo '<div class="zs-email-section-sep zs-show-more">';
+            echo '<button type="button" class="zs-toggle-logs" id="zs-toggle-unavailable">';
             echo sprintf(esc_html__('Show %d unavailable actions', 'zero-sense'), count($unavailableTriggers));
             echo '</button>';
             
@@ -538,9 +537,8 @@ class Flowmattic implements FeatureInterface
         
         // Section 2: Automatic Email Actions
         if (!empty($statusTransitions)) {
-            echo '<div class="zs-email-section-sep">';
-            echo '<button type="button" class="zs-mb-link" id="zs-toggle-automatic-actions">';
-            echo '<span class="dashicons dashicons-arrow-right" style="font-size:12px;line-height:1;margin-right:4px;"></span>';
+            echo '<div class="zs-email-section-sep zs-show-more">';
+            echo '<button type="button" class="zs-toggle-logs" id="zs-toggle-automatic-actions">';
             echo sprintf(esc_html__('Show %d automatic actions', 'zero-sense'), count($statusTransitions));
             echo '</button>';
             
