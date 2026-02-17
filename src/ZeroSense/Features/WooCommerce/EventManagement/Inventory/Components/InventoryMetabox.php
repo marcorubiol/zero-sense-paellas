@@ -317,7 +317,7 @@ class InventoryMetabox
             
             <div class="zs-inventory-header">
                 <div class="zs-inventory-controls">
-                    <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-recalc-btn" disabled title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Recalculate all', 'zero-sense'); ?>
                     </button>
@@ -429,6 +429,8 @@ class InventoryMetabox
                     $lockBtn.attr('title', '<?php echo esc_js(__('Click to unlock for editing', 'zero-sense')); ?>');
                     $lockBtn.show();
                     $saveBtn.hide();
+                    // Disable recalculate button when locked
+                    $('.zs-inventory-recalc-btn').prop('disabled', true);
                 } else {
                     // Unlocked state: hide Unlock button, show Save & Lock
                     $inputs.prop('disabled', false);
@@ -441,6 +443,8 @@ class InventoryMetabox
                     $lockBtn.attr('data-locked', 'false');
                     $lockBtn.hide();
                     $saveBtn.show();
+                    // Enable recalculate button when unlocked
+                    $('.zs-inventory-recalc-btn').prop('disabled', false);
                 }
             });
             
@@ -496,8 +500,6 @@ class InventoryMetabox
                 
                 // Remove all reset icons
                 $('.zs-inventory-reset-icon').remove();
-                
-                alert('<?php echo esc_js(__('All materials recalculated from order data.', 'zero-sense')); ?>');
             });
             
             // Track manual changes
