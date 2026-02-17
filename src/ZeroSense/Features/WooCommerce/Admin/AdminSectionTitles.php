@@ -78,10 +78,10 @@ class AdminSectionTitles implements FeatureInterface
                         
                         if (firstWord === 'Billing' || firstWord === 'Facturación') {
                             if (editLink.length) editLink.remove();
-                            elem.after('<div class="zs-subtitle zs-subtitle-client">👤 Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                            elem.after('<div class="zs-subtitle zs-subtitle-client">Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
                             if (editLink.length) editLink.remove();
-                            elem.after('<div class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                            elem.after('<div class="zs-subtitle zs-subtitle-venue">Venue/Wedding Planner' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         }
                     });
                     
@@ -148,7 +148,7 @@ JAVASCRIPT;
                 margin-top: 2px !important;
             }
 
-            /* Card label above the heading */
+            /* Card label below the heading */
             .zs-subtitle {
                 display: flex;
                 align-items: center;
