@@ -12,10 +12,57 @@
     border: 1px solid #ccd0d4;
     box-shadow: 0 1px 1px rgba(0,0,0,.04);
     margin-top: 0;
+    gap: 15px;
+}
+
+.zs-stock-search {
+    flex: 1;
 }
 
 .zs-stock-search input {
     min-width: 300px;
+}
+
+.zs-stock-actions {
+    flex-shrink: 0;
+}
+
+.zs-lock-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid;
+}
+
+.zs-lock-toggle[data-locked="true"] {
+    background: #dc3232;
+    border-color: #dc3232;
+    color: white;
+}
+
+.zs-lock-toggle[data-locked="true"]:hover {
+    background: #c62d2d;
+    border-color: #c62d2d;
+}
+
+.zs-lock-toggle[data-locked="false"] {
+    background: #46b450;
+    border-color: #46b450;
+    color: white;
+}
+
+.zs-lock-toggle[data-locked="false"]:hover {
+    background: #3ea842;
+    border-color: #3ea842;
+}
+
+.zs-lock-toggle .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
 }
 
 .zs-stock-table-wrapper {
@@ -98,6 +145,14 @@
     width: 80px;
     text-align: center;
     padding: 5px;
+    transition: all 0.2s ease;
+}
+
+.zs-stock-table input.stock-input:disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #ddd;
 }
 
 .zs-stock-table input.stock-input.is-dirty {
@@ -177,11 +232,9 @@
     border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     z-index: 9999;
+    animation: slideIn 0.3s ease;
 }
 
 .zs-toast.show {
@@ -189,13 +242,23 @@
     transform: translateY(0);
 }
 
-.zs-toast-success {
-    background: #00a32a;
+.zs-toast.success {
+    background: #46b450;
     color: white;
 }
 
-.zs-toast-error {
-    background: #d63638;
+.zs-toast.error {
+    background: #dc3232;
+    color: white;
+}
+
+.zs-toast.warning {
+    background: #ffb900;
+    color: #1d2327;
+}
+
+.zs-toast.info {
+    background: #2271b1;
     color: white;
 }
 

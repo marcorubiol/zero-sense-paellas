@@ -5,13 +5,51 @@
         constructor() {
             this.dirtyFields = new Set();
             this.searchTimeout = null;
+            this.isLocked = true; // Always start locked
             this.init();
         }
         
         init() {
+            this.initLockToggle();
             this.initChangeTracking();
             this.initSearch();
             this.initSaveButtons();
+        }
+        
+        initLockToggle() {
+            const $lockBtn = $('.zs-lock-toggle');
+            
+            $lockBtn.on('click', () => {
+                if (!this.isLocked && this.dirtyFields.size > 0) {
+                    // Prevent locking with unsaved changes
+                    this.showToast('Please save your changes before locking the table.', 'warning');
+                    return;
+                }
+                
+                this.toggleLock();
+            });
+        }
+        
+        toggleLock() {
+            this.isLocked = !this.isLocked;
+            const $lockBtn = $('.zs-lock-toggle');
+            const $inputs = $('.stock-input');
+            
+            if (this.isLocked) {
+                // Lock the table
+                $inputs.prop('disabled', true);
+                $lockBtn.attr('data-locked', 'true');
+                $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
+                $lockBtn.find('.lock-text').text('Locked');
+                this.showToast('Table locked. Click the lock button to edit.', 'info');
+            } else {
+                // Unlock the table
+                $inputs.prop('disabled', false);
+                $lockBtn.attr('data-locked', 'false');
+                $lockBtn.find('.dashicons').removeClass('dashicons-lock').addClass('dashicons-unlock');
+                $lockBtn.find('.lock-text').text('Unlocked');
+                this.showToast('Table unlocked. You can now edit stock quantities.', 'success');
+            }
         }
         
         initChangeTracking() {
@@ -74,6 +112,10 @@
         
         initSaveButtons() {
             $('.zs-save-stock').on('click', () => {
+                if (this.isLocked) {
+                    this.showToast('Table is locked. Unlock it to make changes.', 'error');
+                    return;
+                }
                 this.saveChanges();
             });
         }

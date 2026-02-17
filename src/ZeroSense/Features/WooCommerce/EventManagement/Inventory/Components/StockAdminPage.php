@@ -48,14 +48,14 @@ class StockAdminPage
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
             ['dashicons'],
-            '1.1.4'
+            '1.2.0'
         );
         
         wp_enqueue_script(
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/stock-admin.js',
             ['jquery'],
-            '1.0.2',
+            '1.1.0',
             true
         );
         
@@ -116,6 +116,12 @@ class StockAdminPage
                         placeholder="<?php esc_attr_e('Search materials...', 'zero-sense'); ?>"
                         class="regular-text"
                     />
+                </div>
+                <div class="zs-stock-actions">
+                    <button type="button" class="button zs-lock-toggle" data-locked="true">
+                        <span class="dashicons dashicons-lock"></span>
+                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
+                    </button>
                 </div>
             </div>
             
@@ -178,6 +184,7 @@ class StockAdminPage
                                             data-key="<?php echo esc_attr($key); ?>"
                                             value="<?php echo esc_attr($quantity); ?>"
                                             min="0"
+                                            disabled
                                         />
                                     </td>
                                 <?php endforeach; ?>
