@@ -658,6 +658,8 @@ class Recipes implements FeatureInterface
         } else {
             $product->delete_meta_data(self::META_PRODUCT_RECIPE_ID);
         }
+        
+        $product->save();
     }
 
     private function resolveOriginalProductId(int $productId): int
