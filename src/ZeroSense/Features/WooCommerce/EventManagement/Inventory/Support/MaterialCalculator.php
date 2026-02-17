@@ -61,21 +61,54 @@ class MaterialCalculator
     
     /**
      * Cuenta staff por roles
+     * 
+     * Mapeo de roles específicos a categorías de ropa:
+     * - CUINER: Jefe de voluntarios, Cocineros, Ayudantes
+     * - CAMBRER: Camareros, Barra, Coqueteles, Tallador de pernil
      */
     private static function countStaff(array $staffData): array
     {
         $count = ['cuiner' => 0, 'cambrer' => 0];
         
-        foreach ($staffData as $roleSlug => $staffIds) {
-            if (empty($staffIds) || !is_array($staffIds)) {
+        // Roles que necesitan ropa de cocina (xaquetes, bandanes, davantals cuiners)
+        $cuinerRoles = [
+            'jefe-de-voluntarios',
+            'cocineros',
+            'ayudantes',
+        ];
+        
+        // Roles que necesitan ropa de servicio (davantals cambrers)
+        $cambrerRoles = [
+            'camareros',
+            'barra',
+            'coqueteles',
+            'tallador-de-pernil',
+        ];
+        
+        // El formato del meta es: [['role' => 'slug', 'staff_id' => id], ...]
+        foreach ($staffData as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'])) {
                 continue;
             }
             
-            // Mapear roles a categorías
-            if (in_array($roleSlug, ['jefe-de-voluntarios', 'cocineros', 'ayudantes'])) {
-                $count['cuiner'] += count($staffIds);
-            } elseif (in_array($roleSlug, ['camareros', 'barra', 'coqueteles', 'tallador-de-pernil'])) {
-                $count['cambrer'] += count($staffIds);
+            $roleSlug = $assignment['role'];
+            
+            // Obtener el term para verificar el slug
+            $term = get_term_by('slug', $roleSlug, 'zs_staff_role');
+            if (!$term) {
+                // Intentar por term_id si role es un ID
+                $term = get_term($roleSlug, 'zs_staff_role');
+            }
+            
+            if ($term && !is_wp_error($term)) {
+                $roleSlug = $term->slug;
+            }
+            
+            // Mapear a categorías
+            if (in_array($roleSlug, $cuinerRoles, true)) {
+                $count['cuiner']++;
+            } elseif (in_array($roleSlug, $cambrerRoles, true)) {
+                $count['cambrer']++;
             }
         }
         
