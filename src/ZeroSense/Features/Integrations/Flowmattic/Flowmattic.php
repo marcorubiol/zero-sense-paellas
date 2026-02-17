@@ -727,13 +727,13 @@ class Flowmattic implements FeatureInterface
                                     
                                     // Update button badge in real-time
                                     const wrapper = btn.parentElement;
-                                    let existingBadge = btn.querySelector('.zs-badge-type');
+                                    let existingBadge = btn.querySelector('.zs-badge');
 
                                     const badgeMap = {
-                                        manual: ['zs-badge-man',     'MANUAL'],
-                                        auto:   ['zs-badge-auto',    'AUTO'],
-                                        error:  ['zs-badge-error',   'ERROR'],
-                                        skipped:['zs-badge-skipped', 'SKIPPED'],
+                                        manual: ['zs-badge-manual', 'MAN'],
+                                        auto:   ['zs-badge-auto',   'AUTO'],
+                                        error:  ['zs-badge-error',  'ERROR'],
+                                        skipped:['zs-badge-skipped','SKIP'],
                                     };
                                     const statusClassMap = {
                                         manual: 'zs-email-status-manual',
@@ -745,11 +745,11 @@ class Flowmattic implements FeatureInterface
                                     if (badgeMap[st]) {
                                         const [badgeClass, badgeText] = badgeMap[st];
                                         if (existingBadge) {
-                                            existingBadge.className = 'zs-badge-type ' + badgeClass;
+                                            existingBadge.className = 'zs-badge ' + badgeClass;
                                             existingBadge.textContent = badgeText;
                                         } else {
                                             const span = document.createElement('span');
-                                            span.className = 'zs-badge-type ' + badgeClass;
+                                            span.className = 'zs-badge ' + badgeClass;
                                             span.textContent = badgeText;
                                             btn.appendChild(span);
                                         }
