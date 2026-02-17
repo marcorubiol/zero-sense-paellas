@@ -20,6 +20,7 @@ class InventoryMetabox
     {
         add_action('add_meta_boxes', [$this, 'addMetabox']);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20, 2);
+        add_action('wp_ajax_zs_save_inventory', [$this, 'ajaxSave']);
     }
     
     /**
@@ -195,6 +196,78 @@ class InventoryMetabox
                     display: block;
                     margin-top: 2px;
                 }
+                .zs-inventory-save-btn {
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
+                    z-index: 999;
+                    display: none;
+                    padding: 10px 20px;
+                    background: #2271b1;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    transition: all 0.2s ease;
+                }
+                .zs-inventory-save-btn:hover {
+                    background: #135e96;
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+                }
+                .zs-inventory-save-btn.show {
+                    display: block;
+                }
+                .zs-inventory-save-btn.is-saving {
+                    opacity: 0.7;
+                    pointer-events: none;
+                }
+                .zs-inventory-save-btn .dashicons {
+                    font-size: 18px;
+                    width: 18px;
+                    height: 18px;
+                    vertical-align: middle;
+                    margin-right: 4px;
+                }
+                .zs-inventory-toast {
+                    position: fixed;
+                    bottom: 110px;
+                    right: 30px;
+                    padding: 14px 20px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    z-index: 999;
+                    min-width: 250px;
+                    background: white;
+                    color: #1d2327;
+                    border-left: 4px solid;
+                    display: none;
+                }
+                .zs-inventory-toast.show {
+                    display: block;
+                    animation: slideIn 0.3s ease;
+                }
+                .zs-inventory-toast.success {
+                    border-left-color: #46b450;
+                }
+                .zs-inventory-toast.error {
+                    border-left-color: #dc3232;
+                }
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateX(100px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
             </style>
             
             <div class="zs-inventory-header">
@@ -275,13 +348,21 @@ class InventoryMetabox
             
             <p style="margin-top: 15px; color: #666; font-size: 13px;">
                 <strong><?php esc_html_e('Note:', 'zero-sense'); ?></strong>
-                <?php esc_html_e('Leave empty to use automatic calculation. Enter a value to override manually.', 'zero-sense'); ?>
+                <?php esc_html_e('Unlock the table to make changes. Changes are saved automatically via AJAX.', 'zero-sense'); ?>
             </p>
+            
+            <button type="button" class="zs-inventory-save-btn">
+                <span class="dashicons dashicons-yes"></span>
+                <?php esc_html_e('Save Changes', 'zero-sense'); ?>
+            </button>
         </div>
         
         <script>
         jQuery(document).ready(function($) {
             var isLocked = true;
+            var dirtyFields = new Set();
+            var orderId = <?php echo (int) $postId; ?>;
+            var nonce = '<?php echo wp_create_nonce('zs_inventory_ajax'); ?>';
             
             // Lock/Unlock toggle
             $('.zs-inventory-lock-btn').on('click', function(e) {
@@ -362,6 +443,9 @@ class InventoryMetabox
                 var materialKey = $input.attr('name').match(/\[([^\]]+)\]/)[1];
                 var $td = $input.parent();
                 
+                // Track dirty field
+                dirtyFields.add(materialKey);
+                
                 if (currentValue !== '' && currentValue != autoValue) {
                     $input.addClass('zs-inventory-override');
                     
@@ -386,7 +470,84 @@ class InventoryMetabox
                     // Remove reset icon
                     $input.closest('tr').find('.zs-inventory-reset-icon').remove();
                 }
+                
+                // Show save button
+                updateSaveButton();
             });
+            
+            // Update save button visibility
+            function updateSaveButton() {
+                if (dirtyFields.size > 0) {
+                    $('.zs-inventory-save-btn').addClass('show');
+                } else {
+                    $('.zs-inventory-save-btn').removeClass('show');
+                }
+            }
+            
+            // Save changes via AJAX
+            $('.zs-inventory-save-btn').on('click', function() {
+                if (dirtyFields.size === 0) return;
+                
+                var $btn = $(this);
+                $btn.addClass('is-saving');
+                
+                // Collect all field values
+                var data = {};
+                $('.zs-inventory-input').each(function() {
+                    var $input = $(this);
+                    var materialKey = $input.attr('name').match(/\[([^\]]+)\]/)[1];
+                    var value = $input.val();
+                    var autoValue = $input.data('auto');
+                    
+                    // Only send if different from auto or explicitly set
+                    if (value !== '' && value != autoValue) {
+                        data[materialKey] = value;
+                    }
+                });
+                
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'zs_save_inventory',
+                        nonce: nonce,
+                        order_id: orderId,
+                        inventory: data
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            dirtyFields.clear();
+                            updateSaveButton();
+                            showToast('<?php echo esc_js(__('Inventory saved successfully', 'zero-sense')); ?>', 'success');
+                        } else {
+                            showToast('<?php echo esc_js(__('Error saving inventory', 'zero-sense')); ?>', 'error');
+                        }
+                    },
+                    error: function() {
+                        showToast('<?php echo esc_js(__('Connection error', 'zero-sense')); ?>', 'error');
+                    },
+                    complete: function() {
+                        $btn.removeClass('is-saving');
+                    }
+                });
+            });
+            
+            // Show toast notification
+            function showToast(message, type) {
+                var $toast = $('<div class="zs-inventory-toast ' + type + '">' + message + '</div>');
+                $('body').append($toast);
+                
+                setTimeout(function() {
+                    $toast.addClass('show');
+                }, 100);
+                
+                setTimeout(function() {
+                    $toast.removeClass('show');
+                    setTimeout(function() {
+                        $toast.remove();
+                    }, 300);
+                }, 3000);
+            }
         });
         </script>
         <?php
@@ -422,5 +583,42 @@ class InventoryMetabox
         
         // Crear/actualizar reservas
         ReservationManager::createOrUpdate($postId, $final);
+    }
+    
+    /**
+     * Guarda los datos del metabox vía AJAX
+     */
+    public function ajaxSave(): void
+    {
+        check_ajax_referer('zs_inventory_ajax', 'nonce');
+        
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error(['message' => 'Insufficient permissions']);
+        }
+        
+        $orderId = (int) ($_POST['order_id'] ?? 0);
+        $inventory = $_POST['inventory'] ?? [];
+        
+        if (!$orderId) {
+            wp_send_json_error(['message' => 'Invalid order ID']);
+        }
+        
+        $order = wc_get_order($orderId);
+        
+        if (!$order) {
+            wp_send_json_error(['message' => 'Order not found']);
+        }
+        
+        // Guardar overrides manuales
+        ManualOverride::save($orderId, $inventory);
+        
+        // Calcular materiales finales
+        $calculated = MaterialCalculator::calculate($order);
+        $final = ManualOverride::apply($calculated, $inventory);
+        
+        // Crear/actualizar reservas
+        ReservationManager::createOrUpdate($orderId, $final);
+        
+        wp_send_json_success(['message' => 'Inventory saved successfully']);
     }
 }
