@@ -120,14 +120,27 @@ class InventoryMetabox
                     gap: 10px;
                     align-items: center;
                 }
-                .zs-inventory-metabox .button {
+                .zs-inventory-lock-btn,
+                .zs-inventory-recalc-btn {
                     display: inline-flex;
                     align-items: center;
                     gap: 6px;
+                    padding: 6px 12px;
+                    border: 1px solid #ddd;
+                    background: white;
+                    cursor: pointer;
+                    border-radius: 3px;
+                    font-size: 13px;
+                    transition: all 0.2s ease;
                 }
-                .zs-inventory-metabox .button:focus {
-                    box-shadow: none !important;
-                    border-color: #ddd !important;
+                .zs-inventory-lock-btn:hover,
+                .zs-inventory-recalc-btn:hover,
+                .zs-inventory-lock-btn:focus,
+                .zs-inventory-recalc-btn:focus {
+                    background: #f5f5f5;
+                    border-color: #999;
+                    box-shadow: none;
+                    outline: none;
                 }
                 .zs-inventory-lock-btn[data-locked="true"] {
                     color: #d63638;
@@ -186,11 +199,11 @@ class InventoryMetabox
                     <strong><?php esc_html_e('Inventory & Materials', 'zero-sense'); ?></strong>
                 </div>
                 <div class="zs-inventory-controls">
-                    <button type="button" class="button zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Recalculate All', 'zero-sense'); ?>
                     </button>
-                    <button type="button" class="button zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
                         <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
                     </button>

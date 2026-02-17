@@ -31,11 +31,21 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 13px;
+    transition: all 0.2s ease;
 }
 
+.zs-lock-toggle:hover,
 .zs-lock-toggle:focus {
-    box-shadow: none !important;
-    border-color: #ddd !important;
+    background: #f5f5f5;
+    border-color: #999;
+    box-shadow: none;
+    outline: none;
 }
 
 .zs-lock-toggle[data-locked="true"] {
