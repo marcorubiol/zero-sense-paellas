@@ -247,7 +247,7 @@
     background: #e8e8e9;
     position: sticky;
     top: 0;
-    z-index: 5;
+    z-index: 11;
 }
 
 .zs-stock-table tr.zs-category-header td {
@@ -268,7 +268,7 @@
     text-align: left;
     position: sticky;
     left: 0;
-    z-index: 6;
+    z-index: 12;
 }
 
 .zs-stock-table tr.zs-category-header:hover {
