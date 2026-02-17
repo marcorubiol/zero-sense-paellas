@@ -199,9 +199,11 @@ class StaffAssignmentMetabox
         
         // Prepare staff data by role for JavaScript
         $staffByRole = [];
+        $roleLabels = [];
         foreach ($roles as $roleSlug => $roleName) {
             $staffByRoleMembership = $this->getStaffByRoleMembership($roleSlug);
             $staffByRole[$roleSlug] = [];
+            $roleLabels[$roleSlug] = $roleName;
             
             // Add staff with role
             foreach ($staffByRoleMembership['with_role'] as $staff) {
@@ -228,6 +230,7 @@ class StaffAssignmentMetabox
         ?>
         <script>
         var zsStaffByRole = <?php echo wp_json_encode($staffByRole); ?>;
+        var zsRoleLabels = <?php echo wp_json_encode($roleLabels); ?>;
         </script>
         <div class="zs-staff-assignment-wrapper">
             <?php foreach ($roles as $roleSlug => $roleName): ?>
@@ -567,9 +570,12 @@ class StaffAssignmentMetabox
                             }
                         });
                         
+                        // Get role label
+                        var roleLabel = (typeof zsRoleLabels !== 'undefined' && zsRoleLabels[role]) ? zsRoleLabels[role] : role;
+                        
                         // Add optgroup for staff with role
                         if (withRole.length > 0) {
-                            var $optgroupWith = $('<optgroup label="' + role + '"></optgroup>');
+                            var $optgroupWith = $('<optgroup label="' + roleLabel + '"></optgroup>');
                             $.each(withRole, function(index, staff) {
                                 var $option = $('<option></option>')
                                     .val(staff.id)
@@ -701,6 +707,43 @@ class StaffAssignmentMetabox
             }
             .zs-hidden {
                 display: none !important;
+            }
+            
+            /* SelectWoo optgroup styling */
+            .select2-container--default .select2-results__group {
+                font-weight: 600;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: #1d2327;
+                padding: 8px 12px 4px;
+                background: #f6f7f7;
+                border-bottom: 1px solid #dcdcde;
+            }
+            
+            .select2-container--default .select2-results__option[aria-selected] {
+                padding-left: 20px;
+            }
+            
+            /* Make dropdown more compact */
+            .select2-container--default .select2-results__option {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            /* Different background for "Others" group */
+            .select2-results__options[aria-expanded] > .select2-results__option:not([role="group"]) {
+                background: #fff;
+            }
+            
+            /* Highlight options from "Others" group with subtle background */
+            .select2-results__options .select2-results__option[data-has-role="false"] {
+                background: #f9f9f9;
+                font-style: italic;
+            }
+            
+            .select2-results__options .select2-results__option[data-has-role="false"]:hover {
+                background: #e8f4f8 !important;
             }
         </style>
         <?php
