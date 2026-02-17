@@ -199,10 +199,6 @@ class InventoryMetabox
                     display: block;
                     margin-top: 2px;
                 }
-                .zs-inventory-save-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
                 .zs-inventory-save-btn.is-saving {
                     opacity: 0.7;
                     pointer-events: none;
@@ -252,15 +248,15 @@ class InventoryMetabox
                 <div class="zs-inventory-controls">
                     <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
-                        <?php esc_html_e('Recalculate All', 'zero-sense'); ?>
+                        <?php esc_html_e('Recalculate', 'zero-sense'); ?>
                     </button>
                     <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
-                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
+                        <span class="lock-text"><?php esc_html_e('Unlock', 'zero-sense'); ?></span>
                     </button>
-                    <button type="button" class="zs-inventory-save-btn" disabled title="<?php esc_attr_e('Save inventory changes', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-save-btn" style="display:none;" title="<?php esc_attr_e('Save changes and lock table', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-download"></span>
-                        <?php esc_html_e('Save', 'zero-sense'); ?>
+                        <?php esc_html_e('Save & Lock', 'zero-sense'); ?>
                     </button>
                 </div>
             </div>
@@ -342,24 +338,28 @@ class InventoryMetabox
             $('.zs-inventory-lock-btn').on('click', function(e) {
                 e.preventDefault();
                 isLocked = !isLocked;
-                var $btn = $(this);
+                var $lockBtn = $(this);
+                var $saveBtn = $('.zs-inventory-save-btn');
                 var $inputs = $('.zs-inventory-input');
                 var $resetIcons = $('.zs-inventory-reset-icon');
                 
                 if (isLocked) {
+                    // Locked state: show Unlock button, hide Save & Lock
                     $inputs.prop('disabled', true);
                     $resetIcons.addClass('hidden');
-                    $btn.attr('data-locked', 'true');
-                    $btn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
-                    $btn.find('.lock-text').text('<?php echo esc_js(__('Locked', 'zero-sense')); ?>');
-                    $btn.attr('title', '<?php echo esc_js(__('Click to unlock for editing', 'zero-sense')); ?>');
+                    $lockBtn.attr('data-locked', 'true');
+                    $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
+                    $lockBtn.find('.lock-text').text('<?php echo esc_js(__('Unlock', 'zero-sense')); ?>');
+                    $lockBtn.attr('title', '<?php echo esc_js(__('Click to unlock for editing', 'zero-sense')); ?>');
+                    $lockBtn.show();
+                    $saveBtn.hide();
                 } else {
+                    // Unlocked state: hide Unlock button, show Save & Lock
                     $inputs.prop('disabled', false);
                     $resetIcons.removeClass('hidden');
-                    $btn.attr('data-locked', 'false');
-                    $btn.find('.dashicons').removeClass('dashicons-lock').addClass('dashicons-unlock');
-                    $btn.find('.lock-text').text('<?php echo esc_js(__('Unlocked', 'zero-sense')); ?>');
-                    $btn.attr('title', '<?php echo esc_js(__('Click to lock', 'zero-sense')); ?>');
+                    $lockBtn.attr('data-locked', 'false');
+                    $lockBtn.hide();
+                    $saveBtn.show();
                 }
             });
             
@@ -453,23 +453,10 @@ class InventoryMetabox
                     $input.closest('tr').find('.zs-inventory-reset-icon').remove();
                 }
                 
-                // Show save button
-                updateSaveButton();
             });
             
-            // Update save button state
-            function updateSaveButton() {
-                if (dirtyFields.size > 0) {
-                    $('.zs-inventory-save-btn').prop('disabled', false);
-                } else {
-                    $('.zs-inventory-save-btn').prop('disabled', true);
-                }
-            }
-            
-            // Save changes via AJAX
+            // Save & Lock
             $('.zs-inventory-save-btn').on('click', function() {
-                if (dirtyFields.size === 0) return;
-                
                 var $btn = $(this);
                 $btn.addClass('is-saving');
                 
@@ -499,8 +486,22 @@ class InventoryMetabox
                     success: function(response) {
                         if (response.success) {
                             dirtyFields.clear();
-                            updateSaveButton();
-                            showToast('<?php echo esc_js(__('Inventory saved successfully', 'zero-sense')); ?>', 'success');
+                            
+                            // Lock the table after saving
+                            isLocked = true;
+                            var $lockBtn = $('.zs-inventory-lock-btn');
+                            var $inputs = $('.zs-inventory-input');
+                            var $resetIcons = $('.zs-inventory-reset-icon');
+                            
+                            $inputs.prop('disabled', true);
+                            $resetIcons.addClass('hidden');
+                            $lockBtn.attr('data-locked', 'true');
+                            $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
+                            $lockBtn.find('.lock-text').text('<?php echo esc_js(__('Unlock', 'zero-sense')); ?>');
+                            $lockBtn.show();
+                            $btn.hide();
+                            
+                            showToast('<?php echo esc_js(__('Inventory saved and locked', 'zero-sense')); ?>', 'success');
                         } else {
                             showToast('<?php echo esc_js(__('Error saving inventory', 'zero-sense')); ?>', 'error');
                         }
