@@ -426,6 +426,18 @@ class BricksDynamicTags implements FeatureInterface
             'group' => 'WooCommerce',
         ];
 
+        $tags[] = [
+            'name' => '{woo_zs_order_utensils_total}',
+            'label' => 'Order Utensils (Total Calculated)',
+            'group' => 'WooCommerce',
+        ];
+
+        $tags[] = [
+            'name' => '{woo_zs_order_utensils_simple}',
+            'label' => 'Order Utensils (Simple - Only Total)',
+            'group' => 'WooCommerce',
+        ];
+
         return $tags;
     }
 
@@ -592,6 +604,14 @@ class BricksDynamicTags implements FeatureInterface
 
         if ($tag === '{woo_zs_order_ingredients_simple}') {
             return $this->getOrderIngredientsSimple($post);
+        }
+
+        if ($tag === '{woo_zs_order_utensils_total}') {
+            return $this->getOrderUtensilsTotal($post);
+        }
+
+        if ($tag === '{woo_zs_order_utensils_simple}') {
+            return $this->getOrderUtensilsSimple($post);
         }
 
         return $tag;

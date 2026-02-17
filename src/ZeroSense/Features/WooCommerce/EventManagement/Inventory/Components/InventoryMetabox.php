@@ -477,7 +477,7 @@ class InventoryMetabox
                     height: 18px;
                     font-size: 18px;
                     flex-shrink: 0;
-                    margin-top: 3px;
+                    margin-top: 1px;
                 }
                 .zs-alert-item-title .dashicons.alert-critical {
                     color: #dc3545;
