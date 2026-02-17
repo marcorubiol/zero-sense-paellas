@@ -147,21 +147,22 @@
             saveBtn.prop('disabled', true);
             saveBtn.addClass('is-saving');
             
-            const requestBody = {
+            // Prepare FormData for WordPress AJAX
+            const formData = new FormData();
+            formData.append('action', 'zs_update_stock');
+            formData.append('nonce', zsStockAdmin.nonce);
+            formData.append('changes', JSON.stringify(changedData));
+            
+            console.log('Request data:', {
                 action: 'zs_update_stock',
                 nonce: zsStockAdmin.nonce,
                 changes: changedData
-            };
-            
-            console.log('Request body:', requestBody);
+            });
             
             // AJAX: Solo actualiza campos modificados
             fetch(zsStockAdmin.ajaxUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
+                body: formData
             })
             .then(response => {
                 console.log('Response status:', response.status);

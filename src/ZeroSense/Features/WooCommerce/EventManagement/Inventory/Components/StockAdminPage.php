@@ -55,7 +55,7 @@ class StockAdminPage
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/stock-admin.js',
             ['jquery'],
-            '1.1.4',
+            '1.1.5',
             true
         );
         
@@ -119,8 +119,8 @@ class StockAdminPage
                 </div>
                 <div class="zs-stock-actions">
                     <button type="button" class="zs-lock-toggle" data-locked="true" title="<?php esc_attr_e('Click to unlock table for editing', 'zero-sense'); ?>">
-                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
                         <span class="dashicons dashicons-lock"></span>
+                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
                     </button>
                 </div>
             </div>
@@ -215,8 +215,8 @@ class StockAdminPage
             wp_send_json_error(['message' => 'Insufficient permissions']);
         }
         
-        $data = json_decode(file_get_contents('php://input'), true);
-        $changes = $data['changes'] ?? [];
+        $changesJson = $_POST['changes'] ?? '';
+        $changes = json_decode($changesJson, true);
         
         if (empty($changes)) {
             wp_send_json_error(['message' => 'No changes to save']);
