@@ -115,7 +115,16 @@ class InventoryMetabox
                     color: #2c3338;
                     font-weight: 500;
                     cursor: default;
+                    -moz-appearance: textfield;
                 }
+                
+                /* Hide arrows in Chrome, Safari, Edge when disabled */
+                .zs-inventory-metabox input[type="number"]:disabled::-webkit-outer-spin-button,
+                .zs-inventory-metabox input[type="number"]:disabled::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                
                 .zs-inventory-category-header {
                     background: #f0f0f1;
                     font-weight: 600;
