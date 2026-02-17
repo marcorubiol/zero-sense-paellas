@@ -89,23 +89,6 @@ class InventoryMetabox
         ?>
         <div class="zs-inventory-metabox">
             <style>
-                .zs-inventory-metabox table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-                .zs-inventory-metabox th,
-                .zs-inventory-metabox td {
-                    padding: 8px;
-                    text-align: left;
-                    border-bottom: 1px solid #ddd;
-                }
-                .zs-inventory-metabox th {
-                    background: #f5f5f5;
-                    font-weight: 600;
-                }
-                .zs-inventory-metabox input[type="number"] {
-                    width: 80px;
-                }
                 .zs-inventory-metabox input[type="number"]:disabled {
                     background: transparent;
                     border: none;
@@ -137,24 +120,6 @@ class InventoryMetabox
                     gap: 10px;
                     align-items: center;
                 }
-                .zs-inventory-lock-btn,
-                .zs-inventory-recalc-btn {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                    padding: 6px 12px;
-                    border: 1px solid #ddd;
-                    background: white;
-                    cursor: pointer;
-                    border-radius: 3px;
-                    font-size: 13px;
-                    transition: all 0.2s ease;
-                }
-                .zs-inventory-lock-btn:hover,
-                .zs-inventory-recalc-btn:hover {
-                    background: #f5f5f5;
-                    border-color: #999;
-                }
                 .zs-inventory-lock-btn[data-locked="true"] {
                     color: #d63638;
                 }
@@ -180,14 +145,15 @@ class InventoryMetabox
                 }
                 .zs-inventory-reset-icon {
                     cursor: pointer;
-                    color: #d63638;
-                    margin-left: 6px;
-                    font-size: 16px;
+                    color: #2271b1;
                     transition: transform 0.2s ease;
                 }
                 .zs-inventory-reset-icon:hover {
                     transform: rotate(-45deg);
-                    color: #a00;
+                    color: #135e96;
+                }
+                .zs-inventory-reset-icon.hidden {
+                    display: none;
                 }
                 .zs-inventory-description {
                     font-size: 11px;
@@ -203,18 +169,18 @@ class InventoryMetabox
                     <strong><?php esc_html_e('Inventory & Materials', 'zero-sense'); ?></strong>
                 </div>
                 <div class="zs-inventory-controls">
-                    <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
+                    <button type="button" class="button zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Recalculate All', 'zero-sense'); ?>
                     </button>
-                    <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
+                    <button type="button" class="button zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
                         <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
                     </button>
                 </div>
             </div>
             
-            <table>
+            <table class="widefat striped">
                 <thead>
                     <tr>
                         <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
@@ -261,7 +227,7 @@ class InventoryMetabox
                             </td>
                             <td>
                                 <?php if ($hasOverride): ?>
-                                    <span class="dashicons dashicons-update zs-inventory-reset-icon" 
+                                    <span class="dashicons dashicons-update zs-inventory-reset-icon hidden" 
                                        data-material="<?php echo esc_attr($materialKey); ?>"
                                        title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
                                     </span>
@@ -290,15 +256,18 @@ class InventoryMetabox
                 isLocked = !isLocked;
                 var $btn = $(this);
                 var $inputs = $('.zs-inventory-input');
+                var $resetIcons = $('.zs-inventory-reset-icon');
                 
                 if (isLocked) {
                     $inputs.prop('disabled', true);
+                    $resetIcons.addClass('hidden');
                     $btn.attr('data-locked', 'true');
                     $btn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
                     $btn.find('.lock-text').text('<?php echo esc_js(__('Locked', 'zero-sense')); ?>');
                     $btn.attr('title', '<?php echo esc_js(__('Click to unlock for editing', 'zero-sense')); ?>');
                 } else {
                     $inputs.prop('disabled', false);
+                    $resetIcons.removeClass('hidden');
                     $btn.attr('data-locked', 'false');
                     $btn.find('.dashicons').removeClass('dashicons-lock').addClass('dashicons-unlock');
                     $btn.find('.lock-text').text('<?php echo esc_js(__('Unlocked', 'zero-sense')); ?>');
