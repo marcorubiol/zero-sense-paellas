@@ -149,6 +149,14 @@
     color: #2271b1;
 }
 
+button.zs-mb-link {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    appearance: none;
+}
+
 .zs-mb-link:hover {
     color: #135e96;
     text-decoration: underline;
