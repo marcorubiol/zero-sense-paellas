@@ -547,12 +547,13 @@ class InventoryMetabox
                 // Track dirty field
                 dirtyFields.add(materialKey);
                 
-                // Treat 0 as empty
-                var normalizedValue = (currentValue === '' || currentValue == '0') ? 0 : parseInt(currentValue);
-                var normalizedAuto = (autoValue == '0') ? 0 : parseInt(autoValue);
+                // Normalize values (treat empty as 0)
+                var normalizedValue = (currentValue === '' || currentValue === null) ? 0 : parseInt(currentValue);
+                var normalizedAuto = (autoValue === '' || autoValue === null) ? 0 : parseInt(autoValue);
                 
-                if (normalizedValue !== 0 && normalizedValue != normalizedAuto) {
-                    // User set a non-zero value different from auto
+                // Check if value differs from auto
+                if (normalizedValue != normalizedAuto) {
+                    // User set a value different from auto (including 0 when auto is non-zero)
                     $input.addClass('zs-inventory-override');
                     
                     // Update badge to manual
@@ -563,7 +564,7 @@ class InventoryMetabox
                     var $resetIcon = $td.find('.zs-inventory-reset-icon');
                     $resetIcon.removeClass('hidden');
                 } else {
-                    // Value matches auto or is 0/empty
+                    // Value matches auto
                     $input.removeClass('zs-inventory-override');
                     
                     // Update badge: only show AUTO if auto value is > 0
@@ -571,7 +572,7 @@ class InventoryMetabox
                     if (normalizedAuto > 0) {
                         $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     } else {
-                        // Auto is 0 or empty: no badge
+                        // Auto is 0 and value is 0: no badge
                         $container.html('');
                     }
                     
