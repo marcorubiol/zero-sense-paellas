@@ -11,110 +11,296 @@ class MaterialDefinitions
     public static function getAll(): array
     {
         return [
-            // Paellas
+            // PAELLES
+            [
+                'key' => 'paella_55cm',
+                'label' => 'Paella 55cm (4-6 pax)',
+                'category' => 'paelles',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'paella_65cm',
+                'label' => 'Paella 65cm (6-9 pax)',
+                'category' => 'paelles',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'paella_70cm',
+                'label' => 'Paella 70cm (8-12 pax)',
+                'category' => 'paelles',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'paella_80cm',
+                'label' => 'Paella 80cm (12-15 pax)',
+                'category' => 'paelles',
+                'unit' => 'u',
+            ],
             [
                 'key' => 'paella_90cm',
-                'label' => 'Paellas 90cm',
-                'category' => 'paellas',
+                'label' => 'Paella 90cm (15-25 pax)',
+                'category' => 'paelles',
                 'unit' => 'u',
             ],
             [
                 'key' => 'paella_100cm',
-                'label' => 'Paellas 100cm',
-                'category' => 'paellas',
+                'label' => 'Paella 100cm (25-40 pax)',
+                'category' => 'paelles',
                 'unit' => 'u',
             ],
             [
-                'key' => 'paella_110cm',
-                'label' => 'Paellas 110cm',
-                'category' => 'paellas',
+                'key' => 'paella_115cm',
+                'label' => 'Paella 115cm (40-60 pax)',
+                'category' => 'paelles',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'paella_135cm',
+                'label' => 'Paella 135cm (60-80 pax)',
+                'category' => 'paelles',
                 'unit' => 'u',
             ],
             
-            // Cremadores
+            // CREMADORS
+            [
+                'key' => 'cremador_50cm',
+                'label' => 'Cremador 50-60cm',
+                'category' => 'cremadors',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'cremador_70cm',
+                'label' => 'Cremador 70cm',
+                'category' => 'cremadors',
+                'unit' => 'u',
+            ],
             [
                 'key' => 'cremador_90cm',
-                'label' => 'Cremadores 90cm',
-                'category' => 'cremadores',
-                'unit' => 'u',
-            ],
-            [
-                'key' => 'cremador_100cm',
-                'label' => 'Cremadores 100cm',
-                'category' => 'cremadores',
-                'unit' => 'u',
-            ],
-            [
-                'key' => 'cremador_110cm',
-                'label' => 'Cremadores 110cm',
-                'category' => 'cremadores',
+                'label' => 'Cremador 90cm',
+                'category' => 'cremadors',
                 'unit' => 'u',
             ],
             
-            // Bombonas
+            // EQUIPAMENT CUINA
             [
-                'key' => 'bombona_gas',
-                'label' => 'Bombonas de Gas',
-                'category' => 'gas',
+                'key' => 'potes_tripodes',
+                'label' => 'Potes / Trípodes',
+                'category' => 'equipament_cuina',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'buta',
+                'label' => 'Butà',
+                'category' => 'equipament_cuina',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'cassoles',
+                'label' => 'Cassoles',
+                'category' => 'equipament_cuina',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'catifes',
+                'label' => 'Catifes',
+                'category' => 'equipament_cuina',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'poals_fems',
+                'label' => 'Poals Fems',
+                'category' => 'equipament_cuina',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'vitro_cremadors',
+                'label' => 'Vitro / Cremadors',
+                'category' => 'equipament_cuina',
                 'unit' => 'u',
             ],
             
-            // Mesas
+            // ROBA PERSONAL
             [
-                'key' => 'mesa_rectangular',
-                'label' => 'Mesas Rectangulares',
-                'category' => 'mobiliario',
+                'key' => 'xaquetes',
+                'label' => 'Xaquetes',
+                'category' => 'roba_personal',
                 'unit' => 'u',
             ],
             [
-                'key' => 'mesa_redonda',
-                'label' => 'Mesas Redondas',
-                'category' => 'mobiliario',
+                'key' => 'bandanes',
+                'label' => 'Bandanes',
+                'category' => 'roba_personal',
                 'unit' => 'u',
             ],
-            
-            // Sillas
             [
-                'key' => 'silla_plegable',
-                'label' => 'Sillas Plegables',
-                'category' => 'mobiliario',
+                'key' => 'davantals_cuiners',
+                'label' => 'Davantals Cuiners',
+                'category' => 'roba_personal',
                 'unit' => 'u',
             ],
-            
-            // Manteles
             [
-                'key' => 'mantel_blanco',
-                'label' => 'Manteles Blancos',
-                'category' => 'textil',
+                'key' => 'davantals_cambrers',
+                'label' => 'Davantals Cambrers',
+                'category' => 'roba_personal',
                 'unit' => 'u',
             ],
             
-            // Barra
+            // TEXTILS I NETEJA
             [
-                'key' => 'barra_bar',
-                'label' => 'Barras de Bar',
-                'category' => 'barra',
+                'key' => 'draps',
+                'label' => 'Draps',
+                'category' => 'textils_neteja',
                 'unit' => 'u',
             ],
             [
-                'key' => 'nevera_portatil',
-                'label' => 'Neveras Portátiles',
-                'category' => 'barra',
+                'key' => 'teles_negres',
+                'label' => 'Teles Negres',
+                'category' => 'textils_neteja',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'estovalles',
+                'label' => 'Estovalles',
+                'category' => 'textils_neteja',
                 'unit' => 'u',
             ],
             
-            // Personal
+            // CAIXES I CONTENIDORS
             [
-                'key' => 'staff_cuiner',
-                'label' => 'Cocineros',
-                'category' => 'personal',
-                'unit' => 'personas',
+                'key' => 'caixa_gris_gran_utensilis',
+                'label' => 'Caixa Gris Gran Utensilis',
+                'category' => 'caixes_contenidors',
+                'unit' => 'u',
             ],
             [
-                'key' => 'staff_cambrer',
-                'label' => 'Camareros',
-                'category' => 'personal',
-                'unit' => 'personas',
+                'key' => 'caixa_gris_mitjana_paravents',
+                'label' => 'Caixa Gris Mitjana Paravents',
+                'category' => 'caixes_contenidors',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'caixa_gris_petita_neteja',
+                'label' => 'Caixa Gris Petita Neteja',
+                'category' => 'caixes_contenidors',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'caixa_marro_especies',
+                'label' => 'Caixa Marró Espècies',
+                'category' => 'caixes_contenidors',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'caixa_gris_gran_extra',
+                'label' => 'Caixa Gris Gran Extra',
+                'category' => 'caixes_contenidors',
+                'unit' => 'u',
+            ],
+            
+            // REFRIGERACIÓ
+            [
+                'key' => 'neveres_portatils',
+                'label' => 'Neveres Portàtils',
+                'category' => 'refrigeracio',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'poal_refrigerador_begudes',
+                'label' => 'Poal Refrigerador Begudes',
+                'category' => 'refrigeracio',
+                'unit' => 'u',
+            ],
+            
+            // UTENSILIS SERVIR
+            [
+                'key' => 'culleres_servir_extra',
+                'label' => 'Culleres per Servir Extra',
+                'category' => 'utensilis_servir',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'cubiteres_llauto',
+                'label' => 'Cubiteres Llautó',
+                'category' => 'utensilis_servir',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'cubiteres_gel',
+                'label' => 'Cubiteres Gel',
+                'category' => 'utensilis_servir',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'pinzes_gel',
+                'label' => 'Pinzes Gel',
+                'category' => 'utensilis_servir',
+                'unit' => 'u',
+            ],
+            
+            // MOBILIARI ESDEVENIMENTS
+            [
+                'key' => 'para_sols',
+                'label' => 'Para-sols',
+                'category' => 'mobiliari_esdeveniments',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'carpa',
+                'label' => 'Carpa',
+                'category' => 'mobiliari_esdeveniments',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'illuminacio',
+                'label' => 'Il·luminació',
+                'category' => 'mobiliari_esdeveniments',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'font_aigua_8l',
+                'label' => 'Font Aigua 8L',
+                'category' => 'mobiliari_esdeveniments',
+                'unit' => 'u',
+            ],
+            
+            // VAIXELLA I MENATGE
+            [
+                'key' => 'tirador_cervesa',
+                'label' => 'Tirador Cervesa',
+                'category' => 'vaixella_menatge',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'copes_vi_tritan',
+                'label' => 'Copes Vi Tritan',
+                'category' => 'vaixella_menatge',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'gots_reutilitzables_plastic',
+                'label' => 'Gots Reutilitzables Plàstic',
+                'category' => 'vaixella_menatge',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'bols_amanides',
+                'label' => 'Bols Amanides',
+                'category' => 'vaixella_menatge',
+                'unit' => 'u',
+            ],
+            [
+                'key' => 'coberts_amanides',
+                'label' => 'Coberts Amanides',
+                'category' => 'vaixella_menatge',
+                'unit' => 'u',
+            ],
+            
+            // ALTRES
+            [
+                'key' => 'manguera',
+                'label' => 'Manguera',
+                'category' => 'altres',
+                'unit' => 'u',
             ],
         ];
     }

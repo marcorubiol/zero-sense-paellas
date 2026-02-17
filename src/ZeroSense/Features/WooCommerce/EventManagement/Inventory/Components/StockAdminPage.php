@@ -139,13 +139,17 @@ class StockAdminPage
                             if ($currentCategory !== $material['category']):
                                 $currentCategory = $material['category'];
                                 $categoryLabels = [
-                                    'paellas' => 'Paellas',
-                                    'cremadores' => 'Cremadores',
-                                    'gas' => 'Gas',
-                                    'mobiliario' => 'Mobiliario',
-                                    'textil' => 'Textil',
-                                    'barra' => 'Barra',
-                                    'personal' => 'Personal',
+                                    'paelles' => 'Paelles',
+                                    'cremadors' => 'Cremadors',
+                                    'equipament_cuina' => 'Equipament de Cuina',
+                                    'roba_personal' => 'Roba i Vestimenta',
+                                    'textils_neteja' => 'Textils i Neteja',
+                                    'caixes_contenidors' => 'Caixes i Contenidors',
+                                    'refrigeracio' => 'Refrigeració',
+                                    'utensilis_servir' => 'Utensilis per Servir',
+                                    'mobiliari_esdeveniments' => 'Mobiliari i Esdeveniments',
+                                    'vaixella_menatge' => 'Vaixella i Menatge',
+                                    'altres' => 'Altres',
                                 ];
                                 $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
                         ?>
