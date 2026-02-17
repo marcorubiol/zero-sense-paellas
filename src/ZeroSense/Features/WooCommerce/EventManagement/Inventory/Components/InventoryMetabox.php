@@ -243,7 +243,7 @@ class InventoryMetabox
                     user-select: none;
                 }
                 .zs-inventory-accordion-header:hover {
-                    background: #e8e8e9;
+                    background: #f6f7f7;
                 }
                 .zs-inventory-accordion-icon {
                     transition: transform 0.2s ease;
