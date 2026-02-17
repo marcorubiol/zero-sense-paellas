@@ -70,6 +70,9 @@
     border: none;
     box-shadow: none;
     margin-bottom: 0;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
 .zs-stock-table {
@@ -87,12 +90,8 @@
     font-weight: 600;
     font-size: 13px;
     letter-spacing: 0.3px;
-}
-
-/* Only apply sticky to tables NOT inside accordions */
-.zs-stock-table-wrapper:not(.zs-stock-accordion .zs-stock-table-wrapper) .zs-stock-table thead th {
     position: sticky;
-    top: 32px;
+    top: 0;
     z-index: 5;
     transform: translateZ(0);
 }
@@ -146,12 +145,8 @@
 .zs-stock-table th.zs-sticky-col {
     background: #f9f9f9;
     border-bottom: 2px solid #2271b1;
-}
-
-/* Only apply sticky to sticky columns NOT inside accordions */
-.zs-stock-table-wrapper:not(.zs-stock-accordion .zs-stock-table-wrapper) .zs-stock-table th.zs-sticky-col {
     position: sticky;
-    top: 32px;
+    top: 0;
     left: 0;
     z-index: 15;
     transform: translateZ(0);
@@ -275,6 +270,7 @@
     max-height: 5000px;
     overflow: hidden;
     transition: max-height 0.3s ease;
+    position: relative;
 }
 
 .zs-stock-accordion.collapsed .zs-stock-accordion-content {
