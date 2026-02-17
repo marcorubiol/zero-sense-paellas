@@ -372,13 +372,13 @@ class InventoryMetabox
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-header {
                     border-bottom: none;
                 }
+                .zs-stock-alerts-banner.collapsed {
+                    filter: grayscale(0.5);
+                }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title {
                     font-size: 12px;
                     font-weight: 500;
                     opacity: 0.85;
-                }
-                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title .zs-stock-alerts-title > span:first-child {
-                    font-size: 14px;
                 }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-summary {
                     font-size: 11px;
