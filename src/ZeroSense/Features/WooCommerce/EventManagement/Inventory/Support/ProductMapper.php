@@ -49,11 +49,7 @@ class ProductMapper
         foreach ($order->get_items() as $itemId => $item) {
             $product = $item->get_product();
             
-            // DEBUG
-            error_log('🔍 Processing item #' . $itemId . ': ' . $item->get_name());
-            
             if (!$product) {
-                error_log('⚠️ No product found for item #' . $itemId);
                 continue;
             }
             
@@ -64,10 +60,6 @@ class ProductMapper
             $originalProductId = self::resolveOriginalProductId($product->get_id());
             $recipeId = get_post_meta($originalProductId, self::META_PRODUCT_RECIPE_ID, true);
             
-            // DEBUG
-            error_log('🔍 Product ID: ' . $product->get_id() . ' (Original: ' . $originalProductId . ')');
-            error_log('🔍 Recipe ID from meta: ' . var_export($recipeId, true));
-            
             if ($recipeId) {
                 $recipe = get_post($recipeId);
                 
@@ -77,12 +69,6 @@ class ProductMapper
                     
                     // Detectar paellas por checkbox en receta
                     $needsPaella = get_post_meta($recipeId, 'zs_recipe_needs_paella', true);
-                    
-                    // DEBUG
-                    error_log('🔍 ProductMapper DEBUG - Recipe: ' . $recipe->post_title);
-                    error_log('🔍 Recipe ID: ' . $recipeId);
-                    error_log('🔍 Needs Paella Meta: ' . var_export($needsPaella, true));
-                    error_log('🔍 Item Quantity (guests): ' . $item->get_quantity());
                     
                     if ($needsPaella === '1') {
                         $guests = (int) $item->get_quantity();
@@ -113,9 +99,6 @@ class ProductMapper
                             'variety' => $variety,
                         ];
                         $result['paella_items'][] = $paellaItem;
-                        
-                        // DEBUG
-                        error_log('✅ Paella item added: ' . json_encode($paellaItem));
                         
                         continue; // ✅ Procesado por receta, skip categorías
                     }
