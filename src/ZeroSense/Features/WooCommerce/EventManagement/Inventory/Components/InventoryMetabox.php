@@ -680,7 +680,22 @@ class InventoryMetabox
                         ?>
                             <?php
                             $materialDef = $materials[$materialKey] ?? null;
-                            $materialLabel = $materialDef ? $materialDef['label'] : $materialKey;
+                            // Fallback: try to find by searching all materials if exact key doesn't match
+                            if (!$materialDef) {
+                                foreach ($materials as $key => $mat) {
+                                    if (strtolower($key) === strtolower($materialKey)) {
+                                        $materialDef = $mat;
+                                        break;
+                                    }
+                                }
+                            }
+                            // Use label if found, otherwise format the key nicely
+                            if ($materialDef && isset($materialDef['label'])) {
+                                $materialLabel = $materialDef['label'];
+                            } else {
+                                // Format key: replace underscores with spaces and capitalize
+                                $materialLabel = ucwords(str_replace('_', ' ', $materialKey));
+                            }
                             
                             if ($isItemResolved) {
                                 $iconClass = 'dashicons-yes-alt';
