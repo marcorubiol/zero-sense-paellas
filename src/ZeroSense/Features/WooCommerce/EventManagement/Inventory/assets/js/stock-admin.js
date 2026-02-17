@@ -151,13 +151,20 @@
             const formData = new FormData();
             formData.append('action', 'zs_update_stock');
             formData.append('nonce', zsStockAdmin.nonce);
-            formData.append('changes', JSON.stringify(changedData));
+            const changesJson = JSON.stringify(changedData);
+            formData.append('changes', changesJson);
             
             console.log('Request data:', {
                 action: 'zs_update_stock',
                 nonce: zsStockAdmin.nonce,
-                changes: changedData
+                changes: changedData,
+                changesJson: changesJson
             });
+            
+            console.log('FormData entries:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
             
             // AJAX: Solo actualiza campos modificados
             fetch(zsStockAdmin.ajaxUrl, {
