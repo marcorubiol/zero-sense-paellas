@@ -52,8 +52,15 @@ class InventoryMetabox
         
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
         
-        // Calcular materiales automáticamente
-        $calculated = MaterialCalculator::calculate($order);
+        // Calcular materiales automáticamente solo si el pedido tiene items cargados
+        // En el render inicial, los items pueden no estar disponibles aún
+        $orderItems = $order->get_items();
+        if (!empty($orderItems)) {
+            $calculated = MaterialCalculator::calculate($order);
+        } else {
+            // Si no hay items, usar array vacío (se calculará al guardar)
+            $calculated = [];
+        }
         
         // Obtener overrides manuales
         $overrides = ManualOverride::get($postId);
