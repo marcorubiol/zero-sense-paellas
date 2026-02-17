@@ -139,9 +139,9 @@ class InventoryMetabox
                     display: flex;
                     justify-content: flex-end;
                     align-items: center;
-                    margin-bottom: 15px;
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid #ddd;
+                    margin-bottom: 20px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ddd;
                 }
                 .zs-inventory-controls {
                     display: flex;
@@ -340,22 +340,31 @@ class InventoryMetabox
                     background: #fff;
                     border: 1px solid #ddd;
                     border-radius: 4px;
-                    padding: 15px;
                     margin-bottom: 15px;
                 }
+                .zs-alert-details {
+                    max-height: 2000px;
+                    overflow: hidden;
+                    transition: max-height 0.3s ease-out;
+                }
                 .zs-stock-alerts-banner.collapsed .zs-alert-details {
-                    display: none;
+                    max-height: 0;
+                    transition: max-height 0.3s ease-in;
                 }
                 .zs-stock-alerts-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 10px;
                     cursor: pointer;
                     user-select: none;
+                    padding: 15px;
+                    transition: background-color 0.2s ease;
                 }
                 .zs-stock-alerts-header:hover {
-                    opacity: 0.8;
+                    background-color: #f8f9fa;
+                }
+                .zs-stock-alerts-banner:not(.collapsed) .zs-stock-alerts-header {
+                    margin-bottom: 10px;
                 }
                 .zs-stock-alerts-title {
                     font-weight: 600;
@@ -405,8 +414,7 @@ class InventoryMetabox
                     color: #ffc107;
                 }
                 .zs-alert-details {
-                    margin-top: 10px;
-                    padding-top: 10px;
+                    padding: 0 15px 15px 15px;
                     border-top: 1px solid #f0f0f1;
                 }
                 .zs-alert-item {
@@ -586,7 +594,7 @@ class InventoryMetabox
                     $serviceAreaName = $serviceArea && !is_wp_error($serviceArea) ? $serviceArea->name : __('Unknown', 'zero-sense');
                 ?>
                 <div class="zs-stock-alerts-banner">
-                    <div class="zs-stock-alerts-header" onclick="this.closest('.zs-stock-alerts-banner').classList.toggle('collapsed')">
+                    <div class="zs-stock-alerts-header">
                         <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
                             <div class="zs-stock-alerts-title">
                                 <span>⚠️</span>
@@ -1177,6 +1185,22 @@ class InventoryMetabox
             // Accordion toggle
             $('.zs-inventory-accordion-header').on('click', function() {
                 $(this).closest('.zs-inventory-accordion').toggleClass('collapsed');
+            });
+            
+            // Stock Alerts collapse - restore state from localStorage
+            var alertsCollapsed = localStorage.getItem('zs_stock_alerts_collapsed');
+            if (alertsCollapsed === 'true') {
+                $('.zs-stock-alerts-banner').addClass('collapsed');
+            }
+            
+            // Stock Alerts collapse toggle with persistence
+            $(document).on('click', '.zs-stock-alerts-header', function(e) {
+                var $banner = $(this).closest('.zs-stock-alerts-banner');
+                $banner.toggleClass('collapsed');
+                
+                // Save state to localStorage
+                var isCollapsed = $banner.hasClass('collapsed');
+                localStorage.setItem('zs_stock_alerts_collapsed', isCollapsed);
             });
             
             // Mark alert as resolved
