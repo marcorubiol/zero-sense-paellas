@@ -247,7 +247,7 @@ class EventDetailsMetabox
                             <label for="event_team_arrival_time">
                                 <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
                             </label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="zs-mb-field-inline">
                                 <input type="time" 
                                        id="event_team_arrival_time" 
                                        name="event_team_arrival_time" 
@@ -255,15 +255,12 @@ class EventDetailsMetabox
                                        class="short">
                                 <button type="button" 
                                         id="zs-recalculate-team-arrival-time" 
-                                        class="button button-secondary zs-mb-btn-inline"
-                                        title="<?php esc_attr_e('Recalculate based on Paellas service time (3 hours before)', 'zero-sense'); ?>">
-                                    <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                        class="zs-mb-auto-btn"
+                                        title="<?php esc_attr_e('Set 3 hours before Paellas service time', 'zero-sense'); ?>">
+                                    <span class="dashicons dashicons-update"></span>
                                     <?php esc_html_e('Auto', 'zero-sense'); ?>
                                 </button>
                             </div>
-                            <p class="zs-mb-description">
-                                <?php esc_html_e('Click Auto to set this 3 hours before Paellas service time', 'zero-sense'); ?>
-                            </p>
                         </div>
                         <div class="zs-mb-field"></div>
                     </div>
@@ -278,7 +275,7 @@ class EventDetailsMetabox
                             <label for="event_starters_service_time">
                                 <?php esc_html_e('Starters service time', 'zero-sense'); ?>
                             </label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="zs-mb-field-inline">
                                 <input type="time" 
                                        id="event_starters_service_time" 
                                        name="event_starters_service_time" 
@@ -286,15 +283,12 @@ class EventDetailsMetabox
                                        class="short">
                                 <button type="button" 
                                         id="zs-recalculate-starters-time" 
-                                        class="button button-secondary zs-mb-btn-inline"
-                                        title="<?php esc_attr_e('Recalculate based on Paellas service time (30 min before)', 'zero-sense'); ?>">
-                                    <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                                        class="zs-mb-auto-btn"
+                                        title="<?php esc_attr_e('Set 30 minutes before Paellas service time', 'zero-sense'); ?>">
+                                    <span class="dashicons dashicons-update"></span>
                                     <?php esc_html_e('Auto', 'zero-sense'); ?>
                                 </button>
                             </div>
-                            <p class="zs-mb-description">
-                                <?php esc_html_e('Click Auto to set this 30 minutes before Paellas service time', 'zero-sense'); ?>
-                            </p>
                         </div>
                         
                         <div class="zs-mb-field">
