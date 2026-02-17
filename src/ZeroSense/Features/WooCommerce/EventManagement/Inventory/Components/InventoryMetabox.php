@@ -451,26 +451,11 @@ class InventoryMetabox
                     font-size: 11px;
                     font-weight: 400;
                     margin-left: 8px;
-                    opacity: 0.7;
-                    transition: opacity 0.2s ease;
                     align-self: center;
                     line-height: 1;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 3px;
                 }
                 .zs-alert-goto-material:hover {
-                    opacity: 1;
-                    text-decoration: none;
-                }
-                .zs-alert-goto-material .dashicons {
-                    width: 14px;
-                    height: 14px;
-                    font-size: 14px;
-                }
-                .zs-alert-goto-material .zs-resolve-text {
-                    font-size: 11px;
-                    line-height: 1;
+                    text-decoration: underline;
                 }
                 .zs-alert-item-title .dashicons {
                     width: 18px;
@@ -767,8 +752,7 @@ class InventoryMetabox
                                     <span class="dashicons <?php echo $iconClass; ?> <?php echo $alertClass; ?>"></span>
                                     <strong><?php echo esc_html($materialLabel); ?></strong>
                                     <a href="#" class="zs-alert-goto-material" data-material-key="<?php echo esc_attr($materialKey); ?>">
-                                        <span class="dashicons dashicons-arrow-down-alt"></span>
-                                        <span class="zs-resolve-text"><?php _e('resolve', 'zero-sense'); ?></span>
+                                        ⤵ <?php _e('resolve', 'zero-sense'); ?>
                                     </a>
                                 </div>
                                 <div class="zs-alert-item-message">
