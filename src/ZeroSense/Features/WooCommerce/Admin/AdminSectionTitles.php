@@ -68,20 +68,20 @@ class AdminSectionTitles implements FeatureInterface
                     $('#order_data h3').each(function() {
                         var elem = $(this);
                         
-                        if (elem.find('.zs-section-suffix').length) {
+                        if (elem.prev('.zs-subtitle').length) {
                             return;
                         }
                         
                         var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
+                        var editLink = elem.find('a.edit_address');
+                        var editHtml = editLink.length ? editLink[0].outerHTML : '';
                         
-                        if (firstWord === 'Billing') {
-                            elem.html(elem.html().replace('Billing', 'Billing<span class="zs-section-suffix"> &middot; Client</span>'));
-                        } else if (firstWord === 'Facturación') {
-                            elem.html(elem.html().replace('Facturación', 'Facturación<span class="zs-section-suffix"> &middot; Cliente</span>'));
-                        } else if (firstWord === 'Shipping') {
-                            elem.html(elem.html().replace('Shipping', 'Shipping<span class="zs-section-suffix"> &middot; Venue/Wedding Planner</span>'));
-                        } else if (firstWord === 'Envío') {
-                            elem.html(elem.html().replace('Envío', 'Envío<span class="zs-section-suffix"> &middot; Venue/Wedding Planner</span>'));
+                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
+                            if (editLink.length) editLink.remove();
+                            elem.before('<div class="zs-subtitle zs-subtitle-client">👤 Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                        } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
+                            if (editLink.length) editLink.remove();
+                            elem.before('<div class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         }
                     });
                     
@@ -145,13 +145,41 @@ JAVASCRIPT;
             /* Hide initially to avoid visual jump */
             #order_data h3 {
                 visibility: hidden;
+                margin-top: 2px !important;
             }
 
-            /* Muted inline suffix — · Client / · Venue/Wedding Planner */
-            .zs-section-suffix {
-                font-weight: 400;
-                font-size: 0.85em;
+            /* Card label above the heading */
+            .zs-subtitle {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--zs-mb-label-color, #1d2327);
+                padding: 5px 10px;
+                border-radius: var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px) 0 0;
+                margin-bottom: 0;
+                line-height: 1.4;
+            }
+
+            .zs-subtitle-client {
+                background: var(--zs-bg-auto, #dbeafe);
+                border-left: 3px solid var(--zs-color-auto, #2271b1);
+            }
+
+            .zs-subtitle-venue {
+                background: color-mix(in srgb, #7C3AED 10%, white 90%);
+                border-left: 3px solid #7C3AED;
+            }
+
+            .zs-subtitle-edit a {
                 color: var(--zs-mb-description-color, #646970);
+                text-decoration: none;
+                opacity: 0.7;
+            }
+
+            .zs-subtitle-edit a:hover {
+                opacity: 1;
             }
         </style>
         <?php
