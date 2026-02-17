@@ -299,6 +299,7 @@
     color: #1d2327;
     user-select: none;
     transition: background 0.2s ease;
+    border: none;
 }
 
 .zs-stock-accordion-header:hover {

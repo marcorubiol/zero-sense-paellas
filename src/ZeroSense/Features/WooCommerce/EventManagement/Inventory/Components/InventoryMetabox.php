@@ -236,8 +236,6 @@ class InventoryMetabox
                     cursor: pointer;
                     padding: 12px 15px;
                     background: #fff;
-                    border: 1px solid #ddd;
-                    border-bottom: none;
                     font-weight: 600;
                     display: flex;
                     justify-content: space-between;
