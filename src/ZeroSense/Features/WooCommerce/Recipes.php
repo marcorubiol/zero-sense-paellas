@@ -9,8 +9,10 @@ class Recipes implements FeatureInterface
 {
     private const CPT = 'zs_recipe';
     private const TAX_INGREDIENT = 'zs_ingredient';
+    private const TAX_UTENSIL = 'zs_utensil';
 
     private const META_INGREDIENTS = 'zs_recipe_ingredients';
+    private const META_UTENSILS = 'zs_recipe_utensils';
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
     private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
 
@@ -55,6 +57,8 @@ class Recipes implements FeatureInterface
 
         add_action('wp_ajax_zs_ingredient_search', [$this, 'ajaxIngredientSearch']);
         add_action('wp_ajax_zs_ingredient_create', [$this, 'ajaxIngredientCreate']);
+        add_action('wp_ajax_zs_utensil_search', [$this, 'ajaxUtensilSearch']);
+        add_action('wp_ajax_zs_utensil_create', [$this, 'ajaxUtensilCreate']);
 
         add_action('woocommerce_product_options_general_product_data', [$this, 'renderProductRecipeField']);
         add_action('woocommerce_admin_process_product_object', [$this, 'saveProductRecipeField']);
@@ -110,6 +114,24 @@ class Recipes implements FeatureInterface
             'show_admin_column' => false,
             'hierarchical' => false,
         ]);
+
+        register_taxonomy(self::TAX_UTENSIL, [self::CPT], [
+            'labels' => [
+                'name' => __('Utensils', 'zero-sense'),
+                'singular_name' => __('Utensil', 'zero-sense'),
+                'search_items' => __('Search utensils', 'zero-sense'),
+                'all_items' => __('All utensils', 'zero-sense'),
+                'edit_item' => __('Edit utensil', 'zero-sense'),
+                'update_item' => __('Update utensil', 'zero-sense'),
+                'add_new_item' => __('Add new utensil', 'zero-sense'),
+                'new_item_name' => __('New utensil name', 'zero-sense'),
+            ],
+            'public' => false,
+            'show_ui' => true,
+            'show_in_menu' => true,
+            'show_admin_column' => false,
+            'hierarchical' => false,
+        ]);
     }
 
     public function addRecipeMetabox(): void
@@ -128,6 +150,7 @@ class Recipes implements FeatureInterface
     {
         // Remove default tags metabox for our CPT
         remove_meta_box('tagsdiv-' . self::TAX_INGREDIENT, self::CPT, 'side');
+        remove_meta_box('tagsdiv-' . self::TAX_UTENSIL, self::CPT, 'side');
     }
 
     public function renderRecipeMetabox(WP_Post $post): void
@@ -146,24 +169,73 @@ class Recipes implements FeatureInterface
         $nonce = wp_create_nonce('zs_ingredient_ajax');
 
         $manage_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_INGREDIENT . '&post_type=' . self::CPT);
+        $manage_utensils_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_UTENSIL . '&post_type=' . self::CPT);
+        
+        $utensils = get_post_meta($post->ID, self::META_UTENSILS, true);
+        $utensils = is_array($utensils) ? $utensils : [];
+        $needsPaella = get_post_meta($post->ID, self::META_NEEDS_PAELLA, true);
         ?>
+        <style>
+            .zs-paella-mode-toggle {
+                background: #f0f0f1;
+                border: 1px solid #dcdcde;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 20px 0;
+            }
+            .zs-paella-mode-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            .zs-paella-mode-switch {
+                position: relative;
+                display: inline-block;
+                width: 44px;
+                height: 24px;
+            }
+            .zs-paella-mode-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            .zs-paella-mode-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: .3s;
+                border-radius: 24px;
+            }
+            .zs-paella-mode-slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .3s;
+                border-radius: 50%;
+            }
+            input:checked + .zs-paella-mode-slider {
+                background-color: #2271b1;
+            }
+            input:checked + .zs-paella-mode-slider:before {
+                transform: translateX(20px);
+            }
+            .zs-paella-mode-info {
+                color: #646970;
+                font-size: 13px;
+                line-height: 1.5;
+                margin-top: 8px;
+            }
+        </style>
         <div class="zs-recipes-metabox">
-            <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input 
-                        type="checkbox" 
-                        name="zs_recipe_needs_paella" 
-                        value="1"
-                        <?php checked(get_post_meta($post->ID, self::META_NEEDS_PAELLA, true), '1'); ?>
-                        style="margin: 0;"
-                    >
-                    <strong><?php esc_html_e('This recipe requires paella pan', 'zero-sense'); ?></strong>
-                </label>
-                <p style="margin: 8px 0 0 0; color: #666; font-size: 13px;">
-                    <?php esc_html_e('Check this option if the recipe requires a paella pan to automatically calculate materials (pans, burners, etc.)', 'zero-sense'); ?>
-                </p>
-            </div>
-            
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
@@ -241,6 +313,104 @@ class Recipes implements FeatureInterface
                     <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
                 </a>
             </p>
+
+            <!-- Paella Mode Toggle -->
+            <div class="zs-paella-mode-toggle">
+                <div class="zs-paella-mode-header">
+                    <span>🍳</span>
+                    <label class="zs-paella-mode-switch">
+                        <input type="checkbox" name="zs_recipe_needs_paella" value="1" <?php checked($needsPaella, '1'); ?>>
+                        <span class="zs-paella-mode-slider"></span>
+                    </label>
+                    <strong><?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
+                </div>
+                <div class="zs-paella-mode-info">
+                    <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed.', 'zero-sense'); ?></p>
+                </div>
+            </div>
+
+            <!-- Utensils Section (hidden if paella mode is ON) -->
+            <div class="zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
+                <table class="widefat striped" style="margin-top:8px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;"><?php esc_html_e('Utensil', 'zero-sense'); ?></th>
+                            <th style="width: 15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
+                            <th style="width: 20%;"><?php esc_html_e('Every X people', 'zero-sense'); ?></th>
+                            <th style="width: 15%;"><?php esc_html_e('Unit', 'zero-sense'); ?></th>
+                            <th style="width: 15%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="zs-utensil-rows">
+                        <?php 
+                        $utensil_row_index = 0;
+                        foreach ($utensils as $row): 
+                            $termId = isset($row['utensil']) ? (int) $row['utensil'] : 0;
+                            $qty = isset($row['qty']) ? (string) $row['qty'] : '';
+                            $paxRatio = isset($row['pax_ratio']) ? (int) $row['pax_ratio'] : 1;
+
+                            $termName = '';
+                            if ($termId > 0) {
+                                $resolvedId = $this->resolveOriginalTermId($termId, self::TAX_UTENSIL);
+                                $term = get_term($resolvedId, self::TAX_UTENSIL);
+                                if ($term instanceof WP_Term) {
+                                    $termName = $term->name;
+                                }
+                            }
+                            ?>
+                            <tr data-row="<?php echo $utensil_row_index; ?>">
+                                <td>
+                                    <select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
+                                        <?php if ($termId > 0 && $termName !== ''): ?>
+                                            <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
+                                        <?php endif; ?>
+                                        <?php 
+                                        $existing_utensils = get_terms([
+                                            'taxonomy' => self::TAX_UTENSIL,
+                                            'hide_empty' => false,
+                                            'number' => 50,
+                                            'suppress_filters' => true,
+                                        ]);
+                                        if (is_array($existing_utensils)) {
+                                            foreach ($existing_utensils as $utensil) {
+                                                if ($utensil instanceof WP_Term && $utensil->term_id != $termId) {
+                                                    echo '<option value="' . esc_attr((string) $utensil->term_id) . '">' . esc_html($utensil->name) . '</option>';
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.001" min="0" name="zs_recipe_utensils[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
+                                </td>
+                                <td>
+                                    <input type="number" step="1" min="1" name="zs_recipe_utensils[pax_ratio][]" value="<?php echo esc_attr($paxRatio); ?>" style="width:100%;" placeholder="1">
+                                </td>
+                                <td>
+                                    <input type="text" value="u" readonly style="width:100%; background:#f0f0f1;">
+                                </td>
+                                <td>
+                                    <button type="button" class="button zs-utensil-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                                </td>
+                            </tr>
+                            <?php 
+                            $utensil_row_index++;
+                        endforeach; 
+                        ?>
+                    </tbody>
+                </table>
+
+                <p style="margin-top:10px; display: flex; justify-content: space-between; align-items: center;">
+                    <button type="button" class="button" id="zs-utensil-add-row"><?php esc_html_e('Add utensil', 'zero-sense'); ?></button>
+                    <a href="<?php echo esc_url($manage_utensils_url); ?>" target="_blank" style="text-decoration: none; font-size: 13px;">
+                        <?php esc_html_e('Manage all utensils', 'zero-sense'); ?> →
+                    </a>
+                </p>
+                <p style="margin-top:8px; color: #646970; font-size: 12px; font-style: italic;">
+                    <?php esc_html_e('"Every X people" = ratio (1 = per person, 4 = every 4 people, 10 = every 10 people)', 'zero-sense'); ?>
+                </p>
+            </div>
         </div>
 
         <script>
@@ -383,6 +553,141 @@ class Recipes implements FeatureInterface
             // Remove buttons
             $(document).on('click', '.zs-recipe-remove', function() {
                 $(this).closest('tr').remove();
+            });
+            
+            // UTENSILS SECTION
+            var utensilRowCount = <?php echo max(0, count($utensils)); ?>;
+            
+            function initUtensilSelect(element) {
+                if (typeof jQuery.fn.selectWoo === 'undefined') {
+                    console.error('Zero Sense Recipes: selectWoo not available!');
+                    return;
+                }
+                
+                if (!$(element).data('select2')) {
+                    $(element).selectWoo({
+                        width: '100%',
+                        tags: true,
+                        tokenSeparators: [','],
+                        createTag: function(params) {
+                            var term = $.trim(params.term);
+                            if (term === '') {
+                                return null;
+                            }
+                            return {
+                                id: term,
+                                text: term + ' (crear nuevo)',
+                                newTag: true
+                            };
+                        },
+                        insertTag: function(data, tag) {
+                            data.push(tag);
+                        },
+                        ajax: {
+                            url: ajaxUrl,
+                            dataType: 'json',
+                            delay: 250,
+                            data: function(params) {
+                                return {
+                                    action: 'zs_utensil_search',
+                                    nonce: nonce,
+                                    q: params.term || ''
+                                };
+                            },
+                            processResults: function(data) {
+                                return data;
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Zero Sense Recipes: AJAX Error:', {
+                                    status: status,
+                                    error: error,
+                                    responseText: xhr.responseText,
+                                    readyState: xhr.readyState
+                                });
+                            }
+                        }
+                    });
+                    
+                    $(element).on('select2:select', function(e) {
+                        var data = e.params.data;
+                        
+                        if (data && (data.newTag || String(parseInt(data.id, 10)) !== String(data.id))) {
+                            createUtensil(data.id, element);
+                        }
+                    });
+                }
+            }
+            
+            function createUtensil(name, selectElement) {
+                $.ajax({
+                    url: ajaxUrl,
+                    method: 'POST',
+                    data: {
+                        action: 'zs_utensil_create',
+                        nonce: nonce,
+                        name: name
+                    },
+                    success: function(resp) {
+                        if (resp && resp.success && resp.data) {
+                            var newId = resp.data.id;
+                            var text = resp.data.text;
+                            
+                            $(selectElement).empty();
+                            var option = new Option(text, newId, true, true);
+                            $(selectElement).append(option);
+                            
+                            $(selectElement).trigger('change');
+                            $(selectElement).trigger('change.select2');
+                        } else {
+                            alert('Error al crear el utensilio. Por favor, inténtalo de nuevo.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error de conexión al crear el utensilio.');
+                    }
+                });
+            }
+            
+            function addNewUtensilRow() {
+                var newRow = '<tr data-row="' + utensilRowCount + '">' +
+                    '<td>' +
+                        '<select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="<?php echo esc_js(__('Search or create…', 'zero-sense')); ?>"></select>' +
+                    '</td>' +
+                    '<td><input type="number" step="0.001" min="0" name="zs_recipe_utensils[qty][]" value="" style="width:100%;"></td>' +
+                    '<td><input type="number" step="1" min="1" name="zs_recipe_utensils[pax_ratio][]" value="1" style="width:100%;" placeholder="1"></td>' +
+                    '<td><input type="text" value="u" readonly style="width:100%; background:#f0f0f1;"></td>' +
+                    '<td><button type="button" class="button zs-utensil-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button></td>' +
+                '</tr>';
+                
+                $('#zs-utensil-rows').append(newRow);
+                initUtensilSelect($('#zs-utensil-rows tr:last .zs-utensil-select'));
+                utensilRowCount++;
+            }
+            
+            // Initialize existing utensil selects
+            $(document).ready(function() {
+                $('.zs-utensil-select').each(function() {
+                    initUtensilSelect(this);
+                });
+            });
+            
+            // Add utensil row button
+            $('#zs-utensil-add-row').on('click', function() {
+                addNewUtensilRow();
+            });
+            
+            // Remove utensil buttons
+            $(document).on('click', '.zs-utensil-remove', function() {
+                $(this).closest('tr').remove();
+            });
+            
+            // Paella mode toggle
+            $('input[name="zs_recipe_needs_paella"]').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('.zs-utensils-section').slideUp(300);
+                } else {
+                    $('.zs-utensils-section').slideDown(300);
+                }
             });
             
         })(jQuery);

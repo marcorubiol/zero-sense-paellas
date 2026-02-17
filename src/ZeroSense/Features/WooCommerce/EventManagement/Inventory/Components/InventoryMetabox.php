@@ -359,14 +359,13 @@ class InventoryMetabox
                     align-items: center;
                     cursor: pointer;
                     user-select: none;
-                    padding: 10px 15px;
-                    transition: all 0.2s ease;
+                    padding: 12px 15px;
+                    transition: background-color 0.2s ease, border-bottom 0.2s ease;
                 }
                 .zs-stock-alerts-header:hover {
                     background-color: #f8f9fa;
                 }
                 .zs-stock-alerts-banner:not(.collapsed) .zs-stock-alerts-header {
-                    padding: 15px;
                     border-bottom: 1px solid #f0f0f1;
                 }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-header {
@@ -378,9 +377,6 @@ class InventoryMetabox
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title {
                     font-weight: 500;
                     opacity: 0.85;
-                }
-                .zs-stock-alerts-banner.collapsed .zs-alert-count {
-                    gap: 3px;
                 }
                 .zs-stock-alerts-title {
                     font-weight: 600;
@@ -452,10 +448,13 @@ class InventoryMetabox
                 .zs-alert-goto-material {
                     color: #2271b1;
                     text-decoration: none;
-                    font-size: 14px;
-                    margin-left: 4px;
+                    font-size: 11px;
+                    font-weight: 400;
+                    margin-left: 6px;
                     opacity: 0.7;
                     transition: opacity 0.2s ease;
+                    align-self: center;
+                    line-height: 1;
                 }
                 .zs-alert-goto-material:hover {
                     opacity: 1;
