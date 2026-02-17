@@ -55,19 +55,11 @@
     margin-bottom: 10px;
 }
 
-/* Unavailable action items — always left-aligned */
-.zs-unavailable-action-item {
-    margin-bottom: 8px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--zs-mb-border-color, #dcdcde);
-    text-align: left;
-}
-
 .zs-unavailable-action-name {
     font-weight: 600;
     color: var(--zs-mb-label-color);
     margin-bottom: 2px;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .zs-unavailable-action-states {
@@ -76,9 +68,67 @@
     font-style: italic;
 }
 
-/* Expanded content inside section separators — always left-aligned */
+/* Expanded content inside section separators — always left-aligned, with top spacing */
 .zs-email-section-sep > div {
     text-align: left;
+    margin-top: 10px;
+}
+
+/* Automatic action items — log-style with left border + tinted bg */
+.zs-email-item {
+    position: relative;
+    margin-bottom: 6px;
+    padding: 7px 10px 7px 10px;
+    border-left: 3px solid var(--zs-mb-border-color);
+    background: #f6f7f7;
+    border-radius: 0 var(--zs-mb-radius) var(--zs-mb-radius) 0;
+}
+
+.zs-email-item.zs-email-auto {
+    border-left-color: var(--zs-color-auto);
+    background: var(--zs-bg-auto);
+}
+
+.zs-email-item.zs-email-manual {
+    border-left-color: var(--zs-color-manual);
+    background: var(--zs-bg-manual);
+}
+
+.zs-email-item.zs-email-error {
+    border-left-color: var(--zs-color-error);
+    background: var(--zs-bg-error);
+}
+
+.zs-email-item.zs-email-skipped {
+    border-left-color: var(--zs-color-skip);
+    background: var(--zs-bg-skip);
+}
+
+.zs-auto-action-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--zs-mb-label-color);
+    padding-right: 50px;
+}
+
+/* Badge absolute top-right inside the item */
+.zs-email-item .zs-badge {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+}
+
+/* Unavailable action items — same log-style, neutral grey */
+.zs-unavailable-action-item {
+    position: relative;
+    margin-bottom: 6px;
+    padding: 7px 10px;
+    border-left: 3px solid var(--zs-mb-border-color);
+    background: #f6f7f7;
+    border-radius: 0 var(--zs-mb-radius) var(--zs-mb-radius) 0;
+    text-align: left;
+    border-bottom: none;
 }
 
 .zero-sense-flowmattic-metabox .zs-footnote{

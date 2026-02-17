@@ -578,16 +578,16 @@ class Flowmattic implements FeatureInterface
                 if ($emailStatus) {
                     switch ($emailStatus) {
                         case self::EMAIL_STATUS_AUTO:
-                            $statusBadge = '<span class="zs-email-status zs-email-status-auto" style="margin-left:8px;">✓ ' . esc_html__('Sent automatically', 'zero-sense') . '</span>';
+                            $statusBadge = '<span class="zs-badge zs-badge-auto">AUTO</span>';
                             break;
                         case self::EMAIL_STATUS_MANUAL:
-                            $statusBadge = '<span class="zs-email-status zs-email-status-man" style="margin-left:8px;">✓ ' . esc_html__('Sent manually', 'zero-sense') . '</span>';
+                            $statusBadge = '<span class="zs-badge zs-badge-manual">MAN</span>';
                             break;
                         case self::EMAIL_STATUS_ERROR:
-                            $statusBadge = '<span class="zs-email-status zs-email-status-error" style="margin-left:8px;">✗ ' . esc_html__('Failed to send', 'zero-sense') . '</span>';
+                            $statusBadge = '<span class="zs-badge zs-badge-error">ERROR</span>';
                             break;
                         case self::EMAIL_STATUS_SKIPPED:
-                            $statusBadge = '<span class="zs-email-status zs-email-status-skipped" style="margin-left:8px;">– ' . esc_html__('Skipped (send once)', 'zero-sense') . '</span>';
+                            $statusBadge = '<span class="zs-badge zs-badge-skipped">SKIP</span>';
                             break;
                     }
                 }
@@ -611,11 +611,11 @@ class Flowmattic implements FeatureInterface
                     }
                 }
                 
-                echo '<div class="' . esc_attr($containerClass) . '" style="margin-bottom:10px;padding:8px;background:#f9f9f9;border-left:3px solid #ddd;">';
-                echo '<div style="font-size:13px;font-weight:600;color:#3c434a;">';
-                echo esc_html($transitionText) . $emailDesc;
-                echo $statusBadge;
-                echo '</div>';
+                echo '<div class="' . esc_attr($containerClass) . '">';
+                echo '<div class="zs-auto-action-title">' . esc_html($transitionText) . $emailDesc . '</div>';
+                if ($statusBadge) {
+                    echo $statusBadge;
+                }
                 echo '</div>';
             }
             
