@@ -320,12 +320,11 @@ class Recipes implements FeatureInterface
             <!-- Paella Mode Toggle -->
             <div class="zs-paella-mode-toggle">
                 <div class="zs-paella-mode-header">
-                    <span>🍳</span>
                     <label class="zs-paella-mode-switch">
                         <input type="checkbox" name="zs_recipe_needs_paella" value="1" <?php checked($needsPaella, '1'); ?>>
                         <span class="zs-paella-mode-slider"></span>
                     </label>
-                    <strong><?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
+                    <strong><?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?> 🥘</strong>
                 </div>
                 <div class="zs-paella-mode-info">
                     <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed.', 'zero-sense'); ?></p>
