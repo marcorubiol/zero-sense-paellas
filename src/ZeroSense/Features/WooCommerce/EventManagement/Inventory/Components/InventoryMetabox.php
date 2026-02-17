@@ -89,6 +89,9 @@ class InventoryMetabox
         ?>
         <div class="zs-inventory-metabox">
             <style>
+                .zs-inventory-metabox input[type="number"] {
+                    width: 60px;
+                }
                 .zs-inventory-metabox input[type="number"]:disabled {
                     background: transparent;
                     border: none;
