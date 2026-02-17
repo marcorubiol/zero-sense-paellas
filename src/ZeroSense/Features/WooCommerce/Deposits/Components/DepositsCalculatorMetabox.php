@@ -75,7 +75,7 @@ class DepositsCalculatorMetabox
             <div class="zs-deposits-header">
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
-                            class="zs-deposits-reset-btn" 
+                            class="zs-btn is-neutral zs-deposits-reset-btn" 
                             data-order-id="<?php echo esc_attr($orderId); ?>"
                             title="<?php esc_attr_e('Reset to automatic calculation', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
@@ -132,7 +132,8 @@ class DepositsCalculatorMetabox
 
             <?php if ($statusAllowsAuto) : ?>
                 <div class="zs-recalculate-wrapper">
-                    <button type="button" class="button button-primary zs-deposits-recalculate" data-order-id="<?php echo esc_attr($orderId); ?>" style="width:100%;">
+                    <button type="button" class="zs-btn is-primary zs-deposits-recalculate" data-order-id="<?php echo esc_attr($orderId); ?>">
+                        <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Recalculate', 'zero-sense'); ?>
                     </button>
                 </div>

@@ -25,52 +25,23 @@
 }
 
 .zs-deposit-mode-indicator {
-    display: inline-block;
-    line-height: 1;
     margin-left: 8px;
-    padding: 3px 6px;
-    font-size: 10px;
-    font-weight: 700;
-    border-radius: 3px;
     vertical-align: text-bottom;
 }
 
-.zs-deposit-mode-indicator.is-auto {
-    background-color: #e8f4fd;
-    color: #0073aa;
-}
-
-.zs-deposit-mode-indicator.is-manual {
-    background-color: #fef7e6;
-    color: #d67136;
-}
-
 .zs-deposits-reset-to-auto {
-    display: inline-block;
-    background: none;
-    border: none;
-    padding: 0;
     margin: 0 4px;
-    cursor: pointer;
-    color: #2271b1;
-    vertical-align: middle;
-    line-height: 1;
-}
-
-.zs-deposits-reset-to-auto:hover {
-    color: #135e96;
-}
-
-.zs-deposits-reset-to-auto .dashicons {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    vertical-align: middle;
 }
 
 .zs-deposits-reset-to-auto:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Recalculate button — full width */
+.zs-recalculate-wrapper .zs-btn {
+    width: 100%;
+    justify-content: center;
 }
 
 .deposit-amount-display {
