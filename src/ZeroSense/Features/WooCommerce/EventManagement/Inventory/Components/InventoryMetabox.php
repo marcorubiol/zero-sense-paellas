@@ -344,7 +344,7 @@ class InventoryMetabox
                                 <?php foreach ($categories as $catKey => $materialsInCat): ?>
                                     <tr class="zs-inventory-category-header">
                                         <td><?php echo esc_html($categoryLabels[$catKey] ?? $catKey); ?></td>
-                                        <td style="text-align: right; width: 200px;"><?php esc_html_e('Quantity', 'zero-sense'); ?></td>
+                                        <td style="text-align: right; width: 200px; font-weight: 300;"><?php esc_html_e('Qty', 'zero-sense'); ?></td>
                                     </tr>
                                     <?php foreach ($materialsInCat as $material): ?>
                                         <?php
