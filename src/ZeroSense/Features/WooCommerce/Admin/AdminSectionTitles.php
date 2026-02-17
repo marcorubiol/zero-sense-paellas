@@ -68,16 +68,20 @@ class AdminSectionTitles implements FeatureInterface
                     $('#order_data h3').each(function() {
                         var elem = $(this);
                         
-                        if (elem.find('.zs-section-badge').length) {
+                        if (elem.find('.zs-section-suffix').length) {
                             return;
                         }
                         
                         var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
                         
-                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            elem.append('<span class="zs-badge zs-badge-auto zs-section-badge">Client</span>');
-                        } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            elem.append('<span class="zs-badge zs-section-badge zs-section-badge-venue">Venue</span>');
+                        if (firstWord === 'Billing') {
+                            elem.html(elem.html().replace('Billing', 'Billing<span class="zs-section-suffix"> &middot; Client</span>'));
+                        } else if (firstWord === 'Facturación') {
+                            elem.html(elem.html().replace('Facturación', 'Facturación<span class="zs-section-suffix"> &middot; Cliente</span>'));
+                        } else if (firstWord === 'Shipping') {
+                            elem.html(elem.html().replace('Shipping', 'Shipping<span class="zs-section-suffix"> &middot; Venue/Wedding Planner</span>'));
+                        } else if (firstWord === 'Envío') {
+                            elem.html(elem.html().replace('Envío', 'Envío<span class="zs-section-suffix"> &middot; Venue/Wedding Planner</span>'));
                         }
                     });
                     
@@ -138,21 +142,16 @@ JAVASCRIPT;
         }
         ?>
         <style>
-            /* Hide initially, flex row with badge right-aligned */
+            /* Hide initially to avoid visual jump */
             #order_data h3 {
                 visibility: hidden;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
             }
 
-            .zs-section-badge {
-                margin-left: auto;
-            }
-
-            .zs-section-badge-venue {
-                background: color-mix(in srgb, #7C3AED 12%, white 88%);
-                color: #7C3AED;
+            /* Muted inline suffix — · Client / · Venue/Wedding Planner */
+            .zs-section-suffix {
+                font-weight: 400;
+                font-size: 0.85em;
+                color: var(--zs-mb-description-color, #646970);
             }
         </style>
         <?php
