@@ -783,19 +783,24 @@ class Flowmattic implements FeatureInterface
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', function() {
                     const unavailableDiv = document.getElementById('zs-unavailable-actions');
-                    const icon = this.querySelector('.dashicons');
-                    
-                    if (unavailableDiv.style.display === 'none') {
-                        unavailableDiv.style.display = 'block';
-                        icon.classList.remove('dashicons-arrow-right');
-                        icon.classList.add('dashicons-arrow-down');
-                        this.innerHTML = this.innerHTML.replace('Show', 'Hide');
-                    } else {
-                        unavailableDiv.style.display = 'none';
-                        icon.classList.remove('dashicons-arrow-down');
-                        icon.classList.add('dashicons-arrow-right');
-                        this.innerHTML = this.innerHTML.replace('Hide', 'Show');
-                    }
+                    const isHidden = unavailableDiv.style.display === 'none';
+                    unavailableDiv.style.display = isHidden ? 'block' : 'none';
+                    this.textContent = isHidden
+                        ? this.textContent.replace(/^Show/, 'Hide')
+                        : this.textContent.replace(/^Hide/, 'Show');
+                });
+            }
+
+            // Handle toggle for automatic actions
+            const toggleAutoBtn = document.getElementById('zs-toggle-automatic-actions');
+            if (toggleAutoBtn) {
+                toggleAutoBtn.addEventListener('click', function() {
+                    const autoDiv = document.getElementById('zs-automatic-actions');
+                    const isHidden = autoDiv.style.display === 'none';
+                    autoDiv.style.display = isHidden ? 'block' : 'none';
+                    this.textContent = isHidden
+                        ? this.textContent.replace(/^Show/, 'Hide')
+                        : this.textContent.replace(/^Hide/, 'Show');
                 });
             }
         });
