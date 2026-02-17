@@ -67,13 +67,16 @@
 
 .zs-stock-table th.zs-sticky-col,
 .zs-stock-table td.zs-sticky-col {
-    position: sticky;
     left: 0;
-    z-index: 10;
     text-align: left;
     font-weight: 600;
     border-right: 2px solid #e0e0e0;
     box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.zs-stock-table td.zs-sticky-col {
+    position: sticky;
+    z-index: 10;
 }
 
 .zs-stock-table tbody tr:nth-child(even):not(.zs-category-header) td.zs-sticky-col {
