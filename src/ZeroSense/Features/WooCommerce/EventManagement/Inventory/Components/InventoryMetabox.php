@@ -373,10 +373,9 @@ class InventoryMetabox
                     border-bottom: none;
                 }
                 .zs-stock-alerts-banner.collapsed {
-                    filter: grayscale(0.5);
+                    filter: grayscale(0.8);
                 }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title {
-                    font-size: 12px;
                     font-weight: 500;
                     opacity: 0.85;
                 }
@@ -393,7 +392,7 @@ class InventoryMetabox
                 }
                 .zs-stock-alerts-title {
                     font-weight: 600;
-                    font-size: 14px;
+                    font-size: 12px;
                     display: flex;
                     align-items: center;
                     gap: 8px;
