@@ -321,51 +321,11 @@ class InventoryMetabox
                         transform: translateX(0);
                     }
                 }
-                
-                .zs-inventory-recalc-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-                
-                .zs-inventory-recalc-btn:disabled:hover::after {
-                    content: "You must unlock the inventory to recalculate materials";
-                    position: absolute;
-                    bottom: 100%;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: #333;
-                    color: white;
-                    padding: 8px 12px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    white-space: nowrap;
-                    z-index: 1000;
-                    margin-bottom: 5px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                }
-                
-                .zs-inventory-recalc-btn:disabled:hover::before {
-                    content: "";
-                    position: absolute;
-                    bottom: 100%;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 0;
-                    height: 0;
-                    border-left: 6px solid transparent;
-                    border-right: 6px solid transparent;
-                    border-top: 6px solid #333;
-                    z-index: 1000;
-                }
-                
-                .zs-inventory-recalc-btn {
-                    position: relative;
-                }
             </style>
             
             <div class="zs-inventory-header">
                 <div class="zs-inventory-controls">
-                    <button type="button" class="zs-inventory-recalc-btn" disabled title="<?php esc_attr_e('Unlock inventory to enable recalculation', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Recalculate all', 'zero-sense'); ?>
                     </button>
@@ -477,8 +437,6 @@ class InventoryMetabox
                     $lockBtn.attr('title', '<?php echo esc_js(__('Click to unlock for editing', 'zero-sense')); ?>');
                     $lockBtn.show();
                     $saveBtn.hide();
-                    // Disable recalculate button when locked
-                    $('.zs-inventory-recalc-btn').prop('disabled', true);
                 } else {
                     // Unlocked state: hide Unlock button, show Save & Lock
                     $inputs.prop('disabled', false);
@@ -491,8 +449,6 @@ class InventoryMetabox
                     $lockBtn.attr('data-locked', 'false');
                     $lockBtn.hide();
                     $saveBtn.show();
-                    // Enable recalculate button when unlocked
-                    $('.zs-inventory-recalc-btn').prop('disabled', false);
                 }
             });
             

@@ -46,9 +46,19 @@ class ProductMapper
         
         // Return cached result if available (same request)
         if (isset(self::$analysisCache[$orderId])) {
-            error_log('   📦 Using cached analysis for Order #' . $orderId);
+            error_log('📦 CACHE HIT for Order #' . $orderId . ' - has_barra_lliure: ' . (self::$analysisCache[$orderId]['has_barra_lliure'] ? 'YES' : 'NO'));
             return self::$analysisCache[$orderId];
         }
+        
+        // DEBUG: Log caller to understand flow
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+        $caller = '';
+        foreach ($backtrace as $i => $trace) {
+            if (isset($trace['class']) && isset($trace['function'])) {
+                $caller .= ($i > 0 ? ' <- ' : '') . $trace['class'] . '::' . $trace['function'];
+            }
+        }
+        error_log('🔍 CACHE MISS for Order #' . $orderId . ' - Caller: ' . $caller);
         
         $result = [
             'has_entrants' => false,
@@ -63,12 +73,10 @@ class ProductMapper
         $barraTermIds = self::getTermIds(self::BARRA_CATEGORY_SLUGS);
         $entrantsTermIds = self::getTermIds(self::ENTRANT_CATEGORY_SLUGS);
         
-        // DEBUG: Log category term IDs
-        error_log('🔍 Category Detection - Order #' . $order->get_id());
-        error_log('   Barra term IDs: ' . json_encode($barraTermIds));
-        error_log('   Entrants term IDs: ' . json_encode($entrantsTermIds));
+        $items = $order->get_items();
+        error_log('   Items count: ' . count($items));
         
-        foreach ($order->get_items() as $itemId => $item) {
+        foreach ($items as $itemId => $item) {
             $product = $item->get_product();
             
             if (!$product) {
@@ -145,7 +153,6 @@ class ProductMapper
             // Barra Libre (suele venderse por horas, sin receta de cocina)
             if (!empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $productId)) {
                 $result['has_barra_lliure'] = true;
-                error_log('   ✅ Open Bar detected! Product ID: ' . $productId . ' (' . $product->get_name() . ')');
             }
             
             // Entrants (si venden "Pack Aperitivo" sin receta detallada)
@@ -156,6 +163,7 @@ class ProductMapper
         
         // Cache result for this request
         self::$analysisCache[$orderId] = $result;
+        error_log('   ➡️ RESULT: has_barra_lliure=' . ($result['has_barra_lliure'] ? 'YES' : 'NO') . ', has_entrants=' . ($result['has_entrants'] ? 'YES' : 'NO'));
         
         return $result;
     }
