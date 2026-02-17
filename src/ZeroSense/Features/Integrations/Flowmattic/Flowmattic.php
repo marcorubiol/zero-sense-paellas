@@ -1758,15 +1758,15 @@ class Flowmattic implements FeatureInterface
     {
         switch ($status) {
             case self::EMAIL_STATUS_AUTO:
-                return '<span class="zs-badge-type zs-badge-auto">' . esc_html__('AUTO', 'zero-sense') . '</span>';
+                return '<span class="zs-badge zs-badge-auto">' . esc_html__('AUTO', 'zero-sense') . '</span>';
             case self::EMAIL_STATUS_MANUAL:
-                return '<span class="zs-badge-type zs-badge-manual">' . esc_html__('MAN', 'zero-sense') . '</span>';
+                return '<span class="zs-badge zs-badge-manual">' . esc_html__('MAN', 'zero-sense') . '</span>';
             case self::EMAIL_STATUS_ERROR:
-                return '<span class="zs-badge-type zs-badge-error">' . esc_html__('ERROR', 'zero-sense') . '</span>';
+                return '<span class="zs-badge zs-badge-error">' . esc_html__('ERROR', 'zero-sense') . '</span>';
             case self::EMAIL_STATUS_SKIPPED:
-                return '<span class="zs-badge-type zs-badge-skipped">' . esc_html__('SKIPPED', 'zero-sense') . '</span>';
+                return '<span class="zs-badge zs-badge-skipped">' . esc_html__('SKIPPED', 'zero-sense') . '</span>';
             default:
-                return '<span class="zs-badge-type zs-badge-auto">' . esc_html__('AUTO', 'zero-sense') . '</span>';
+                return '<span class="zs-badge zs-badge-auto">' . esc_html__('AUTO', 'zero-sense') . '</span>';
         }
     }
 
