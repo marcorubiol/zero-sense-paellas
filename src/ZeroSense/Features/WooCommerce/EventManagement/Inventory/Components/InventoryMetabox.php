@@ -357,7 +357,7 @@ class InventoryMetabox
                     align-items: center;
                     cursor: pointer;
                     user-select: none;
-                    padding: 12px 15px;
+                    padding: 10px 15px;
                     transition: all 0.2s ease;
                 }
                 .zs-stock-alerts-header:hover {
@@ -371,12 +371,23 @@ class InventoryMetabox
                     border-bottom: none;
                 }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title {
-                    font-size: 13px;
+                    font-size: 12px;
                     font-weight: 500;
                     opacity: 0.85;
                 }
+                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-title .zs-stock-alerts-title > span:first-child {
+                    font-size: 14px;
+                }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-summary {
-                    font-size: 12px;
+                    font-size: 11px;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-alert-count {
+                    gap: 3px;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-alert-count .dashicons {
+                    width: 14px;
+                    height: 14px;
+                    font-size: 14px;
                 }
                 .zs-stock-alerts-title {
                     font-weight: 600;
@@ -397,6 +408,11 @@ class InventoryMetabox
                     height: 16px;
                     font-size: 16px;
                     transition: transform 0.2s ease;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-toggle .dashicons {
+                    width: 14px;
+                    height: 14px;
+                    font-size: 14px;
                 }
                 .zs-stock-alerts-banner.collapsed .zs-stock-alerts-toggle .dashicons {
                     transform: rotate(-90deg);
