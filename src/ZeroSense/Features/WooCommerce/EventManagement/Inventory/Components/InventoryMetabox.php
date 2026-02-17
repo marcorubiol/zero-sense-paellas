@@ -651,18 +651,33 @@ class InventoryMetabox
             return;
         }
         
+        // Calcular valores automáticos primero
+        $calculated = MaterialCalculator::calculate($order);
+        
         // Obtener overrides existentes
         $existingOverrides = ManualOverride::get($postId);
         
-        // Merge con nuevos overrides del formulario (preservar los existentes)
+        // Filtrar solo los campos que realmente difieren del cálculo automático
         $newOverrides = $_POST['zs_inventory'] ?? [];
-        $mergedOverrides = array_merge($existingOverrides, $newOverrides);
+        $actualOverrides = [];
+        
+        foreach ($newOverrides as $materialKey => $value) {
+            $autoValue = $calculated[$materialKey] ?? 0;
+            $normalizedValue = ($value === '' || $value === null) ? 0 : (int) $value;
+            
+            // Solo guardar como override si difiere del valor automático
+            if ($normalizedValue != $autoValue) {
+                $actualOverrides[$materialKey] = $normalizedValue;
+            }
+        }
+        
+        // Merge con overrides existentes (preservar los que no vienen en el formulario)
+        $mergedOverrides = array_merge($existingOverrides, $actualOverrides);
         
         // Guardar overrides combinados
         ManualOverride::save($postId, $mergedOverrides);
         
-        // Calcular materiales finales
-        $calculated = MaterialCalculator::calculate($order);
+        // Aplicar overrides finales
         $final = ManualOverride::apply($calculated, $mergedOverrides);
         
         // Crear/actualizar reservas
