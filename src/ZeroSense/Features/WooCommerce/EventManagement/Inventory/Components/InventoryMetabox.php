@@ -313,11 +313,51 @@ class InventoryMetabox
                         transform: translateX(0);
                     }
                 }
+                
+                .zs-inventory-recalc-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+                
+                .zs-inventory-recalc-btn:disabled:hover::after {
+                    content: "You must unlock the inventory to recalculate materials";
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #333;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    white-space: nowrap;
+                    z-index: 1000;
+                    margin-bottom: 5px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                }
+                
+                .zs-inventory-recalc-btn:disabled:hover::before {
+                    content: "";
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-top: 6px solid #333;
+                    z-index: 1000;
+                }
+                
+                .zs-inventory-recalc-btn {
+                    position: relative;
+                }
             </style>
             
             <div class="zs-inventory-header">
                 <div class="zs-inventory-controls">
-                    <button type="button" class="zs-inventory-recalc-btn" disabled title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-recalc-btn" disabled title="<?php esc_attr_e('Unlock inventory to enable recalculation', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Recalculate all', 'zero-sense'); ?>
                     </button>
@@ -523,19 +563,17 @@ class InventoryMetabox
                     $input.addClass('zs-inventory-override');
                     
                     // Update badge to manual
-                    var $wrapper = $td.find('.zs-inventory-quantity-wrapper');
-                    var $container = $wrapper.find('.zs-inventory-badge-container');
+                    var $container = $td.find('.zs-inventory-badge-container');
                     $container.html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
                     
                     // Show reset icon
-                    var $resetIcon = $wrapper.find('.zs-inventory-reset-icon');
+                    var $resetIcon = $td.find('.zs-inventory-reset-icon');
                     $resetIcon.removeClass('hidden');
                 } else {
                     $input.removeClass('zs-inventory-override');
                     
                     // Update badge to auto
-                    var $wrapper = $td.find('.zs-inventory-quantity-wrapper');
-                    var $container = $wrapper.find('.zs-inventory-badge-container');
+                    var $container = $td.find('.zs-inventory-badge-container');
                     if (autoValue > 0) {
                         $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     } else {
@@ -543,7 +581,7 @@ class InventoryMetabox
                     }
                     
                     // Hide reset icon
-                    var $resetIcon = $wrapper.find('.zs-inventory-reset-icon');
+                    var $resetIcon = $td.find('.zs-inventory-reset-icon');
                     $resetIcon.addClass('hidden');
                 }
                 
