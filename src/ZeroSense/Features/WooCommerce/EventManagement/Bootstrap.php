@@ -9,6 +9,9 @@ use ZeroSense\Features\WooCommerce\EventManagement\Components\StaffAssignmentMet
 use ZeroSense\Features\WooCommerce\EventManagement\Components\DataExposer;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\ServiceAreaAdminColumns;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database\Schema;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\InventoryMetabox;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\StockAdminPage;
 
 /**
  * Bootstrap for Event Management module
@@ -18,6 +21,7 @@ class Bootstrap
     public function boot(): void
     {
         $this->registerMetaFields();
+        $this->initializeInventorySystem();
         
         (new EventDetailsMetabox())->register();
         (new EmailContentMetabox())->register();
@@ -25,6 +29,18 @@ class Bootstrap
         (new StaffAssignmentMetabox())->register();
         (new DataExposer())->register();
         (new ServiceAreaAdminColumns())->register();
+        
+        // Inventory system
+        (new InventoryMetabox())->register();
+        (new StockAdminPage())->register();
+    }
+    
+    private function initializeInventorySystem(): void
+    {
+        // Create database tables on plugin activation
+        register_activation_hook(__FILE__, function() {
+            Schema::createTables();
+        });
     }
 
     private function registerMetaFields(): void
