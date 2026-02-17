@@ -379,9 +379,6 @@ class InventoryMetabox
                     font-weight: 500;
                     opacity: 0.85;
                 }
-                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-summary {
-                    font-size: 11px;
-                }
                 .zs-stock-alerts-banner.collapsed .zs-alert-count {
                     gap: 3px;
                 }
@@ -421,7 +418,7 @@ class InventoryMetabox
                 .zs-stock-alerts-summary {
                     display: flex;
                     gap: 15px;
-                    font-size: 13px;
+                    font-size: 11px;
                 }
                 .zs-alert-count {
                     display: flex;
@@ -452,7 +449,7 @@ class InventoryMetabox
                 }
                 .zs-alert-item-header {
                     display: flex;
-                    align-items: center;
+                    align-items: flex-start;
                     gap: 6px;
                     font-weight: 500;
                 }
@@ -461,7 +458,7 @@ class InventoryMetabox
                     height: 18px;
                     font-size: 18px;
                     flex-shrink: 0;
-                    margin-top: 2px;
+                    margin-top: 3px;
                 }
                 .zs-alert-item-header .dashicons.alert-critical {
                     color: #dc3545;
