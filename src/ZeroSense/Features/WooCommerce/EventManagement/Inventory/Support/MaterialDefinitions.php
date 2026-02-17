@@ -30,7 +30,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 4-6 persones',
             ],
             [
                 'key' => 'paella_65cm',
@@ -38,7 +38,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 6-9 persones',
             ],
             [
                 'key' => 'paella_70cm',
@@ -46,7 +46,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 8-12 persones',
             ],
             [
                 'key' => 'paella_80cm',
@@ -54,7 +54,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 12-15 persones',
             ],
             [
                 'key' => 'paella_90cm',
@@ -62,7 +62,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 15-25 persones',
             ],
             [
                 'key' => 'paella_100cm',
@@ -70,7 +70,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 25-40 persones',
             ],
             [
                 'key' => 'paella_115cm',
@@ -78,7 +78,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 40-60 persones',
             ],
             [
                 'key' => 'paella_135cm',
@@ -86,7 +86,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: distribució intel·ligent segons total persones',
+                'description' => '1 paella per cada recepta amb 60-80 persones',
             ],
             
             // CREMADORS
@@ -96,7 +96,7 @@ class MaterialDefinitions
                 'category' => 'cremadors',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: per paelles de 55-65cm',
+                'description' => '1 per cada paella de 55cm o 65cm',
             ],
             [
                 'key' => 'cremador_70cm',
@@ -104,7 +104,7 @@ class MaterialDefinitions
                 'category' => 'cremadors',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: per paelles de 70-115cm',
+                'description' => '1 per cada paella de 70cm, 80cm, 90cm o 115cm',
             ],
             [
                 'key' => 'cremador_90cm',
@@ -112,7 +112,7 @@ class MaterialDefinitions
                 'category' => 'cremadors',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: per paelles de 100-135cm',
+                'description' => '1 per cada paella de 100cm o 135cm',
             ],
             
             // EQUIPAMENT CUINA
@@ -162,7 +162,7 @@ class MaterialDefinitions
                 'category' => 'equipament_cuina',
                 'parent_category' => 'materials_cuina',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 o 2 segons mida esdeveniment',
+                'description' => '1 si ≤50 persones, 2 si >50 persones',
             ],
             
             // ROBA PERSONAL
@@ -264,7 +264,7 @@ class MaterialDefinitions
                 'category' => 'caixes_contenidors',
                 'parent_category' => 'materials_logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: si >60pax',
+                'description' => '1 si >60 persones',
             ],
             
             // REFRIGERACIÓ
@@ -274,7 +274,7 @@ class MaterialDefinitions
                 'category' => 'refrigeracio',
                 'parent_category' => 'materials_logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: cuina 1/40pax + openbar 1/15pax',
+                'description' => 'Cuina: 1 cada 40 persones. Openbar: +1 cada 15 persones',
             ],
             [
                 'key' => 'poal_refrigerador_begudes',
@@ -282,7 +282,7 @@ class MaterialDefinitions
                 'category' => 'refrigeracio',
                 'parent_category' => 'materials_logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: openbar >25pax',
+                'description' => '1 si openbar i >25 persones',
             ],
             
             // UTENSILIS SERVIR
@@ -300,7 +300,7 @@ class MaterialDefinitions
                 'category' => 'utensilis_servir',
                 'parent_category' => 'materials_servei',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: openbar 1/15pax',
+                'description' => 'Openbar: 1 cada 15 persones',
             ],
             [
                 'key' => 'cubiteres_gel',
@@ -308,7 +308,7 @@ class MaterialDefinitions
                 'category' => 'utensilis_servir',
                 'parent_category' => 'materials_servei',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: openbar 1/30pax',
+                'description' => 'Openbar: 1 cada 30 persones',
             ],
             [
                 'key' => 'pinzes_gel',
@@ -316,7 +316,7 @@ class MaterialDefinitions
                 'category' => 'utensilis_servir',
                 'parent_category' => 'materials_servei',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: mateix nombre que cubiteres gel',
+                'description' => '1 per cada cubitera de gel',
             ],
             
             // MOBILIARI ESDEVENIMENTS
@@ -350,7 +350,7 @@ class MaterialDefinitions
                 'category' => 'mobiliari_esdeveniments',
                 'parent_category' => 'materials_logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: si openbar',
+                'description' => '1 si openbar',
             ],
             
             // VAIXELLA I MENATGE
@@ -368,7 +368,7 @@ class MaterialDefinitions
                 'category' => 'vaixella_menatge',
                 'parent_category' => 'materials_servei',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: openbar 2 per persona',
+                'description' => 'Openbar: 2 per persona',
             ],
             [
                 'key' => 'gots_reutilitzables_plastic',
@@ -376,7 +376,7 @@ class MaterialDefinitions
                 'category' => 'vaixella_menatge',
                 'parent_category' => 'materials_servei',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: openbar 3 per persona',
+                'description' => 'Openbar: 3 per persona',
             ],
             [
                 'key' => 'bols_amanides',
@@ -402,7 +402,7 @@ class MaterialDefinitions
                 'category' => 'altres',
                 'parent_category' => 'materials_logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: segons persones + entrants + barra',
+                'description' => '≤20pax:1, ≤35:2, ≤50:3, ≤70:4, >70:1/20pax. +1 si entrants, +1 si openbar',
             ],
             [
                 'key' => 'vehicle',
