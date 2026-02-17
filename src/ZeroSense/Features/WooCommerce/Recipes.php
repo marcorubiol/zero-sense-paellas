@@ -62,6 +62,13 @@ class Recipes implements FeatureInterface
 
         add_action('woocommerce_product_options_general_product_data', [$this, 'renderProductRecipeField']);
         add_action('woocommerce_admin_process_product_object', [$this, 'saveProductRecipeField']);
+        
+        // Taxonomy usage protection
+        add_filter('manage_edit-' . self::TAX_INGREDIENT . '_columns', [$this, 'addUsageColumn']);
+        add_filter('manage_' . self::TAX_INGREDIENT . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
+        add_filter('manage_edit-' . self::TAX_UTENSIL . '_columns', [$this, 'addUsageColumn']);
+        add_filter('manage_' . self::TAX_UTENSIL . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
+        add_action('pre_delete_term', [$this, 'preventDeleteIfInUse'], 10, 2);
     }
 
     public function getPriority(): int
@@ -1150,5 +1157,101 @@ class Recipes implements FeatureInterface
             'l' => __('l', 'zero-sense'),
             'u' => __('u', 'zero-sense'),
         ];
+    }
+
+    public function addUsageColumn(array $columns): array
+    {
+        $new_columns = [];
+        foreach ($columns as $key => $value) {
+            $new_columns[$key] = $value;
+            if ($key === 'name') {
+                $new_columns['usage'] = __('Used in recipes', 'zero-sense');
+            }
+        }
+        return $new_columns;
+    }
+
+    public function renderUsageColumn(string $content, string $column_name, int $term_id): string
+    {
+        if ($column_name !== 'usage') {
+            return $content;
+        }
+
+        $taxonomy = get_term($term_id)->taxonomy ?? '';
+        $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
+        $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
+
+        $args = [
+            'post_type' => self::CPT,
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => $meta_key,
+                    'value' => sprintf(':"%d";', $term_id),
+                    'compare' => 'LIKE',
+                ],
+            ],
+        ];
+
+        $query = new \WP_Query($args);
+        $count = $query->post_count;
+
+        if ($count === 0) {
+            return '<span style="color:#999;">—</span>';
+        }
+
+        $url = add_query_arg([
+            'post_type' => self::CPT,
+            $taxonomy => $term_id,
+        ], admin_url('edit.php'));
+
+        return sprintf(
+            '<a href="%s"><strong>%d</strong> %s</a>',
+            esc_url($url),
+            $count,
+            $count === 1 ? __('recipe', 'zero-sense') : __('recipes', 'zero-sense')
+        );
+    }
+
+    public function preventDeleteIfInUse(int $term_id, string $taxonomy): void
+    {
+        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
+            return;
+        }
+
+        $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
+        $term_name = get_term($term_id)->name ?? '';
+
+        $args = [
+            'post_type' => self::CPT,
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => $meta_key,
+                    'value' => sprintf(':"%d";', $term_id),
+                    'compare' => 'LIKE',
+                ],
+            ],
+        ];
+
+        $query = new \WP_Query($args);
+        $count = $query->post_count;
+
+        if ($count > 0) {
+            $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
+            
+            wp_die(
+                sprintf(
+                    __('Cannot delete %s "%s". It is currently used in %d recipe(s). Please remove it from all recipes before deleting.', 'zero-sense'),
+                    $type_label,
+                    esc_html($term_name),
+                    $count
+                ),
+                __('Term in use', 'zero-sense'),
+                ['back_link' => true]
+            );
+        }
     }
 }
