@@ -48,7 +48,7 @@ class StockAdminPage
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
             ['dashicons'],
-            '1.1.2'
+            '1.1.3'
         );
         
         wp_enqueue_script(
@@ -153,7 +153,7 @@ class StockAdminPage
                                 $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
                         ?>
                             <tr class="zs-category-header">
-                                <td colspan="<?php echo count($serviceAreas) + 1; ?>" style="background: #f0f0f1; font-weight: 600; padding: 10px 12px; border-top: 2px solid #c3c4c7;">
+                                <td colspan="<?php echo count($serviceAreas) + 1; ?>">
                                     <?php echo esc_html($categoryLabel); ?>
                                 </td>
                             </tr>
