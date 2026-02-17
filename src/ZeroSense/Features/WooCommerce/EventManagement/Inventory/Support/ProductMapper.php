@@ -38,6 +38,7 @@ class ProductMapper
             'has_barra_lliure' => false,
             'paella_varieties' => [],
             'paella_count' => 0,
+            'paella_items' => [],
             'staff_count' => ['cuiner' => 0, 'cambrer' => 0],
         ];
         
@@ -45,7 +46,7 @@ class ProductMapper
         $barraTermIds = self::getTermIds(self::BARRA_CATEGORY_SLUGS);
         $entrantsTermIds = self::getTermIds(self::ENTRANT_CATEGORY_SLUGS);
         
-        foreach ($order->get_items() as $item) {
+        foreach ($order->get_items() as $itemId => $item) {
             $product = $item->get_product();
             
             if (!$product) {
@@ -64,20 +65,37 @@ class ProductMapper
                     // UTF-8 safe
                     $recipeName = mb_strtolower($recipe->post_title, 'UTF-8');
                     
-                    // Detectar paellas por receta
-                    if (mb_stripos($recipeName, 'paella', 0, 'UTF-8') !== false) {
-                        $result['paella_count'] += $item->get_quantity();
+                    // Detectar paellas por checkbox en receta
+                    $needsPaella = get_post_meta($recipeId, 'zs_recipe_needs_paella', true);
+                    
+                    if ($needsPaella === '1') {
+                        $guests = (int) $item->get_quantity();
+                        $result['paella_count'] += $guests;
                         
-                        // Detectar variedad
+                        // Detectar variedad por nombre (para cassoles)
+                        $variety = '';
                         if (mb_stripos($recipeName, 'valenciana', 0, 'UTF-8') !== false) {
+                            $variety = 'valenciana';
                             $result['paella_varieties'][] = 'valenciana';
                         } elseif (mb_stripos($recipeName, 'marisco', 0, 'UTF-8') !== false) {
+                            $variety = 'marisco';
                             $result['paella_varieties'][] = 'marisco';
                         } elseif (mb_stripos($recipeName, 'secreta', 0, 'UTF-8') !== false) {
+                            $variety = 'secreta';
                             $result['paella_varieties'][] = 'secreta';
                         } elseif (mb_stripos($recipeName, 'mixta', 0, 'UTF-8') !== false) {
+                            $variety = 'mixta';
                             $result['paella_varieties'][] = 'mixta';
                         }
+                        
+                        // Añadir item detallado para cálculos
+                        $result['paella_items'][] = [
+                            'item_id' => $itemId,
+                            'recipe_id' => $recipeId,
+                            'recipe_name' => $recipe->post_title,
+                            'guests' => $guests,
+                            'variety' => $variety,
+                        ];
                         
                         continue; // ✅ Procesado por receta, skip categorías
                     }

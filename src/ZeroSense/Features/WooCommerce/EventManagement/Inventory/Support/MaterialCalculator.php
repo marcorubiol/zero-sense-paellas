@@ -120,6 +120,13 @@ class MaterialCalculator
     private static function calculatePaellasAndCremadors(int $guests, array $analysis): array
     {
         $result = [];
+        $cremadorCount = [];
+        $totalPaellas = 0;
+        
+        // Si no hay paella_items, no calculamos nada
+        if (empty($analysis['paella_items'])) {
+            return $result;
+        }
         
         // Definición de capacidades de paellas (pax promedio)
         $paellaSizes = [
@@ -133,47 +140,48 @@ class MaterialCalculator
             ['key' => 'paella_55cm', 'min' => 4, 'max' => 6, 'avg' => 5, 'cremador' => 'cremador_50cm'],
         ];
         
-        // Algoritmo: usar paellas más grandes posibles
-        $remaining = $guests;
-        $cremadorCount = [];
-        
-        foreach ($paellaSizes as $size) {
-            if ($remaining <= 0) break;
+        // Iterar sobre cada receta de paella individual
+        foreach ($analysis['paella_items'] as $paellaItem) {
+            $itemGuests = (int) $paellaItem['guests'];
             
-            // Calcular cuántas paellas de este tamaño necesitamos
-            $count = 0;
+            if ($itemGuests <= 0) {
+                continue;
+            }
             
-            // Si quedan suficientes personas para llenar esta paella
-            while ($remaining >= $size['min']) {
-                $count++;
-                $remaining -= $size['avg'];
-                
-                // Contar cremadores
-                if (!isset($cremadorCount[$size['cremador']])) {
-                    $cremadorCount[$size['cremador']] = 0;
+            // Encontrar el tamaño de paella más apropiado para ESTE número de personas
+            $selectedSize = null;
+            
+            foreach ($paellaSizes as $size) {
+                if ($itemGuests >= $size['min'] && $itemGuests <= $size['max']) {
+                    $selectedSize = $size;
+                    break;
                 }
-                $cremadorCount[$size['cremador']]++;
             }
             
-            if ($count > 0) {
-                $result[$size['key']] = $count;
+            // Si no encontramos tamaño exacto, usar el más cercano
+            if (!$selectedSize) {
+                if ($itemGuests < 4) {
+                    $selectedSize = $paellaSizes[count($paellaSizes) - 1]; // Más pequeña
+                } else {
+                    $selectedSize = $paellaSizes[0]; // Más grande
+                }
             }
-        }
-        
-        // Si aún quedan personas (resto pequeño), añadir una paella pequeña
-        if ($remaining > 0) {
-            if (!isset($result['paella_55cm'])) {
-                $result['paella_55cm'] = 0;
-            }
-            $result['paella_55cm']++;
             
-            if (!isset($cremadorCount['cremador_50cm'])) {
-                $cremadorCount['cremador_50cm'] = 0;
+            // Añadir paella
+            if (!isset($result[$selectedSize['key']])) {
+                $result[$selectedSize['key']] = 0;
             }
-            $cremadorCount['cremador_50cm']++;
+            $result[$selectedSize['key']]++;
+            $totalPaellas++;
+            
+            // Añadir cremador correspondiente
+            if (!isset($cremadorCount[$selectedSize['cremador']])) {
+                $cremadorCount[$selectedSize['cremador']] = 0;
+            }
+            $cremadorCount[$selectedSize['cremador']]++;
         }
         
-        // Añadir cremadores
+        // Añadir cremadores al resultado
         foreach ($cremadorCount as $cremador => $count) {
             $result[$cremador] = $count;
         }
@@ -187,16 +195,10 @@ class MaterialCalculator
         // Butà: 1 por cremador + extras si >60pax
         $result['buta'] = $totalCremadors;
         if ($guests > 60) {
-            $result['buta'] += 2; // 1-2 extra para eventos grandes
+            $result['buta'] += 2;
         }
         
-        // Catifes: 1 por paella (sumar todas las paellas)
-        $totalPaellas = 0;
-        foreach ($result as $key => $value) {
-            if (strpos($key, 'paella_') === 0) {
-                $totalPaellas += $value;
-            }
-        }
+        // Catifes: 1 por paella
         $result['catifes'] = $totalPaellas;
         
         return $result;

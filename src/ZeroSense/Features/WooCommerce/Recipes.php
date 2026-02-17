@@ -12,6 +12,7 @@ class Recipes implements FeatureInterface
 
     private const META_INGREDIENTS = 'zs_recipe_ingredients';
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
+    private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
 
     private const NONCE_FIELD = 'zs_recipe_nonce';
     private const NONCE_ACTION = 'zs_recipe_save';
@@ -224,6 +225,22 @@ class Recipes implements FeatureInterface
                     <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
                 </a>
             </p>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input 
+                        type="checkbox" 
+                        name="zs_recipe_needs_paella" 
+                        value="1"
+                        <?php checked(get_post_meta($post->ID, self::META_NEEDS_PAELLA, true), '1'); ?>
+                        style="margin: 0;"
+                    >
+                    <strong><?php esc_html_e('Aquesta recepta necessita paellera', 'zero-sense'); ?></strong>
+                </label>
+                <p style="margin: 8px 0 0 0; color: #666; font-size: 13px;">
+                    <?php esc_html_e('Marca aquesta opció si la recepta requereix paellera per calcular materials automàticament (paelles, cremadors, etc.)', 'zero-sense'); ?>
+                </p>
+            </div>
         </div>
 
         <script>
@@ -394,6 +411,13 @@ class Recipes implements FeatureInterface
         $units = isset($raw['unit']) && is_array($raw['unit']) ? $raw['unit'] : [];
 
         $allowedUnits = array_keys($this->getAllowedUnits());
+
+        // Save paella checkbox
+        if (isset($_POST['zs_recipe_needs_paella']) && $_POST['zs_recipe_needs_paella'] === '1') {
+            update_post_meta($postId, self::META_NEEDS_PAELLA, '1');
+        } else {
+            delete_post_meta($postId, self::META_NEEDS_PAELLA);
+        }
 
         $out = [];
         $count = max(count($ids), count($qtys), count($units));
