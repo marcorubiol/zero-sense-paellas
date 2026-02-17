@@ -1274,9 +1274,10 @@ class Recipes implements FeatureInterface
         );
     }
 
-    public function preventIngredientDelete(int $term_id, int $tt_id, string $taxonomy, $deleted_term): void
+    public function preventIngredientDelete(int $term_id, int $tt_id, $deleted_term, $object_ids): void
     {
-        $term = get_term($term_id, self::TAX_INGREDIENT);
+        $term = is_object($deleted_term) && $deleted_term instanceof \WP_Term ? $deleted_term : get_term($term_id, self::TAX_INGREDIENT);
+        
         if (!$term instanceof \WP_Term) {
             return;
         }
@@ -1325,9 +1326,10 @@ class Recipes implements FeatureInterface
         }
     }
 
-    public function preventUtensilDelete(int $term_id, int $tt_id, string $taxonomy, $deleted_term): void
+    public function preventUtensilDelete(int $term_id, int $tt_id, $deleted_term, $object_ids): void
     {
-        $term = get_term($term_id, self::TAX_UTENSIL);
+        $term = is_object($deleted_term) && $deleted_term instanceof \WP_Term ? $deleted_term : get_term($term_id, self::TAX_UTENSIL);
+        
         if (!$term instanceof \WP_Term) {
             return;
         }
