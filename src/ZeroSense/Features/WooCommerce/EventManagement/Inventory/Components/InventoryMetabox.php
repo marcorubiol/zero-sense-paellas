@@ -62,9 +62,25 @@ class InventoryMetabox
         
         // Obtener todas las definiciones de materiales
         $materials = MaterialDefinitions::getAll();
+        $parentCategories = MaterialDefinitions::getParentCategories();
         
-        // Agrupar por categoría
-        $categories = [
+        // Agrupar por parent_category y luego por category
+        $groupedByParent = [];
+        foreach ($materials as $material) {
+            $parentCat = $material['parent_category'] ?? 'altres';
+            $cat = $material['category'] ?? 'altres';
+            
+            if (!isset($groupedByParent[$parentCat])) {
+                $groupedByParent[$parentCat] = [];
+            }
+            if (!isset($groupedByParent[$parentCat][$cat])) {
+                $groupedByParent[$parentCat][$cat] = [];
+            }
+            $groupedByParent[$parentCat][$cat][] = $material;
+        }
+        
+        // Nombres de categorías
+        $categoryLabels = [
             'paelles' => 'Paelles',
             'cremadors' => 'Cremadors',
             'equipament_cuina' => 'Equipament Cuina',
@@ -77,15 +93,6 @@ class InventoryMetabox
             'vaixella_menatge' => 'Vaixella i Menatge',
             'altres' => 'Altres',
         ];
-        
-        $groupedMaterials = [];
-        foreach ($materials as $material) {
-            $cat = $material['category'] ?? 'altres';
-            if (!isset($groupedMaterials[$cat])) {
-                $groupedMaterials[$cat] = [];
-            }
-            $groupedMaterials[$cat][] = $material;
-        }
         
         ?>
         <div class="zs-inventory-metabox">
@@ -207,6 +214,50 @@ class InventoryMetabox
                     font-size: 11px;
                     color: #666;
                     font-style: italic;
+                }
+                .zs-inventory-accordion {
+                    margin-bottom: 15px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    overflow: hidden;
+                }
+                .zs-inventory-accordion-header {
+                    background: #f0f0f1;
+                    padding: 12px 15px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-weight: 600;
+                    font-size: 14px;
+                    color: #1d2327;
+                    user-select: none;
+                    transition: background 0.2s ease;
+                }
+                .zs-inventory-accordion-header:hover {
+                    background: #e8e8e9;
+                }
+                .zs-inventory-accordion-icon {
+                    transition: transform 0.2s ease;
+                    font-size: 16px;
+                }
+                .zs-inventory-accordion.collapsed .zs-inventory-accordion-icon {
+                    transform: rotate(-90deg);
+                }
+                .zs-inventory-accordion-content {
+                    max-height: 5000px;
+                    overflow: hidden;
+                    transition: max-height 0.3s ease;
+                }
+                .zs-inventory-accordion.collapsed .zs-inventory-accordion-content {
+                    max-height: 0;
+                }
+                .zs-inventory-category-header {
+                    background: #fafafa;
+                    font-weight: 600;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                    color: #50575e;
                     display: block;
                     margin-top: 2px;
                 }
@@ -272,65 +323,73 @@ class InventoryMetabox
                 </div>
             </div>
             
-            <table class="widefat striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                        <th style="text-align: right;"><?php esc_html_e('Quantity', 'zero-sense'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($categories as $catKey => $catLabel): ?>
-                        <?php if (isset($groupedMaterials[$catKey])): ?>
-                            <tr class="zs-inventory-category-header">
-                                <td colspan="2"><?php echo esc_html($catLabel); ?></td>
-                            </tr>
-                            <?php foreach ($groupedMaterials[$catKey] as $material): ?>
-                        <?php
-                        $materialKey = $material['key'];
-                        $autoValue = $calculated[$materialKey] ?? 0;
-                        $overrideValue = $overrides[$materialKey] ?? null;
-                        $finalValue = $final[$materialKey] ?? 0;
-                        $hasOverride = $overrideValue !== null && $overrideValue !== '';
-                        ?>
-                        <tr>
-                            <td>
-                                <strong><?php echo esc_html($material['label']); ?></strong>
-                                <?php if (!empty($material['description'])): ?>
-                                    <span class="zs-inventory-description"><?php echo esc_html($material['description']); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <div class="zs-inventory-quantity-wrapper">
-                                    <span class="dashicons dashicons-update zs-inventory-reset-icon hidden" 
-                                       data-material="<?php echo esc_attr($materialKey); ?>"
-                                       data-has-override="<?php echo $hasOverride ? '1' : '0'; ?>"
-                                       title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
-                                    </span>
-                                    <span class="zs-inventory-badge-container">
-                                        <?php if ($hasOverride): ?>
-                                            <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
-                                        <?php elseif ($autoValue > 0): ?>
-                                            <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
-                                        <?php endif; ?>
-                                    </span>
-                                    <input 
-                                        type="number" 
-                                        name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
-                                        value="<?php echo esc_attr(($hasOverride ? $overrideValue : $autoValue) ?: ''); ?>"
-                                        data-auto="<?php echo esc_attr($autoValue); ?>"
-                                        min="0"
-                                        class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
-                                        disabled
-                                    />
-                                </div>
-                            </td>
-                        </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <?php foreach ($groupedByParent as $parentKey => $categories): ?>
+                <div class="zs-inventory-accordion">
+                    <div class="zs-inventory-accordion-header">
+                        <span><?php echo esc_html($parentCategories[$parentKey] ?? $parentKey); ?></span>
+                        <span class="dashicons dashicons-arrow-down-alt2 zs-inventory-accordion-icon"></span>
+                    </div>
+                    <div class="zs-inventory-accordion-content">
+                        <table class="widefat striped">
+                            <thead>
+                                <tr>
+                                    <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
+                                    <th style="text-align: right;"><?php esc_html_e('Quantity', 'zero-sense'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($categories as $catKey => $materialsInCat): ?>
+                                    <tr class="zs-inventory-category-header">
+                                        <td colspan="2"><?php echo esc_html($categoryLabels[$catKey] ?? $catKey); ?></td>
+                                    </tr>
+                                    <?php foreach ($materialsInCat as $material): ?>
+                                        <?php
+                                        $materialKey = $material['key'];
+                                        $autoValue = $calculated[$materialKey] ?? 0;
+                                        $overrideValue = $overrides[$materialKey] ?? null;
+                                        $finalValue = $final[$materialKey] ?? 0;
+                                        $hasOverride = $overrideValue !== null && $overrideValue !== '';
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?php echo esc_html($material['label']); ?></strong>
+                                                <?php if (!empty($material['description'])): ?>
+                                                    <span class="zs-inventory-description"><?php echo esc_html($material['description']); ?></span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div class="zs-inventory-quantity-wrapper">
+                                                    <span class="dashicons dashicons-update zs-inventory-reset-icon hidden" 
+                                                       data-material="<?php echo esc_attr($materialKey); ?>"
+                                                       data-has-override="<?php echo $hasOverride ? '1' : '0'; ?>"
+                                                       title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
+                                                    </span>
+                                                    <span class="zs-inventory-badge-container">
+                                                        <?php if ($hasOverride): ?>
+                                                            <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
+                                                        <?php elseif ($autoValue > 0): ?>
+                                                            <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                    <input 
+                                                        type="number" 
+                                                        name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
+                                                        value="<?php echo esc_attr(($hasOverride ? $overrideValue : $autoValue) ?: ''); ?>"
+                                                        data-auto="<?php echo esc_attr($autoValue); ?>"
+                                                        min="0"
+                                                        class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
+                                                        disabled
+                                                    />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endforeach; ?>
             
             <p style="margin-top: 15px; color: #666; font-size: 13px;">
                 <strong><?php esc_html_e('Note:', 'zero-sense'); ?></strong>
@@ -542,18 +601,17 @@ class InventoryMetabox
             function showToast(message, type) {
                 var $toast = $('<div class="zs-inventory-toast ' + type + '">' + message + '</div>');
                 $('body').append($toast);
-                
-                setTimeout(function() {
-                    $toast.addClass('show');
-                }, 100);
-                
-                setTimeout(function() {
+                setTimeout(function() { $toast.addClass('show'); }, 10);
+                setTimeout(function() { 
                     $toast.removeClass('show');
-                    setTimeout(function() {
-                        $toast.remove();
-                    }, 300);
+                    setTimeout(function() { $toast.remove(); }, 300);
                 }, 3000);
             }
+            
+            // Accordion toggle
+            $('.zs-inventory-accordion-header').on('click', function() {
+                $(this).closest('.zs-inventory-accordion').toggleClass('collapsed');
+            });
         });
         </script>
         <?php
