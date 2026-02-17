@@ -382,11 +382,6 @@ class InventoryMetabox
                 .zs-stock-alerts-banner.collapsed .zs-alert-count {
                     gap: 3px;
                 }
-                .zs-stock-alerts-banner.collapsed .zs-alert-count .dashicons {
-                    width: 14px;
-                    height: 14px;
-                    font-size: 14px;
-                }
                 .zs-stock-alerts-title {
                     font-weight: 600;
                     font-size: 12px;
@@ -450,6 +445,7 @@ class InventoryMetabox
                 .zs-alert-item-header {
                     display: flex;
                     align-items: flex-start;
+                    flex-wrap: wrap;
                     gap: 6px;
                     font-weight: 500;
                 }
