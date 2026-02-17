@@ -86,6 +86,23 @@ class StockAdminPage
         <div class="wrap zs-stock-admin-page">
             <h1><?php esc_html_e('Stock Management', 'zero-sense'); ?></h1>
             
+            <!-- Explicación -->
+            <div class="zs-stock-help" style="background: #fff; border-left: 4px solid #2271b1; padding: 15px; margin: 20px 0; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+                <h3 style="margin-top: 0;">📦 <?php esc_html_e('How Stock Management Works', 'zero-sense'); ?></h3>
+                <p>
+                    <strong><?php esc_html_e('This page manages your total inventory per service area.', 'zero-sense'); ?></strong>
+                </p>
+                <ul style="margin-left: 20px;">
+                    <li><strong><?php esc_html_e('Total Stock:', 'zero-sense'); ?></strong> <?php esc_html_e('Enter the total quantity you own for each material in each service area.', 'zero-sense'); ?></li>
+                    <li><strong><?php esc_html_e('Automatic Calculation:', 'zero-sense'); ?></strong> <?php esc_html_e('When you create an order, the system automatically calculates required materials based on guest count and products.', 'zero-sense'); ?></li>
+                    <li><strong><?php esc_html_e('Manual Override:', 'zero-sense'); ?></strong> <?php esc_html_e('In the order edit screen, you can manually adjust quantities if needed.', 'zero-sense'); ?></li>
+                    <li><strong><?php esc_html_e('Reservations:', 'zero-sense'); ?></strong> <?php esc_html_e('Materials are automatically reserved for each order based on event date.', 'zero-sense'); ?></li>
+                </ul>
+                <p style="margin-bottom: 0;">
+                    💡 <em><?php esc_html_e('Tip: Use the search box to quickly find specific materials.', 'zero-sense'); ?></em>
+                </p>
+            </div>
+            
             <!-- Buscador -->
             <div class="zs-stock-header">
                 <div class="zs-stock-search">
@@ -98,7 +115,7 @@ class StockAdminPage
                 </div>
                 <div class="zs-stock-actions">
                     <button type="button" class="button button-primary zs-save-stock">
-                        💾 <?php esc_html_e('Save All Changes', 'zero-sense'); ?>
+                        💾 <?php esc_html_e('Save Changes', 'zero-sense'); ?>
                     </button>
                 </div>
             </div>
@@ -115,8 +132,31 @@ class StockAdminPage
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($materials as $material): ?>
-                            <tr data-material="<?php echo esc_attr($material['key']); ?>">
+                        <?php 
+                        $currentCategory = '';
+                        foreach ($materials as $material): 
+                            // Mostrar header de categoría si cambia
+                            if ($currentCategory !== $material['category']):
+                                $currentCategory = $material['category'];
+                                $categoryLabels = [
+                                    'paellas' => 'Paellas',
+                                    'cremadores' => 'Cremadores',
+                                    'gas' => 'Gas',
+                                    'mobiliario' => 'Mobiliario',
+                                    'textil' => 'Textil',
+                                    'barra' => 'Barra',
+                                    'personal' => 'Personal',
+                                ];
+                                $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
+                        ?>
+                            <tr class="zs-category-header">
+                                <td colspan="<?php echo count($serviceAreas) + 1; ?>" style="background: #f0f0f1; font-weight: 600; padding: 10px 12px; border-top: 2px solid #c3c4c7;">
+                                    📦 <?php echo esc_html($categoryLabel); ?>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                        
+                            <tr data-material="<?php echo esc_attr($material['key']); ?>" data-category="<?php echo esc_attr($material['category']); ?>">
                                 <td class="zs-sticky-col">
                                     <strong><?php echo esc_html($material['label']); ?></strong>
                                 </td>
@@ -144,7 +184,7 @@ class StockAdminPage
             <!-- Sticky Footer con botón de guardar -->
             <div class="zs-stock-footer">
                 <button type="button" class="button button-primary zs-save-stock">
-                    💾 <?php esc_html_e('Save All Changes', 'zero-sense'); ?>
+                    💾 <?php esc_html_e('Save Changes', 'zero-sense'); ?>
                 </button>
             </div>
         </div>

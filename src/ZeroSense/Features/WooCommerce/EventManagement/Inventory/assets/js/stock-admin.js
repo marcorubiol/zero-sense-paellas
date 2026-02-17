@@ -36,12 +36,38 @@
             const term = searchTerm.toLowerCase();
             
             $('.zs-stock-table tbody tr').each(function() {
-                const materialName = $(this).find('.zs-sticky-col').text().toLowerCase();
+                // Skip category headers in filtering
+                if ($(this).hasClass('zs-category-header')) {
+                    return;
+                }
                 
-                if (term === '' || materialName.indexOf(term) !== -1) {
+                const materialName = $(this).find('.zs-sticky-col').text().toLowerCase();
+                const category = $(this).data('category') || '';
+                
+                if (term === '' || materialName.indexOf(term) !== -1 || category.indexOf(term) !== -1) {
                     $(this).show();
                 } else {
                     $(this).hide();
+                }
+            });
+            
+            // Show/hide category headers based on visible items
+            $('.zs-stock-table tbody tr.zs-category-header').each(function() {
+                const $header = $(this);
+                let hasVisibleItems = false;
+                
+                // Check if any items in this category are visible
+                $header.nextUntil('.zs-category-header').each(function() {
+                    if ($(this).is(':visible')) {
+                        hasVisibleItems = true;
+                        return false; // break
+                    }
+                });
+                
+                if (hasVisibleItems || term === '') {
+                    $header.show();
+                } else {
+                    $header.hide();
                 }
             });
         }
