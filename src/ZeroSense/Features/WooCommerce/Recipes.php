@@ -455,6 +455,7 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
+                                console.log('ZS Recipes: AJAX search triggered for term:', params.term);
                                 return {
                                     action: 'zs_ingredient_search',
                                     nonce: nonce,
@@ -462,15 +463,27 @@ class Recipes implements FeatureInterface
                                 };
                             },
                             processResults: function(data) {
+                                console.log('ZS Recipes: AJAX search results received:', data);
                                 return data;
                             },
-                            error: function(xhr, status, error) {
-                                console.error('Zero Sense Recipes: AJAX Error:', {
-                                    status: status,
-                                    error: error,
-                                    responseText: xhr.responseText,
-                                    readyState: xhr.readyState
+                            transport: function(params, success, failure) {
+                                var $request = $.ajax(params);
+                                
+                                $request.then(success);
+                                $request.fail(function(jqXHR, textStatus, errorThrown) {
+                                    // Ignore abort errors (they happen when user types fast)
+                                    if (textStatus !== 'abort') {
+                                        console.error('Zero Sense Recipes: AJAX Error:', {
+                                            status: textStatus,
+                                            error: errorThrown,
+                                            responseText: jqXHR.responseText,
+                                            readyState: jqXHR.readyState
+                                        });
+                                        failure();
+                                    }
                                 });
+                                
+                                return $request;
                             }
                         }
                     });
@@ -612,6 +625,7 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
+                                console.log('ZS Recipes (Utensils): AJAX search triggered for term:', params.term);
                                 return {
                                     action: 'zs_utensil_search',
                                     nonce: nonce,
@@ -619,15 +633,27 @@ class Recipes implements FeatureInterface
                                 };
                             },
                             processResults: function(data) {
+                                console.log('ZS Recipes (Utensils): AJAX search results received:', data);
                                 return data;
                             },
-                            error: function(xhr, status, error) {
-                                console.error('Zero Sense Recipes: AJAX Error:', {
-                                    status: status,
-                                    error: error,
-                                    responseText: xhr.responseText,
-                                    readyState: xhr.readyState
+                            transport: function(params, success, failure) {
+                                var $request = $.ajax(params);
+                                
+                                $request.then(success);
+                                $request.fail(function(jqXHR, textStatus, errorThrown) {
+                                    // Ignore abort errors (they happen when user types fast)
+                                    if (textStatus !== 'abort') {
+                                        console.error('Zero Sense Recipes (Utensils): AJAX Error:', {
+                                            status: textStatus,
+                                            error: errorThrown,
+                                            responseText: jqXHR.responseText,
+                                            readyState: jqXHR.readyState
+                                        });
+                                        failure();
+                                    }
                                 });
+                                
+                                return $request;
                             }
                         }
                     });
