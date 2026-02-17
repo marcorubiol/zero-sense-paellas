@@ -189,71 +189,8 @@ class Recipes implements FeatureInterface
         $utensils = is_array($utensils) ? $utensils : [];
         $needsPaella = get_post_meta($post->ID, self::META_NEEDS_PAELLA, true);
         ?>
-        <style>
-            .zs-paella-mode-toggle {
-                background: #f9f9f9;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                padding: 15px;
-                margin: 20px 0;
-            }
-            .zs-paella-mode-header {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 8px;
-            }
-            .zs-paella-mode-header > span:first-child {
-                font-size: 24px;
-                line-height: 1;
-            }
-            .zs-paella-mode-switch {
-                position: relative;
-                display: inline-block;
-                width: 36px;
-                height: 20px;
-            }
-            .zs-paella-mode-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-            .zs-paella-mode-slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ddd;
-                transition: .3s;
-                border-radius: 20px;
-            }
-            .zs-paella-mode-slider:before {
-                position: absolute;
-                content: "";
-                height: 14px;
-                width: 14px;
-                left: 3px;
-                bottom: 3px;
-                background-color: white;
-                transition: .3s;
-                border-radius: 50%;
-            }
-            input:checked + .zs-paella-mode-slider {
-                background-color: #2271b1;
-            }
-            input:checked + .zs-paella-mode-slider:before {
-                transform: translateX(16px);
-            }
-            .zs-paella-mode-info {
-                color: #666;
-                font-size: 13px;
-                line-height: 1.5;
-            }
-        </style>
-        <div class="zs-recipes-metabox">
-            <h3 style="margin-top:0; margin-bottom:10px; font-size:14px;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
+        <div class="zs-mb-wrapper">
+            <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
@@ -324,9 +261,9 @@ class Recipes implements FeatureInterface
                     ?>
                 </tbody>
             </table>
-            <p style="margin-top:10px; display: flex; justify-content: space-between; align-items: center;">
+            <p class="zs-mb-row-actions">
                 <button type="button" class="button" id="zs-recipe-add-row"><?php esc_html_e('Add ingredient', 'zero-sense'); ?></button>
-                <a href="<?php echo esc_url($manage_url); ?>" target="_blank" style="text-decoration: none; font-size: 13px;">
+                <a href="<?php echo esc_url($manage_url); ?>" target="_blank" class="zs-mb-link">
                     <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
                 </a>
             </p>
@@ -334,9 +271,9 @@ class Recipes implements FeatureInterface
             <!-- Paella Mode Toggle -->
             <div class="zs-paella-mode-toggle">
                 <div class="zs-paella-mode-header">
-                    <label class="zs-paella-mode-switch">
+                    <label class="zs-switch">
                         <input type="checkbox" name="zs_recipe_needs_paella" value="1" <?php checked($needsPaella, '1'); ?>>
-                        <span class="zs-paella-mode-slider"></span>
+                        <span class="zs-slider"></span>
                     </label>
                     <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
                 </div>
@@ -347,7 +284,7 @@ class Recipes implements FeatureInterface
 
             <!-- Utensils Section (hidden if paella mode is ON) -->
             <div class="zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
-                <h3 style="margin-top:0; margin-bottom:10px; font-size:14px;"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
                 <table class="widefat striped" style="margin-top:8px;">
                     <thead>
                         <tr>
@@ -418,13 +355,13 @@ class Recipes implements FeatureInterface
                     </tbody>
                 </table>
 
-                <p style="margin-top:10px; display: flex; justify-content: space-between; align-items: center;">
+                <p class="zs-mb-row-actions">
                     <button type="button" class="button" id="zs-utensil-add-row"><?php esc_html_e('Add utensil', 'zero-sense'); ?></button>
-                    <a href="<?php echo esc_url($manage_utensils_url); ?>" target="_blank" style="text-decoration: none; font-size: 13px;">
+                    <a href="<?php echo esc_url($manage_utensils_url); ?>" target="_blank" class="zs-mb-link">
                         <?php esc_html_e('Manage all utensils', 'zero-sense'); ?> →
                     </a>
                 </p>
-                <p style="margin-top:8px; color: #646970; font-size: 12px; font-style: italic;">
+                <p class="zs-mb-description" style="font-style: italic;">
                     <?php esc_html_e('"Every X people" = ratio (1 = per person, 4 = every 4 people, 10 = every 10 people)', 'zero-sense'); ?>
                 </p>
             </div>

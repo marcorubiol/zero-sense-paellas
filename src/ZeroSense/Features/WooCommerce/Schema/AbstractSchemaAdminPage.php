@@ -213,18 +213,18 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                 <?php wp_nonce_field($this->getFormAction()); ?>
                 <input type="hidden" name="action" value="<?php echo esc_attr($this->getFormAction()); ?>">
 
-                <h3 style="margin-top: 20px; margin-bottom: 4px;"><?php esc_html_e('Visible Fields', 'zero-sense'); ?></h3>
-                <p style="margin-top: 0; margin-bottom: 12px; color: #666;"><?php esc_html_e('These fields are visible in all orders. Drag to reorder them or click "Hide" to move them to the hidden section.', 'zero-sense'); ?></p>
+                <h3 class="zs-schema-section-title"><?php esc_html_e('Visible Fields', 'zero-sense'); ?></h3>
+                <p class="zs-schema-section-desc"><?php esc_html_e('These fields are visible in all orders. Drag to reorder them or click "Hide" to move them to the hidden section.', 'zero-sense'); ?></p>
 
-                <table class="widefat striped" style="max-width: 1100px;">
+                <table class="widefat striped zs-schema-table">
                     <thead>
                         <tr>
-                            <th style="width: 40px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
-                            <th style="width: 180px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
+                            <th class="zs-schema-col-order"><?php esc_html_e('Order', 'zero-sense'); ?></th>
+                            <th class="zs-schema-col-key"><?php esc_html_e('Key', 'zero-sense'); ?></th>
                             <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
-                            <th style="width: 150px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
-                            <th style="width: 100px;"><?php esc_html_e('Usage', 'zero-sense'); ?></th>
-                            <th style="width: 120px;"><?php esc_html_e('Actions', 'zero-sense'); ?></th>
+                            <th class="zs-schema-col-type"><?php esc_html_e('Type', 'zero-sense'); ?></th>
+                            <th class="zs-schema-col-usage"><?php esc_html_e('Usage', 'zero-sense'); ?></th>
+                            <th class="zs-schema-col-actions"><?php esc_html_e('Actions', 'zero-sense'); ?></th>
                         </tr>
                     </thead>
                     <tbody id="zs-ops-schema-rows">
@@ -239,7 +239,7 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                     </tbody>
                 </table>
 
-                <div class="tablenav top" style="max-width:1100px;">
+                <div class="tablenav top zs-schema-tablenav">
                     <div class="alignleft actions">
                         <button type="button" class="button" id="zs-ops-schema-add">
                             <?php esc_html_e('Add field', 'zero-sense'); ?>
@@ -260,16 +260,16 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                 });
                 
                 if (!empty($hiddenFields)) : ?>
-                    <h3 style="margin-top: 30px; margin-bottom: 4px;"><?php esc_html_e('Hidden Fields', 'zero-sense'); ?> <span style="color: #666; font-size: 13px; font-weight: normal;">(<?php echo count($hiddenFields); ?>)</span></h3>
-                    <p style="margin-top: 0; margin-bottom: 12px; color: #666;"><?php esc_html_e('These fields are hidden from new orders but remain visible in orders that already have data. Click "Unhide" to make them visible again, or "Delete" to permanently remove fields with no data.', 'zero-sense'); ?></p>
-                    <table class="widefat" style="max-width:1100px; margin-top: 12px;">
+                    <h3 class="zs-schema-section-title zs-schema-section-title--hidden"><?php esc_html_e('Hidden Fields', 'zero-sense'); ?> <span class="zs-schema-count">(<?php echo count($hiddenFields); ?>)</span></h3>
+                    <p class="zs-schema-section-desc"><?php esc_html_e('These fields are hidden from new orders but remain visible in orders that already have data. Click "Unhide" to make them visible again, or "Delete" to permanently remove fields with no data.', 'zero-sense'); ?></p>
+                    <table class="widefat zs-schema-table zs-schema-table--hidden">
                         <thead>
                             <tr>
-                                <th style="width: 180px;"><?php esc_html_e('Key', 'zero-sense'); ?></th>
+                                <th class="zs-schema-col-key"><?php esc_html_e('Key', 'zero-sense'); ?></th>
                                 <th><?php esc_html_e('Label', 'zero-sense'); ?></th>
-                                <th style="width: 150px;"><?php esc_html_e('Type', 'zero-sense'); ?></th>
-                                <th style="width: 100px;"><?php esc_html_e('Usage', 'zero-sense'); ?></th>
-                                <th style="width: 120px;"><?php esc_html_e('Actions', 'zero-sense'); ?></th>
+                                <th class="zs-schema-col-type"><?php esc_html_e('Type', 'zero-sense'); ?></th>
+                                <th class="zs-schema-col-usage"><?php esc_html_e('Usage', 'zero-sense'); ?></th>
+                                <th class="zs-schema-col-actions"><?php esc_html_e('Actions', 'zero-sense'); ?></th>
                             </tr>
                         </thead>
                         <tbody id="zs-ops-schema-hidden-rows">
@@ -306,10 +306,10 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                 <input type="hidden" name="<?php echo esc_attr($formFieldName); ?>[created_at][]" value="<?php echo esc_attr($createdAt); ?>">
             </td>
             <td>
-                <input type="text" name="<?php echo esc_attr($formFieldName); ?>[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. Work tables">
+                <input type="text" name="<?php echo esc_attr($formFieldName); ?>[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field widefat" placeholder="e.g. Work tables">
             </td>
             <td>
-                <select name="<?php echo esc_attr($formFieldName); ?>[type][]" style="width:100%;">
+                <select name="<?php echo esc_attr($formFieldName); ?>[type][]" class="widefat">
                     <?php foreach ($allowedTypes as $typeValue => $typeLabel): ?>
                         <option value="<?php echo esc_attr($typeValue); ?>" <?php selected($type, $typeValue); ?>><?php echo esc_html($typeLabel); ?></option>
                     <?php endforeach; ?>
@@ -345,10 +345,10 @@ abstract class AbstractSchemaAdminPage implements FeatureInterface
                 <input type="hidden" name="<?php echo esc_attr($formFieldName); ?>[created_at][]" value="<?php echo esc_attr($createdAt); ?>">
             </td>
             <td>
-                <input type="text" name="<?php echo esc_attr($formFieldName); ?>[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field" style="width:100%;" placeholder="e.g. Work tables">
+                <input type="text" name="<?php echo esc_attr($formFieldName); ?>[label][]" value="<?php echo esc_attr($label); ?>" class="regular-text zs-ops-label-field widefat" placeholder="e.g. Work tables">
             </td>
             <td>
-                <select name="<?php echo esc_attr($formFieldName); ?>[type][]" style="width:100%;">
+                <select name="<?php echo esc_attr($formFieldName); ?>[type][]" class="widefat">
                     <?php foreach ($allowedTypes as $typeValue => $typeLabel): ?>
                         <option value="<?php echo esc_attr($typeValue); ?>" <?php selected($type, $typeValue); ?>><?php echo esc_html($typeLabel); ?></option>
                     <?php endforeach; ?>

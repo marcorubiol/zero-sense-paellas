@@ -138,13 +138,13 @@ abstract class AbstractSchemaMetabox implements FeatureInterface
 
         wp_nonce_field('zs_schema_save_' . $schemaKey, 'zs_schema_nonce_' . $schemaKey);
         ?>
-        <table class="widefat striped" style="margin-top:8px;" data-schema-metabox="<?php echo esc_attr($schemaKey); ?>">
+        <table class="widefat striped zs-schema-metabox-table" data-schema-metabox="<?php echo esc_attr($schemaKey); ?>">
             <tbody>
             <?php if ($fields === []) : 
                 $url = admin_url('admin.php?page=' . $menuSlug);
             ?>
                 <tr>
-                    <td colspan="2" style="padding:12px;">
+                    <td colspan="2" class="zs-mb-wrapper">
                         <?php echo esc_html(sprintf(__('%s fields are not configured yet.', 'zero-sense'), $this->getMetaboxTitle())); ?> 
                         <a href="<?php echo esc_url($url); ?>"><?php echo esc_html__('Configure schema', 'zero-sense'); ?></a>
                     </td>

@@ -1,4 +1,62 @@
 /* Material & Logistics Schema Styles */
+
+/* Section titles */
+.zs-schema-section-title {
+    margin-top: 20px;
+    margin-bottom: 4px;
+}
+
+.zs-schema-section-title--hidden {
+    margin-top: 30px;
+}
+
+.zs-schema-section-desc {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #666;
+}
+
+.zs-schema-count {
+    color: #666;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+/* Table layout */
+.zs-schema-table {
+    max-width: 1100px;
+}
+
+.zs-schema-table--hidden {
+    margin-top: 12px;
+}
+
+.zs-schema-tablenav {
+    max-width: 1100px;
+}
+
+/* Column widths */
+.zs-schema-col-order { width: 40px; }
+.zs-schema-col-key   { width: 180px; }
+.zs-schema-col-type  { width: 150px; }
+.zs-schema-col-usage { width: 100px; }
+.zs-schema-col-actions { width: 120px; }
+
+/* Also fix the th label field — widefat handles width but we need vertical-align */
+.zs-schema-table th {
+    vertical-align: middle;
+}
+
+/* Schema metabox (order edit screen) */
+.zs-schema-metabox-table {
+    margin-top: 8px;
+}
+
+.zs-schema-metabox-label-col {
+    width: 260px;
+}
+
+
 /* Override WordPress default vertical-align: top for .widefat td */
 #zs-ops-schema-rows td:nth-child(2) {
     vertical-align: middle;

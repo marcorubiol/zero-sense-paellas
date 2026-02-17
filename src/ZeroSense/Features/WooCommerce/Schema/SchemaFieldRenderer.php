@@ -111,7 +111,6 @@ class SchemaFieldRenderer
             id="<?php echo esc_attr($inputId); ?>"
             name="<?php echo esc_attr($inputName); ?>"
             rows="3"
-            style="width:100%;"
             class="widefat"><?php echo esc_textarea(is_string($value) ? $value : ''); ?></textarea>
         <?php
     }

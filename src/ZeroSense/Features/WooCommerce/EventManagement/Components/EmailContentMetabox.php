@@ -46,8 +46,8 @@ class EmailContentMetabox
         wp_nonce_field('zs_emails_content_save', 'zs_emails_content_nonce');
         ?>
         
-        <div class="zs-email-content-wrapper">
-            <div class="zs-field">
+        <div class="zs-mb-wrapper">
+            <div class="zs-mb-field">
                 <label for="budget_emails_content">
                     <?php esc_html_e('Budget Emails Content', 'zero-sense'); ?>
                 </label>
@@ -55,7 +55,7 @@ class EmailContentMetabox
                 <p class="description"><?php esc_html_e('Custom content for budget emails sent via FlowMattic.', 'zero-sense'); ?></p>
             </div>
             
-            <div class="zs-field">
+            <div class="zs-mb-field" style="margin-top: 16px;">
                 <label for="final_details_emails_content">
                     <?php esc_html_e('Final Details Emails Content', 'zero-sense'); ?>
                 </label>
@@ -64,24 +64,6 @@ class EmailContentMetabox
             </div>
         </div>
 
-        <style>
-            .zs-email-content-wrapper {
-                padding: 12px;
-            }
-            .zs-email-content-wrapper .zs-field {
-                margin-bottom: 16px;
-            }
-            .zs-email-content-wrapper .zs-field:last-child {
-                margin-bottom: 0;
-            }
-            .zs-email-content-wrapper .zs-field label {
-                display: block;
-                margin-bottom: 6px;
-                font-weight: 600;
-                font-size: 13px;
-                color: #1d2327;
-            }
-        </style>
         <?php
     }
 

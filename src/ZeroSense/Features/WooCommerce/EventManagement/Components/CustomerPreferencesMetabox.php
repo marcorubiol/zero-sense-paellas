@@ -55,7 +55,7 @@ class CustomerPreferencesMetabox
                            <?php checked($marketingConsent, '1'); ?>>
                     <?php esc_html_e('Marketing Consent', 'zero-sense'); ?>
                 </label>
-                <span class="description" style="display:block;margin-top:4px;font-size:12px;color:#646970;">
+                <span class="description zs-mb-description">
                     <?php esc_html_e('Syncs with FluentCRM', 'zero-sense'); ?>
                 </span>
             </p>

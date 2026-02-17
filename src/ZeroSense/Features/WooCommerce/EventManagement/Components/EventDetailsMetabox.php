@@ -124,13 +124,13 @@ class EventDetailsMetabox
         wp_nonce_field('zs_event_details_save', 'zs_event_details_nonce');
         ?>
         
-        <div class="zs-event-details-wrapper">
+        <div class="zs-mb-wrapper">
             <!-- Guest Information -->
-            <div class="zs-field-group">
+            <div class="zs-mb-field-group">
                 <h3><?php esc_html_e('Guest information', 'zero-sense'); ?></h3>
                 
-                <div class="zs-field-row">
-                    <div class="zs-field">
+                <div class="zs-mb-field-row">
+                    <div class="zs-mb-field">
                         <label for="event_total_guests">
                             <?php esc_html_e('Total guests', 'zero-sense'); ?>
                         </label>
@@ -143,8 +143,8 @@ class EventDetailsMetabox
                     </div>
                 </div>
                 
-                <div class="zs-field-row">
-                    <div class="zs-field">
+                <div class="zs-mb-field-row">
+                    <div class="zs-mb-field">
                         <label for="event_adults">
                             <?php esc_html_e('Adults', 'zero-sense'); ?>
                         </label>
@@ -156,7 +156,7 @@ class EventDetailsMetabox
                                class="short">
                     </div>
                     
-                    <div class="zs-field">
+                    <div class="zs-mb-field">
                         <label for="event_children_5_to_8">
                             <?php esc_html_e('Children 5-8 years (40%)', 'zero-sense'); ?>
                         </label>
@@ -168,7 +168,7 @@ class EventDetailsMetabox
                                class="short">
                     </div>
                     
-                    <div class="zs-field">
+                    <div class="zs-mb-field">
                         <label for="event_children_0_to_4">
                             <?php esc_html_e('Children 0-4 years (free)', 'zero-sense'); ?>
                         </label>
@@ -181,7 +181,7 @@ class EventDetailsMetabox
                     </div>
                 </div>
 
-                <div class="zs-field">
+                <div class="zs-mb-field">
                     <label for="event_intolerances">
                         <?php esc_html_e('Allergies / Intolerances', 'zero-sense'); ?>
                     </label>
@@ -190,10 +190,10 @@ class EventDetailsMetabox
             </div>
 
             <!-- Service Location -->
-            <div class="zs-field-group">
+            <div class="zs-mb-field-group">
                 <h3><?php esc_html_e('Service location', 'zero-sense'); ?></h3>
                 
-                <div class="zs-field">
+                <div class="zs-mb-field">
                     <label for="event_service_location">
                         <?php esc_html_e('Service location', 'zero-sense'); ?>
                     </label>
@@ -211,11 +211,11 @@ class EventDetailsMetabox
             </div>
 
             <!-- Event Timing -->
-            <div class="zs-field-group">
+            <div class="zs-mb-field-group">
                 <h3><?php esc_html_e('Event timing', 'zero-sense'); ?></h3>
                 
-                <div class="zs-field-row">
-                    <div class="zs-field">
+                <div class="zs-mb-field-row">
+                    <div class="zs-mb-field">
                         <label for="event_date">
                             <?php esc_html_e('Event date', 'zero-sense'); ?>
                         </label>
@@ -226,7 +226,7 @@ class EventDetailsMetabox
                                class="short">
                     </div>
                     
-                    <div class="zs-field">
+                    <div class="zs-mb-field">
                         <label for="event_start_time">
                             <?php esc_html_e('Event start time', 'zero-sense'); ?>
                         </label>
@@ -239,11 +239,11 @@ class EventDetailsMetabox
                 </div>
                 
                 <!-- Team Setup -->
-                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Team setup', 'zero-sense'); ?></h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php esc_html_e('Team setup', 'zero-sense'); ?></h4>
                     
-                    <div class="zs-field-row">
-                        <div class="zs-field">
+                    <div class="zs-mb-field-row">
+                        <div class="zs-mb-field">
                             <label for="event_team_arrival_time">
                                 <?php esc_html_e('Team arrival time', 'zero-sense'); ?>
                             </label>
@@ -255,27 +255,26 @@ class EventDetailsMetabox
                                        class="short">
                                 <button type="button" 
                                         id="zs-recalculate-team-arrival-time" 
-                                        class="button button-secondary"
-                                        style="display: flex; align-items: center; gap: 4px;"
+                                        class="button button-secondary zs-mb-btn-inline"
                                         title="<?php esc_attr_e('Recalculate based on Paellas service time (3 hours before)', 'zero-sense'); ?>">
                                     <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
                                     <?php esc_html_e('Auto', 'zero-sense'); ?>
                                 </button>
                             </div>
-                            <p class="description" style="margin-top: 4px; font-size: 11px; color: #646970;">
+                            <p class="zs-mb-description">
                                 <?php esc_html_e('Click Auto to set this 3 hours before Paellas service time', 'zero-sense'); ?>
                             </p>
                         </div>
-                        <div class="zs-field"></div>
+                        <div class="zs-mb-field"></div>
                     </div>
                 </div>
                 
                 <!-- Service Times -->
-                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Service times', 'zero-sense'); ?></h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php esc_html_e('Service times', 'zero-sense'); ?></h4>
                     
-                    <div class="zs-field-row">
-                        <div class="zs-field">
+                    <div class="zs-mb-field-row">
+                        <div class="zs-mb-field">
                             <label for="event_starters_service_time">
                                 <?php esc_html_e('Starters service time', 'zero-sense'); ?>
                             </label>
@@ -287,19 +286,18 @@ class EventDetailsMetabox
                                        class="short">
                                 <button type="button" 
                                         id="zs-recalculate-starters-time" 
-                                        class="button button-secondary"
-                                        style="display: flex; align-items: center; gap: 4px;"
+                                        class="button button-secondary zs-mb-btn-inline"
                                         title="<?php esc_attr_e('Recalculate based on Paellas service time (30 min before)', 'zero-sense'); ?>">
                                     <span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
                                     <?php esc_html_e('Auto', 'zero-sense'); ?>
                                 </button>
                             </div>
-                            <p class="description" style="margin-top: 4px; font-size: 11px; color: #646970;">
+                            <p class="zs-mb-description">
                                 <?php esc_html_e('Click Auto to set this 30 minutes before Paellas service time', 'zero-sense'); ?>
                             </p>
                         </div>
                         
-                        <div class="zs-field">
+                        <div class="zs-mb-field">
                             <label for="event_serving_time">
                                 <?php esc_html_e('Paellas service time', 'zero-sense'); ?>
                             </label>
@@ -313,11 +311,11 @@ class EventDetailsMetabox
                 </div>
                 
                 <!-- Open Bar -->
-                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Open bar', 'zero-sense'); ?></h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php esc_html_e('Open bar', 'zero-sense'); ?></h4>
                     
-                    <div class="zs-field-row">
-                        <div class="zs-field">
+                    <div class="zs-mb-field-row">
+                        <div class="zs-mb-field">
                             <label for="event_open_bar_start">
                                 <?php esc_html_e('Open bar start', 'zero-sense'); ?>
                             </label>
@@ -328,7 +326,7 @@ class EventDetailsMetabox
                                    class="short">
                         </div>
                         
-                        <div class="zs-field">
+                        <div class="zs-mb-field">
                             <label for="event_open_bar_end">
                                 <?php esc_html_e('Open bar end', 'zero-sense'); ?>
                             </label>
@@ -342,11 +340,11 @@ class EventDetailsMetabox
                 </div>
                 
                 <!-- Cocktail -->
-                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;"><?php esc_html_e('Cocktail', 'zero-sense'); ?></h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php esc_html_e('Cocktail', 'zero-sense'); ?></h4>
                     
-                    <div class="zs-field-row">
-                        <div class="zs-field">
+                    <div class="zs-mb-field-row">
+                        <div class="zs-mb-field">
                             <label for="event_cocktail_start">
                                 <?php esc_html_e('Cocktail start', 'zero-sense'); ?>
                             </label>
@@ -357,7 +355,7 @@ class EventDetailsMetabox
                                    class="short">
                         </div>
                         
-                        <div class="zs-field">
+                        <div class="zs-mb-field">
                             <label for="event_cocktail_end">
                                 <?php esc_html_e('Cocktail end', 'zero-sense'); ?>
                             </label>
@@ -372,11 +370,11 @@ class EventDetailsMetabox
             </div>
 
             <!-- Event Details -->
-            <div class="zs-field-group">
+            <div class="zs-mb-field-group">
                 <h3><?php esc_html_e('Additional details', 'zero-sense'); ?></h3>
                 
-                <div class="zs-field-row">
-                    <div class="zs-field">
+                <div class="zs-mb-field-row">
+                    <div class="zs-mb-field">
                         <label for="event_type">
                             <?php esc_html_e('Event type', 'zero-sense'); ?>
                         </label>
@@ -390,7 +388,7 @@ class EventDetailsMetabox
                         </select>
                     </div>
                     
-                    <div class="zs-field">
+                    <div class="zs-mb-field">
                         <label for="event_how_found_us">
                             <?php esc_html_e('How found us', 'zero-sense'); ?>
                         </label>
@@ -407,57 +405,6 @@ class EventDetailsMetabox
             </div>
         </div>
 
-        <style>
-            .zs-event-details-wrapper {
-                padding: 12px;
-            }
-            .zs-field-group {
-                display: grid;
-                gap: 16px;
-                margin-bottom: 24px;
-                padding-bottom: 24px;
-                border-bottom: 1px solid #ddd;
-            }
-            .zs-field-group:last-child {
-                border-bottom: none;
-            }
-            .zs-field-group h3 {
-                margin: 0;
-                font-size: 14px;
-                font-weight: 600;
-                color: #1d2327;
-            }
-            .zs-field-row {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 16px;
-            }
-
-            .zs-field-row .zs-field {
-                display: flex;
-                flex-direction: column;
-            }
-
-            .zs-field label {
-                display: block;
-                margin-bottom: 6px;
-                font-weight: 600;
-                font-size: 13px;
-                color: #1d2327;
-            }
-            .zs-field input[type="text"],
-            .zs-field input[type="number"],
-            .zs-field input[type="date"],
-            .zs-field input[type="time"],
-            .zs-field input[type="url"],
-            .zs-field select {
-                width: 100%;
-            }
-            .zs-field input.short {
-                width: 150px;
-            }
-        </style>
-        
         <script>
         (function() {
             'use strict';

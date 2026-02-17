@@ -1,5 +1,215 @@
 /* Zero Sense - Admin Metaboxes Shared Styles */
 
+/* =================================================================
+   METABOX DESIGN TOKENS
+   ================================================================= */
+
+:root {
+    /* Layout */
+    --zs-mb-padding: 12px;
+    --zs-mb-gap: 16px;
+    --zs-mb-section-gap: 12px;
+    --zs-mb-border: 1px solid #dcdcde;
+
+    /* Typography */
+    --zs-mb-label-size: 13px;
+    --zs-mb-label-weight: 600;
+    --zs-mb-label-color: #1d2327;
+    --zs-mb-subheader-size: 12px;
+    --zs-mb-subheader-color: #50575e;
+    --zs-mb-description-size: 11px;
+    --zs-mb-description-color: #646970;
+}
+
+/* =================================================================
+   SHARED METABOX LAYOUT CLASSES
+   ================================================================= */
+
+/* Wrapper: standard padding for all metabox content areas */
+.zs-mb-wrapper {
+    padding: var(--zs-mb-padding);
+}
+
+/* Field group: a labeled section with a bottom separator */
+.zs-mb-field-group {
+    display: grid;
+    gap: var(--zs-mb-gap);
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: var(--zs-mb-border);
+}
+
+.zs-mb-field-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.zs-mb-field-group > h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--zs-mb-label-color);
+}
+
+/* Field row: side-by-side fields in a responsive grid */
+.zs-mb-field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--zs-mb-gap);
+}
+
+.zs-mb-field-row .zs-mb-field {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Individual field */
+.zs-mb-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: var(--zs-mb-label-weight);
+    font-size: var(--zs-mb-label-size);
+    color: var(--zs-mb-label-color);
+}
+
+.zs-mb-field input[type="text"],
+.zs-mb-field input[type="number"],
+.zs-mb-field input[type="date"],
+.zs-mb-field input[type="time"],
+.zs-mb-field input[type="url"],
+.zs-mb-field select {
+    width: 100%;
+}
+
+.zs-mb-field input.short {
+    width: 150px;
+}
+
+/* Sub-section divider: replaces inline border-top divs */
+.zs-mb-divider {
+    border-top: var(--zs-mb-border);
+    padding-top: var(--zs-mb-section-gap);
+    margin-top: var(--zs-mb-section-gap);
+}
+
+/* Sub-section header: replaces inline h4 styles */
+.zs-mb-subheader {
+    margin: 0 0 8px 0;
+    font-size: var(--zs-mb-subheader-size);
+    font-weight: 600;
+    color: var(--zs-mb-subheader-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Description text */
+.zs-mb-description {
+    margin-top: 4px;
+    font-size: var(--zs-mb-description-size);
+    color: var(--zs-mb-description-color);
+}
+
+/* Manage link (e.g. "Manage all ingredients →") */
+.zs-mb-link {
+    text-decoration: none;
+    font-size: 13px;
+    color: #2271b1;
+}
+
+.zs-mb-link:hover {
+    color: #135e96;
+    text-decoration: underline;
+}
+
+/* Inline button with icon (e.g. Auto recalculate buttons) */
+.zs-mb-btn-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Inline flex row with space-between (e.g. Add button + Manage link) */
+.zs-mb-row-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* Staff role section */
+.zs-staff-role-section {
+    margin-bottom: 8px;
+}
+
+/* Utility: hide element */
+.zs-hidden {
+    display: none !important;
+}
+
+/* Staff row: flex row for staff assignment entries */
+.zs-staff-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.zs-staff-display {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.zs-staff-display strong {
+    min-width: 150px;
+}
+
+.zs-staff-info {
+    flex: 1;
+    font-size: 12px;
+    color: var(--zs-mb-description-color);
+}
+
+.zs-staff-select {
+    flex: 1;
+    max-width: 300px;
+}
+
+/* =================================================================
+   PAELLA MODE TOGGLE (Recipes metabox)
+   ================================================================= */
+
+.zs-paella-mode-toggle {
+    background: #f9f9f9;
+    border: var(--zs-mb-border);
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.zs-paella-mode-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.zs-paella-mode-info {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.zs-paella-mode-info p {
+    margin: 0;
+}
+
+/* =================================================================
+   SHOW MORE/LESS BUTTON
+   ================================================================= */
+
 /* Show More/Less Button */
 .zs-show-more {
     margin-top: 12px;

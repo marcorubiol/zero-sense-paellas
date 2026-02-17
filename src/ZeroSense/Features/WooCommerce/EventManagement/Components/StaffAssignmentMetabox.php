@@ -232,7 +232,7 @@ class StaffAssignmentMetabox
         var zsStaffByRole = <?php echo wp_json_encode($staffByRole); ?>;
         var zsRoleLabels = <?php echo wp_json_encode($roleLabels); ?>;
         </script>
-        <div class="zs-staff-assignment-wrapper">
+        <div class="zs-mb-wrapper">
             <?php foreach ($roles as $roleSlug => $roleName): ?>
                 <?php
                 $assignedStaff = array_filter($staffAssignments, function($assignment) use ($roleSlug) {
@@ -245,10 +245,8 @@ class StaffAssignmentMetabox
                 $otherStaff = $staffByRoleMembership['without_role'];
                 ?>
                 
-                <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #50575e; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <?php echo esc_html($roleName); ?>
-                    </h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php echo esc_html($roleName); ?></h4>
                     
                     <div class="zs-staff-role-section" data-role="<?php echo esc_attr($roleSlug); ?>">
                         <?php if (!empty($assignedStaff)): ?>
@@ -260,12 +258,12 @@ class StaffAssignmentMetabox
                                 $phone = $staffId > 0 ? get_post_meta($staffId, self::META_PHONE, true) : '';
                                 $email = $staffId > 0 ? get_post_meta($staffId, self::META_EMAIL, true) : '';
                                 ?>
-                                <div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;" data-staff-id="<?php echo esc_attr($staffId); ?>">
+                                <div class="zs-staff-row" data-staff-id="<?php echo esc_attr($staffId); ?>">
                                     <input type="hidden" name="zs_event_staff[<?php echo esc_attr($roleSlug); ?>][]" value="<?php echo esc_attr($staffId); ?>" class="zs-staff-hidden-input">
                                     
-                                    <div class="zs-staff-display" style="flex: 1; gap: 10px; align-items: center; display: flex;">
-                                        <strong style="min-width: 150px;"><?php echo esc_html($staffName); ?></strong>
-                                        <span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;">
+                                    <div class="zs-staff-display">
+                                        <strong><?php echo esc_html($staffName); ?></strong>
+                                        <span class="zs-staff-info">
                                             <?php if ($phone || $email): ?>
                                                 <?php if ($phone): ?>
                                                     📞 <?php echo esc_html($phone); ?>
@@ -279,7 +277,6 @@ class StaffAssignmentMetabox
                                     </div>
                                     
                                     <select class="zs-staff-select zs-hidden" 
-                                            style="flex: 1; max-width: 300px;"
                                             data-role="<?php echo esc_attr($roleSlug); ?>">
                                         <option value=""><?php esc_html_e('Select staff member...', 'zero-sense'); ?></option>
                                         
@@ -313,10 +310,10 @@ class StaffAssignmentMetabox
                                         <?php endif; ?>
                                     </select>
                                     
-                                    <button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;">
+                                    <button type="button" class="button button-small zs-staff-edit">
                                         <?php esc_html_e('Change', 'zero-sense'); ?>
                                     </button>
-                                    <button type="button" class="button button-small zs-staff-remove" style="flex-shrink: 0;">
+                                    <button type="button" class="button button-small zs-staff-remove">
                                         <?php esc_html_e('Remove', 'zero-sense'); ?>
                                     </button>
                                 </div>
@@ -324,9 +321,8 @@ class StaffAssignmentMetabox
                         <?php endif; ?>
                         
                         <a href="#" 
-                           class="zs-staff-add" 
-                           data-role="<?php echo esc_attr($roleSlug); ?>"
-                           style="display: inline-block; margin-top: 8px; text-decoration: none; font-size: 13px;">
+                           class="zs-staff-add zs-mb-link" 
+                           data-role="<?php echo esc_attr($roleSlug); ?>">
                             + <?php esc_html_e('Add staff member', 'zero-sense'); ?>
                         </a>
                     </div>
@@ -549,12 +545,12 @@ class StaffAssignmentMetabox
                     var role = $btn.data('role');
                     var $section = $btn.closest('.zs-staff-role-section');
                     
-                    var $newRow = $('<div class="zs-staff-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;"></div>');
+                    var $newRow = $('<div class="zs-staff-row"></div>');
                     
                     var $hiddenInput = $('<input type="hidden" class="zs-staff-hidden-input" name="zs_event_staff[' + role + '][]" value="">');
-                    var $display = $('<div class="zs-staff-display zs-hidden" style="flex: 1; gap: 10px; align-items: center;"><strong style="min-width: 150px;"></strong><span class="zs-staff-info" style="flex: 1; font-size: 12px; color: #646970;"></span></div>');
+                    var $display = $('<div class="zs-staff-display zs-hidden"><strong></strong><span class="zs-staff-info"></span></div>');
                     
-                    var $select = $('<select class="zs-staff-select" style="flex: 1; max-width: 300px;" data-role="' + role + '"></select>');
+                    var $select = $('<select class="zs-staff-select" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
                     
                     // Get staff options from the global data
@@ -605,8 +601,8 @@ class StaffAssignmentMetabox
                         }
                     }
                     
-                    var $editBtn = $('<button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
-                    var $removeBtn = $('<button type="button" class="button button-small zs-staff-remove" style="flex-shrink: 0;"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
+                    var $editBtn = $('<button type="button" class="button button-small zs-staff-edit"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
+                    var $removeBtn = $('<button type="button" class="button button-small zs-staff-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
                     
                     $newRow.append($hiddenInput).append($display).append($select).append($editBtn).append($removeBtn);
                     $btn.before($newRow);
@@ -699,16 +695,6 @@ class StaffAssignmentMetabox
         </script>
 
         <style>
-            .zs-staff-assignment-wrapper {
-                padding: 12px;
-            }
-            .zs-staff-role-section {
-                margin-bottom: 8px;
-            }
-            .zs-hidden {
-                display: none !important;
-            }
-            
             /* SelectWoo optgroup styling */
             .select2-container--default .select2-results__group {
                 font-weight: 600;
