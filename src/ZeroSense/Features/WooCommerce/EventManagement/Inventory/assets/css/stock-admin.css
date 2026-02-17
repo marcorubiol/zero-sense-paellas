@@ -35,27 +35,34 @@
     min-width: 36px;
     height: 36px;
     transition: all 0.2s ease;
-    border: 1px solid #dcdcde;
-    background: white;
+    border: none;
+    background: transparent;
     cursor: pointer;
+    color: #1d2327;
 }
 
-.zs-lock-toggle[data-locked="true"] {
-    color: #d63638;
+.zs-lock-toggle:hover,
+.zs-lock-toggle:focus {
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-.zs-lock-toggle[data-locked="true"]:hover {
-    background: #f6f7f7;
-    border-color: #d63638;
+.zs-lock-toggle[data-locked="true"]:hover .dashicons-lock {
+    display: none;
 }
 
-.zs-lock-toggle[data-locked="false"] {
-    color: #2271b1;
+.zs-lock-toggle[data-locked="true"]:hover::before {
+    content: "\f528";
+    font-family: dashicons;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 1;
 }
 
-.zs-lock-toggle[data-locked="false"]:hover {
-    background: #f6f7f7;
-    border-color: #2271b1;
+.zs-lock-toggle[data-locked="false"] .dashicons {
+    color: #1d2327;
 }
 
 .zs-lock-toggle .dashicons {
@@ -149,11 +156,11 @@
 }
 
 .zs-stock-table input.stock-input:disabled {
-    background: #fafafa;
-    color: #646970;
+    background: #f6f7f7;
+    color: #2c3338;
     cursor: not-allowed;
-    border-color: #e5e5e5;
-    opacity: 0.8;
+    border-color: #dcdcde;
+    font-weight: 500;
 }
 
 .zs-stock-table input.stock-input.is-dirty {
@@ -222,6 +229,26 @@
     font-size: 28px;
     line-height: 1;
     color: white;
+    transition: opacity 0.2s ease;
+}
+
+.zs-stock-footer .zs-save-stock.is-saving::before {
+    display: none;
+}
+
+.zs-stock-footer .zs-save-stock.is-saving::after {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Toast notifications */
@@ -237,6 +264,9 @@
     z-index: 999;
     animation: slideIn 0.3s ease;
     min-width: 250px;
+    background: white;
+    color: #1d2327;
+    border-left: 4px solid;
 }
 
 .zs-toast.show {
@@ -245,23 +275,19 @@
 }
 
 .zs-toast.success {
-    background: #46b450;
-    color: white;
+    border-left-color: #46b450;
 }
 
 .zs-toast.error {
-    background: #dc3232;
-    color: white;
+    border-left-color: #dc3232;
 }
 
 .zs-toast.warning {
-    background: #ffb900;
-    color: #1d2327;
+    border-left-color: #ffb900;
 }
 
 .zs-toast.info {
-    background: #2271b1;
-    color: white;
+    border-left-color: #2271b1;
 }
 
 /* Spinner */

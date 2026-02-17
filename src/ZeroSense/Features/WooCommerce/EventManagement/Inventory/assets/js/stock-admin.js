@@ -133,10 +133,10 @@
                 changedData[key] = input.val();
             });
             
-            // Cambiar botón a estado "Guardando..."
+            // Hide icon and show spinner
             const saveBtn = $('.zs-save-stock');
             saveBtn.prop('disabled', true);
-            saveBtn.html('<span class="spinner is-active"></span> Guardando...');
+            saveBtn.addClass('is-saving');
             
             // AJAX: Solo actualiza campos modificados
             fetch(zsStockAdmin.ajaxUrl, {
@@ -173,9 +173,9 @@
                 this.showToast('❌ Error de conexión', 'error');
             })
             .finally(() => {
-                // Restaurar botón
+                // Restore button
                 saveBtn.prop('disabled', false);
-                saveBtn.html('💾 Save All Changes');
+                saveBtn.removeClass('is-saving');
             });
         }
         
