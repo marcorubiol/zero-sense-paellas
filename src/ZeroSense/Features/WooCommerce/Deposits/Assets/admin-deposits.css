@@ -38,11 +38,6 @@
     cursor: not-allowed;
 }
 
-/* Recalculate button — full width */
-.zs-recalculate-wrapper .zs-btn {
-    width: 100%;
-    justify-content: center;
-}
 
 .deposit-amount-display {
     display: inline-flex;

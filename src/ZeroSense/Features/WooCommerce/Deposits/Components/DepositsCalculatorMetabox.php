@@ -73,6 +73,7 @@ class DepositsCalculatorMetabox
         ?>
         <div class="zs-deposits-calculator-wrapper">
             <div class="zs-deposits-header">
+                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-btn is-neutral zs-deposits-reset-btn" 
@@ -82,7 +83,6 @@ class DepositsCalculatorMetabox
                         <?php esc_html_e('Reset to Auto', 'zero-sense'); ?>
                     </button>
                 <?php endif; ?>
-                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
             </div>
 
             <table class="zs-deposits-table">
@@ -130,14 +130,6 @@ class DepositsCalculatorMetabox
                 </tbody>
             </table>
 
-            <?php if ($statusAllowsAuto) : ?>
-                <div class="zs-recalculate-wrapper">
-                    <button type="button" class="zs-btn is-primary zs-deposits-recalculate" data-order-id="<?php echo esc_attr($orderId); ?>">
-                        <span class="dashicons dashicons-update"></span>
-                        <?php esc_html_e('Recalculate', 'zero-sense'); ?>
-                    </button>
-                </div>
-            <?php endif; ?>
         </div>
 
         <script>
@@ -217,33 +209,6 @@ class DepositsCalculatorMetabox
                 });
             });
 
-            // Recalculate (uses auto mode)
-            $('.zs-deposits-recalculate').on('click', function(e) {
-                e.preventDefault();
-                var $btn = $(this);
-                var orderId = $btn.data('order-id');
-                var nonce = $('.zs-deposit-nonce-hidden').val();
-                
-                console.log('Recalculating:', {orderId: orderId});
-                
-                $btn.prop('disabled', true).text('<?php esc_html_e('Calculating...', 'zero-sense'); ?>');
-                
-                // Use the same action but with mode=auto
-                $.post(ajaxurl, {
-                    action: 'zs_deposits_update_amount',
-                    order_id: orderId,
-                    mode: 'auto',
-                    security: nonce
-                }, function(response) {
-                    console.log('Recalculate response:', response);
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert('Error recalculating: ' + (response.data ? response.data.message : 'Unknown error'));
-                        $btn.prop('disabled', false).text('<?php esc_html_e('Recalculate', 'zero-sense'); ?>');
-                    }
-                });
-            });
         });
         </script>
         <?php
