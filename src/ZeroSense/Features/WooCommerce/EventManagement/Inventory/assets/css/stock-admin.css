@@ -31,21 +31,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px;
-    min-width: 36px;
-    height: 36px;
-    transition: all 0.2s ease;
+    padding: 0;
     border: none;
-    background: transparent;
+    background: none;
     cursor: pointer;
-    color: #1d2327;
+    box-shadow: none;
+    transition: color 0.2s ease;
 }
 
 .zs-lock-toggle:hover,
 .zs-lock-toggle:focus {
-    background: transparent;
+    background: none;
     border: none;
     box-shadow: none;
+    outline: none;
+}
+
+.zs-lock-toggle[data-locked="true"] {
+    color: #dc3232;
 }
 
 .zs-lock-toggle[data-locked="true"]:hover .dashicons-lock {
@@ -59,10 +62,11 @@
     width: 20px;
     height: 20px;
     line-height: 1;
+    color: #46b450;
 }
 
-.zs-lock-toggle[data-locked="false"] .dashicons {
-    color: #1d2327;
+.zs-lock-toggle[data-locked="false"] {
+    color: #46b450;
 }
 
 .zs-lock-toggle .dashicons {
@@ -156,11 +160,12 @@
 }
 
 .zs-stock-table input.stock-input:disabled {
-    background: #f6f7f7;
+    background: transparent;
     color: #2c3338;
-    cursor: not-allowed;
-    border-color: #dcdcde;
+    cursor: default;
+    border: none;
     font-weight: 500;
+    pointer-events: none;
 }
 
 .zs-stock-table input.stock-input.is-dirty {
