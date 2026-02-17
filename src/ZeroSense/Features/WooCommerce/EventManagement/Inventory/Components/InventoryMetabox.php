@@ -755,8 +755,8 @@ class InventoryMetabox
                                 <div class="zs-alert-item-title">
                                     <span class="dashicons <?php echo $iconClass; ?> <?php echo $alertClass; ?>"></span>
                                     <strong><?php echo esc_html($materialLabel); ?></strong>
-                                    <a href="#" class="zs-alert-goto-material" data-material-key="<?php echo esc_attr($materialKey); ?>" title="<?php esc_attr_e('Go to material', 'zero-sense'); ?>">
-                                        →
+                                    <a href="#" class="zs-alert-goto-material" data-material-key="<?php echo esc_attr($materialKey); ?>">
+                                        <?php _e('Resolve', 'zero-sense'); ?> →
                                     </a>
                                 </div>
                                 <div class="zs-alert-item-message">
@@ -790,7 +790,7 @@ class InventoryMetabox
                                             <a href="<?php echo esc_url(admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')); ?>" 
                                                target="_blank" 
                                                style="color: #2271b1;">
-                                                #<?php echo $conflict['order_id']; ?>
+                                                #<?php echo $conflict['order_id']; ?><span class="dashicons dashicons-external" style="font-size: 12px; width: 12px; height: 12px; margin-left: 2px; vertical-align: middle;"></span>
                                             </a>
                                         <?php endforeach; ?>
                                     </div>
