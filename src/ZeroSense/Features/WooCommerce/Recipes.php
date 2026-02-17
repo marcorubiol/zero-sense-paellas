@@ -69,6 +69,7 @@ class Recipes implements FeatureInterface
         add_filter('manage_edit-' . self::TAX_UTENSIL . '_columns', [$this, 'addUsageColumn']);
         add_filter('manage_' . self::TAX_UTENSIL . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
         add_filter('pre_delete_term', [$this, 'preventDeleteIfInUse'], 10, 2);
+        add_action('delete_term', [$this, 'checkDeleteBeforeCommit'], 1, 4);
         
         // Recipe list columns
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addRecipeColumns']);
@@ -1340,6 +1341,67 @@ class Recipes implements FeatureInterface
         // Allow deletion
         error_log(sprintf('ZS Recipes: Allowing deletion of %s "%s" (ID: %d) - not in use', $taxonomy, $term_name, $term_id));
         return $term_id;
+    }
+
+    public function checkDeleteBeforeCommit(int $term_id, int $tt_id, string $taxonomy, $deleted_term): void
+    {
+        // Only check our taxonomies
+        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
+            return;
+        }
+
+        $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
+        $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
+        $term_name = is_object($deleted_term) && isset($deleted_term->name) ? $deleted_term->name : '';
+
+        // Get all recipes
+        $recipes = get_posts([
+            'post_type' => self::CPT,
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'suppress_filters' => true,
+        ]);
+
+        // Count manually by checking the meta
+        $count = 0;
+        foreach ($recipes as $recipe_id) {
+            $items = get_post_meta($recipe_id, $meta_key, true);
+            if (!is_array($items)) {
+                continue;
+            }
+            
+            foreach ($items as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                
+                $item_id = isset($item[$field_name]) ? (int) $item[$field_name] : 0;
+                if ($item_id === $term_id) {
+                    $count++;
+                    break;
+                }
+            }
+        }
+
+        // If term is in use, stop the deletion with wp_die
+        if ($count > 0) {
+            $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
+            
+            wp_die(
+                sprintf(
+                    '<h1>%s</h1><p>%s</p>',
+                    __('Cannot delete term', 'zero-sense'),
+                    sprintf(
+                        __('Cannot delete %s "%s". It is currently used in %d recipe(s). Please remove it from all recipes before deleting.', 'zero-sense'),
+                        $type_label,
+                        esc_html($term_name),
+                        $count
+                    )
+                ),
+                __('Term in use', 'zero-sense'),
+                ['back_link' => true, 'response' => 403]
+            );
+        }
     }
 
     public function addRecipeColumns(array $columns): array
