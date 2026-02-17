@@ -118,8 +118,11 @@ class StockAdminPage
             
             <!-- Explicación -->
             <div class="zs-stock-help" style="background: #fff; border-left: 4px solid #2271b1; padding: 12px 15px; margin: 15px 0; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+                <p style="margin: 0 0 4px 0;">
+                    <strong><?php esc_html_e('Manage your total inventory per service area.', 'zero-sense'); ?></strong>
+                </p>
                 <p style="margin: 0 0 8px 0;">
-                    <strong><?php esc_html_e('Manage your total inventory per service area.', 'zero-sense'); ?></strong> <?php esc_html_e('Materials are organized by category in collapsible sections. Click Unlock to edit quantities, then Save & Lock when done.', 'zero-sense'); ?>
+                    <?php esc_html_e('Materials are organized by category in collapsible sections. Click Unlock to edit quantities, then Save & Lock when done.', 'zero-sense'); ?>
                 </p>
                 <p style="margin: 0; font-size: 13px; color: #666;">
                     💡 <?php esc_html_e('Use search to filter materials. Materials are automatically reserved for orders based on event date.', 'zero-sense'); ?>

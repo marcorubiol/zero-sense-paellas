@@ -79,8 +79,8 @@
     margin: 0;
     border: none;
     width: 100%;
-    min-width: 100%;
-    table-layout: fixed;
+    min-width: fit-content;
+    table-layout: auto;
 }
 
 /* Thead removed - using category headers instead */
@@ -93,7 +93,9 @@
 
 .zs-stock-table th:not(.zs-sticky-col),
 .zs-stock-table td:not(.zs-sticky-col) {
-    width: auto;
+    min-width: fit-content;
+    white-space: nowrap;
+    padding: 8px 16px;
 }
 
 .zs-stock-table tbody tr:nth-child(even):not(.zs-category-header) {
