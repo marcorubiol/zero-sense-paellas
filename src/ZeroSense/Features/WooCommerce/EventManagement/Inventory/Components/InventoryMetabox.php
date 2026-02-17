@@ -444,7 +444,7 @@ class InventoryMetabox
                 .zs-alert-count .dashicons.alert-resolved {
                     color: #46b450;
                 }
-                .zs-alert-details {
+                .zs-stock-alerts-banner:not(.collapsed) .zs-alert-details {
                     padding: 10px 15px 15px 15px;
                 }
                 .zs-alert-item {
