@@ -163,6 +163,12 @@ class InventoryMetabox
                 .zs-inventory-metabox table td:nth-child(3) {
                     width: 50px;
                 }
+                .zs-inventory-badge-container {
+                    display: inline-block;
+                    width: 50px;
+                    text-align: left;
+                    vertical-align: middle;
+                }
                 .zs-inventory-badge {
                     display: inline-block;
                     padding: 2px 6px;
@@ -170,7 +176,6 @@ class InventoryMetabox
                     font-weight: 600;
                     border-radius: 3px;
                     text-transform: uppercase;
-                    margin-right: 6px;
                 }
                 .zs-inventory-badge-auto {
                     background: #d7f0ff;
@@ -291,11 +296,13 @@ class InventoryMetabox
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($hasOverride): ?>
-                                    <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
-                                <?php elseif ($autoValue > 0): ?>
-                                    <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
-                                <?php endif; ?>
+                                <span class="zs-inventory-badge-container">
+                                    <?php if ($hasOverride): ?>
+                                        <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
+                                    <?php elseif ($autoValue > 0): ?>
+                                        <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
+                                    <?php endif; ?>
+                                </span>
                                 <input 
                                     type="number" 
                                     name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
@@ -378,9 +385,11 @@ class InventoryMetabox
                 
                 // Update badge
                 var $td = $input.parent();
-                $td.find('.zs-inventory-badge').remove();
+                var $container = $td.find('.zs-inventory-badge-container');
                 if (autoValue > 0) {
-                    $input.before('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                } else {
+                    $container.html('');
                 }
                 
                 $(this).remove();
@@ -399,9 +408,11 @@ class InventoryMetabox
                     
                     // Update badges
                     var $td = $input.parent();
-                    $td.find('.zs-inventory-badge').remove();
+                    var $container = $td.find('.zs-inventory-badge-container');
                     if (autoValue > 0) {
-                        $input.before('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                        $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    } else {
+                        $container.html('');
                     }
                 });
                 
@@ -432,8 +443,8 @@ class InventoryMetabox
                     $input.addClass('zs-inventory-override');
                     
                     // Update badge to manual
-                    $td.find('.zs-inventory-badge').remove();
-                    $input.before('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
+                    var $container = $td.find('.zs-inventory-badge-container');
+                    $container.html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
                     
                     // Add reset icon if not present
                     var $resetTd = $input.closest('tr').find('td:last');
@@ -444,9 +455,11 @@ class InventoryMetabox
                     $input.removeClass('zs-inventory-override');
                     
                     // Update badge to auto
-                    $td.find('.zs-inventory-badge').remove();
+                    var $container = $td.find('.zs-inventory-badge-container');
                     if (autoValue > 0) {
-                        $input.before('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                        $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    } else {
+                        $container.html('');
                     }
                     
                     // Remove reset icon
