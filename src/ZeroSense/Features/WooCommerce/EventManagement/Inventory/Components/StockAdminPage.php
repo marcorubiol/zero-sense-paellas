@@ -40,20 +40,20 @@ class StockAdminPage
             return;
         }
         
-        $pluginUrl = plugin_dir_url(dirname(dirname(dirname(dirname(dirname(__FILE__))))));
+        $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))));
         
         wp_enqueue_style(
             'zs-stock-admin',
-            $pluginUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
+            $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
             [],
-            '1.0.1'
+            '1.0.2'
         );
         
         wp_enqueue_script(
             'zs-stock-admin',
-            $pluginUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/stock-admin.js',
+            $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/stock-admin.js',
             ['jquery'],
-            '1.0.1',
+            '1.0.2',
             true
         );
         
