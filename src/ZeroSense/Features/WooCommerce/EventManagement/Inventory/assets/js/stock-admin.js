@@ -123,10 +123,7 @@
         }
         
         saveChanges() {
-            console.log('=== SAVE CHANGES STARTED ===');
-            
             if (this.dirtyFields.size === 0) {
-                console.warn('No dirty fields to save');
                 this.showToast('No changes to save', 'error');
                 return;
             }
@@ -138,10 +135,6 @@
                 changedData[key] = input.val();
             });
             
-            console.log('Changed data:', changedData);
-            console.log('AJAX URL:', zsStockAdmin.ajaxUrl);
-            console.log('Nonce:', zsStockAdmin.nonce);
-            
             // Hide icon and show spinner
             const saveBtn = $('.zs-save-stock');
             saveBtn.prop('disabled', true);
@@ -151,44 +144,16 @@
             const formData = new FormData();
             formData.append('action', 'zs_update_stock');
             formData.append('nonce', zsStockAdmin.nonce);
-            const changesJson = JSON.stringify(changedData);
-            formData.append('changes', changesJson);
-            
-            console.log('Request data:', {
-                action: 'zs_update_stock',
-                nonce: zsStockAdmin.nonce,
-                changes: changedData,
-                changesJson: changesJson
-            });
-            
-            console.log('FormData entries:');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
+            formData.append('changes', JSON.stringify(changedData));
             
             // AJAX: Solo actualiza campos modificados
             fetch(zsStockAdmin.ajaxUrl, {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                return response.text().then(text => {
-                    console.log('Raw response:', text);
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        console.error('Failed to parse JSON:', e);
-                        throw new Error('Invalid JSON response: ' + text);
-                    }
-                });
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Parsed data:', data);
-                
                 if (data.success) {
-                    console.log('Save successful');
                     // Eliminar clase .is-dirty de campos guardados
                     this.dirtyFields.forEach(key => {
                         const input = $(`.stock-input[data-key="${key}"]`);
@@ -199,21 +164,15 @@
                     this.dirtyFields.clear();
                     
                     // Mostrar toast de éxito
-                    this.showToast('✅ Stock actualizado', 'success');
+                    this.showToast('Stock updated successfully', 'success');
                 } else {
-                    console.error('Save failed:', data);
-                    this.showToast('❌ Error al guardar: ' + (data.data || 'Unknown error'), 'error');
+                    this.showToast('Error saving changes', 'error');
                 }
             })
             .catch(error => {
-                console.error('=== SAVE ERROR ===');
-                console.error('Error type:', error.name);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
-                this.showToast('❌ Error de conexión: ' + error.message, 'error');
+                this.showToast('Connection error', 'error');
             })
             .finally(() => {
-                console.log('=== SAVE CHANGES COMPLETED ===');
                 // Restore button
                 saveBtn.prop('disabled', false);
                 saveBtn.removeClass('is-saving');

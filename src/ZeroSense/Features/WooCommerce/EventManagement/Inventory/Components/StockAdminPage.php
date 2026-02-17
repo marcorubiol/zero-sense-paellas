@@ -55,7 +55,7 @@ class StockAdminPage
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/stock-admin.js',
             ['jquery'],
-            '1.1.6',
+            '1.2.0',
             true
         );
         
@@ -209,34 +209,18 @@ class StockAdminPage
      */
     public function ajaxUpdateStock(): void
     {
-        error_log('=== AJAX UPDATE STOCK CALLED ===');
-        error_log('$_POST: ' . print_r($_POST, true));
-        
         check_ajax_referer('zs_stock_admin', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
-            error_log('Permission denied');
             wp_send_json_error(['message' => 'Insufficient permissions']);
         }
         
         $changesJson = $_POST['changes'] ?? '';
-        error_log('Changes JSON (raw): ' . $changesJson);
-        
-        // WordPress escapes slashes, need to strip them
         $changesJson = stripslashes($changesJson);
-        error_log('Changes JSON (after stripslashes): ' . $changesJson);
-        
         $changes = json_decode($changesJson, true);
-        error_log('Decoded changes: ' . print_r($changes, true));
-        error_log('JSON decode error: ' . json_last_error_msg());
         
         if (empty($changes)) {
-            error_log('Changes is empty!');
-            wp_send_json_error(['message' => 'No changes to save', 'debug' => [
-                'changesJson' => $changesJson,
-                'decoded' => $changes,
-                'post' => $_POST
-            ]]);
+            wp_send_json_error(['message' => 'No changes to save']);
         }
         
         StockManager::updateMultiple($changes);
