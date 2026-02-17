@@ -343,11 +343,19 @@ class InventoryMetabox
                     padding: 15px;
                     margin-bottom: 15px;
                 }
+                .zs-stock-alerts-banner.collapsed .zs-alert-details {
+                    display: none;
+                }
                 .zs-stock-alerts-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 10px;
+                    cursor: pointer;
+                    user-select: none;
+                }
+                .zs-stock-alerts-header:hover {
+                    opacity: 0.8;
                 }
                 .zs-stock-alerts-title {
                     font-weight: 600;
@@ -355,6 +363,22 @@ class InventoryMetabox
                     display: flex;
                     align-items: center;
                     gap: 8px;
+                }
+                .zs-stock-alerts-toggle {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 12px;
+                    color: #666;
+                }
+                .zs-stock-alerts-toggle .dashicons {
+                    width: 16px;
+                    height: 16px;
+                    font-size: 16px;
+                    transition: transform 0.2s ease;
+                }
+                .zs-stock-alerts-banner.collapsed .zs-stock-alerts-toggle .dashicons {
+                    transform: rotate(-90deg);
                 }
                 .zs-stock-alerts-summary {
                     display: flex;
@@ -559,18 +583,19 @@ class InventoryMetabox
                     $serviceAreaName = $serviceArea && !is_wp_error($serviceArea) ? $serviceArea->name : __('Unknown', 'zero-sense');
                 ?>
                 <div class="zs-stock-alerts-banner">
-                    <div class="zs-stock-alerts-header">
-                        <div class="zs-stock-alerts-title">
-                            <span>⚠️</span>
-                            <span><?php printf(__('Stock Alerts (%d)', 'zero-sense'), $totalAlerts); ?></span>
-                            <?php if ($eventDate): ?>
-                                <span style="font-weight: normal; color: #666;">
-                                    - <?php echo esc_html(date_i18n(get_option('date_format'), strtotime($eventDate))); ?>
-                                    - <?php echo esc_html($serviceAreaName); ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="zs-stock-alerts-summary">
+                    <div class="zs-stock-alerts-header" onclick="this.closest('.zs-stock-alerts-banner').classList.toggle('collapsed')">
+                        <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                            <div class="zs-stock-alerts-title">
+                                <span>⚠️</span>
+                                <span><?php printf(__('Stock Alerts (%d)', 'zero-sense'), $totalAlerts); ?></span>
+                                <?php if ($eventDate): ?>
+                                    <span style="font-weight: normal; color: #666;">
+                                        - <?php echo esc_html(date_i18n(get_option('date_format'), strtotime($eventDate))); ?>
+                                        - <?php echo esc_html($serviceAreaName); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="zs-stock-alerts-summary">
                             <?php if ($criticalCount > 0): ?>
                                 <div class="zs-alert-count">
                                     <span class="dashicons <?php echo AlertCalculator::getAlertIcon(AlertCalculator::ALERT_CRITICAL); ?> alert-critical"></span>
@@ -589,6 +614,10 @@ class InventoryMetabox
                                     <span><?php echo $lowStockCount; ?> <?php echo AlertCalculator::getAlertLabel(AlertCalculator::ALERT_LOW_STOCK); ?></span>
                                 </div>
                             <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="zs-stock-alerts-toggle">
+                            <span class="dashicons dashicons-arrow-down-alt2"></span>
                         </div>
                     </div>
                     
