@@ -65,18 +65,14 @@ class DepositsCalculatorMetabox
 
         $manualOverride = MetaKeys::isEnabled($order, MetaKeys::IS_MANUAL_OVERRIDE);
         $statusAllowsAuto = in_array($order->get_status(), ['pending', 'budget-requested'], true);
-        $autoBadgeClass = $manualOverride ? 'zs-badge-auto zs-badge-inactive' : 'zs-badge-auto';
-        $manBadgeClass  = $manualOverride ? 'zs-badge-manual' : 'zs-badge-manual zs-badge-inactive';
+        $activeBadgeClass = $manualOverride ? 'zs-badge-manual' : 'zs-badge-auto';
+        $activeBadgeText  = $manualOverride ? __('MAN', 'zero-sense') : __('AUTO', 'zero-sense');
         $depositAmount = $depositInfo['deposit_amount'] ?? (float) MetaKeys::get($order, MetaKeys::DEPOSIT_AMOUNT);
         $remainingAmount = $depositInfo['remaining_amount'] ?? (float) MetaKeys::get($order, MetaKeys::REMAINING_AMOUNT);
         $orderTotal = $order->get_total();
         ?>
         <div class="zs-deposits-calculator-wrapper">
             <div class="zs-deposits-header">
-                <div class="zs-deposits-mode-badges">
-                    <span class="zs-badge <?php echo esc_attr($autoBadgeClass); ?>"><?php esc_html_e('AUTO', 'zero-sense'); ?></span>
-                    <span class="zs-badge <?php echo esc_attr($manBadgeClass); ?>"><?php esc_html_e('MAN', 'zero-sense'); ?></span>
-                </div>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-btn is-neutral zs-deposits-reset-btn" 
@@ -85,7 +81,10 @@ class DepositsCalculatorMetabox
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Reset to Auto', 'zero-sense'); ?>
                     </button>
+                <?php else : ?>
+                    <span></span>
                 <?php endif; ?>
+                <span class="zs-badge <?php echo esc_attr($activeBadgeClass); ?>"><?php echo esc_html($activeBadgeText); ?></span>
             </div>
 
             <table class="zs-deposits-table">

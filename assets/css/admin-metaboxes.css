@@ -699,14 +699,6 @@ button.zs-mb-link {
     position: static;
 }
 
-.zs-deposits-mode-badges {
-    display: flex;
-    gap: 4px;
-}
-
-.zs-badge-inactive {
-    opacity: 0.3;
-}
 
 .zs-deposits-table {
     width: 100%;
