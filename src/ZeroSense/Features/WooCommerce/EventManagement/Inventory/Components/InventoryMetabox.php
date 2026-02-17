@@ -442,28 +442,42 @@ class InventoryMetabox
                     font-size: 13px;
                     line-height: 1.6;
                 }
-                .zs-alert-item-header {
+                .zs-alert-item-title {
                     display: flex;
                     align-items: flex-start;
-                    flex-wrap: wrap;
                     gap: 6px;
-                    font-weight: 500;
+                    font-weight: 600;
+                    margin-bottom: 4px;
                 }
-                .zs-alert-item-header .dashicons {
+                .zs-alert-item-title .dashicons {
                     width: 18px;
                     height: 18px;
                     font-size: 18px;
                     flex-shrink: 0;
                     margin-top: 3px;
                 }
-                .zs-alert-item-header .dashicons.alert-critical {
+                .zs-alert-item-title .dashicons.alert-critical {
                     color: #dc3545;
                 }
-                .zs-alert-item-header .dashicons.alert-max-capacity {
+                .zs-alert-item-title .dashicons.alert-max-capacity {
                     color: #fd7e14;
                 }
-                .zs-alert-item-header .dashicons.alert-low-stock {
+                .zs-alert-item-title .dashicons.alert-low-stock {
                     color: #ffc107;
+                }
+                .zs-alert-item-title .dashicons.alert-resolved {
+                    color: #46b450;
+                }
+                .zs-alert-item-message {
+                    margin-left: 24px;
+                    color: #666;
+                    font-size: 12px;
+                    margin-bottom: 4px;
+                }
+                .zs-alert-item-conflicts {
+                    margin-left: 24px;
+                    color: #666;
+                    font-size: 12px;
                 }
                 .zs-alert-inline-message .dashicons {
                     width: 18px;
@@ -478,18 +492,6 @@ class InventoryMetabox
                 }
                 .zs-alert-inline-message .dashicons.alert-low-stock {
                     color: #ffc107;
-                }
-                .zs-alert-item-details {
-                    margin-left: 22px;
-                    color: #666;
-                    font-size: 12px;
-                }
-                .zs-alert-conflict-link {
-                    color: #2271b1;
-                    text-decoration: none;
-                }
-                .zs-alert-conflict-link:hover {
-                    text-decoration: underline;
                 }
                 
                 /* Inline Alert Icons */
@@ -738,35 +740,35 @@ class InventoryMetabox
                             }
                             ?>
                             <div class="zs-alert-item">
-                                <div class="zs-alert-item-header">
+                                <div class="zs-alert-item-title">
                                     <span class="dashicons <?php echo $iconClass; ?> <?php echo $alertClass; ?>"></span>
-                                    <strong><?php echo esc_html($materialLabel); ?>:</strong>
-                                    <span>
-                                        <?php if ($isItemResolved): ?>
-                                            <?php 
-                                            $resolution = $resolutions[$materialKey] ?? null;
-                                            if ($resolution) {
-                                                $resolvedBy = get_userdata($resolution['resolved_by']);
-                                                $resolvedByName = $resolvedBy ? $resolvedBy->display_name : __('Unknown', 'zero-sense');
-                                                printf(__('Resolved by %s', 'zero-sense'), esc_html($resolvedByName));
-                                                if (!empty($resolution['notes'])) {
-                                                    echo ' - ' . esc_html($resolution['notes']);
-                                                }
+                                    <strong><?php echo esc_html($materialLabel); ?></strong>
+                                </div>
+                                <div class="zs-alert-item-message">
+                                    <?php if ($isItemResolved): ?>
+                                        <?php 
+                                        $resolution = $resolutions[$materialKey] ?? null;
+                                        if ($resolution) {
+                                            $resolvedBy = get_userdata($resolution['resolved_by']);
+                                            $resolvedByName = $resolvedBy ? $resolvedBy->display_name : __('Unknown', 'zero-sense');
+                                            printf(__('Resolved by %s', 'zero-sense'), esc_html($resolvedByName));
+                                            if (!empty($resolution['notes'])) {
+                                                echo ' - ' . esc_html($resolution['notes']);
                                             }
-                                            ?>
+                                        }
+                                        ?>
+                                    <?php else: ?>
+                                        <?php if ($alert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
+                                            <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
+                                        <?php elseif ($alert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
+                                            <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
                                         <?php else: ?>
-                                            <?php if ($alert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
-                                                <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
-                                            <?php elseif ($alert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
-                                                <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
-                                            <?php else: ?>
-                                                <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $alert['usage_percent']); ?>
-                                            <?php endif; ?>
+                                            <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $alert['usage_percent']); ?>
                                         <?php endif; ?>
-                                    </span>
+                                    <?php endif; ?>
                                 </div>
                                 <?php if (!$isItemResolved && !empty($alert['conflicts'])): ?>
-                                    <div class="zs-alert-item-details">
+                                    <div class="zs-alert-item-conflicts">
                                         <?php _e('Conflicts with other orders:', 'zero-sense'); ?>
                                         <?php foreach ($alert['conflicts'] as $idx => $conflict): ?>
                                             <?php if ($idx > 0) echo ', '; ?>
