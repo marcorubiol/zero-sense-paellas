@@ -119,7 +119,6 @@ class OrderLanguageAdmin
                         target="_blank"
                         class="zs-btn is-neutral"
                     >
-                        <span class="dashicons dashicons-clipboard"></span>
                         <?php esc_html_e('Open Event Sheet', 'zero-sense'); ?>
                     </a>
                 </div>

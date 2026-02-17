@@ -80,23 +80,13 @@ class AdminSectionTitles implements FeatureInterface
                         var editHtml = editLink.length ? editLink[0].outerHTML : '';
                         
                         if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            // Remover el botón Edit del HTML original
                             if (editLink.length) editLink.remove();
-                            
-                            // Insertar subtítulo con botón Edit dentro
-                            var subtitle = '<br><span class="zs-subtitle">👤 Client' + (editHtml ? ' ' + editHtml : '') + '</span>';
-                            var newHtml = elem.html().replace(/^(\s*)Billing(\s*)/, '$1Billing' + subtitle + '$2');
-                            newHtml = newHtml.replace(/^(\s*)Facturación(\s*)/, '$1Facturación' + subtitle + '$2');
-                            elem.html(newHtml);
+                            var subtitle = '<span class="zs-subtitle">👤 Client' + (editHtml ? ' ' + editHtml : '') + '</span><br>';
+                            elem.prepend(subtitle);
                         } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            // Remover el botón Edit del HTML original
                             if (editLink.length) editLink.remove();
-                            
-                            // Insertar subtítulo con botón Edit dentro
-                            var subtitle = '<br><span class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? ' ' + editHtml : '') + '</span>';
-                            var newHtml = elem.html().replace(/^(\s*)Shipping(\s*)/, '$1Shipping' + subtitle + '$2');
-                            newHtml = newHtml.replace(/^(\s*)Envío(\s*)/, '$1Envío' + subtitle + '$2');
-                            elem.html(newHtml);
+                            var subtitle = '<span class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? ' ' + editHtml : '') + '</span><br>';
+                            elem.prepend(subtitle);
                         }
                     });
                     

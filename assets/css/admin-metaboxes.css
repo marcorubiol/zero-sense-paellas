@@ -198,6 +198,7 @@ button.zs-mb-link {
     transition: background 0.15s ease, border-color 0.15s ease;
     line-height: 1.4;
     white-space: nowrap;
+    text-decoration: none;
 }
 
 .zs-btn:hover,
