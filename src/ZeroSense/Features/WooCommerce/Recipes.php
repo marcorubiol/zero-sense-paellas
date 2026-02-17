@@ -701,6 +701,27 @@ class Recipes implements FeatureInterface
                         }
                     });
                     
+                    $(element).on('select2:closing', function(e) {
+                        console.log('ZS Recipes (Utensils): EVENT select2:closing');
+                        
+                        // Check if there's a value that's about to be selected
+                        setTimeout(function() {
+                            var val = $(element).val();
+                            console.log('ZS Recipes (Utensils): After closing, value is:', val, 'Type:', typeof val);
+                            
+                            // If value is a string (new tag), create it
+                            if (val && typeof val === 'string' && isNaN(val)) {
+                                console.log('ZS Recipes (Utensils): Detected new tag after closing:', val);
+                                
+                                // Clear the select
+                                $(element).val(null).trigger('change.select2');
+                                
+                                // Create the utensil
+                                createUtensil(val, element);
+                            }
+                        }, 100);
+                    });
+                    
                     $(element).on('change', function(e) {
                         var val = $(this).val();
                         console.log('ZS Recipes (Utensils): Select changed, value:', val);
