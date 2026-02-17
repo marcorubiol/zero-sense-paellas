@@ -346,12 +346,12 @@ class InventoryMetabox
                     max-height: 2000px;
                     overflow: hidden;
                     padding: 10px 15px 15px 15px;
-                    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+                    transition: max-height 0.25s ease-out, padding 0.25s ease-out;
                 }
                 .zs-stock-alerts-banner.collapsed .zs-alert-details {
                     max-height: 0;
                     padding: 0 15px;
-                    transition: max-height 0.3s ease-in, padding 0.3s ease-in;
+                    transition: max-height 0.25s ease-out, padding 0.25s ease-out;
                 }
                 .zs-stock-alerts-header {
                     display: flex;
