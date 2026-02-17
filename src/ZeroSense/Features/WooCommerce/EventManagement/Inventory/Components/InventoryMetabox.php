@@ -340,16 +340,11 @@ class InventoryMetabox
                     </div>
                     <div class="zs-inventory-accordion-content">
                         <table class="widefat striped">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                                    <th style="text-align: right;"><?php esc_html_e('Quantity', 'zero-sense'); ?></th>
-                                </tr>
-                            </thead>
                             <tbody>
                                 <?php foreach ($categories as $catKey => $materialsInCat): ?>
                                     <tr class="zs-inventory-category-header">
-                                        <td colspan="2"><?php echo esc_html($categoryLabels[$catKey] ?? $catKey); ?></td>
+                                        <td><?php echo esc_html($categoryLabels[$catKey] ?? $catKey); ?></td>
+                                        <td style="text-align: right; width: 200px;"><?php esc_html_e('Quantity', 'zero-sense'); ?></td>
                                     </tr>
                                     <?php foreach ($materialsInCat as $material): ?>
                                         <?php
@@ -361,9 +356,11 @@ class InventoryMetabox
                                         ?>
                                         <tr>
                                             <td>
-                                                <strong><?php echo esc_html($material['label']); ?></strong>
+                                                <div>
+                                                    <strong><?php echo esc_html($material['label']); ?></strong>
+                                                </div>
                                                 <?php if (!empty($material['description'])): ?>
-                                                    <span class="zs-inventory-description"><?php echo esc_html($material['description']); ?></span>
+                                                    <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
