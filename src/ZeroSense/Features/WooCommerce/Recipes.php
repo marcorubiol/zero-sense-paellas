@@ -475,17 +475,22 @@ class Recipes implements FeatureInterface
                     
                     $(element).on('select2:select', function(e) {
                         var data = e.params.data;
+                        console.log('ZS Recipes: select2:select event fired', data);
                         
                         // Check if it's a new tag (not an existing ingredient)
                         if (data && data.newTag === true) {
+                            console.log('ZS Recipes: New tag detected, creating ingredient:', data.text);
                             e.preventDefault();
                             createIngredient(data.text.replace(' (crear nuevo)', ''), element);
+                        } else {
+                            console.log('ZS Recipes: Existing ingredient selected:', data);
                         }
                     });
                 }
             }
             
             function createIngredient(name, selectElement) {
+                console.log('ZS Recipes: createIngredient called with name:', name);
                 $.ajax({
                     url: ajaxUrl,
                     method: 'POST',
@@ -495,9 +500,11 @@ class Recipes implements FeatureInterface
                         name: name
                     },
                     success: function(resp) {
+                        console.log('ZS Recipes: AJAX response received:', resp);
                         if (resp && resp.success && resp.data) {
                             var newId = resp.data.id;
                             var text = resp.data.text;
+                            console.log('ZS Recipes: Ingredient created successfully. ID:', newId, 'Text:', text);
                             
                             // Clear all options and set the new one
                             $(selectElement).empty();
@@ -507,11 +514,14 @@ class Recipes implements FeatureInterface
                             // Trigger change to update select2
                             $(selectElement).trigger('change');
                             $(selectElement).trigger('change.select2');
+                            console.log('ZS Recipes: Select updated with new ingredient');
                         } else {
+                            console.error('ZS Recipes: Error in response:', resp);
                             alert('Error al crear el ingrediente. Por favor, inténtalo de nuevo.');
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('ZS Recipes: AJAX error:', {xhr: xhr, status: status, error: error});
                         alert('Error de conexión al crear el ingrediente.');
                     }
                 });
@@ -614,17 +624,22 @@ class Recipes implements FeatureInterface
                     
                     $(element).on('select2:select', function(e) {
                         var data = e.params.data;
+                        console.log('ZS Recipes (Utensils): select2:select event fired', data);
                         
                         // Check if it's a new tag (not an existing utensil)
                         if (data && data.newTag === true) {
+                            console.log('ZS Recipes (Utensils): New tag detected, creating utensil:', data.text);
                             e.preventDefault();
                             createUtensil(data.text.replace(' (crear nuevo)', ''), element);
+                        } else {
+                            console.log('ZS Recipes (Utensils): Existing utensil selected:', data);
                         }
                     });
                 }
             }
             
             function createUtensil(name, selectElement) {
+                console.log('ZS Recipes (Utensils): createUtensil called with name:', name);
                 $.ajax({
                     url: ajaxUrl,
                     method: 'POST',
@@ -634,9 +649,11 @@ class Recipes implements FeatureInterface
                         name: name
                     },
                     success: function(resp) {
+                        console.log('ZS Recipes (Utensils): AJAX response received:', resp);
                         if (resp && resp.success && resp.data) {
                             var newId = resp.data.id;
                             var text = resp.data.text;
+                            console.log('ZS Recipes (Utensils): Utensil created successfully. ID:', newId, 'Text:', text);
                             
                             $(selectElement).empty();
                             var option = new Option(text, newId, true, true);
@@ -644,11 +661,14 @@ class Recipes implements FeatureInterface
                             
                             $(selectElement).trigger('change');
                             $(selectElement).trigger('change.select2');
+                            console.log('ZS Recipes (Utensils): Select updated with new utensil');
                         } else {
+                            console.error('ZS Recipes (Utensils): Error in response:', resp);
                             alert('Error al crear el utensilio. Por favor, inténtalo de nuevo.');
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('ZS Recipes (Utensils): AJAX error:', {xhr: xhr, status: status, error: error});
                         alert('Error de conexión al crear el utensilio.');
                     }
                 });
