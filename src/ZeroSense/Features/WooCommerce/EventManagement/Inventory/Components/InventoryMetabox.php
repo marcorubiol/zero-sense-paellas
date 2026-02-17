@@ -197,44 +197,18 @@ class InventoryMetabox
                     margin-top: 2px;
                 }
                 .zs-inventory-save-btn {
-                    position: fixed;
-                    bottom: 30px;
-                    right: 30px;
-                    z-index: 999;
                     display: none;
-                    padding: 10px 20px;
-                    background: #2271b1;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    transition: all 0.2s ease;
-                }
-                .zs-inventory-save-btn:hover {
-                    background: #135e96;
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
                 }
                 .zs-inventory-save-btn.show {
-                    display: block;
+                    display: inline-flex;
                 }
                 .zs-inventory-save-btn.is-saving {
                     opacity: 0.7;
                     pointer-events: none;
                 }
-                .zs-inventory-save-btn .dashicons {
-                    font-size: 18px;
-                    width: 18px;
-                    height: 18px;
-                    vertical-align: middle;
-                    margin-right: 4px;
-                }
                 .zs-inventory-toast {
                     position: fixed;
-                    bottom: 110px;
+                    bottom: 30px;
                     right: 30px;
                     padding: 14px 20px;
                     border-radius: 4px;
@@ -282,6 +256,10 @@ class InventoryMetabox
                     <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
                         <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
+                    </button>
+                    <button type="button" class="zs-inventory-save-btn" title="<?php esc_attr_e('Save inventory changes', 'zero-sense'); ?>">
+                        <span class="dashicons dashicons-download"></span>
+                        <?php esc_html_e('Save', 'zero-sense'); ?>
                     </button>
                 </div>
             </div>
@@ -348,13 +326,8 @@ class InventoryMetabox
             
             <p style="margin-top: 15px; color: #666; font-size: 13px;">
                 <strong><?php esc_html_e('Note:', 'zero-sense'); ?></strong>
-                <?php esc_html_e('Unlock the table to make changes. Changes are saved automatically via AJAX.', 'zero-sense'); ?>
+                <?php esc_html_e('Unlock the table to make changes. Click Save to store changes via AJAX.', 'zero-sense'); ?>
             </p>
-            
-            <button type="button" class="zs-inventory-save-btn">
-                <span class="dashicons dashicons-yes"></span>
-                <?php esc_html_e('Save Changes', 'zero-sense'); ?>
-            </button>
         </div>
         
         <script>
