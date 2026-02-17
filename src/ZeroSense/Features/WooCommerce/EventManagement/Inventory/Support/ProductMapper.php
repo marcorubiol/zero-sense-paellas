@@ -14,9 +14,13 @@ class ProductMapper
     /**
      * Category slugs BASE (español) para fallback
      * Solo para servicios que NO tienen receta (barra, staff)
+     * 
+     * IMPORTANTE: Usar el slug del idioma por defecto (español).
+     * WPML resolverá automáticamente a las traducciones:
+     * - ES: "barras-libres" → CA: "barres-lliures" → EN: "open-bar"
      */
     const ENTRANT_CATEGORY_SLUGS = ['entrantes', 'aperitivos'];
-    const BARRA_CATEGORY_SLUGS = ['barra-lliure', 'open-bar'];
+    const BARRA_CATEGORY_SLUGS = ['barras-libres'];
     
     /**
      * Cache de term IDs
