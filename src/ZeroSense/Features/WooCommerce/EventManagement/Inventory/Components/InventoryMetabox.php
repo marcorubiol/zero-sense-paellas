@@ -100,13 +100,6 @@ class InventoryMetabox
                     font-weight: 500;
                     cursor: default;
                 }
-                .zs-inventory-override {
-                    border-left: 3px solid #ff9800 !important;
-                    border-top: 1px solid #ddd !important;
-                    border-right: 1px solid #ddd !important;
-                    border-bottom: 1px solid #ddd !important;
-                    background: white !important;
-                }
                 .zs-inventory-category-header {
                     background: #f0f0f1;
                     font-weight: 600;
@@ -202,8 +195,7 @@ class InventoryMetabox
                     color: #2271b1;
                 }
                 .zs-inventory-reset-icon.hidden {
-                    visibility: hidden;
-                    width: 16px;
+                    display: none;
                 }
                 .zs-inventory-description {
                     font-size: 11px;
