@@ -60,10 +60,12 @@ class ProductMapper
             // ---------------------------------------------------------
             // NIVEL 1: RECETA (La verdad absoluta para comida)
             // ---------------------------------------------------------
-            $recipeId = $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            // Always read from original product (WPML support)
+            $originalProductId = self::resolveOriginalProductId($product->get_id());
+            $recipeId = get_post_meta($originalProductId, self::META_PRODUCT_RECIPE_ID, true);
             
             // DEBUG
-            error_log('🔍 Product ID: ' . $product->get_id());
+            error_log('🔍 Product ID: ' . $product->get_id() . ' (Original: ' . $originalProductId . ')');
             error_log('🔍 Recipe ID from meta: ' . var_export($recipeId, true));
             
             if ($recipeId) {
@@ -147,6 +149,19 @@ class ProductMapper
         }
         
         return $result;
+    }
+    
+    /**
+     * Resolve original product ID (WPML support)
+     */
+    private static function resolveOriginalProductId(int $productId): int
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            return $productId;
+        }
+        $defaultLang = apply_filters('wpml_default_language', null);
+        $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
+        return $originalId ? (int) $originalId : $productId;
     }
     
     /**
