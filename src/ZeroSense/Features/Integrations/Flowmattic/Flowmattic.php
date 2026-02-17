@@ -492,7 +492,7 @@ class Flowmattic implements FeatureInterface
             }
             
             echo '<div class="zs-email-action-item">';
-            echo '<button type="button" class="zs-btn zs-manual-email-btn ' . esc_attr($buttonCssClass) . '" data-workflow-id="' . esc_attr($workflowId) . '" data-order-id="' . esc_attr($orderId) . '">'; 
+            echo '<button type="button" class="zs-btn is-action zs-manual-email-btn ' . esc_attr($buttonCssClass) . '" data-workflow-id="' . esc_attr($workflowId) . '" data-order-id="' . esc_attr($orderId) . '">';
             echo esc_html($buttonText);
             echo '</button>';
             if ($statusText) {
@@ -503,13 +503,11 @@ class Flowmattic implements FeatureInterface
         
         // Show unavailable triggers section
         if (!empty($unavailableTriggers)) {
-            echo '<div class="zs-mb-divider">';
-            echo '<div style="margin-bottom:8px;">';
-            echo '<button type="button" class="zs-mb-link" id="zs-toggle-unavailable" style="font-size:12px;">';
+            echo '<div class="zs-email-section-sep">';
+            echo '<button type="button" class="zs-mb-link" id="zs-toggle-unavailable">';
             echo '<span class="dashicons dashicons-arrow-right" style="font-size:12px;line-height:1;margin-right:4px;"></span>';
             echo sprintf(esc_html__('Show %d unavailable actions', 'zero-sense'), count($unavailableTriggers));
             echo '</button>';
-            echo '</div>';
             
             echo '<div id="zs-unavailable-actions" style="display:none;margin-left:16px;">';
             foreach ($unavailableTriggers as $trigger) {
@@ -540,13 +538,11 @@ class Flowmattic implements FeatureInterface
         
         // Section 2: Automatic Email Actions
         if (!empty($statusTransitions)) {
-            echo '<div class="zs-mb-divider">';
-            echo '<div style="margin-bottom:8px;">';
-            echo '<button type="button" class="zs-mb-link" id="zs-toggle-automatic-actions" style="font-size:12px;">';
+            echo '<div class="zs-email-section-sep">';
+            echo '<button type="button" class="zs-mb-link" id="zs-toggle-automatic-actions">';
             echo '<span class="dashicons dashicons-arrow-right" style="font-size:12px;line-height:1;margin-right:4px;"></span>';
             echo sprintf(esc_html__('Show %d automatic actions', 'zero-sense'), count($statusTransitions));
             echo '</button>';
-            echo '</div>';
             
             echo '<div id="zs-automatic-actions" style="display:none;">';
             echo '<h4 class="zs-mb-subheader" style="margin-bottom:12px;">' . esc_html__('Automatic Email Actions', 'zero-sense') . '</h4>';

@@ -28,6 +28,13 @@
     justify-content: center;
 }
 
+/* Section separator — just a top border, no box */
+.zs-email-section-sep {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--zs-mb-border-color, #dcdcde);
+}
+
 /* Email action item wrapper */
 .zs-email-action-item {
     margin-bottom: 10px;

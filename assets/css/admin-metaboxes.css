@@ -9,7 +9,9 @@
     --zs-mb-padding: 12px;
     --zs-mb-gap: 16px;
     --zs-mb-section-gap: 12px;
-    --zs-mb-border: 1px solid #dcdcde;
+    --zs-mb-border-color: #dcdcde;
+    --zs-mb-border: 1px solid var(--zs-mb-border-color);
+    --zs-mb-radius: 4px;
 
     /* Typography */
     --zs-mb-label-size: 13px;
@@ -27,6 +29,20 @@
     --zs-color-error: #DC2626;
     --zs-color-gateway: #166534;
     --zs-color-skip: #374151;
+
+    /* Buttons */
+    --zs-btn-font-size: 12px;
+    --zs-btn-padding: 4px 10px;
+    --zs-btn-radius: var(--zs-mb-radius);
+    --zs-btn-color: var(--zs-color-auto);
+    --zs-btn-border: var(--zs-mb-border-color);
+    --zs-btn-hover-bg: #f6f7f7;
+    --zs-btn-hover-border: #8c8f94;
+    --zs-btn-primary-hover-bg: color-mix(in srgb, var(--zs-color-auto) 8%, white 92%);
+    --zs-btn-primary-hover-border: var(--zs-color-auto);
+    --zs-btn-destructive-color: var(--zs-color-error);
+    --zs-btn-destructive-border: color-mix(in srgb, var(--zs-color-error) 25%, white 75%);
+    --zs-btn-destructive-hover-bg: color-mix(in srgb, var(--zs-color-error) 5%, white 95%);
 
     /* Zero Sense Background Colors - lighter 15/85 mix for badges */
     --zs-bg-auto: color-mix(in srgb, var(--zs-color-auto) 15%, white 85%);
@@ -159,17 +175,17 @@
     padding-bottom: 0;
 }
 
-/* Auto-calculate utility button — subtle, matches field height */
+/* Shared inline utility button (use .is-primary, .is-neutral, .is-destructive modifiers) */
 .zs-btn {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 4px 10px;
-    border: 1px solid #dcdcde;
+    padding: var(--zs-btn-padding);
+    border: 1px solid var(--zs-btn-border);
     background: #fff;
-    border-radius: 3px;
-    font-size: 12px;
-    color: #2271b1;
+    border-radius: var(--zs-btn-radius);
+    font-size: var(--zs-btn-font-size);
+    color: var(--zs-btn-color);
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease;
     line-height: 1.4;
@@ -178,8 +194,8 @@
 
 .zs-btn:hover,
 .zs-btn:focus {
-    background: #f6f7f7;
-    border-color: #8c8f94;
+    background: var(--zs-btn-hover-bg);
+    border-color: var(--zs-btn-hover-border);
     outline: none;
     box-shadow: none;
 }
@@ -187,8 +203,8 @@
 /* Primary variant — blue hover for smart/auto actions */
 .zs-btn.is-primary:hover,
 .zs-btn.is-primary:focus {
-    background: #f0f6fc;
-    border-color: #2271b1;
+    background: var(--zs-btn-primary-hover-bg);
+    border-color: var(--zs-btn-primary-hover-border);
 }
 
 .zs-btn .dashicons {
@@ -210,16 +226,31 @@
     color: var(--zs-mb-label-color);
 }
 
+/* Action variant — filled grey, reads clearly as a clickable trigger */
+.zs-btn.is-action {
+    background: #f6f7f7;
+    color: var(--zs-mb-label-color);
+    border-color: var(--zs-mb-border-color);
+    font-weight: 500;
+}
+
+.zs-btn.is-action:hover,
+.zs-btn.is-action:focus {
+    background: #e8e9ea;
+    border-color: var(--zs-btn-hover-border);
+    color: var(--zs-mb-label-color);
+}
+
 /* Destructive variant — red text by default, stronger on hover */
 .zs-btn.is-destructive {
-    color: #d63638;
-    border-color: #f0b8b8;
+    color: var(--zs-btn-destructive-color);
+    border-color: var(--zs-btn-destructive-border);
 }
 
 .zs-btn.is-destructive:hover,
 .zs-btn.is-destructive:focus {
-    background: #fff5f5;
-    border-color: #d63638;
+    background: var(--zs-btn-destructive-hover-bg);
+    border-color: var(--zs-btn-destructive-color);
 }
 
 /* Inline flex row with space-between (e.g. Add button + Manage link) */
