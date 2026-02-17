@@ -418,40 +418,30 @@ class Recipes implements FeatureInterface
 
         <script>
         (function($) {
-            console.log('ZS Recipes: Script loaded successfully');
             var ajaxUrl = '<?php echo $ajax_url; ?>';
             var nonce = '<?php echo $nonce; ?>';
             var rowCount = <?php echo max(0, count($ingredients)); ?>;
-            console.log('ZS Recipes: Config loaded. AJAX URL:', ajaxUrl, 'Nonce:', nonce);
             
             function initSelect(element) {
                 if (typeof jQuery.fn.selectWoo === 'undefined') {
-                    console.error('Zero Sense Recipes: selectWoo not available!');
                     return;
                 }
                 
                 if (!$(element).data('select2')) {
-                    console.log('ZS Recipes: Initializing SelectWoo on element:', element);
                     $(element).selectWoo({
                         width: '100%',
                         tags: true,
                         tokenSeparators: [','],
                         createTag: function(params) {
                             var term = $.trim(params.term);
-                            console.log('ZS Recipes: createTag called with term:', term);
-                            if (term === '') {
-                                return null;
-                            }
-                            var tag = {
+                            if (term === '') return null;
+                            return {
                                 id: term,
                                 text: term + ' (crear nuevo)',
                                 newTag: true
                             };
-                            console.log('ZS Recipes: Created tag:', tag);
-                            return tag;
                         },
                         insertTag: function(data, tag) {
-                            console.log('ZS Recipes: insertTag called. Tag:', tag, 'Data length:', data.length);
                             data.push(tag);
                         },
                         ajax: {
@@ -459,7 +449,6 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
-                                console.log('ZS Recipes: AJAX search triggered for term:', params.term);
                                 return {
                                     action: 'zs_ingredient_search',
                                     nonce: nonce,
@@ -467,96 +456,32 @@ class Recipes implements FeatureInterface
                                 };
                             },
                             processResults: function(data) {
-                                console.log('ZS Recipes: AJAX search results received:', data);
                                 return data;
                             },
                             transport: function(params, success, failure) {
                                 var $request = $.ajax(params);
-                                
                                 $request.then(success);
-                                $request.fail(function(jqXHR, textStatus, errorThrown) {
-                                    // Ignore abort errors (they happen when user types fast)
-                                    if (textStatus !== 'abort') {
-                                        console.error('Zero Sense Recipes: AJAX Error:', {
-                                            status: textStatus,
-                                            error: errorThrown,
-                                            responseText: jqXHR.responseText,
-                                            readyState: jqXHR.readyState
-                                        });
-                                        failure();
-                                    }
+                                $request.fail(function(jqXHR, textStatus) {
+                                    if (textStatus !== 'abort') failure();
                                 });
-                                
                                 return $request;
                             }
                         }
                     });
                     
-                    // Log ALL possible Select2/SelectWoo events
-                    $(element).on('select2:opening', function(e) {
-                        console.log('ZS Recipes: EVENT select2:opening');
-                    });
-                    $(element).on('select2:open', function(e) {
-                        console.log('ZS Recipes: EVENT select2:open');
-                    });
-                    $(element).on('select2:closing', function(e) {
-                        console.log('ZS Recipes: EVENT select2:closing');
-                        
-                        // Check if there's a value that's about to be selected
+                    $(element).on('select2:closing', function() {
                         setTimeout(function() {
                             var val = $(element).val();
-                            console.log('ZS Recipes: After closing, value is:', val, 'Type:', typeof val);
-                            
-                            // If value is a string (new tag), create it
                             if (val && typeof val === 'string' && isNaN(val)) {
-                                console.log('ZS Recipes: Detected new tag after closing:', val);
-                                
-                                // Clear the select
                                 $(element).val(null).trigger('change.select2');
-                                
-                                // Create the ingredient
                                 createIngredient(val, element);
                             }
                         }, 100);
-                    });
-                    $(element).on('select2:close', function(e) {
-                        console.log('ZS Recipes: EVENT select2:close');
-                    });
-                    $(element).on('select2:selecting', function(e) {
-                        console.log('ZS Recipes: EVENT select2:selecting', e.params);
-                    });
-                    $(element).on('select2:select', function(e) {
-                        console.log('ZS Recipes: EVENT select2:select', e.params);
-                    });
-                    $(element).on('select2:unselecting', function(e) {
-                        console.log('ZS Recipes: EVENT select2:unselecting', e.params);
-                    });
-                    $(element).on('select2:unselect', function(e) {
-                        console.log('ZS Recipes: EVENT select2:unselect', e.params);
-                    });
-                    
-                    $(element).on('change', function(e) {
-                        var val = $(this).val();
-                        console.log('ZS Recipes: EVENT change, value:', val, 'Type:', typeof val);
-                        
-                        // Check if value is a string (new tag) instead of numeric ID
-                        if (val && isNaN(val)) {
-                            console.log('ZS Recipes: Non-numeric value detected (new tag):', val);
-                            
-                            // Clear the select
-                            $(element).val(null).trigger('change.select2');
-                            
-                            // Create the ingredient
-                            createIngredient(val, element);
-                        } else {
-                            console.log('ZS Recipes: Existing ingredient ID selected:', val);
-                        }
                     });
                 }
             }
             
             function createIngredient(name, selectElement) {
-                console.log('ZS Recipes: createIngredient called with name:', name);
                 $.ajax({
                     url: ajaxUrl,
                     method: 'POST',
@@ -566,28 +491,15 @@ class Recipes implements FeatureInterface
                         name: name
                     },
                     success: function(resp) {
-                        console.log('ZS Recipes: AJAX response received:', resp);
                         if (resp && resp.success && resp.data) {
-                            var newId = resp.data.id;
-                            var text = resp.data.text;
-                            console.log('ZS Recipes: Ingredient created successfully. ID:', newId, 'Text:', text);
-                            
-                            // Clear all options and set the new one
                             $(selectElement).empty();
-                            var option = new Option(text, newId, true, true);
-                            $(selectElement).append(option);
-                            
-                            // Trigger change to update select2
-                            $(selectElement).trigger('change');
-                            $(selectElement).trigger('change.select2');
-                            console.log('ZS Recipes: Select updated with new ingredient');
+                            var option = new Option(resp.data.text, resp.data.id, true, true);
+                            $(selectElement).append(option).trigger('change');
                         } else {
-                            console.error('ZS Recipes: Error in response:', resp);
-                            alert('Error al crear el ingrediente. Por favor, inténtalo de nuevo.');
+                            alert('Error al crear el ingrediente.');
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.error('ZS Recipes: AJAX error:', {xhr: xhr, status: status, error: error});
+                    error: function() {
                         alert('Error de conexión al crear el ingrediente.');
                     }
                 });
@@ -640,7 +552,6 @@ class Recipes implements FeatureInterface
             
             function initUtensilSelect(element) {
                 if (typeof jQuery.fn.selectWoo === 'undefined') {
-                    console.error('Zero Sense Recipes: selectWoo not available!');
                     return;
                 }
                 
@@ -651,9 +562,7 @@ class Recipes implements FeatureInterface
                         tokenSeparators: [','],
                         createTag: function(params) {
                             var term = $.trim(params.term);
-                            if (term === '') {
-                                return null;
-                            }
+                            if (term === '') return null;
                             return {
                                 id: term,
                                 text: term + ' (crear nuevo)',
@@ -668,7 +577,6 @@ class Recipes implements FeatureInterface
                             dataType: 'json',
                             delay: 250,
                             data: function(params) {
-                                console.log('ZS Recipes (Utensils): AJAX search triggered for term:', params.term);
                                 return {
                                     action: 'zs_utensil_search',
                                     nonce: nonce,
@@ -676,74 +584,32 @@ class Recipes implements FeatureInterface
                                 };
                             },
                             processResults: function(data) {
-                                console.log('ZS Recipes (Utensils): AJAX search results received:', data);
                                 return data;
                             },
                             transport: function(params, success, failure) {
                                 var $request = $.ajax(params);
-                                
                                 $request.then(success);
-                                $request.fail(function(jqXHR, textStatus, errorThrown) {
-                                    // Ignore abort errors (they happen when user types fast)
-                                    if (textStatus !== 'abort') {
-                                        console.error('Zero Sense Recipes (Utensils): AJAX Error:', {
-                                            status: textStatus,
-                                            error: errorThrown,
-                                            responseText: jqXHR.responseText,
-                                            readyState: jqXHR.readyState
-                                        });
-                                        failure();
-                                    }
+                                $request.fail(function(jqXHR, textStatus) {
+                                    if (textStatus !== 'abort') failure();
                                 });
-                                
                                 return $request;
                             }
                         }
                     });
                     
-                    $(element).on('select2:closing', function(e) {
-                        console.log('ZS Recipes (Utensils): EVENT select2:closing');
-                        
-                        // Check if there's a value that's about to be selected
+                    $(element).on('select2:closing', function() {
                         setTimeout(function() {
                             var val = $(element).val();
-                            console.log('ZS Recipes (Utensils): After closing, value is:', val, 'Type:', typeof val);
-                            
-                            // If value is a string (new tag), create it
                             if (val && typeof val === 'string' && isNaN(val)) {
-                                console.log('ZS Recipes (Utensils): Detected new tag after closing:', val);
-                                
-                                // Clear the select
                                 $(element).val(null).trigger('change.select2');
-                                
-                                // Create the utensil
                                 createUtensil(val, element);
                             }
                         }, 100);
-                    });
-                    
-                    $(element).on('change', function(e) {
-                        var val = $(this).val();
-                        console.log('ZS Recipes (Utensils): Select changed, value:', val);
-                        
-                        // Check if value is a string (new tag) instead of numeric ID
-                        if (val && isNaN(val)) {
-                            console.log('ZS Recipes (Utensils): Non-numeric value detected (new tag):', val);
-                            
-                            // Clear the select
-                            $(element).val(null).trigger('change.select2');
-                            
-                            // Create the utensil
-                            createUtensil(val, element);
-                        } else {
-                            console.log('ZS Recipes (Utensils): Existing utensil ID selected:', val);
-                        }
                     });
                 }
             }
             
             function createUtensil(name, selectElement) {
-                console.log('ZS Recipes (Utensils): createUtensil called with name:', name);
                 $.ajax({
                     url: ajaxUrl,
                     method: 'POST',
@@ -753,26 +619,15 @@ class Recipes implements FeatureInterface
                         name: name
                     },
                     success: function(resp) {
-                        console.log('ZS Recipes (Utensils): AJAX response received:', resp);
                         if (resp && resp.success && resp.data) {
-                            var newId = resp.data.id;
-                            var text = resp.data.text;
-                            console.log('ZS Recipes (Utensils): Utensil created successfully. ID:', newId, 'Text:', text);
-                            
                             $(selectElement).empty();
-                            var option = new Option(text, newId, true, true);
-                            $(selectElement).append(option);
-                            
-                            $(selectElement).trigger('change');
-                            $(selectElement).trigger('change.select2');
-                            console.log('ZS Recipes (Utensils): Select updated with new utensil');
+                            var option = new Option(resp.data.text, resp.data.id, true, true);
+                            $(selectElement).append(option).trigger('change');
                         } else {
-                            console.error('ZS Recipes (Utensils): Error in response:', resp);
-                            alert('Error al crear el utensilio. Por favor, inténtalo de nuevo.');
+                            alert('Error al crear el utensilio.');
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.error('ZS Recipes (Utensils): AJAX error:', {xhr: xhr, status: status, error: error});
+                    error: function() {
                         alert('Error de conexión al crear el utensilio.');
                     }
                 });
