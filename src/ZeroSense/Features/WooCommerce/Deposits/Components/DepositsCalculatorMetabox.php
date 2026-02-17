@@ -65,15 +65,18 @@ class DepositsCalculatorMetabox
 
         $manualOverride = MetaKeys::isEnabled($order, MetaKeys::IS_MANUAL_OVERRIDE);
         $statusAllowsAuto = in_array($order->get_status(), ['pending', 'budget-requested'], true);
-        $modeBadgeClass = $manualOverride ? 'zs-badge-manual' : 'zs-badge-auto';
-        $modeBadgeText = $manualOverride ? __('MAN', 'zero-sense') : __('AUTO', 'zero-sense');
+        $autoBadgeClass = $manualOverride ? 'zs-badge-auto zs-badge-inactive' : 'zs-badge-auto';
+        $manBadgeClass  = $manualOverride ? 'zs-badge-manual' : 'zs-badge-manual zs-badge-inactive';
         $depositAmount = $depositInfo['deposit_amount'] ?? (float) MetaKeys::get($order, MetaKeys::DEPOSIT_AMOUNT);
         $remainingAmount = $depositInfo['remaining_amount'] ?? (float) MetaKeys::get($order, MetaKeys::REMAINING_AMOUNT);
         $orderTotal = $order->get_total();
         ?>
         <div class="zs-deposits-calculator-wrapper">
             <div class="zs-deposits-header">
-                <span class="zs-badge <?php echo esc_attr($modeBadgeClass); ?>"><?php echo esc_html($modeBadgeText); ?></span>
+                <div class="zs-deposits-mode-badges">
+                    <span class="zs-badge <?php echo esc_attr($autoBadgeClass); ?>"><?php esc_html_e('AUTO', 'zero-sense'); ?></span>
+                    <span class="zs-badge <?php echo esc_attr($manBadgeClass); ?>"><?php esc_html_e('MAN', 'zero-sense'); ?></span>
+                </div>
                 <?php if ($manualOverride && $statusAllowsAuto) : ?>
                     <button type="button" 
                             class="zs-btn is-neutral zs-deposits-reset-btn" 

@@ -695,9 +695,17 @@ button.zs-mb-link {
     min-height: 32px;
 }
 
-.zs-deposits-header .zs-badge.zs-badge-manual {
+.zs-deposits-header .zs-badge {
     position: static;
-    margin-right: 12px;
+}
+
+.zs-deposits-mode-badges {
+    display: flex;
+    gap: 4px;
+}
+
+.zs-badge-inactive {
+    opacity: 0.3;
 }
 
 .zs-deposits-table {
