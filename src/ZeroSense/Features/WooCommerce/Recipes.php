@@ -309,7 +309,6 @@ class Recipes implements FeatureInterface
                     ?>
                 </tbody>
             </table>
-🥘 Paella Recipe Mode
             <p style="margin-top:10px; display: flex; justify-content: space-between; align-items: center;">
                 <button type="button" class="button" id="zs-recipe-add-row"><?php esc_html_e('Add ingredient', 'zero-sense'); ?></button>
                 <a href="<?php echo esc_url($manage_url); ?>" target="_blank" style="text-decoration: none; font-size: 13px;">
@@ -324,7 +323,7 @@ class Recipes implements FeatureInterface
                         <input type="checkbox" name="zs_recipe_needs_paella" value="1" <?php checked($needsPaella, '1'); ?>>
                         <span class="zs-paella-mode-slider"></span>
                     </label>
-                    <strong><?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?> 🥘</strong>
+                    <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
                 </div>
                 <div class="zs-paella-mode-info">
                     <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed.', 'zero-sense'); ?></p>
