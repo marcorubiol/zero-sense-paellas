@@ -233,17 +233,16 @@ class InventoryMetabox
                     overflow: hidden;
                 }
                 .zs-inventory-accordion-header {
-                    background: #f0f0f1;
-                    padding: 12px 15px;
                     cursor: pointer;
+                    padding: 12px 15px;
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    border-bottom: none;
+                    font-weight: 600;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    font-weight: 600;
-                    font-size: 14px;
-                    color: #1d2327;
                     user-select: none;
-                    transition: background 0.2s ease;
                 }
                 .zs-inventory-accordion-header:hover {
                     background: #e8e8e9;
