@@ -25,6 +25,11 @@ class MaterialCalculator
         // Analizar productos del pedido
         $analysis = ProductMapper::analyzeOrder($order);
         
+        // DEBUG: Log Open Bar detection
+        error_log('🍹 Open Bar Detection - Order #' . $order->get_id());
+        error_log('   has_barra_lliure: ' . ($analysis['has_barra_lliure'] ? 'YES' : 'NO'));
+        error_log('   Total guests: ' . $totalGuests);
+        
         // Obtener staff asignado
         $staffData = $order->get_meta('zs_event_staff', true) ?: [];
         $staffCount = self::countStaff($staffData);

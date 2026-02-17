@@ -50,6 +50,11 @@ class ProductMapper
         $barraTermIds = self::getTermIds(self::BARRA_CATEGORY_SLUGS);
         $entrantsTermIds = self::getTermIds(self::ENTRANT_CATEGORY_SLUGS);
         
+        // DEBUG: Log category term IDs
+        error_log('🔍 Category Detection - Order #' . $order->get_id());
+        error_log('   Barra term IDs: ' . json_encode($barraTermIds));
+        error_log('   Entrants term IDs: ' . json_encode($entrantsTermIds));
+        
         foreach ($order->get_items() as $itemId => $item) {
             $product = $item->get_product();
             
@@ -127,6 +132,7 @@ class ProductMapper
             // Barra Libre (suele venderse por horas, sin receta de cocina)
             if (!empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $productId)) {
                 $result['has_barra_lliure'] = true;
+                error_log('   ✅ Open Bar detected! Product ID: ' . $productId . ' (' . $product->get_name() . ')');
             }
             
             // Entrants (si venden "Pack Aperitivo" sin receta detallada)
