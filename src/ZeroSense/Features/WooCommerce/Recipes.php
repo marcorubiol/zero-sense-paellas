@@ -148,6 +148,22 @@ class Recipes implements FeatureInterface
         $manage_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_INGREDIENT . '&post_type=' . self::CPT);
         ?>
         <div class="zs-recipes-metabox">
+            <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input 
+                        type="checkbox" 
+                        name="zs_recipe_needs_paella" 
+                        value="1"
+                        <?php checked(get_post_meta($post->ID, self::META_NEEDS_PAELLA, true), '1'); ?>
+                        style="margin: 0;"
+                    >
+                    <strong><?php esc_html_e('This recipe requires paella pan', 'zero-sense'); ?></strong>
+                </label>
+                <p style="margin: 8px 0 0 0; color: #666; font-size: 13px;">
+                    <?php esc_html_e('Check this option if the recipe requires a paella pan to automatically calculate materials (pans, burners, etc.)', 'zero-sense'); ?>
+                </p>
+            </div>
+            
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
@@ -225,22 +241,6 @@ class Recipes implements FeatureInterface
                     <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
                 </a>
             </p>
-            
-            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input 
-                        type="checkbox" 
-                        name="zs_recipe_needs_paella" 
-                        value="1"
-                        <?php checked(get_post_meta($post->ID, self::META_NEEDS_PAELLA, true), '1'); ?>
-                        style="margin: 0;"
-                    >
-                    <strong><?php esc_html_e('Aquesta recepta necessita paellera', 'zero-sense'); ?></strong>
-                </label>
-                <p style="margin: 8px 0 0 0; color: #666; font-size: 13px;">
-                    <?php esc_html_e('Marca aquesta opció si la recepta requereix paellera per calcular materials automàticament (paelles, cremadors, etc.)', 'zero-sense'); ?>
-                </p>
-            </div>
         </div>
 
         <script>
