@@ -548,10 +548,11 @@ class InventoryMetabox
                 dirtyFields.add(materialKey);
                 
                 // Treat 0 as empty
-                var normalizedValue = (currentValue === '' || currentValue == '0') ? '' : currentValue;
-                var normalizedAuto = (autoValue == '0') ? '' : autoValue;
+                var normalizedValue = (currentValue === '' || currentValue == '0') ? 0 : parseInt(currentValue);
+                var normalizedAuto = (autoValue == '0') ? 0 : parseInt(autoValue);
                 
-                if (normalizedValue !== '' && normalizedValue != normalizedAuto) {
+                if (normalizedValue !== 0 && normalizedValue != normalizedAuto) {
+                    // User set a non-zero value different from auto
                     $input.addClass('zs-inventory-override');
                     
                     // Update badge to manual
@@ -562,13 +563,15 @@ class InventoryMetabox
                     var $resetIcon = $td.find('.zs-inventory-reset-icon');
                     $resetIcon.removeClass('hidden');
                 } else {
+                    // Value matches auto or is 0/empty
                     $input.removeClass('zs-inventory-override');
                     
-                    // Update badge to auto
+                    // Update badge: only show AUTO if auto value is > 0
                     var $container = $td.find('.zs-inventory-badge-container');
-                    if (autoValue > 0) {
+                    if (normalizedAuto > 0) {
                         $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     } else {
+                        // Auto is 0 or empty: no badge
                         $container.html('');
                     }
                     
