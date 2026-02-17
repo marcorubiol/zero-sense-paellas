@@ -301,6 +301,7 @@ class Staff implements FeatureInterface
     {
         if (in_array($term->slug, array_keys($this->getCoreRoles()), true)) {
             unset($actions['delete']);
+            unset($actions['edit']);
             unset($actions['inline hide-if-no-js']);
             
             // Add visual indicator
