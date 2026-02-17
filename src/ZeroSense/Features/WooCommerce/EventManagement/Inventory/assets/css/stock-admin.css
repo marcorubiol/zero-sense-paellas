@@ -203,6 +203,11 @@
     letter-spacing: 0.5px;
     padding: 10px 12px;
     background: #e8e8e9;
+    white-space: nowrap;
+}
+
+.zs-stock-table tr.zs-category-header td:not(:first-child) {
+    min-width: fit-content;
 }
 
 .zs-stock-table tr.zs-category-header td:first-child {
