@@ -449,6 +449,18 @@ class InventoryMetabox
                     font-weight: 600;
                     margin-bottom: 4px;
                 }
+                .zs-alert-goto-material {
+                    color: #2271b1;
+                    text-decoration: none;
+                    font-size: 14px;
+                    margin-left: 4px;
+                    opacity: 0.7;
+                    transition: opacity 0.2s ease;
+                }
+                .zs-alert-goto-material:hover {
+                    opacity: 1;
+                    text-decoration: none;
+                }
                 .zs-alert-item-title .dashicons {
                     width: 18px;
                     height: 18px;
@@ -743,6 +755,9 @@ class InventoryMetabox
                                 <div class="zs-alert-item-title">
                                     <span class="dashicons <?php echo $iconClass; ?> <?php echo $alertClass; ?>"></span>
                                     <strong><?php echo esc_html($materialLabel); ?></strong>
+                                    <a href="#" class="zs-alert-goto-material" data-material-key="<?php echo esc_attr($materialKey); ?>" title="<?php esc_attr_e('Go to material', 'zero-sense'); ?>">
+                                        →
+                                    </a>
                                 </div>
                                 <div class="zs-alert-item-message">
                                     <?php if ($isItemResolved): ?>
@@ -1239,6 +1254,37 @@ class InventoryMetabox
                 // Save state to localStorage
                 var isCollapsed = $banner.hasClass('collapsed');
                 localStorage.setItem('zs_stock_alerts_collapsed', isCollapsed);
+            });
+            
+            // Go to material from alert
+            $(document).on('click', '.zs-alert-goto-material', function(e) {
+                e.preventDefault();
+                
+                var materialKey = $(this).data('material-key');
+                
+                // Find the material row by data attribute or input name
+                var $materialRow = $('input[name="zs_inventory[' + materialKey + ']"]').closest('tr');
+                
+                if ($materialRow.length) {
+                    // Find parent accordion
+                    var $accordion = $materialRow.closest('.zs-inventory-accordion');
+                    
+                    // Expand accordion if collapsed
+                    if ($accordion.hasClass('collapsed')) {
+                        $accordion.removeClass('collapsed');
+                    }
+                    
+                    // Scroll to material row with smooth animation
+                    $('html, body').animate({
+                        scrollTop: $materialRow.offset().top - 100
+                    }, 500);
+                    
+                    // Highlight the row briefly
+                    $materialRow.css('background-color', '#fff3cd');
+                    setTimeout(function() {
+                        $materialRow.css('background-color', '');
+                    }, 2000);
+                }
             });
             
             // Mark alert as resolved
