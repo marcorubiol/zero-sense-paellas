@@ -92,6 +92,8 @@
 
 .zs-stock-table tr.zs-category-header {
     background: #f0f0f1;
+    position: relative;
+    z-index: 1;
 }
 
 .zs-stock-table tr.zs-category-header td {
@@ -103,9 +105,14 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 10px 12px;
+    background: #f0f0f1;
 }
 
 .zs-stock-table tr.zs-category-header:hover {
+    background: #f0f0f1;
+}
+
+.zs-stock-table tr.zs-category-header:hover td {
     background: #f0f0f1;
 }
 
@@ -140,7 +147,7 @@
 }
 
 .zs-stock-footer .zs-save-stock::before {
-    content: "\f147";
+    content: "\f316";
     font-family: dashicons;
     font-size: 28px;
     line-height: 1;
