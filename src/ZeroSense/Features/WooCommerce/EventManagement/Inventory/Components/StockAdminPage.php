@@ -88,7 +88,7 @@ class StockAdminPage
             
             <!-- Explicación -->
             <div class="zs-stock-help" style="background: #fff; border-left: 4px solid #2271b1; padding: 15px; margin: 20px 0; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
-                <h3 style="margin-top: 0;">📦 <?php esc_html_e('How Stock Management Works', 'zero-sense'); ?></h3>
+                <h3 style="margin-top: 0;"><?php esc_html_e('How Stock Management Works', 'zero-sense'); ?></h3>
                 <p>
                     <strong><?php esc_html_e('This page manages your total inventory per service area.', 'zero-sense'); ?></strong>
                 </p>
@@ -112,11 +112,6 @@ class StockAdminPage
                         placeholder="<?php esc_attr_e('Search materials...', 'zero-sense'); ?>"
                         class="regular-text"
                     />
-                </div>
-                <div class="zs-stock-actions">
-                    <button type="button" class="button button-primary zs-save-stock">
-                        💾 <?php esc_html_e('Save Changes', 'zero-sense'); ?>
-                    </button>
                 </div>
             </div>
             
@@ -155,7 +150,7 @@ class StockAdminPage
                         ?>
                             <tr class="zs-category-header">
                                 <td colspan="<?php echo count($serviceAreas) + 1; ?>" style="background: #f0f0f1; font-weight: 600; padding: 10px 12px; border-top: 2px solid #c3c4c7;">
-                                    📦 <?php echo esc_html($categoryLabel); ?>
+                                    <?php echo esc_html($categoryLabel); ?>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -163,6 +158,9 @@ class StockAdminPage
                             <tr data-material="<?php echo esc_attr($material['key']); ?>" data-category="<?php echo esc_attr($material['category']); ?>">
                                 <td class="zs-sticky-col">
                                     <strong><?php echo esc_html($material['label']); ?></strong>
+                                    <?php if (!empty($material['description'])): ?>
+                                        <br><small style="color: #666; font-weight: normal;"><?php echo esc_html($material['description']); ?></small>
+                                    <?php endif; ?>
                                 </td>
                                 <?php foreach ($serviceAreas as $area): ?>
                                     <?php
@@ -188,7 +186,7 @@ class StockAdminPage
             <!-- Sticky Footer con botón de guardar -->
             <div class="zs-stock-footer">
                 <button type="button" class="button button-primary zs-save-stock">
-                    💾 <?php esc_html_e('Save Changes', 'zero-sense'); ?>
+                    <?php esc_html_e('Save Changes', 'zero-sense'); ?>
                 </button>
             </div>
         </div>

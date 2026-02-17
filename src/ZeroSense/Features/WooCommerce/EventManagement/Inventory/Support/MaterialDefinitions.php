@@ -17,48 +17,56 @@ class MaterialDefinitions
                 'label' => 'Paella 55cm (4-6 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 5 persones',
             ],
             [
                 'key' => 'paella_65cm',
                 'label' => 'Paella 65cm (6-9 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 7 persones',
             ],
             [
                 'key' => 'paella_70cm',
                 'label' => 'Paella 70cm (8-12 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 10 persones',
             ],
             [
                 'key' => 'paella_80cm',
                 'label' => 'Paella 80cm (12-15 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 13 persones',
             ],
             [
                 'key' => 'paella_90cm',
                 'label' => 'Paella 90cm (15-25 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 20 persones',
             ],
             [
                 'key' => 'paella_100cm',
                 'label' => 'Paella 100cm (25-40 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 32 persones',
             ],
             [
                 'key' => 'paella_115cm',
                 'label' => 'Paella 115cm (40-60 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 50 persones',
             ],
             [
                 'key' => 'paella_135cm',
                 'label' => 'Paella 135cm (60-80 pax)',
                 'category' => 'paelles',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 paella per cada 70 persones',
             ],
             
             // CREMADORS
@@ -67,18 +75,21 @@ class MaterialDefinitions
                 'label' => 'Cremador 50-60cm',
                 'category' => 'cremadors',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 cremador per paella de 55-65cm',
             ],
             [
                 'key' => 'cremador_70cm',
                 'label' => 'Cremador 70cm',
                 'category' => 'cremadors',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 cremador per paella de 70-115cm',
             ],
             [
                 'key' => 'cremador_90cm',
                 'label' => 'Cremador 90cm',
                 'category' => 'cremadors',
                 'unit' => 'u',
+                'description' => 'Càlcul automàtic: 1 cremador per paella de 100-135cm',
             ],
             
             // EQUIPAMENT CUINA
