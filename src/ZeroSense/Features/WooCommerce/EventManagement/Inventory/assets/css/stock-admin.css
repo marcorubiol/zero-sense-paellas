@@ -49,6 +49,7 @@
     position: sticky;
     top: 32px;
     z-index: 5;
+    transform: translateZ(0);
 }
 
 .zs-stock-table th,
@@ -77,6 +78,7 @@
 .zs-stock-table td.zs-sticky-col {
     position: sticky;
     z-index: 10;
+    transform: translateZ(0);
 }
 
 .zs-stock-table tbody tr:nth-child(even):not(.zs-category-header) td.zs-sticky-col {
@@ -94,6 +96,7 @@
     position: sticky;
     top: 32px;
     left: 0;
+    transform: translateZ(0);
 }
 
 .zs-stock-table input.stock-input {
