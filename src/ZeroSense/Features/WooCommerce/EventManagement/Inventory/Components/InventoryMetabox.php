@@ -125,7 +125,8 @@ class InventoryMetabox
                     align-items: center;
                 }
                 .zs-inventory-lock-btn,
-                .zs-inventory-recalc-btn {
+                .zs-inventory-recalc-btn,
+                .zs-inventory-save-btn {
                     display: inline-flex;
                     align-items: center;
                     gap: 6px;
@@ -139,8 +140,10 @@ class InventoryMetabox
                 }
                 .zs-inventory-lock-btn:hover,
                 .zs-inventory-recalc-btn:hover,
+                .zs-inventory-save-btn:hover,
                 .zs-inventory-lock-btn:focus,
-                .zs-inventory-recalc-btn:focus {
+                .zs-inventory-recalc-btn:focus,
+                .zs-inventory-save-btn:focus {
                     background: #f5f5f5;
                     border-color: #999;
                     box-shadow: none;
@@ -196,11 +199,8 @@ class InventoryMetabox
                     display: block;
                     margin-top: 2px;
                 }
-                .zs-inventory-save-btn {
-                    display: none;
-                }
-                .zs-inventory-save-btn.show {
-                    display: inline-flex;
+                .zs-inventory-save-btn:not(.show) {
+                    display: none !important;
                 }
                 .zs-inventory-save-btn.is-saving {
                     opacity: 0.7;
