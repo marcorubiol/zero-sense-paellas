@@ -106,22 +106,16 @@ class InventoryMetabox
                 .zs-inventory-metabox input[type="number"] {
                     width: 80px;
                 }
-                .zs-inventory-auto {
-                    color: #666;
-                    font-size: 12px;
+                .zs-inventory-metabox input[type="number"]:disabled {
+                    background: transparent;
+                    border: none;
+                    color: #2c3338;
+                    font-weight: 500;
+                    cursor: default;
                 }
                 .zs-inventory-override {
                     border: 2px solid #ff9800 !important;
-                    background: #fff3e0;
-                }
-                .zs-inventory-reset {
-                    margin-left: 5px;
-                    cursor: pointer;
-                    color: #d63638;
-                    text-decoration: none;
-                }
-                .zs-inventory-reset:hover {
-                    color: #a00;
+                    background: #fff3e0 !important;
                 }
                 .zs-inventory-category-header {
                     background: #f0f0f1;
@@ -130,14 +124,101 @@ class InventoryMetabox
                     text-transform: uppercase;
                     color: #1d2327;
                 }
+                .zs-inventory-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #ddd;
+                }
+                .zs-inventory-controls {
+                    display: flex;
+                    gap: 10px;
+                    align-items: center;
+                }
+                .zs-inventory-lock-btn,
+                .zs-inventory-recalc-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 12px;
+                    border: 1px solid #ddd;
+                    background: white;
+                    cursor: pointer;
+                    border-radius: 3px;
+                    font-size: 13px;
+                    transition: all 0.2s ease;
+                }
+                .zs-inventory-lock-btn:hover,
+                .zs-inventory-recalc-btn:hover {
+                    background: #f5f5f5;
+                    border-color: #999;
+                }
+                .zs-inventory-lock-btn[data-locked="true"] {
+                    color: #d63638;
+                }
+                .zs-inventory-lock-btn[data-locked="false"] {
+                    color: #2271b1;
+                }
+                .zs-inventory-badge {
+                    display: inline-block;
+                    padding: 2px 6px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    border-radius: 3px;
+                    text-transform: uppercase;
+                    margin-left: 6px;
+                }
+                .zs-inventory-badge-auto {
+                    background: #d7f0ff;
+                    color: #0073aa;
+                }
+                .zs-inventory-badge-manual {
+                    background: #fff3cd;
+                    color: #856404;
+                }
+                .zs-inventory-reset-icon {
+                    cursor: pointer;
+                    color: #d63638;
+                    margin-left: 6px;
+                    font-size: 16px;
+                    transition: transform 0.2s ease;
+                }
+                .zs-inventory-reset-icon:hover {
+                    transform: rotate(-45deg);
+                    color: #a00;
+                }
+                .zs-inventory-description {
+                    font-size: 11px;
+                    color: #666;
+                    font-style: italic;
+                    display: block;
+                    margin-top: 2px;
+                }
             </style>
+            
+            <div class="zs-inventory-header">
+                <div>
+                    <strong><?php esc_html_e('Inventory & Materials', 'zero-sense'); ?></strong>
+                </div>
+                <div class="zs-inventory-controls">
+                    <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
+                        <span class="dashicons dashicons-update"></span>
+                        <?php esc_html_e('Recalculate All', 'zero-sense'); ?>
+                    </button>
+                    <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
+                        <span class="dashicons dashicons-lock"></span>
+                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
+                    </button>
+                </div>
+            </div>
             
             <table>
                 <thead>
                     <tr>
                         <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                        <th><?php esc_html_e('Auto', 'zero-sense'); ?></th>
-                        <th><?php esc_html_e('Quantity', 'zero-sense'); ?></th>
+                        <th><?php esc_html_e('Final Quantity', 'zero-sense'); ?></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -158,30 +239,32 @@ class InventoryMetabox
                         <tr>
                             <td>
                                 <strong><?php echo esc_html($material['label']); ?></strong>
-                            </td>
-                            <td>
-                                <span class="zs-inventory-auto">
-                                    <?php echo $autoValue > 0 ? esc_html($autoValue) : '—'; ?>
-                                </span>
+                                <?php if (!empty($material['description'])): ?>
+                                    <span class="zs-inventory-description"><?php echo esc_html($material['description']); ?></span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <input 
                                     type="number" 
                                     name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
-                                    value="<?php echo esc_attr($hasOverride ? $overrideValue : ''); ?>"
-                                    placeholder="<?php echo $autoValue > 0 ? esc_attr($autoValue) : ''; ?>"
+                                    value="<?php echo esc_attr($hasOverride ? $overrideValue : $autoValue); ?>"
+                                    data-auto="<?php echo esc_attr($autoValue); ?>"
                                     min="0"
-                                    class="<?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
+                                    class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
+                                    disabled
                                 />
+                                <?php if ($hasOverride): ?>
+                                    <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
+                                <?php elseif ($autoValue > 0): ?>
+                                    <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($hasOverride): ?>
-                                    <a href="#" 
-                                       class="zs-inventory-reset" 
+                                    <span class="dashicons dashicons-update zs-inventory-reset-icon" 
                                        data-material="<?php echo esc_attr($materialKey); ?>"
                                        title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
-                                        🔄
-                                    </a>
+                                    </span>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -199,21 +282,107 @@ class InventoryMetabox
         
         <script>
         jQuery(document).ready(function($) {
-            // Reset button
-            $('.zs-inventory-reset').on('click', function(e) {
+            var isLocked = true;
+            
+            // Lock/Unlock toggle
+            $('.zs-inventory-lock-btn').on('click', function(e) {
                 e.preventDefault();
+                isLocked = !isLocked;
+                var $btn = $(this);
+                var $inputs = $('.zs-inventory-input');
+                
+                if (isLocked) {
+                    $inputs.prop('disabled', true);
+                    $btn.attr('data-locked', 'true');
+                    $btn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
+                    $btn.find('.lock-text').text('<?php echo esc_js(__('Locked', 'zero-sense')); ?>');
+                    $btn.attr('title', '<?php echo esc_js(__('Click to unlock for editing', 'zero-sense')); ?>');
+                } else {
+                    $inputs.prop('disabled', false);
+                    $btn.attr('data-locked', 'false');
+                    $btn.find('.dashicons').removeClass('dashicons-lock').addClass('dashicons-unlock');
+                    $btn.find('.lock-text').text('<?php echo esc_js(__('Unlocked', 'zero-sense')); ?>');
+                    $btn.attr('title', '<?php echo esc_js(__('Click to lock', 'zero-sense')); ?>');
+                }
+            });
+            
+            // Reset individual material to auto
+            $(document).on('click', '.zs-inventory-reset-icon', function(e) {
+                e.preventDefault();
+                if (isLocked) return;
+                
                 var materialKey = $(this).data('material');
-                var input = $('input[name="zs_inventory[' + materialKey + ']"]');
-                input.val('').removeClass('zs-inventory-override');
+                var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
+                var autoValue = $input.data('auto');
+                
+                $input.val(autoValue).removeClass('zs-inventory-override');
+                
+                // Update badge
+                var $td = $input.parent();
+                $td.find('.zs-inventory-badge').remove();
+                if (autoValue > 0) {
+                    $input.after('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                }
+                
                 $(this).remove();
             });
             
-            // Add override class on input
-            $('.zs-inventory-metabox input[type="number"]').on('input', function() {
-                if ($(this).val() !== '') {
-                    $(this).addClass('zs-inventory-override');
+            // Recalculate all
+            $('.zs-inventory-recalc-btn').on('click', function(e) {
+                e.preventDefault();
+                
+                $('.zs-inventory-input').each(function() {
+                    var $input = $(this);
+                    var autoValue = $input.data('auto');
+                    $input.val(autoValue).removeClass('zs-inventory-override');
+                    
+                    // Update badges
+                    var $td = $input.parent();
+                    $td.find('.zs-inventory-badge').remove();
+                    if (autoValue > 0) {
+                        $input.after('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    }
+                });
+                
+                // Remove all reset icons
+                $('.zs-inventory-reset-icon').remove();
+                
+                alert('<?php echo esc_js(__('All materials recalculated from order data.', 'zero-sense')); ?>');
+            });
+            
+            // Track manual changes
+            $('.zs-inventory-metabox').on('input', '.zs-inventory-input', function() {
+                if (isLocked) return;
+                
+                var $input = $(this);
+                var currentValue = $input.val();
+                var autoValue = $input.data('auto');
+                var materialKey = $input.attr('name').match(/\[([^\]]+)\]/)[1];
+                var $td = $input.parent();
+                
+                if (currentValue !== '' && currentValue != autoValue) {
+                    $input.addClass('zs-inventory-override');
+                    
+                    // Update badge to manual
+                    $td.find('.zs-inventory-badge').remove();
+                    $input.after('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
+                    
+                    // Add reset icon if not present
+                    var $resetTd = $input.closest('tr').find('td:last');
+                    if (!$resetTd.find('.zs-inventory-reset-icon').length) {
+                        $resetTd.html('<span class="dashicons dashicons-update zs-inventory-reset-icon" data-material="' + materialKey + '" title="<?php echo esc_js(__('Reset to auto', 'zero-sense')); ?>"></span>');
+                    }
                 } else {
-                    $(this).removeClass('zs-inventory-override');
+                    $input.removeClass('zs-inventory-override');
+                    
+                    // Update badge to auto
+                    $td.find('.zs-inventory-badge').remove();
+                    if (autoValue > 0) {
+                        $input.after('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    }
+                    
+                    // Remove reset icon
+                    $input.closest('tr').find('.zs-inventory-reset-icon').remove();
                 }
             });
         });
