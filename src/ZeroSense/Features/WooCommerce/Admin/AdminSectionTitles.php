@@ -68,7 +68,7 @@ class AdminSectionTitles implements FeatureInterface
                     $('#order_data h3').each(function() {
                         var elem = $(this);
                         
-                        if (elem.prev('.zs-subtitle').length) {
+                        if (elem.next('.zs-subtitle').length) {
                             return;
                         }
                         
@@ -78,10 +78,10 @@ class AdminSectionTitles implements FeatureInterface
                         
                         if (firstWord === 'Billing' || firstWord === 'Facturación') {
                             if (editLink.length) editLink.remove();
-                            elem.before('<div class="zs-subtitle zs-subtitle-client">👤 Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                            elem.after('<div class="zs-subtitle zs-subtitle-client">👤 Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
                             if (editLink.length) editLink.remove();
-                            elem.before('<div class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                            elem.after('<div class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         }
                     });
                     
@@ -157,7 +157,7 @@ JAVASCRIPT;
                 font-weight: 600;
                 color: var(--zs-mb-label-color, #1d2327);
                 padding: 5px 10px;
-                border-radius: var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px) 0 0;
+                border-radius: 0 0 var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px);
                 margin-bottom: 0;
                 line-height: 1.4;
             }
