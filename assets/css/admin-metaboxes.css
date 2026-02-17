@@ -695,8 +695,8 @@ button.zs-mb-link {
     min-height: 32px;
 }
 
-.zs-deposits-header .zs-badge {
-    position: static;
+.zs-deposits-mode-badge {
+    margin-left: auto;
 }
 
 

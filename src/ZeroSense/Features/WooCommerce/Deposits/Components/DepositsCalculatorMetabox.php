@@ -81,10 +81,8 @@ class DepositsCalculatorMetabox
                         <span class="dashicons dashicons-update"></span>
                         <?php esc_html_e('Reset to Auto', 'zero-sense'); ?>
                     </button>
-                <?php else : ?>
-                    <span></span>
                 <?php endif; ?>
-                <span class="zs-badge <?php echo esc_attr($activeBadgeClass); ?>"><?php echo esc_html($activeBadgeText); ?></span>
+                <span class="zs-badge zs-deposits-mode-badge <?php echo esc_attr($activeBadgeClass); ?>"><?php echo esc_html($activeBadgeText); ?></span>
             </div>
 
             <table class="zs-deposits-table">
