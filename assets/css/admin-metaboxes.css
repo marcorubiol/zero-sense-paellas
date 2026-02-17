@@ -152,7 +152,7 @@
     box-sizing: border-box;
 }
 
-.zs-mb-field-inline .zs-mb-auto-btn {
+.zs-mb-field-inline .zs-btn {
     height: 30px;
     box-sizing: border-box;
     padding-top: 0;
@@ -160,7 +160,7 @@
 }
 
 /* Auto-calculate utility button — subtle, matches field height */
-.zs-mb-auto-btn {
+.zs-btn {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -176,15 +176,22 @@
     white-space: nowrap;
 }
 
-.zs-mb-auto-btn:hover,
-.zs-mb-auto-btn:focus {
-    background: #f0f6fc;
-    border-color: #2271b1;
+.zs-btn:hover,
+.zs-btn:focus {
+    background: #f6f7f7;
+    border-color: #8c8f94;
     outline: none;
     box-shadow: none;
 }
 
-.zs-mb-auto-btn .dashicons {
+/* Primary variant — blue hover for smart/auto actions */
+.zs-btn.is-primary:hover,
+.zs-btn.is-primary:focus {
+    background: #f0f6fc;
+    border-color: #2271b1;
+}
+
+.zs-btn .dashicons {
     font-size: 14px;
     width: 14px;
     height: 14px;
@@ -193,24 +200,24 @@
     align-items: center;
 }
 
-/* Neutral variant — grey at rest, blue on hover (e.g. Change button) */
-.zs-mb-auto-btn.is-neutral {
+/* Neutral variant — grey text at rest */
+.zs-btn.is-neutral {
     color: var(--zs-mb-subheader-color);
 }
 
-.zs-mb-auto-btn.is-neutral:hover,
-.zs-mb-auto-btn.is-neutral:focus {
-    color: #2271b1;
+.zs-btn.is-neutral:hover,
+.zs-btn.is-neutral:focus {
+    color: var(--zs-mb-label-color);
 }
 
 /* Destructive variant — red text by default, stronger on hover */
-.zs-mb-auto-btn.is-destructive {
+.zs-btn.is-destructive {
     color: #d63638;
     border-color: #f0b8b8;
 }
 
-.zs-mb-auto-btn.is-destructive:hover,
-.zs-mb-auto-btn.is-destructive:focus {
+.zs-btn.is-destructive:hover,
+.zs-btn.is-destructive:focus {
     background: #fff5f5;
     border-color: #d63638;
 }

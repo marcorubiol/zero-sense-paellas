@@ -453,7 +453,7 @@ class Flowmattic implements FeatureInterface
         
         // Section 1: Manual Email Actions (Class Actions)
         if (!empty($emailTriggers)) {
-            echo '<h4 style="margin:0 0 12px;font-size:13px;font-weight:600;color:#3c434a;">' . esc_html__('Manual Email Actions', 'zero-sense') . '</h4>';
+            echo '<h4 class="zs-mb-subheader" style="margin-bottom:12px;">' . esc_html__('Manual Email Actions', 'zero-sense') . '</h4>';
         }
         
         foreach ($emailTriggers as $trigger) {
@@ -491,8 +491,8 @@ class Flowmattic implements FeatureInterface
                 }
             }
             
-            echo '<div style="margin-bottom:12px;">';
-            echo '<button type="button" class="button zs-manual-email-btn ' . esc_attr($buttonCssClass) . '" data-workflow-id="' . esc_attr($workflowId) . '" data-order-id="' . esc_attr($orderId) . '">';
+            echo '<div class="zs-email-action-item">';
+            echo '<button type="button" class="zs-btn zs-manual-email-btn ' . esc_attr($buttonCssClass) . '" data-workflow-id="' . esc_attr($workflowId) . '" data-order-id="' . esc_attr($orderId) . '">'; 
             echo esc_html($buttonText);
             echo '</button>';
             if ($statusText) {
@@ -503,9 +503,9 @@ class Flowmattic implements FeatureInterface
         
         // Show unavailable triggers section
         if (!empty($unavailableTriggers)) {
-            echo '<div style="margin-top:20px;border-top:1px solid #ddd;padding-top:12px;">';
+            echo '<div class="zs-mb-divider">';
             echo '<div style="margin-bottom:8px;">';
-            echo '<button type="button" class="button-link" id="zs-toggle-unavailable" style="text-decoration:none;color:#666;font-size:12px;">';
+            echo '<button type="button" class="zs-mb-link" id="zs-toggle-unavailable" style="font-size:12px;">';
             echo '<span class="dashicons dashicons-arrow-right" style="font-size:12px;line-height:1;margin-right:4px;"></span>';
             echo sprintf(esc_html__('Show %d unavailable actions', 'zero-sense'), count($unavailableTriggers));
             echo '</button>';
@@ -529,9 +529,9 @@ class Flowmattic implements FeatureInterface
                     $statesText = sprintf(esc_html__('Available in: %s', 'zero-sense'), implode(', ', $stateLabels));
                 }
                 
-                echo '<div style="margin-bottom:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;">';
-                echo '<div style="font-weight:600;color:#333;margin-bottom:2px;">' . esc_html($buttonText) . '</div>';
-                echo '<div style="font-size:11px;color:#666;font-style:italic;">(' . $statesText . ')</div>';
+                echo '<div class="zs-unavailable-action-item">';
+                echo '<div class="zs-unavailable-action-name">' . esc_html($buttonText) . '</div>';
+                echo '<div class="zs-unavailable-action-states">(' . $statesText . ')</div>';
                 echo '</div>';
             }
             echo '</div>';
@@ -540,16 +540,16 @@ class Flowmattic implements FeatureInterface
         
         // Section 2: Automatic Email Actions
         if (!empty($statusTransitions)) {
-            echo '<div style="border-top:1px solid #ddd;padding-top:12px;">';
+            echo '<div class="zs-mb-divider">';
             echo '<div style="margin-bottom:8px;">';
-            echo '<button type="button" class="button-link" id="zs-toggle-automatic-actions" style="text-decoration:none;color:#666;font-size:12px;">';
+            echo '<button type="button" class="zs-mb-link" id="zs-toggle-automatic-actions" style="font-size:12px;">';
             echo '<span class="dashicons dashicons-arrow-right" style="font-size:12px;line-height:1;margin-right:4px;"></span>';
             echo sprintf(esc_html__('Show %d automatic actions', 'zero-sense'), count($statusTransitions));
             echo '</button>';
             echo '</div>';
             
             echo '<div id="zs-automatic-actions" style="display:none;">';
-            echo '<h4 style="margin:0 0 12px;font-size:13px;font-weight:600;color:#3c434a;">' . esc_html__('Automatic Email Actions', 'zero-sense') . '</h4>';
+            echo '<h4 class="zs-mb-subheader" style="margin-bottom:12px;">' . esc_html__('Automatic Email Actions', 'zero-sense') . '</h4>';
             
             $statusOptions = $this->getStatusOptions();
             

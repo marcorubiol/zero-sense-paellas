@@ -310,10 +310,10 @@ class StaffAssignmentMetabox
                                         <?php endif; ?>
                                     </select>
                                     
-                                    <button type="button" class="zs-mb-auto-btn is-neutral zs-staff-edit">
+                                    <button type="button" class="zs-btn is-neutral zs-staff-edit">
                                         <?php esc_html_e('Change', 'zero-sense'); ?>
                                     </button>
-                                    <button type="button" class="zs-mb-auto-btn is-destructive zs-staff-remove">
+                                    <button type="button" class="zs-btn is-destructive zs-staff-remove">
                                         <?php esc_html_e('Remove', 'zero-sense'); ?>
                                     </button>
                                 </div>
@@ -601,8 +601,8 @@ class StaffAssignmentMetabox
                         }
                     }
                     
-                    var $editBtn = $('<button type="button" class="zs-mb-auto-btn is-neutral zs-staff-edit"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
-                    var $removeBtn = $('<button type="button" class="zs-mb-auto-btn is-destructive zs-staff-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
+                    var $editBtn = $('<button type="button" class="zs-btn is-neutral zs-staff-edit"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
+                    var $removeBtn = $('<button type="button" class="zs-btn is-destructive zs-staff-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
                     
                     $newRow.append($hiddenInput).append($display).append($select).append($editBtn).append($removeBtn);
                     $btn.before($newRow);

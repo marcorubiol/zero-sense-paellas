@@ -11,16 +11,46 @@
     gap:6px;
     margin-bottom:6px;
 }
-.zero-sense-flowmattic-metabox .zs-grid .button{
+.zero-sense-flowmattic-metabox .zs-grid .zs-btn{
     width:100%;
     white-space:normal;
     line-height:1.25;
-    padding:4px 6px;
-    font-size:12px;
+    justify-content: center;
 }
-.zero-sense-flowmattic-metabox .zs-grid .button[disabled]{
+.zero-sense-flowmattic-metabox .zs-grid .zs-btn[disabled]{
     opacity:0.55;
     cursor:not-allowed;
+}
+
+/* Standalone email action button (outside grid) */
+.zs-manual-email-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Email action item wrapper */
+.zs-email-action-item {
+    margin-bottom: 10px;
+}
+
+/* Unavailable action items */
+.zs-unavailable-action-item {
+    margin-bottom: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.zs-unavailable-action-name {
+    font-weight: 600;
+    color: #3c434a;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.zs-unavailable-action-states {
+    font-size: 11px;
+    color: #646970;
+    font-style: italic;
 }
 .zero-sense-flowmattic-metabox .zs-footnote{
     font-size:11px;

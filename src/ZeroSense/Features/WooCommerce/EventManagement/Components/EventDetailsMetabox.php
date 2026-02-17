@@ -255,7 +255,7 @@ class EventDetailsMetabox
                                        class="short">
                                 <button type="button" 
                                         id="zs-recalculate-team-arrival-time" 
-                                        class="zs-mb-auto-btn"
+                                        class="zs-btn is-primary"
                                         title="<?php esc_attr_e('Set 3 hours before Paellas service time', 'zero-sense'); ?>">
                                     <span class="dashicons dashicons-update"></span>
                                     <?php esc_html_e('Auto', 'zero-sense'); ?>
@@ -283,7 +283,7 @@ class EventDetailsMetabox
                                        class="short">
                                 <button type="button" 
                                         id="zs-recalculate-starters-time" 
-                                        class="zs-mb-auto-btn"
+                                        class="zs-btn is-primary"
                                         title="<?php esc_attr_e('Set 30 minutes before Paellas service time', 'zero-sense'); ?>">
                                     <span class="dashicons dashicons-update"></span>
                                     <?php esc_html_e('Auto', 'zero-sense'); ?>

@@ -3,8 +3,8 @@
 /* Metabox styles (order edit screen) */
 #zero_sense_flowmattic_actions .zs-group-title{margin:6px 0 4px;font-weight:600}
 #zero_sense_flowmattic_actions .zs-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
-#zero_sense_flowmattic_actions .zs-grid .button{width:100%;white-space:normal;line-height:1.25;padding:4px 6px;font-size:12px}
-#zero_sense_flowmattic_actions .zs-grid .button[disabled]{opacity:0.55;cursor:not-allowed}
+#zero_sense_flowmattic_actions .zs-grid .zs-btn{width:100%;white-space:normal;line-height:1.25;justify-content:center;}
+#zero_sense_flowmattic_actions .zs-grid .zs-btn[disabled]{opacity:0.55;cursor:not-allowed}
 #zero_sense_flowmattic_actions .zs-footnote{font-size:11px;color:#666;margin-top:4px;display:block}
 #zero_sense_flowmattic_actions .zs-toggle{font-size:11px;color:#135e96;cursor:pointer;text-decoration:none}
 #zero_sense_flowmattic_actions .zs-toggle:hover{text-decoration:underline}

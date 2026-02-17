@@ -59,8 +59,8 @@
 .zs-inventory-lock-btn:focus,
 .zs-inventory-recalc-btn:focus,
 .zs-inventory-save-btn:focus {
-    background: #f0f6fc;
-    border-color: #2271b1;
+    background: #f6f7f7;
+    border-color: #8c8f94;
     box-shadow: none;
     outline: none;
 }
