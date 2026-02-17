@@ -68,7 +68,7 @@ class Recipes implements FeatureInterface
         add_filter('manage_' . self::TAX_INGREDIENT . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
         add_filter('manage_edit-' . self::TAX_UTENSIL . '_columns', [$this, 'addUsageColumn']);
         add_filter('manage_' . self::TAX_UTENSIL . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
-        add_action('pre_delete_term', [$this, 'preventDeleteIfInUse'], 10, 2);
+        add_filter('pre_delete_term', [$this, 'preventDeleteIfInUse'], 10, 2);
         
         // Recipe list columns
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addRecipeColumns']);
@@ -1275,6 +1275,7 @@ class Recipes implements FeatureInterface
 
     public function preventDeleteIfInUse($term_id, string $taxonomy)
     {
+        // Only check our taxonomies
         if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
             return $term_id;
         }
@@ -1282,13 +1283,19 @@ class Recipes implements FeatureInterface
         $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
         $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
         $term = get_term($term_id);
-        $term_name = $term instanceof \WP_Term ? $term->name : '';
+        
+        if (!$term instanceof \WP_Term) {
+            return $term_id;
+        }
+        
+        $term_name = $term->name;
 
         // Get all recipes
         $recipes = get_posts([
             'post_type' => self::CPT,
             'posts_per_page' => -1,
             'fields' => 'ids',
+            'suppress_filters' => true,
         ]);
 
         // Count manually by checking the meta
@@ -1312,8 +1319,12 @@ class Recipes implements FeatureInterface
             }
         }
 
+        // If term is in use, prevent deletion
         if ($count > 0) {
             $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
+            
+            // Log for debugging
+            error_log(sprintf('ZS Recipes: Preventing deletion of %s "%s" (ID: %d) - used in %d recipes', $type_label, $term_name, $term_id, $count));
             
             return new \WP_Error(
                 'term_in_use',
@@ -1326,6 +1337,8 @@ class Recipes implements FeatureInterface
             );
         }
 
+        // Allow deletion
+        error_log(sprintf('ZS Recipes: Allowing deletion of %s "%s" (ID: %d) - not in use', $taxonomy, $term_name, $term_id));
         return $term_id;
     }
 
