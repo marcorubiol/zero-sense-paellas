@@ -29,6 +29,32 @@ class StaffAssignmentMetabox
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('wp_ajax_zs_create_staff_member', [$this, 'ajaxCreateStaffMember']);
         add_action('wp_ajax_zs_save_staff_assignment', [$this, 'ajaxSaveStaffAssignment']);
+        add_action('wp_ajax_zs_assign_staff_role', [$this, 'ajaxAssignStaffRole']);
+    }
+    
+    public function ajaxAssignStaffRole(): void
+    {
+        check_ajax_referer('zs_assign_role', 'nonce');
+        
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $staffId = isset($_POST['staff_id']) ? absint($_POST['staff_id']) : 0;
+        $role = isset($_POST['role']) ? sanitize_text_field($_POST['role']) : '';
+        
+        if (!$staffId || !$role) {
+            wp_send_json_error('Invalid parameters');
+        }
+        
+        // Assign the role to the staff member
+        $result = wp_set_object_terms($staffId, $role, self::STAFF_TAX, true);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+        
+        wp_send_json_success(['message' => 'Role assigned successfully']);
     }
     
     public function ajaxSaveStaffAssignment(): void
@@ -174,14 +200,28 @@ class StaffAssignmentMetabox
         // Prepare staff data by role for JavaScript
         $staffByRole = [];
         foreach ($roles as $roleSlug => $roleName) {
-            $roleStaffList = $this->getAllStaff($roleSlug);
+            $staffByRoleMembership = $this->getStaffByRoleMembership($roleSlug);
             $staffByRole[$roleSlug] = [];
-            foreach ($roleStaffList as $staff) {
+            
+            // Add staff with role
+            foreach ($staffByRoleMembership['with_role'] as $staff) {
                 $staffByRole[$roleSlug][] = [
                     'id' => $staff->ID,
                     'name' => $staff->post_title,
                     'phone' => get_post_meta($staff->ID, self::META_PHONE, true),
                     'email' => get_post_meta($staff->ID, self::META_EMAIL, true),
+                    'has_role' => true,
+                ];
+            }
+            
+            // Add staff without role
+            foreach ($staffByRoleMembership['without_role'] as $staff) {
+                $staffByRole[$roleSlug][] = [
+                    'id' => $staff->ID,
+                    'name' => $staff->post_title,
+                    'phone' => get_post_meta($staff->ID, self::META_PHONE, true),
+                    'email' => get_post_meta($staff->ID, self::META_EMAIL, true),
+                    'has_role' => false,
                 ];
             }
         }
@@ -196,8 +236,10 @@ class StaffAssignmentMetabox
                     return isset($assignment['role']) && $assignment['role'] === $roleSlug;
                 });
                 
-                // Get staff filtered by this specific role
-                $roleStaff = $this->getAllStaff($roleSlug);
+                // Get staff separated by role membership
+                $staffByRoleMembership = $this->getStaffByRoleMembership($roleSlug);
+                $roleStaff = $staffByRoleMembership['with_role'];
+                $otherStaff = $staffByRoleMembership['without_role'];
                 ?>
                 
                 <div style="border-top: 1px solid #dcdcde; padding-top: 12px; margin-top: 12px;">
@@ -237,14 +279,35 @@ class StaffAssignmentMetabox
                                             style="flex: 1; max-width: 300px;"
                                             data-role="<?php echo esc_attr($roleSlug); ?>">
                                         <option value=""><?php esc_html_e('Select staff member...', 'zero-sense'); ?></option>
-                                        <?php foreach ($roleStaff as $staff): ?>
-                                            <option value="<?php echo esc_attr((string) $staff->ID); ?>" 
-                                                    <?php selected($staffId, $staff->ID); ?>
-                                                    data-phone="<?php echo esc_attr(get_post_meta($staff->ID, self::META_PHONE, true)); ?>"
-                                                    data-email="<?php echo esc_attr(get_post_meta($staff->ID, self::META_EMAIL, true)); ?>">
-                                                <?php echo esc_html($staff->post_title); ?>
-                                            </option>
-                                        <?php endforeach; ?>
+                                        
+                                        <?php if (!empty($roleStaff)): ?>
+                                            <optgroup label="<?php echo esc_attr($roleName); ?>">
+                                                <?php foreach ($roleStaff as $staff): ?>
+                                                    <option value="<?php echo esc_attr((string) $staff->ID); ?>" 
+                                                            <?php selected($staffId, $staff->ID); ?>
+                                                            data-phone="<?php echo esc_attr(get_post_meta($staff->ID, self::META_PHONE, true)); ?>"
+                                                            data-email="<?php echo esc_attr(get_post_meta($staff->ID, self::META_EMAIL, true)); ?>"
+                                                            data-has-role="true">
+                                                        <?php echo esc_html($staff->post_title); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (!empty($otherStaff)): ?>
+                                            <optgroup label="<?php esc_html_e('Others (will assign role)', 'zero-sense'); ?>">
+                                                <?php foreach ($otherStaff as $staff): ?>
+                                                    <option value="<?php echo esc_attr((string) $staff->ID); ?>" 
+                                                            <?php selected($staffId, $staff->ID); ?>
+                                                            data-phone="<?php echo esc_attr(get_post_meta($staff->ID, self::META_PHONE, true)); ?>"
+                                                            data-email="<?php echo esc_attr(get_post_meta($staff->ID, self::META_EMAIL, true)); ?>"
+                                                            data-has-role="false"
+                                                            data-assign-role="<?php echo esc_attr($roleSlug); ?>">
+                                                        <?php echo esc_html($staff->post_title); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endif; ?>
                                     </select>
                                     
                                     <button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;">
@@ -407,12 +470,13 @@ class StaffAssignmentMetabox
                     }
                 });
                 
-                // Handle selection change - create new staff if needed
+                // Handle selection change - create new staff if needed or assign role
                 $(document).on('change', '.zs-staff-select', function() {
                     var $select = $(this);
                     var value = $select.val();
                     var $row = $select.closest('.zs-staff-row');
                     var $section = $row.closest('.zs-staff-role-section');
+                    var $option = $select.find('option:selected');
                     
                     // Check if this staff member is already assigned in this role
                     if (value && value.indexOf('new:') !== 0) {
@@ -456,6 +520,22 @@ class StaffAssignmentMetabox
                                 $select.val('').trigger('change');
                             }
                         });
+                    } else if (value && $option.data('has-role') === false) {
+                        // Staff member doesn't have this role - assign it automatically
+                        var roleToAssign = $option.data('assign-role');
+                        
+                        $.post(ajaxurl, {
+                            action: 'zs_assign_staff_role',
+                            nonce: '<?php echo wp_create_nonce('zs_assign_role'); ?>',
+                            staff_id: value,
+                            role: roleToAssign
+                        }, function(response) {
+                            if (response.success) {
+                                // Update the option to reflect it now has the role
+                                $option.data('has-role', true);
+                                $option.removeAttr('data-assign-role');
+                            }
+                        });
                     }
                 });
                 
@@ -476,14 +556,47 @@ class StaffAssignmentMetabox
                     
                     // Get staff options from the global data
                     if (typeof zsStaffByRole !== 'undefined' && zsStaffByRole[role]) {
+                        var withRole = [];
+                        var withoutRole = [];
+                        
                         $.each(zsStaffByRole[role], function(index, staff) {
-                            var $option = $('<option></option>')
-                                .val(staff.id)
-                                .text(staff.name)
-                                .data('phone', staff.phone)
-                                .data('email', staff.email);
-                            $select.append($option);
+                            if (staff.has_role) {
+                                withRole.push(staff);
+                            } else {
+                                withoutRole.push(staff);
+                            }
                         });
+                        
+                        // Add optgroup for staff with role
+                        if (withRole.length > 0) {
+                            var $optgroupWith = $('<optgroup label="' + role + '"></optgroup>');
+                            $.each(withRole, function(index, staff) {
+                                var $option = $('<option></option>')
+                                    .val(staff.id)
+                                    .text(staff.name)
+                                    .data('phone', staff.phone)
+                                    .data('email', staff.email)
+                                    .data('has-role', true);
+                                $optgroupWith.append($option);
+                            });
+                            $select.append($optgroupWith);
+                        }
+                        
+                        // Add optgroup for staff without role
+                        if (withoutRole.length > 0) {
+                            var $optgroupWithout = $('<optgroup label="<?php echo esc_js(__('Others (will assign role)', 'zero-sense')); ?>"></optgroup>');
+                            $.each(withoutRole, function(index, staff) {
+                                var $option = $('<option></option>')
+                                    .val(staff.id)
+                                    .text(staff.name)
+                                    .data('phone', staff.phone)
+                                    .data('email', staff.email)
+                                    .data('has-role', false)
+                                    .data('assign-role', role);
+                                $optgroupWithout.append($option);
+                            });
+                            $select.append($optgroupWithout);
+                        }
                     }
                     
                     var $editBtn = $('<button type="button" class="button button-small zs-staff-edit" style="flex-shrink: 0;"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
@@ -686,6 +799,37 @@ class StaffAssignmentMetabox
         return $roles;
     }
 
+    private function getStaffByRoleMembership(string $roleSlug): array
+    {
+        // Get all staff
+        $allStaff = get_posts([
+            'post_type' => self::STAFF_CPT,
+            'post_status' => 'publish',
+            'numberposts' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+        ]);
+        
+        $withRole = [];
+        $withoutRole = [];
+        
+        foreach ($allStaff as $staff) {
+            $terms = wp_get_object_terms($staff->ID, self::STAFF_TAX, ['fields' => 'slugs']);
+            $hasRole = is_array($terms) && in_array($roleSlug, $terms, true);
+            
+            if ($hasRole) {
+                $withRole[] = $staff;
+            } else {
+                $withoutRole[] = $staff;
+            }
+        }
+        
+        return [
+            'with_role' => $withRole,
+            'without_role' => $withoutRole,
+        ];
+    }
+    
     private function getAllStaff(string $roleSlug = ''): array
     {
         $args = [
