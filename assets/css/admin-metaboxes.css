@@ -136,6 +136,20 @@
     align-items: center;
 }
 
+.zs-mb-field-inline input[type="time"],
+.zs-mb-field-inline input[type="date"] {
+    margin: 0;
+    height: 30px;
+    box-sizing: border-box;
+}
+
+.zs-mb-field-inline .zs-mb-auto-btn {
+    height: 30px;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 /* Auto-calculate utility button — subtle, matches field height */
 .zs-mb-auto-btn {
     display: inline-flex;
