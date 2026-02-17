@@ -298,7 +298,7 @@ class StaffAssignmentMetabox
                                         <?php endif; ?>
                                         
                                         <?php if (!empty($otherStaff)): ?>
-                                            <optgroup label="<?php esc_html_e('Others (will assign role)', 'zero-sense'); ?>">
+                                            <optgroup label="<?php esc_html_e('OTHERS (will auto-assign role)', 'zero-sense'); ?>">
                                                 <?php foreach ($otherStaff as $staff): ?>
                                                     <option value="<?php echo esc_attr((string) $staff->ID); ?>" 
                                                             <?php selected($staffId, $staff->ID); ?>
@@ -590,7 +590,7 @@ class StaffAssignmentMetabox
                         
                         // Add optgroup for staff without role
                         if (withoutRole.length > 0) {
-                            var $optgroupWithout = $('<optgroup label="<?php echo esc_js(__('Others (will assign role)', 'zero-sense')); ?>"></optgroup>');
+                            var $optgroupWithout = $('<optgroup label="<?php echo esc_js(__('OTHERS (will auto-assign role)', 'zero-sense')); ?>"></optgroup>');
                             $.each(withoutRole, function(index, staff) {
                                 var $option = $('<option></option>')
                                     .val(staff.id)
