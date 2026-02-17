@@ -44,6 +44,7 @@ class Staff implements FeatureInterface
     public function init(): void
     {
         add_action('init', [$this, 'registerContentTypes']);
+        add_action('init', [$this, 'ensureCoreRoles'], 20); // After taxonomy registration
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
         add_action('admin_footer', [$this, 'addEditRolesLink']);
@@ -54,6 +55,7 @@ class Staff implements FeatureInterface
         add_filter('get_terms', [$this, 'sortRoleTerms'], 10, 3);
         add_action('pre_delete_term', [$this, 'protectCoreRoles'], 10, 2);
         add_filter('user_has_cap', [$this, 'preventCoreRoleDeletion'], 10, 3);
+        add_filter(self::TAX_ROLE . '_row_actions', [$this, 'removeCoreRoleActions'], 10, 2);
     }
     
     public function sortRoleTerms(array $terms, array $taxonomies, array $args): array
@@ -266,13 +268,46 @@ class Staff implements FeatureInterface
     private function getCoreRoles(): array
     {
         return [
-            'cap-de-bolo',
-            'cuiner-a',
-            'ajudant-a-de-cuina',
-            'cambrer-a-barra',
-            'cockteler-a',
-            'tallador-a-de-pernil',
+            'cap-de-bolo' => 'Cap de Bolo',
+            'cuiner-a' => 'Cuiner/a',
+            'ajudant-a-de-cuina' => 'Ajudant/a de cuina',
+            'cambrer-a-barra' => 'Cambrer/a - Barra',
+            'cockteler-a' => 'Cockteler/a',
+            'tallador-a-de-pernil' => 'Tallador/a de pernil',
         ];
+    }
+    
+    /**
+     * Ensure core roles exist in database
+     */
+    public function ensureCoreRoles(): void
+    {
+        foreach ($this->getCoreRoles() as $slug => $name) {
+            $term = get_term_by('slug', $slug, self::TAX_ROLE);
+            
+            if (!$term) {
+                wp_insert_term($name, self::TAX_ROLE, [
+                    'slug' => $slug,
+                    'description' => __('Core system role - cannot be deleted', 'zero-sense'),
+                ]);
+            }
+        }
+    }
+    
+    /**
+     * Remove delete and edit actions for core roles in admin
+     */
+    public function removeCoreRoleActions(array $actions, \WP_Term $term): array
+    {
+        if (in_array($term->slug, array_keys($this->getCoreRoles()), true)) {
+            unset($actions['delete']);
+            unset($actions['inline hide-if-no-js']);
+            
+            // Add visual indicator
+            $actions['protected'] = '<span style="color: #2271b1;">🔒 ' . __('System Role', 'zero-sense') . '</span>';
+        }
+        
+        return $actions;
     }
     
     /**
@@ -289,7 +324,7 @@ class Staff implements FeatureInterface
             return;
         }
         
-        if (in_array($term->slug, $this->getCoreRoles(), true)) {
+        if (in_array($term->slug, array_keys($this->getCoreRoles()), true)) {
             wp_die(
                 __('This role cannot be deleted as it is required for automatic material calculations.', 'zero-sense'),
                 __('Protected Role', 'zero-sense'),
@@ -321,7 +356,7 @@ class Staff implements FeatureInterface
         }
         
         // Prevent deletion of core roles
-        if (in_array($term->slug, $this->getCoreRoles(), true)) {
+        if (in_array($term->slug, array_keys($this->getCoreRoles()), true)) {
             $allcaps['delete_term'] = false;
         }
         

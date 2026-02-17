@@ -263,8 +263,10 @@ class InventoryMetabox
                 .zs-inventory-accordion.collapsed .zs-inventory-accordion-content {
                     max-height: 0;
                 }
-                .zs-inventory-category-header {
-                    background: #e8e8e9;
+                /* Category headers - higher specificity to override WordPress striped rows */
+                .zs-inventory-metabox table.widefat tr.zs-inventory-category-header,
+                .zs-inventory-metabox table.striped tr.zs-inventory-category-header {
+                    background: #e8e8e9 !important;
                     font-weight: 600;
                     font-size: 12px;
                     text-transform: uppercase;
@@ -272,6 +274,7 @@ class InventoryMetabox
                 }
                 .zs-inventory-category-header td {
                     padding: 10px 12px !important;
+                    background: #e8e8e9 !important;
                 }
                 .zs-inventory-accordion-content table {
                     border: none !important;
