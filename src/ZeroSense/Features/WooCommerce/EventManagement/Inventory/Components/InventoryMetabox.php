@@ -120,11 +120,28 @@ class InventoryMetabox
                     gap: 10px;
                     align-items: center;
                 }
+                .zs-inventory-metabox .button {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .zs-inventory-metabox .button:focus {
+                    box-shadow: none !important;
+                    border-color: #ddd !important;
+                }
                 .zs-inventory-lock-btn[data-locked="true"] {
                     color: #d63638;
                 }
                 .zs-inventory-lock-btn[data-locked="false"] {
                     color: #2271b1;
+                }
+                .zs-inventory-metabox table th:nth-child(2),
+                .zs-inventory-metabox table td:nth-child(2) {
+                    width: 150px;
+                }
+                .zs-inventory-metabox table th:nth-child(3),
+                .zs-inventory-metabox table td:nth-child(3) {
+                    width: 50px;
                 }
                 .zs-inventory-badge {
                     display: inline-block;
