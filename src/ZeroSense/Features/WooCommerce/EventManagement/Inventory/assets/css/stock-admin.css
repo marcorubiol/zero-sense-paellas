@@ -28,41 +28,41 @@
 }
 
 .zs-lock-toggle {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: 2px solid;
+    justify-content: center;
+    padding: 6px;
+    min-width: 36px;
+    height: 36px;
+    transition: all 0.2s ease;
+    border: 1px solid #dcdcde;
+    background: white;
+    cursor: pointer;
 }
 
 .zs-lock-toggle[data-locked="true"] {
-    background: #dc3232;
-    border-color: #dc3232;
-    color: white;
+    color: #d63638;
 }
 
 .zs-lock-toggle[data-locked="true"]:hover {
-    background: #c62d2d;
-    border-color: #c62d2d;
+    background: #f6f7f7;
+    border-color: #d63638;
 }
 
 .zs-lock-toggle[data-locked="false"] {
-    background: #46b450;
-    border-color: #46b450;
-    color: white;
+    color: #2271b1;
 }
 
 .zs-lock-toggle[data-locked="false"]:hover {
-    background: #3ea842;
-    border-color: #3ea842;
+    background: #f6f7f7;
+    border-color: #2271b1;
 }
 
 .zs-lock-toggle .dashicons {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 1;
 }
 
 .zs-stock-table-wrapper {
@@ -149,10 +149,11 @@
 }
 
 .zs-stock-table input.stock-input:disabled {
-    background: #f5f5f5;
-    color: #999;
+    background: #fafafa;
+    color: #646970;
     cursor: not-allowed;
-    border-color: #ddd;
+    border-color: #e5e5e5;
+    opacity: 0.8;
 }
 
 .zs-stock-table input.stock-input.is-dirty {
@@ -226,15 +227,16 @@
 /* Toast notifications */
 .zs-toast {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 20px;
+    bottom: 110px;
+    right: 30px;
+    padding: 14px 20px;
     border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 999;
     animation: slideIn 0.3s ease;
+    min-width: 250px;
 }
 
 .zs-toast.show {
