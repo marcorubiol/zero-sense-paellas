@@ -116,7 +116,7 @@ class InventoryMetabox
                 }
                 .zs-inventory-header {
                     display: flex;
-                    justify-content: space-between;
+                    justify-content: flex-end;
                     align-items: center;
                     margin-bottom: 15px;
                     padding-bottom: 10px;
@@ -253,13 +253,25 @@ class InventoryMetabox
                     max-height: 0;
                 }
                 .zs-inventory-category-header {
-                    background: #fafafa;
+                    background: #e8e8e9;
                     font-weight: 600;
                     font-size: 12px;
                     text-transform: uppercase;
-                    color: #50575e;
-                    display: block;
-                    margin-top: 2px;
+                    color: #1d2327;
+                }
+                .zs-inventory-category-header td {
+                    padding: 10px 12px !important;
+                }
+                .zs-inventory-accordion-content table {
+                    border: none !important;
+                    box-shadow: none !important;
+                    margin: 0 !important;
+                }
+                .zs-inventory-accordion-content table thead {
+                    border-bottom: 1px solid #ddd;
+                }
+                .zs-inventory-accordion-content table tbody tr:last-child td {
+                    border-bottom: none;
                 }
                 .zs-inventory-save-btn.is-saving {
                     opacity: 0.7;
@@ -304,9 +316,6 @@ class InventoryMetabox
             </style>
             
             <div class="zs-inventory-header">
-                <div>
-                    <strong><?php esc_html_e('Inventory & Materials', 'zero-sense'); ?></strong>
-                </div>
                 <div class="zs-inventory-controls">
                     <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
