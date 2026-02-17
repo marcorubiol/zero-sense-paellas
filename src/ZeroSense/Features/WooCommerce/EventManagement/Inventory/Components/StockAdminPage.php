@@ -42,11 +42,13 @@ class StockAdminPage
         
         $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))));
         
+        wp_enqueue_style('dashicons');
+        
         wp_enqueue_style(
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
-            [],
-            '1.0.4'
+            ['dashicons'],
+            '1.0.5'
         );
         
         wp_enqueue_script(
