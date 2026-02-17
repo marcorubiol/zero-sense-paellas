@@ -651,13 +651,19 @@ class InventoryMetabox
             return;
         }
         
-        // Guardar overrides manuales
-        $overrides = $_POST['zs_inventory'] ?? [];
-        ManualOverride::save($postId, $overrides);
+        // Obtener overrides existentes
+        $existingOverrides = ManualOverride::get($postId);
+        
+        // Merge con nuevos overrides del formulario (preservar los existentes)
+        $newOverrides = $_POST['zs_inventory'] ?? [];
+        $mergedOverrides = array_merge($existingOverrides, $newOverrides);
+        
+        // Guardar overrides combinados
+        ManualOverride::save($postId, $mergedOverrides);
         
         // Calcular materiales finales
         $calculated = MaterialCalculator::calculate($order);
-        $final = ManualOverride::apply($calculated, $overrides);
+        $final = ManualOverride::apply($calculated, $mergedOverrides);
         
         // Crear/actualizar reservas
         ReservationManager::createOrUpdate($postId, $final);
@@ -687,12 +693,18 @@ class InventoryMetabox
             wp_send_json_error(['message' => 'Order not found']);
         }
         
-        // Guardar overrides manuales
-        ManualOverride::save($orderId, $inventory);
+        // Obtener overrides existentes
+        $existingOverrides = ManualOverride::get($orderId);
+        
+        // Merge con nuevos overrides (preservar los existentes)
+        $mergedOverrides = array_merge($existingOverrides, $inventory);
+        
+        // Guardar overrides combinados
+        ManualOverride::save($orderId, $mergedOverrides);
         
         // Calcular materiales finales
         $calculated = MaterialCalculator::calculate($order);
-        $final = ManualOverride::apply($calculated, $inventory);
+        $final = ManualOverride::apply($calculated, $mergedOverrides);
         
         // Crear/actualizar reservas
         ReservationManager::createOrUpdate($orderId, $final);
