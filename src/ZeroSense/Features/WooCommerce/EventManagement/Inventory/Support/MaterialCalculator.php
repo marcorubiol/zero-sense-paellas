@@ -13,13 +13,22 @@ class MaterialCalculator
      */
     public static function calculate(WC_Order $order): array
     {
-        $result = [];
+        $guests = self::getTotalGuests($order);
+        $analysis = ProductMapper::analyzeOrder($order);
+        
+        // DEBUG
+        error_log('🔍 MaterialCalculator - Order #' . $order->get_id());
+        error_log('🔍 Total Guests: ' . $guests);
+        error_log('🔍 Paella Items Count: ' . count($analysis['paella_items'] ?? []));
+        error_log('🔍 Paella Items: ' . json_encode($analysis['paella_items'] ?? []));
+        
+        $materials = [];
         
         // Obtener datos del pedido
         $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
         
         if ($totalGuests <= 0) {
-            return $result;
+            return $materials;
         }
         
         // Analizar productos del pedido
@@ -123,8 +132,14 @@ class MaterialCalculator
         $cremadorCount = [];
         $totalPaellas = 0;
         
+        // DEBUG
+        error_log('🔍 calculatePaellasAndCremadors called');
+        error_log('🔍 Paella items received: ' . count($analysis['paella_items'] ?? []));
+        error_log('🔍 Paella items data: ' . json_encode($analysis['paella_items'] ?? []));
+        
         // Si no hay paella_items, no calculamos nada
         if (empty($analysis['paella_items'])) {
+            error_log('⚠️ No paella items found - returning empty result');
             return $result;
         }
         

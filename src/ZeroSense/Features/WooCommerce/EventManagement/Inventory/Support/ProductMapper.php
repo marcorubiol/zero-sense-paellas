@@ -68,6 +68,12 @@ class ProductMapper
                     // Detectar paellas por checkbox en receta
                     $needsPaella = get_post_meta($recipeId, 'zs_recipe_needs_paella', true);
                     
+                    // DEBUG
+                    error_log('🔍 ProductMapper DEBUG - Recipe: ' . $recipe->post_title);
+                    error_log('🔍 Recipe ID: ' . $recipeId);
+                    error_log('🔍 Needs Paella Meta: ' . var_export($needsPaella, true));
+                    error_log('🔍 Item Quantity (guests): ' . $item->get_quantity());
+                    
                     if ($needsPaella === '1') {
                         $guests = (int) $item->get_quantity();
                         $result['paella_count'] += $guests;
@@ -89,13 +95,17 @@ class ProductMapper
                         }
                         
                         // Añadir item detallado para cálculos
-                        $result['paella_items'][] = [
+                        $paellaItem = [
                             'item_id' => $itemId,
                             'recipe_id' => $recipeId,
                             'recipe_name' => $recipe->post_title,
                             'guests' => $guests,
                             'variety' => $variety,
                         ];
+                        $result['paella_items'][] = $paellaItem;
+                        
+                        // DEBUG
+                        error_log('✅ Paella item added: ' . json_encode($paellaItem));
                         
                         continue; // ✅ Procesado por receta, skip categorías
                     }
