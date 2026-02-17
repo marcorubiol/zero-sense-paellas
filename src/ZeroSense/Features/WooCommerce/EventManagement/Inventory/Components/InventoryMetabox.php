@@ -401,6 +401,7 @@ class InventoryMetabox
                     height: 18px;
                     font-size: 18px;
                     flex-shrink: 0;
+                    margin-top: 2px;
                 }
                 .zs-alert-item-header .dashicons.alert-critical {
                     color: #dc3545;
@@ -409,6 +410,20 @@ class InventoryMetabox
                     color: #fd7e14;
                 }
                 .zs-alert-item-header .dashicons.alert-low-stock {
+                    color: #ffc107;
+                }
+                .zs-alert-inline-message .dashicons {
+                    width: 18px;
+                    height: 18px;
+                    font-size: 18px;
+                }
+                .zs-alert-inline-message .dashicons.alert-critical {
+                    color: #dc3545;
+                }
+                .zs-alert-inline-message .dashicons.alert-max-capacity {
+                    color: #fd7e14;
+                }
+                .zs-alert-inline-message .dashicons.alert-low-stock {
                     color: #ffc107;
                 }
                 .zs-alert-item-details {
@@ -470,18 +485,20 @@ class InventoryMetabox
                 }
                 .zs-alert-resolve-btn {
                     display: inline-block;
-                    padding: 6px 12px;
-                    background: #50575e;
-                    color: white;
-                    border: none;
+                    padding: 5px 12px;
+                    background: transparent;
+                    color: #50575e;
+                    border: 1px solid #50575e;
                     border-radius: 3px;
                     font-size: 12px;
                     cursor: pointer;
                     white-space: nowrap;
                     flex-shrink: 0;
+                    transition: all 0.2s ease;
                 }
                 .zs-alert-resolve-btn:hover {
-                    background: #3c434a;
+                    background: #50575e;
+                    color: white;
                 }
                 .zs-alert-notes-input {
                     flex: 1;
@@ -672,37 +689,6 @@ class InventoryMetabox
                                             <td>
                                                 <div>
                                                     <strong><?php echo esc_html($material['label']); ?></strong>
-                                                    <?php 
-                                                    // Check if this material has an alert
-                                                    $materialAlert = $alerts[$materialKey] ?? null;
-                                                    $materialResolution = $resolutions[$materialKey] ?? null;
-                                                    $isResolved = $materialResolution && ($materialResolution['resolved'] ?? false);
-                                                    
-                                                    if ($materialAlert && !$isResolved): 
-                                                        $alertIconClass = AlertCalculator::getAlertIcon($materialAlert['alert_type']);
-                                                        $alertLabel = AlertCalculator::getAlertLabel($materialAlert['alert_type']);
-                                                        $alertCssClass = '';
-                                                        switch ($materialAlert['alert_type']) {
-                                                            case AlertCalculator::ALERT_CRITICAL:
-                                                                $alertCssClass = 'alert-critical';
-                                                                break;
-                                                            case AlertCalculator::ALERT_MAX_CAPACITY:
-                                                                $alertCssClass = 'alert-max-capacity';
-                                                                break;
-                                                            case AlertCalculator::ALERT_LOW_STOCK:
-                                                                $alertCssClass = 'alert-low-stock';
-                                                                break;
-                                                        }
-                                                    ?>
-                                                        <span class="zs-material-alert-icon" 
-                                                              title="<?php echo esc_attr($alertLabel); ?>">
-                                                            <span class="dashicons <?php echo $alertIconClass; ?> <?php echo $alertCssClass; ?>"></span>
-                                                        </span>
-                                                    <?php elseif ($isResolved): ?>
-                                                        <span class="zs-material-alert-icon" title="<?php esc_attr_e('Resolved', 'zero-sense'); ?>">
-                                                            <span class="dashicons dashicons-yes-alt alert-resolved"></span>
-                                                        </span>
-                                                    <?php endif; ?>
                                                 </div>
                                                 <?php if (!empty($material['description'])): ?>
                                                     <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
@@ -734,7 +720,7 @@ class InventoryMetabox
                                                             <?php endif; ?>
                                                         </div>
                                                     <?php else: ?>
-                                                        <div style="margin-top: 8px; font-size: 12px; color: #666; display: flex; align-items: flex-start; gap: 6px;">
+                                                        <div class="zs-alert-inline-message" style="margin-top: 8px; font-size: 12px; color: #666; display: flex; align-items: flex-start; gap: 6px;">
                                                             <?php
                                                             $alertIconClass = AlertCalculator::getAlertIcon($materialAlert['alert_type']);
                                                             $alertCssClass = '';
@@ -750,7 +736,7 @@ class InventoryMetabox
                                                                     break;
                                                             }
                                                             ?>
-                                                            <span class="dashicons <?php echo $alertIconClass; ?> <?php echo $alertCssClass; ?>" style="flex-shrink: 0; margin-top: 2px;"></span>
+                                                            <span class="dashicons <?php echo $alertIconClass; ?> <?php echo $alertCssClass; ?>" style="flex-shrink: 0; margin-top: 1px;"></span>
                                                             <div style="flex: 1;">
                                                                 <?php if ($materialAlert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
                                                                     <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
