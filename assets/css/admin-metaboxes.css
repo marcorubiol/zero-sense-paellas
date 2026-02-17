@@ -125,38 +125,6 @@
     margin-top: var(--zs-mb-section-gap);
 }
 
-/* Collapsible sub-sections (Open Bar, Cocktail) */
-.zs-mb-collapsible .zs-mb-collapsible-toggle {
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.zs-mb-collapse-icon::before {
-    content: '\25BE';
-    font-size: 10px;
-    transition: transform 0.2s ease;
-    display: inline-block;
-}
-
-.zs-mb-collapsible.is-collapsed .zs-mb-collapse-icon::before {
-    transform: rotate(-90deg);
-}
-
-.zs-mb-collapsible .zs-mb-field-row {
-    overflow: hidden;
-    max-height: 200px;
-    transition: max-height 0.25s ease, opacity 0.2s ease;
-    opacity: 1;
-}
-
-.zs-mb-collapsible.is-collapsed .zs-mb-field-row {
-    max-height: 0;
-    opacity: 0;
-    pointer-events: none;
-}
 
 /* Sub-section header: replaces inline h4 styles */
 .zs-mb-subheader {

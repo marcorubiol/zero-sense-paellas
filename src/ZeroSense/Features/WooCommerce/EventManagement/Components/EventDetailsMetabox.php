@@ -305,8 +305,8 @@ class EventDetailsMetabox
                 </div>
                 
                 <!-- Open Bar -->
-                <div class="zs-mb-divider zs-mb-collapsible<?php echo (!$openBarStart && !$openBarEnd) ? ' is-collapsed' : ''; ?>" data-collapsible="open-bar">
-                    <h4 class="zs-mb-subheader zs-mb-collapsible-toggle"><?php esc_html_e('Open bar', 'zero-sense'); ?> <span class="zs-mb-collapse-icon"></span></h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php esc_html_e('Open bar', 'zero-sense'); ?></h4>
                     
                     <div class="zs-mb-field-row">
                         <div class="zs-mb-field">
@@ -334,8 +334,8 @@ class EventDetailsMetabox
                 </div>
                 
                 <!-- Cocktail -->
-                <div class="zs-mb-divider zs-mb-collapsible<?php echo (!$cocktailStart && !$cocktailEnd) ? ' is-collapsed' : ''; ?>" data-collapsible="cocktail">
-                    <h4 class="zs-mb-subheader zs-mb-collapsible-toggle"><?php esc_html_e('Cocktail', 'zero-sense'); ?> <span class="zs-mb-collapse-icon"></span></h4>
+                <div class="zs-mb-divider">
+                    <h4 class="zs-mb-subheader"><?php esc_html_e('Cocktail', 'zero-sense'); ?></h4>
                     
                     <div class="zs-mb-field-row">
                         <div class="zs-mb-field">
@@ -446,11 +446,6 @@ class EventDetailsMetabox
                 setupRecalcBtn('zs-recalculate-starters-time', 'event_starters_service_time', 30);
                 setupRecalcBtn('zs-recalculate-team-arrival-time', 'event_team_arrival_time', 180);
 
-                document.querySelectorAll('.zs-mb-collapsible-toggle').forEach(function(toggle) {
-                    toggle.addEventListener('click', function() {
-                        this.closest('.zs-mb-collapsible').classList.toggle('is-collapsed');
-                    });
-                });
             });
         })();
         </script>
