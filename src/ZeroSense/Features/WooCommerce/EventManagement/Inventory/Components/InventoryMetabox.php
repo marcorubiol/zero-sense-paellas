@@ -296,8 +296,9 @@ class InventoryMetabox
                             </td>
                             <td>
                                 <div class="zs-inventory-quantity-wrapper">
-                                    <span class="dashicons dashicons-update zs-inventory-reset-icon <?php echo $hasOverride ? '' : 'hidden'; ?>" 
+                                    <span class="dashicons dashicons-update zs-inventory-reset-icon hidden" 
                                        data-material="<?php echo esc_attr($materialKey); ?>"
+                                       data-has-override="<?php echo $hasOverride ? '1' : '0'; ?>"
                                        title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
                                     </span>
                                     <span class="zs-inventory-badge-container">
@@ -360,7 +361,12 @@ class InventoryMetabox
                 } else {
                     // Unlocked state: hide Unlock button, show Save & Lock
                     $inputs.prop('disabled', false);
-                    $resetIcons.removeClass('hidden');
+                    // Only show reset icons for fields with overrides
+                    $resetIcons.each(function() {
+                        if ($(this).data('has-override') == '1') {
+                            $(this).removeClass('hidden');
+                        }
+                    });
                     $lockBtn.attr('data-locked', 'false');
                     $lockBtn.hide();
                     $saveBtn.show();
