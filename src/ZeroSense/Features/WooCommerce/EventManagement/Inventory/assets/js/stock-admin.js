@@ -41,6 +41,7 @@
                 $lockBtn.attr('data-locked', 'true');
                 $lockBtn.attr('title', 'Click to unlock table for editing');
                 $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
+                $lockBtn.find('.lock-text').text('Locked');
                 this.showToast('Table locked. Click the lock button to edit.', 'info');
             } else {
                 // Unlock the table
@@ -48,6 +49,7 @@
                 $lockBtn.attr('data-locked', 'false');
                 $lockBtn.attr('title', 'Click to lock table');
                 $lockBtn.find('.dashicons').removeClass('dashicons-lock').addClass('dashicons-unlock');
+                $lockBtn.find('.lock-text').text('Unlocked');
                 this.showToast('Table unlocked. You can now edit stock quantities.', 'success');
             }
         }

@@ -48,14 +48,14 @@ class StockAdminPage
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
             ['dashicons'],
-            '1.2.9'
+            '1.3.0'
         );
         
         wp_enqueue_script(
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/stock-admin.js',
             ['jquery'],
-            '1.1.2',
+            '1.1.3',
             true
         );
         
@@ -120,6 +120,7 @@ class StockAdminPage
                 <div class="zs-stock-actions">
                     <button type="button" class="zs-lock-toggle" data-locked="true" title="<?php esc_attr_e('Click to unlock table for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
+                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
                     </button>
                 </div>
             </div>
