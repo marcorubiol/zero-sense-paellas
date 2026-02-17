@@ -69,6 +69,10 @@ class Recipes implements FeatureInterface
         add_filter('manage_edit-' . self::TAX_UTENSIL . '_columns', [$this, 'addUsageColumn']);
         add_filter('manage_' . self::TAX_UTENSIL . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
         add_action('pre_delete_term', [$this, 'preventDeleteIfInUse'], 10, 2);
+        
+        // Recipe list columns
+        add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addRecipeColumns']);
+        add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderRecipeColumn'], 10, 2);
     }
 
     public function getPriority(): int
@@ -1261,28 +1265,24 @@ class Recipes implements FeatureInterface
             return '<span style="color:#999;">—</span>';
         }
 
-        $url = add_query_arg([
-            'post_type' => self::CPT,
-            $taxonomy => $term_id,
-        ], admin_url('edit.php'));
-
+        // Don't use taxonomy filter (doesn't work with meta), just show count
         return sprintf(
-            '<a href="%s"><strong>%d</strong> %s</a>',
-            esc_url($url),
+            '<strong>%d</strong> %s',
             $count,
             $count === 1 ? __('recipe', 'zero-sense') : __('recipes', 'zero-sense')
         );
     }
 
-    public function preventDeleteIfInUse(int $term_id, string $taxonomy): void
+    public function preventDeleteIfInUse($term_id, string $taxonomy)
     {
         if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
-            return;
+            return $term_id;
         }
 
         $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
         $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
-        $term_name = get_term($term_id)->name ?? '';
+        $term = get_term($term_id);
+        $term_name = $term instanceof \WP_Term ? $term->name : '';
 
         // Get all recipes
         $recipes = get_posts([
@@ -1305,7 +1305,7 @@ class Recipes implements FeatureInterface
                 }
                 
                 $item_id = isset($item[$field_name]) ? (int) $item[$field_name] : 0;
-                if ($item_id === $term_id) {
+                if ($item_id === (int) $term_id) {
                     $count++;
                     break; // Count each recipe only once
                 }
@@ -1315,16 +1315,95 @@ class Recipes implements FeatureInterface
         if ($count > 0) {
             $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
             
-            wp_die(
+            return new \WP_Error(
+                'term_in_use',
                 sprintf(
                     __('Cannot delete %s "%s". It is currently used in %d recipe(s). Please remove it from all recipes before deleting.', 'zero-sense'),
                     $type_label,
                     esc_html($term_name),
                     $count
-                ),
-                __('Term in use', 'zero-sense'),
-                ['back_link' => true]
+                )
             );
+        }
+
+        return $term_id;
+    }
+
+    public function addRecipeColumns(array $columns): array
+    {
+        $new_columns = [];
+        foreach ($columns as $key => $value) {
+            $new_columns[$key] = $value;
+            if ($key === 'title') {
+                $new_columns['ingredients'] = __('Ingredients', 'zero-sense');
+                $new_columns['utensils'] = __('Utensils', 'zero-sense');
+            }
+        }
+        return $new_columns;
+    }
+
+    public function renderRecipeColumn(string $column, int $post_id): void
+    {
+        if ($column === 'ingredients') {
+            $ingredients = get_post_meta($post_id, self::META_INGREDIENTS, true);
+            if (!is_array($ingredients) || empty($ingredients)) {
+                echo '<span style="color:#999;">—</span>';
+                return;
+            }
+
+            $names = [];
+            foreach ($ingredients as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $term_id = isset($item['ingredient']) ? (int) $item['ingredient'] : 0;
+                if ($term_id > 0) {
+                    $term = get_term($term_id, self::TAX_INGREDIENT);
+                    if ($term instanceof \WP_Term) {
+                        $names[] = $term->name;
+                    }
+                }
+            }
+
+            if (empty($names)) {
+                echo '<span style="color:#999;">—</span>';
+            } else {
+                echo '<span style="font-size:12px;">' . esc_html(implode(', ', $names)) . '</span>';
+            }
+        }
+
+        if ($column === 'utensils') {
+            $needsPaella = get_post_meta($post_id, self::META_NEEDS_PAELLA, true);
+            if ($needsPaella === '1') {
+                echo '<span style="color:#999; font-style:italic;">Paella mode</span>';
+                return;
+            }
+
+            $utensils = get_post_meta($post_id, self::META_UTENSILS, true);
+            if (!is_array($utensils) || empty($utensils)) {
+                echo '<span style="color:#999;">—</span>';
+                return;
+            }
+
+            $names = [];
+            foreach ($utensils as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $term_id = isset($item['utensil']) ? (int) $item['utensil'] : 0;
+                if ($term_id > 0) {
+                    $term = get_term($term_id, self::TAX_UTENSIL);
+                    if ($term instanceof \WP_Term) {
+                        $names[] = $term->name;
+                    }
+                }
+            }
+
+            if (empty($names)) {
+                echo '<span style="color:#999;">—</span>';
+            } else {
+                echo '<span style="font-size:12px;">' . esc_html(implode(', ', $names)) . '</span>';
+            }
         }
     }
 }
