@@ -57,10 +57,10 @@ class OrderLanguageAdmin
                 <?php endif; ?>
             </h4>
 
-            <div class="wpml-language-display" style="margin-bottom: 0.5em;">
+            <div class="wpml-language-display zs-mb-field-inline">
                 <span class="wpml-language-current">
                     <?php if ($currentLanguage) : ?>
-                        <span class="wpml-language-tag" style="background: #f0f0f1; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-right: 0.5em;">
+                        <span class="zs-badge zs-badge-auto wpml-language-tag">
                             <?php echo esc_html(strtoupper($currentLanguage)); ?>
                         </span>
                         <?php echo esc_html($currentLanguageName); ?>
@@ -68,12 +68,12 @@ class OrderLanguageAdmin
                         <em><?php esc_html_e('Not set', 'zero-sense'); ?></em>
                     <?php endif; ?>
                 </span>
-                <a href="#" class="wpml-language-edit" style="margin-left: 0.5em;">
+                <a href="#" class="zs-mb-link wpml-language-edit">
                     <?php esc_html_e('Change', 'zero-sense'); ?>
                 </a>
             </div>
 
-            <div class="wpml-language-selector" style="display: none; margin-top: 0.5em;">
+            <div class="wpml-language-selector" style="display: none;">
                 <select name="wpml_language" id="wpml_language" class="wc-enhanced-select" style="width: 100%;">
                     <?php foreach ($languages as $code => $name) : ?>
                         <option value="<?php echo esc_attr($code); ?>" <?php selected($currentLanguage, $code); ?>>
@@ -81,9 +81,9 @@ class OrderLanguageAdmin
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <div class="wpml-language-actions" style="margin-top: 0.5em;">
-                    <button type="button" class="button wpml-language-cancel"><?php esc_html_e('Cancel', 'zero-sense'); ?></button>
-                    <button type="button" class="button button-primary wpml-language-save"><?php esc_html_e('Update Language', 'zero-sense'); ?></button>
+                <div class="wpml-language-actions zs-mb-row-actions">
+                    <button type="button" class="zs-btn is-neutral wpml-language-cancel"><?php esc_html_e('Cancel', 'zero-sense'); ?></button>
+                    <button type="button" class="zs-btn is-primary wpml-language-save"><?php esc_html_e('Update Language', 'zero-sense'); ?></button>
                 </div>
                 <p class="description" style="margin-top: 0.5em;">
                     <?php esc_html_e('The language affects payment URLs and customer communications.', 'zero-sense'); ?>
@@ -117,8 +117,9 @@ class OrderLanguageAdmin
                     <a 
                         href="<?php echo esc_url($eventLink); ?>" 
                         target="_blank"
-                        class="button"
+                        class="zs-btn is-neutral"
                     >
+                        <span class="dashicons dashicons-clipboard"></span>
                         <?php esc_html_e('Open Event Sheet', 'zero-sense'); ?>
                     </a>
                 </div>

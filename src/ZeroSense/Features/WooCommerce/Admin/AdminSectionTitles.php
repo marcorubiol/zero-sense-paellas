@@ -93,7 +93,7 @@ class AdminSectionTitles implements FeatureInterface
                             if (editLink.length) editLink.remove();
                             
                             // Insertar subtítulo con botón Edit dentro
-                            var subtitle = '<br><span class="zs-subtitle">📍 Venue/Wedding Planner' + (editHtml ? ' ' + editHtml : '') + '</span>';
+                            var subtitle = '<br><span class="zs-subtitle zs-subtitle-venue">📍 Venue/Wedding Planner' + (editHtml ? ' ' + editHtml : '') + '</span>';
                             var newHtml = elem.html().replace(/^(\s*)Shipping(\s*)/, '$1Shipping' + subtitle + '$2');
                             newHtml = newHtml.replace(/^(\s*)Envío(\s*)/, '$1Envío' + subtitle + '$2');
                             elem.html(newHtml);
@@ -157,41 +157,45 @@ JAVASCRIPT;
         }
         ?>
         <style>
-            /* Ocultar títulos inicialmente para evitar salto visual */
+            /* Hide titles initially to avoid visual jump */
             #order_data h3 {
                 visibility: hidden;
             }
-            
-            /* Estilos para los subtítulos descriptivos - Badge style */
+
+            /* Log-style left border card — same pattern as action items */
             .zs-subtitle {
-                display: inline-block;
-                font-size: 0.88em;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
                 font-weight: 600;
-                color: #3e5462;
-                background: linear-gradient(135deg, #e7f3ff 0%, #d4e9ff 100%);
-                padding: 3px 10px 3px 8px;
-                border-radius: 4px;
-                margin-top: 4px;
+                color: var(--zs-mb-label-color, #1d2327);
+                background: var(--zs-bg-auto, #dbeafe);
+                padding: 4px 10px;
+                border-radius: 0 var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px) 0;
+                margin-top: 5px;
                 line-height: 1.4;
-                border-left: 3px solid #3e5462;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                border-left: 3px solid var(--zs-color-auto, #2271b1);
             }
-            
-            /* Estilos para el botón Edit dentro del badge */
+
+            .zs-subtitle-venue {
+                background: var(--zs-bg-status, #ede9fe);
+                border-left-color: var(--zs-color-status, #7C3AED);
+            }
+
             .zs-subtitle a.edit_address {
-                color: #2271b1;
+                color: var(--zs-color-auto, #2271b1);
                 text-decoration: none;
-                font-size: 0.95em;
-                margin-left: 8px;
-                opacity: 0.8;
+                font-size: 11px;
+                opacity: 0.75;
+                margin-left: 4px;
             }
-            
+
             .zs-subtitle a.edit_address:hover {
                 opacity: 1;
                 text-decoration: underline;
             }
-            
-            /* Reducir espacio entre título y subtítulo */
+
             #order_data h3 br {
                 line-height: 0.5;
             }
