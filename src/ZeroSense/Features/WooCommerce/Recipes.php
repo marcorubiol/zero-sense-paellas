@@ -68,8 +68,10 @@ class Recipes implements FeatureInterface
         add_filter('manage_' . self::TAX_INGREDIENT . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
         add_filter('manage_edit-' . self::TAX_UTENSIL . '_columns', [$this, 'addUsageColumn']);
         add_filter('manage_' . self::TAX_UTENSIL . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
-        add_action('delete_' . self::TAX_INGREDIENT, [$this, 'preventIngredientDelete'], 1, 4);
-        add_action('delete_' . self::TAX_UTENSIL, [$this, 'preventUtensilDelete'], 1, 4);
+        add_filter(self::TAX_INGREDIENT . '_row_actions', [$this, 'removeDeleteActionIfInUse'], 10, 2);
+        add_filter(self::TAX_UTENSIL . '_row_actions', [$this, 'removeDeleteActionIfInUse'], 10, 2);
+        add_filter('user_has_cap', [$this, 'preventTermDeletionCapability'], 10, 3);
+        add_action('pre_delete_term', [$this, 'protectTermsInUse'], 10, 2);
         
         // Recipe list columns
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addRecipeColumns']);
@@ -1274,65 +1276,83 @@ class Recipes implements FeatureInterface
         );
     }
 
-    public function preventIngredientDelete(int $term_id, int $tt_id, $deleted_term, $object_ids): void
+    public function removeDeleteActionIfInUse(array $actions, \WP_Term $term): array
     {
-        $term = is_object($deleted_term) && $deleted_term instanceof \WP_Term ? $deleted_term : get_term($term_id, self::TAX_INGREDIENT);
-        
-        if (!$term instanceof \WP_Term) {
-            return;
+        $taxonomy = $term->taxonomy;
+        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
+            return $actions;
         }
 
-        $recipes = get_posts([
-            'post_type' => self::CPT,
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'suppress_filters' => true,
-        ]);
-
-        $count = 0;
-        foreach ($recipes as $recipe_id) {
-            $items = get_post_meta($recipe_id, self::META_INGREDIENTS, true);
-            if (!is_array($items)) {
-                continue;
-            }
-            
-            foreach ($items as $item) {
-                if (!is_array($item)) {
-                    continue;
-                }
-                
-                $item_id = isset($item['ingredient']) ? (int) $item['ingredient'] : 0;
-                if ($item_id === $term_id) {
-                    $count++;
-                    break;
-                }
-            }
+        if ($this->isTermInUse($term->term_id, $taxonomy)) {
+            unset($actions['delete']);
+            unset($actions['inline hide-if-no-js']);
         }
 
-        if ($count > 0) {
-            wp_die(
-                sprintf(
-                    '<h1>%s</h1><p>%s</p>',
-                    __('Cannot delete ingredient', 'zero-sense'),
-                    sprintf(
-                        __('Cannot delete ingredient "%s". It is currently used in %d recipe(s). Please remove it from all recipes before deleting.', 'zero-sense'),
-                        esc_html($term->name),
-                        $count
-                    )
-                ),
-                __('Ingredient in use', 'zero-sense'),
-                ['back_link' => true, 'response' => 403]
-            );
-        }
+        return $actions;
     }
 
-    public function preventUtensilDelete(int $term_id, int $tt_id, $deleted_term, $object_ids): void
+    public function preventTermDeletionCapability($allcaps, $caps, $args): array
     {
-        $term = is_object($deleted_term) && $deleted_term instanceof \WP_Term ? $deleted_term : get_term($term_id, self::TAX_UTENSIL);
-        
+        if (!isset($args[0]) || $args[0] !== 'delete_term') {
+            return $allcaps;
+        }
+
+        if (!isset($args[2])) {
+            return $allcaps;
+        }
+
+        $term = get_term($args[2]);
         if (!$term instanceof \WP_Term) {
+            return $allcaps;
+        }
+
+        if ($term->taxonomy !== self::TAX_INGREDIENT && $term->taxonomy !== self::TAX_UTENSIL) {
+            return $allcaps;
+        }
+
+        if ($this->isTermInUse($term->term_id, $term->taxonomy)) {
+            $allcaps['delete_term'] = false;
+        }
+
+        return $allcaps;
+    }
+
+    public function protectTermsInUse(int $term_id, string $taxonomy): void
+    {
+        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
             return;
         }
+
+        if (!$this->isTermInUse($term_id, $taxonomy)) {
+            return;
+        }
+
+        $term = get_term($term_id);
+        $term_name = $term instanceof \WP_Term ? $term->name : '';
+        $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
+        $count = $this->getTermUsageCount($term_id, $taxonomy);
+
+        wp_die(
+            sprintf(
+                __('Cannot delete %s "%s". It is currently used in %d recipe(s). Please remove it from all recipes before deleting.', 'zero-sense'),
+                $type_label,
+                esc_html($term_name),
+                $count
+            ),
+            __('Term in use', 'zero-sense'),
+            ['back_link' => true]
+        );
+    }
+
+    private function isTermInUse(int $term_id, string $taxonomy): bool
+    {
+        return $this->getTermUsageCount($term_id, $taxonomy) > 0;
+    }
+
+    private function getTermUsageCount(int $term_id, string $taxonomy): int
+    {
+        $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
+        $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
 
         $recipes = get_posts([
             'post_type' => self::CPT,
@@ -1343,7 +1363,7 @@ class Recipes implements FeatureInterface
 
         $count = 0;
         foreach ($recipes as $recipe_id) {
-            $items = get_post_meta($recipe_id, self::META_UTENSILS, true);
+            $items = get_post_meta($recipe_id, $meta_key, true);
             if (!is_array($items)) {
                 continue;
             }
@@ -1353,7 +1373,7 @@ class Recipes implements FeatureInterface
                     continue;
                 }
                 
-                $item_id = isset($item['utensil']) ? (int) $item['utensil'] : 0;
+                $item_id = isset($item[$field_name]) ? (int) $item[$field_name] : 0;
                 if ($item_id === $term_id) {
                     $count++;
                     break;
@@ -1361,21 +1381,7 @@ class Recipes implements FeatureInterface
             }
         }
 
-        if ($count > 0) {
-            wp_die(
-                sprintf(
-                    '<h1>%s</h1><p>%s</p>',
-                    __('Cannot delete utensil', 'zero-sense'),
-                    sprintf(
-                        __('Cannot delete utensil "%s". It is currently used in %d recipe(s). Please remove it from all recipes before deleting.', 'zero-sense'),
-                        esc_html($term->name),
-                        $count
-                    )
-                ),
-                __('Utensil in use', 'zero-sense'),
-                ['back_link' => true, 'response' => 403]
-            );
-        }
+        return $count;
     }
 
     public function addRecipeColumns(array $columns): array
