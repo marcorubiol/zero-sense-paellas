@@ -27,6 +27,17 @@
     flex-shrink: 0;
 }
 
+.zs-lock-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zs-lock-toggle:focus {
+    box-shadow: none !important;
+    border-color: #ddd !important;
+}
+
 .zs-lock-toggle[data-locked="true"] {
     color: #d63638;
 }
