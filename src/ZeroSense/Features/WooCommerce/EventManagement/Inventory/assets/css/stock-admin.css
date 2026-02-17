@@ -70,6 +70,7 @@
     border: none;
     width: 100%;
     min-width: 100%;
+    table-layout: fixed;
 }
 
 .zs-stock-table thead th {
@@ -91,6 +92,11 @@
     text-align: center;
 }
 
+.zs-stock-table th:not(.zs-sticky-col),
+.zs-stock-table td:not(.zs-sticky-col) {
+    width: auto;
+}
+
 .zs-stock-table tbody tr:nth-child(even):not(.zs-category-header) {
     background: #f9f9f9;
 }
@@ -106,6 +112,9 @@
     font-weight: 600;
     border-right: 2px solid #e0e0e0;
     box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
 }
 
 .zs-stock-table td.zs-sticky-col {
