@@ -14,6 +14,8 @@
             this.initChangeTracking();
             this.initSearch();
             this.initSaveButtons();
+            this.initAccordions();
+            this.initSearchClear();
         }
         
         initLockToggle() {
@@ -33,24 +35,27 @@
         toggleLock() {
             this.isLocked = !this.isLocked;
             const $lockBtn = $('.zs-lock-toggle');
+            const $saveBtn = $('.zs-save-stock');
             const $inputs = $('.stock-input');
             
             if (this.isLocked) {
                 // Lock the table
                 $inputs.prop('disabled', true);
                 $lockBtn.attr('data-locked', 'true');
-                $lockBtn.attr('title', 'Click to unlock table for editing');
+                $lockBtn.attr('title', 'Click to unlock for editing');
                 $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
-                $lockBtn.find('.lock-text').text('Locked');
-                this.showToast('Table locked. Click the lock button to edit.', 'info');
+                $lockBtn.find('.lock-text').text('Unlock');
+                $lockBtn.show();
+                $saveBtn.hide();
             } else {
                 // Unlock the table
                 $inputs.prop('disabled', false);
                 $lockBtn.attr('data-locked', 'false');
                 $lockBtn.attr('title', 'Click to lock table');
                 $lockBtn.find('.dashicons').removeClass('dashicons-lock').addClass('dashicons-unlock');
-                $lockBtn.find('.lock-text').text('Unlocked');
-                this.showToast('Table unlocked. You can now edit stock quantities.', 'success');
+                $lockBtn.find('.lock-text').text('Unlock');
+                $lockBtn.hide();
+                $saveBtn.show();
             }
         }
         
@@ -75,39 +80,54 @@
         filterRows(searchTerm) {
             const term = searchTerm.toLowerCase();
             
-            $('.zs-stock-table tbody tr').each(function() {
-                // Skip category headers in filtering
-                if ($(this).hasClass('zs-category-header')) {
-                    return;
-                }
-                
-                const materialName = $(this).find('.zs-sticky-col').text().toLowerCase();
-                const category = $(this).data('category') || '';
-                
-                if (term === '' || materialName.indexOf(term) !== -1 || category.indexOf(term) !== -1) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-            
-            // Show/hide category headers based on visible items
-            $('.zs-stock-table tbody tr.zs-category-header').each(function() {
-                const $header = $(this);
+            // Filter rows within each accordion
+            $('.zs-stock-accordion').each(function() {
+                const $accordion = $(this);
                 let hasVisibleItems = false;
                 
-                // Check if any items in this category are visible
-                $header.nextUntil('.zs-category-header').each(function() {
-                    if ($(this).is(':visible')) {
+                $accordion.find('.zs-stock-table tbody tr').each(function() {
+                    // Skip category headers in filtering
+                    if ($(this).hasClass('zs-category-header') || $(this).hasClass('zs-parent-category-header')) {
+                        return;
+                    }
+                    
+                    const materialName = $(this).find('.zs-sticky-col').text().toLowerCase();
+                    const category = $(this).data('category') || '';
+                    
+                    if (term === '' || materialName.indexOf(term) !== -1 || category.indexOf(term) !== -1) {
+                        $(this).show();
                         hasVisibleItems = true;
-                        return false; // break
+                    } else {
+                        $(this).hide();
                     }
                 });
                 
-                if (hasVisibleItems || term === '') {
-                    $header.show();
+                // Show/hide category headers based on visible items
+                $accordion.find('.zs-stock-table tbody tr.zs-category-header').each(function() {
+                    const $header = $(this);
+                    let categoryHasVisible = false;
+                    
+                    // Check if any items in this category are visible
+                    $header.nextUntil('.zs-category-header').each(function() {
+                        if ($(this).is(':visible')) {
+                            categoryHasVisible = true;
+                            return false; // break
+                        }
+                    });
+                    
+                    if (categoryHasVisible || term === '') {
+                        $header.show();
+                    } else {
+                        $header.hide();
+                    }
+                });
+                
+                // Show/hide accordion based on whether it has visible items
+                if (term === '' || hasVisibleItems) {
+                    $accordion.show();
+                    $accordion.removeClass('collapsed');
                 } else {
-                    $header.hide();
+                    $accordion.hide();
                 }
             });
         }
@@ -163,8 +183,20 @@
                     // Limpiar set de campos modificados
                     this.dirtyFields.clear();
                     
+                    // Lock the table after saving
+                    this.isLocked = true;
+                    const $lockBtn = $('.zs-lock-toggle');
+                    const $inputs = $('.stock-input');
+                    
+                    $inputs.prop('disabled', true);
+                    $lockBtn.attr('data-locked', 'true');
+                    $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
+                    $lockBtn.find('.lock-text').text('Unlock');
+                    $lockBtn.show();
+                    saveBtn.hide();
+                    
                     // Mostrar toast de éxito
-                    this.showToast('Stock updated successfully', 'success');
+                    this.showToast('Stock saved and locked', 'success');
                 } else {
                     this.showToast('Error saving changes', 'error');
                 }
@@ -176,6 +208,32 @@
                 // Restore button
                 saveBtn.prop('disabled', false);
                 saveBtn.removeClass('is-saving');
+            });
+        }
+        
+        initAccordions() {
+            $('.zs-stock-accordion-header').on('click', function() {
+                $(this).closest('.zs-stock-accordion').toggleClass('collapsed');
+            });
+        }
+        
+        initSearchClear() {
+            const $searchInput = $('#zs-stock-search');
+            const $clearBtn = $('.zs-search-clear');
+            
+            // Show/hide clear button based on input value
+            $searchInput.on('input', function() {
+                if ($(this).val().length > 0) {
+                    $clearBtn.show();
+                } else {
+                    $clearBtn.hide();
+                }
+            });
+            
+            // Clear search on click
+            $clearBtn.on('click', function() {
+                $searchInput.val('').trigger('keyup');
+                $clearBtn.hide();
             });
         }
         

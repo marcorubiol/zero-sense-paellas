@@ -136,92 +136,95 @@ class StockAdminPage
             <!-- Buscador -->
             <div class="zs-stock-header">
                 <div class="zs-stock-search">
-                    <input 
-                        type="text" 
-                        id="zs-stock-search" 
-                        placeholder="<?php esc_attr_e('Search materials...', 'zero-sense'); ?>"
-                        class="regular-text"
-                    />
+                    <div style="position: relative; display: inline-block;">
+                        <input 
+                            type="text" 
+                            id="zs-stock-search" 
+                            placeholder="<?php esc_attr_e('Search materials...', 'zero-sense'); ?>"
+                            class="regular-text"
+                        />
+                        <span class="dashicons dashicons-no-alt zs-search-clear" style="display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;" title="<?php esc_attr_e('Clear search', 'zero-sense'); ?>"></span>
+                    </div>
                 </div>
                 <div class="zs-stock-actions">
-                    <button type="button" class="zs-lock-toggle" data-locked="true" title="<?php esc_attr_e('Click to unlock table for editing', 'zero-sense'); ?>">
+                    <button type="button" class="zs-lock-toggle" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
-                        <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
+                        <span class="lock-text"><?php esc_html_e('Unlock', 'zero-sense'); ?></span>
+                    </button>
+                    <button type="button" class="zs-save-stock" style="display:none;" title="<?php esc_attr_e('Save changes and lock table', 'zero-sense'); ?>">
+                        <span class="dashicons dashicons-download"></span>
+                        <?php esc_html_e('Save & Lock', 'zero-sense'); ?>
                     </button>
                 </div>
             </div>
             
-            <!-- Tabla Matricial -->
-            <div class="zs-stock-table-wrapper">
-                <table class="widefat striped zs-stock-table">
-                    <thead>
-                        <tr>
-                            <th class="zs-sticky-col"><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                            <?php foreach ($serviceAreas as $area): ?>
-                                <th><?php echo esc_html($area->name); ?></th>
-                            <?php endforeach; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($groupedByParent as $parentKey => $materialsInParent): ?>
-                            <!-- Parent Category Header -->
-                            <tr class="zs-parent-category-header">
-                                <td colspan="<?php echo count($serviceAreas) + 1; ?>">
-                                    <strong><?php echo esc_html($parentCategories[$parentKey] ?? $parentKey); ?></strong>
-                                </td>
-                            </tr>
-                            
-                            <?php 
-                            $currentCategory = '';
-                            foreach ($materialsInParent as $material): 
-                                // Mostrar header de categoría si cambia
-                                if ($currentCategory !== $material['category']):
-                                    $currentCategory = $material['category'];
-                                    $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
-                            ?>
-                                <tr class="zs-category-header">
-                                    <td colspan="<?php echo count($serviceAreas) + 1; ?>">
-                                        <?php echo esc_html($categoryLabel); ?>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                            
-                                <tr data-material="<?php echo esc_attr($material['key']); ?>" data-category="<?php echo esc_attr($material['category']); ?>" data-parent="<?php echo esc_attr($parentKey); ?>">
-                                    <td class="zs-sticky-col">
-                                        <strong><?php echo esc_html($material['label']); ?></strong>
-                                        <?php if (!empty($material['description'])): ?>
-                                            <br><small style="color: #666; font-weight: normal;"><?php echo esc_html($material['description']); ?></small>
-                                        <?php endif; ?>
-                                    </td>
-                                    <?php foreach ($serviceAreas as $area): ?>
-                                        <?php
-                                        $key = $material['key'] . '|' . $area->term_id;
-                                        $quantity = $stock[$key] ?? 0;
-                                        ?>
-                                        <td>
-                                            <input 
-                                                type="number" 
-                                                class="stock-input"
-                                                data-key="<?php echo esc_attr($key); ?>"
-                                                value="<?php echo esc_attr($quantity); ?>"
-                                                min="0"
-                                                disabled
-                                            />
-                                        </td>
+            <!-- Acordeones con Tablas -->
+            <?php foreach ($groupedByParent as $parentKey => $materialsInParent): ?>
+                <div class="zs-stock-accordion">
+                    <div class="zs-stock-accordion-header">
+                        <span><?php echo esc_html($parentCategories[$parentKey] ?? $parentKey); ?></span>
+                        <span class="dashicons dashicons-arrow-down-alt2 zs-stock-accordion-icon"></span>
+                    </div>
+                    <div class="zs-stock-accordion-content">
+                        <div class="zs-stock-table-wrapper">
+                            <table class="widefat striped zs-stock-table">
+                                <thead>
+                                    <tr>
+                                        <th class="zs-sticky-col"><?php esc_html_e('Material', 'zero-sense'); ?></th>
+                                        <?php foreach ($serviceAreas as $area): ?>
+                                            <th><?php echo esc_html($area->name); ?></th>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $currentCategory = '';
+                                    foreach ($materialsInParent as $material): 
+                                        // Mostrar header de categoría si cambia
+                                        if ($currentCategory !== $material['category']):
+                                            $currentCategory = $material['category'];
+                                            $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
+                                    ?>
+                                        <tr class="zs-category-header">
+                                            <td colspan="<?php echo count($serviceAreas) + 1; ?>">
+                                                <?php echo esc_html($categoryLabel); ?>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                    
+                                        <tr data-material="<?php echo esc_attr($material['key']); ?>" data-category="<?php echo esc_attr($material['category']); ?>" data-parent="<?php echo esc_attr($parentKey); ?>">
+                                            <td class="zs-sticky-col">
+                                                <div>
+                                                    <strong><?php echo esc_html($material['label']); ?></strong>
+                                                </div>
+                                                <?php if (!empty($material['description'])): ?>
+                                                    <div style="color: #666; font-weight: normal; font-size: 11px; font-style: italic; margin-top: 4px;"><?php echo esc_html($material['description']); ?></div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <?php foreach ($serviceAreas as $area): ?>
+                                                <?php
+                                                $key = $material['key'] . '|' . $area->term_id;
+                                                $quantity = $stock[$key] ?? 0;
+                                                ?>
+                                                <td>
+                                                    <input 
+                                                        type="number" 
+                                                        class="stock-input"
+                                                        data-key="<?php echo esc_attr($key); ?>"
+                                                        value="<?php echo esc_attr($quantity); ?>"
+                                                        min="0"
+                                                        disabled
+                                                    />
+                                                </td>
+                                            <?php endforeach; ?>
+                                        </tr>
                                     <?php endforeach; ?>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Sticky Footer con botón de guardar -->
-            <div class="zs-stock-footer">
-                <button type="button" class="button button-primary zs-save-stock">
-                    <?php esc_html_e('Save Changes', 'zero-sense'); ?>
-                </button>
-            </div>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
         <?php
     }
