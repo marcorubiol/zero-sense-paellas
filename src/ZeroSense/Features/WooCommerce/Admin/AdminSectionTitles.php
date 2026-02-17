@@ -163,13 +163,15 @@ JAVASCRIPT;
             }
 
             .zs-subtitle-client {
-                background: var(--zs-bg-auto, #dbeafe);
-                border-left: 3px solid var(--zs-color-auto, #2271b1);
+                background: #DCFCE7;
+                border-left: 3px solid #16A34A;
+                color: #14532D;
             }
 
             .zs-subtitle-venue {
-                background: color-mix(in srgb, #7C3AED 10%, white 90%);
-                border-left: 3px solid #7C3AED;
+                background: #E0E7FF;
+                border-left: 3px solid #4F46E5;
+                color: #1E1B4B;
             }
 
             .zs-subtitle-edit a {
