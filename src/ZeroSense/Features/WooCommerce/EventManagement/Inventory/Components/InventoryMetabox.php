@@ -694,6 +694,13 @@ class InventoryMetabox
                                                     <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
                                                 <?php endif; ?>
                                                 
+                                                <?php 
+                                                // Check if this material has an alert
+                                                $materialAlert = $alerts[$materialKey] ?? null;
+                                                $materialResolution = $resolutions[$materialKey] ?? null;
+                                                $isResolved = $materialResolution && ($materialResolution['resolved'] ?? false);
+                                                ?>
+                                                
                                                 <?php if ($materialAlert): ?>
                                                     <?php if ($isResolved): ?>
                                                         <div class="zs-alert-resolution">
