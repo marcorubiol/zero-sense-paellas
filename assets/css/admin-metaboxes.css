@@ -184,12 +184,16 @@
     align-items: center;
 }
 
-/* Remove variant — red hover for destructive inline actions */
+/* Destructive variant — red text by default, stronger on hover */
+.zs-mb-auto-btn.is-destructive {
+    color: #d63638;
+    border-color: #f0b8b8;
+}
+
 .zs-mb-auto-btn.is-destructive:hover,
 .zs-mb-auto-btn.is-destructive:focus {
     background: #fff5f5;
     border-color: #d63638;
-    color: #d63638;
 }
 
 /* Inline flex row with space-between (e.g. Add button + Manage link) */
