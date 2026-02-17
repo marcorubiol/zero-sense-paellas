@@ -107,7 +107,6 @@ class InventoryMetabox
                         <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
                         <th><?php esc_html_e('Auto', 'zero-sense'); ?></th>
                         <th><?php esc_html_e('Quantity', 'zero-sense'); ?></th>
-                        <th><?php esc_html_e('Unit', 'zero-sense'); ?></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -126,7 +125,7 @@ class InventoryMetabox
                             </td>
                             <td>
                                 <span class="zs-inventory-auto">
-                                    <?php echo esc_html($autoValue); ?>
+                                    <?php echo $autoValue > 0 ? esc_html($autoValue) : '—'; ?>
                                 </span>
                             </td>
                             <td>
@@ -134,13 +133,10 @@ class InventoryMetabox
                                     type="number" 
                                     name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
                                     value="<?php echo esc_attr($hasOverride ? $overrideValue : ''); ?>"
-                                    placeholder="<?php echo esc_attr($autoValue); ?>"
+                                    placeholder="<?php echo $autoValue > 0 ? esc_attr($autoValue) : ''; ?>"
                                     min="0"
                                     class="<?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
                                 />
-                            </td>
-                            <td>
-                                <?php echo esc_html($material['unit']); ?>
                             </td>
                             <td>
                                 <?php if ($hasOverride): ?>
