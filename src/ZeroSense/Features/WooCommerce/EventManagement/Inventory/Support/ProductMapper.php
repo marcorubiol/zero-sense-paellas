@@ -150,8 +150,16 @@ class ProductMapper
             
             $productId = $item->get_product_id();
             
+            // DEBUG: Log each product check
+            $productCategories = wp_get_object_terms($productId, 'product_cat', ['fields' => 'ids']);
+            error_log('   Product #' . $productId . ' (' . $product->get_name() . ') categories: ' . json_encode($productCategories));
+            error_log('   Checking against barraTermIds: ' . json_encode($barraTermIds));
+            
             // Barra Libre (suele venderse por horas, sin receta de cocina)
-            if (!empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $productId)) {
+            $hasBarra = !empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $productId);
+            error_log('   has_term result: ' . ($hasBarra ? 'TRUE' : 'FALSE'));
+            
+            if ($hasBarra) {
                 $result['has_barra_lliure'] = true;
             }
             
