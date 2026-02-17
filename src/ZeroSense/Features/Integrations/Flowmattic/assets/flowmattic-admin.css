@@ -55,24 +55,39 @@
     margin-bottom: 10px;
 }
 
-/* Unavailable action items */
+/* Unavailable action items — always left-aligned */
 .zs-unavailable-action-item {
     margin-bottom: 8px;
     padding: 6px 0;
-    border-bottom: 1px solid #f0f0f1;
+    border-bottom: 1px solid var(--zs-mb-border-color, #dcdcde);
+    text-align: left;
 }
 
 .zs-unavailable-action-name {
     font-weight: 600;
-    color: #3c434a;
+    color: var(--zs-mb-label-color);
     margin-bottom: 2px;
     font-size: 13px;
 }
 
 .zs-unavailable-action-states {
     font-size: 11px;
-    color: #646970;
+    color: var(--zs-mb-description-color);
     font-style: italic;
+}
+
+/* Expanded content inside section separators — always left-aligned */
+.zs-email-section-sep > div {
+    text-align: left;
+}
+
+/* Section subheaders inside email actions — not all-caps */
+#zs-automatic-actions .zs-mb-subheader,
+#zs-unavailable-actions .zs-mb-subheader {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--zs-mb-label-size, 13px);
+    color: var(--zs-mb-label-color);
 }
 .zero-sense-flowmattic-metabox .zs-footnote{
     font-size:11px;
