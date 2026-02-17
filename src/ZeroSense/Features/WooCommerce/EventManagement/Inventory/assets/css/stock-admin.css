@@ -33,18 +33,20 @@
     justify-content: center;
     padding: 0;
     border: none;
-    background: none;
+    background: none !important;
     cursor: pointer;
-    box-shadow: none;
+    box-shadow: none !important;
     transition: color 0.2s ease;
 }
 
 .zs-lock-toggle:hover,
-.zs-lock-toggle:focus {
-    background: none;
-    border: none;
-    box-shadow: none;
-    outline: none;
+.zs-lock-toggle:focus,
+.zs-lock-toggle:active {
+    background: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .zs-lock-toggle[data-locked="true"] {
@@ -166,6 +168,14 @@
     border: none;
     font-weight: 500;
     pointer-events: none;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.zs-stock-table input.stock-input:disabled::-webkit-outer-spin-button,
+.zs-stock-table input.stock-input:disabled::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .zs-stock-table input.stock-input.is-dirty {

@@ -48,7 +48,7 @@ class StockAdminPage
             'zs-stock-admin',
             $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/css/stock-admin.css',
             ['dashicons'],
-            '1.2.7'
+            '1.2.8'
         );
         
         wp_enqueue_script(
