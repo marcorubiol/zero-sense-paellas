@@ -284,7 +284,10 @@ button.zs-mb-link {
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    background: var(--zs-mb-bg, #f6f7f7);
+    border-radius: var(--zs-mb-radius, 4px);
+    padding: 6px 10px;
 }
 
 .zs-staff-display {
