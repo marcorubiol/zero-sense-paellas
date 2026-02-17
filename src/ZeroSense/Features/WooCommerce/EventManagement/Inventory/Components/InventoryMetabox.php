@@ -345,11 +345,13 @@ class InventoryMetabox
                 .zs-alert-details {
                     max-height: 2000px;
                     overflow: hidden;
-                    transition: max-height 0.3s ease-out;
+                    padding: 10px 15px 15px 15px;
+                    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
                 }
                 .zs-stock-alerts-banner.collapsed .zs-alert-details {
                     max-height: 0;
-                    transition: max-height 0.3s ease-in;
+                    padding: 0 15px;
+                    transition: max-height 0.3s ease-in, padding 0.3s ease-in;
                 }
                 .zs-stock-alerts-header {
                     display: flex;
@@ -443,9 +445,6 @@ class InventoryMetabox
                 }
                 .zs-alert-count .dashicons.alert-resolved {
                     color: #46b450;
-                }
-                .zs-stock-alerts-banner:not(.collapsed) .zs-alert-details {
-                    padding: 10px 15px 15px 15px;
                 }
                 .zs-alert-item {
                     padding: 8px 0;
