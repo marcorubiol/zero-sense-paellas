@@ -45,9 +45,6 @@ class MaterialCalculator
         $staffCalc = self::calculateStaff($totalGuests, $analysis);
         $result = array_merge($result, $staffCalc);
         
-        // TESTING: Forzar siempre 1 butano para pruebas
-        $result['buta'] = 1;
-        
         return $result;
     }
     
