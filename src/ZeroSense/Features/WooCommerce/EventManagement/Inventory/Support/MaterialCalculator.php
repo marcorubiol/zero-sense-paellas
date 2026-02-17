@@ -13,26 +13,23 @@ class MaterialCalculator
      */
     public static function calculate(WC_Order $order): array
     {
-        $guests = self::getTotalGuests($order);
-        $analysis = ProductMapper::analyzeOrder($order);
-        
-        // DEBUG
-        error_log('🔍 MaterialCalculator - Order #' . $order->get_id());
-        error_log('🔍 Total Guests: ' . $guests);
-        error_log('🔍 Paella Items Count: ' . count($analysis['paella_items'] ?? []));
-        error_log('🔍 Paella Items: ' . json_encode($analysis['paella_items'] ?? []));
-        
-        $materials = [];
+        $result = [];
         
         // Obtener datos del pedido
         $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
         
         if ($totalGuests <= 0) {
-            return $materials;
+            return $result;
         }
         
         // Analizar productos del pedido
         $analysis = ProductMapper::analyzeOrder($order);
+        
+        // DEBUG
+        error_log('🔍 MaterialCalculator - Order #' . $order->get_id());
+        error_log('🔍 Total Guests: ' . $totalGuests);
+        error_log('🔍 Paella Items Count: ' . count($analysis['paella_items'] ?? []));
+        error_log('🔍 Paella Items: ' . json_encode($analysis['paella_items'] ?? []));
         
         // Obtener staff asignado
         $staffData = $order->get_meta('zs_event_staff', true) ?: [];
