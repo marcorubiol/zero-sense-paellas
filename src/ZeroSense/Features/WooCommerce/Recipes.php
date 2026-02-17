@@ -309,7 +309,7 @@ class Recipes implements FeatureInterface
                     ?>
                 </tbody>
             </table>
-
+🥘 Paella Recipe Mode
             <p style="margin-top:10px; display: flex; justify-content: space-between; align-items: center;">
                 <button type="button" class="button" id="zs-recipe-add-row"><?php esc_html_e('Add ingredient', 'zero-sense'); ?></button>
                 <a href="<?php echo esc_url($manage_url); ?>" target="_blank" style="text-decoration: none; font-size: 13px;">
