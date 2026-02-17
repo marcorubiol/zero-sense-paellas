@@ -62,6 +62,30 @@ class InventoryMetabox
         // Obtener todas las definiciones de materiales
         $materials = MaterialDefinitions::getAll();
         
+        // Agrupar por categoría
+        $categories = [
+            'paelles' => 'Paelles',
+            'cremadors' => 'Cremadors',
+            'equipament_cuina' => 'Equipament Cuina',
+            'roba_personal' => 'Roba Personal',
+            'textils_neteja' => 'Textils i Neteja',
+            'caixes_contenidors' => 'Caixes i Contenidors',
+            'refrigeracio' => 'Refrigeració',
+            'utensilis_servir' => 'Utensilis Servir',
+            'mobiliari_esdeveniments' => 'Mobiliari Esdeveniments',
+            'vaixella_menatge' => 'Vaixella i Menatge',
+            'altres' => 'Altres',
+        ];
+        
+        $groupedMaterials = [];
+        foreach ($materials as $material) {
+            $cat = $material['category'] ?? 'altres';
+            if (!isset($groupedMaterials[$cat])) {
+                $groupedMaterials[$cat] = [];
+            }
+            $groupedMaterials[$cat][] = $material;
+        }
+        
         ?>
         <div class="zs-inventory-metabox">
             <style>
@@ -99,6 +123,13 @@ class InventoryMetabox
                 .zs-inventory-reset:hover {
                     color: #a00;
                 }
+                .zs-inventory-category-header {
+                    background: #f0f0f1;
+                    font-weight: 600;
+                    font-size: 13px;
+                    text-transform: uppercase;
+                    color: #1d2327;
+                }
             </style>
             
             <table>
@@ -111,7 +142,12 @@ class InventoryMetabox
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($materials as $material): ?>
+                    <?php foreach ($categories as $catKey => $catLabel): ?>
+                        <?php if (isset($groupedMaterials[$catKey])): ?>
+                            <tr class="zs-inventory-category-header">
+                                <td colspan="4"><?php echo esc_html($catLabel); ?></td>
+                            </tr>
+                            <?php foreach ($groupedMaterials[$catKey] as $material): ?>
                         <?php
                         $materialKey = $material['key'];
                         $autoValue = $calculated[$materialKey] ?? 0;
@@ -149,6 +185,8 @@ class InventoryMetabox
                                 <?php endif; ?>
                             </td>
                         </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </tbody>
             </table>
