@@ -657,28 +657,37 @@ class InventoryMetabox
         // Obtener overrides existentes
         $existingOverrides = ManualOverride::get($postId);
         
-        // Filtrar solo los campos que realmente difieren del cálculo automático
+        // Procesar campos del formulario
         $newOverrides = $_POST['zs_inventory'] ?? [];
-        $actualOverrides = [];
+        
+        // Si el formulario está vacío (locked), mantener overrides existentes
+        if (empty($newOverrides)) {
+            $final = ManualOverride::apply($calculated, $existingOverrides);
+            ReservationManager::createOrUpdate($postId, $final);
+            return;
+        }
+        
+        // Filtrar solo los campos que realmente difieren del cálculo automático
+        $actualOverrides = $existingOverrides; // Empezar con los existentes
         
         foreach ($newOverrides as $materialKey => $value) {
             $autoValue = $calculated[$materialKey] ?? 0;
             $normalizedValue = ($value === '' || $value === null) ? 0 : (int) $value;
             
-            // Solo guardar como override si difiere del valor automático
             if ($normalizedValue != $autoValue) {
+                // Difiere del auto: guardar como override
                 $actualOverrides[$materialKey] = $normalizedValue;
+            } else {
+                // Coincide con auto: eliminar override si existe
+                unset($actualOverrides[$materialKey]);
             }
         }
         
-        // Merge con overrides existentes (preservar los que no vienen en el formulario)
-        $mergedOverrides = array_merge($existingOverrides, $actualOverrides);
-        
-        // Guardar overrides combinados
-        ManualOverride::save($postId, $mergedOverrides);
+        // Guardar overrides actualizados
+        ManualOverride::save($postId, $actualOverrides);
         
         // Aplicar overrides finales
-        $final = ManualOverride::apply($calculated, $mergedOverrides);
+        $final = ManualOverride::apply($calculated, $actualOverrides);
         
         // Crear/actualizar reservas
         ReservationManager::createOrUpdate($postId, $final);
