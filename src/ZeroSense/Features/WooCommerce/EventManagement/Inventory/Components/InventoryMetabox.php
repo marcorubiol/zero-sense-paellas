@@ -44,9 +44,16 @@ class InventoryMetabox
     /**
      * Renderiza el metabox
      */
-    public function render(WP_Post $post): void
+    public function render($post_or_order): void
     {
-        $order = wc_get_order($post->ID);
+        // Handle both WP_Post (legacy) and WC_Order (HPOS)
+        if ($post_or_order instanceof \WC_Order) {
+            $order = $post_or_order;
+            $postId = $order->get_id();
+        } else {
+            $postId = $post_or_order->ID;
+            $order = wc_get_order($postId);
+        }
         
         if (!$order) {
             return;
@@ -58,7 +65,7 @@ class InventoryMetabox
         $calculated = MaterialCalculator::calculate($order);
         
         // Obtener overrides manuales
-        $overrides = ManualOverride::get($post->ID);
+        $overrides = ManualOverride::get($postId);
         
         // Aplicar overrides
         $final = ManualOverride::apply($calculated, $overrides);
@@ -194,19 +201,20 @@ class InventoryMetabox
     /**
      * Guarda los datos del metabox
      */
-    public function save(int $postId, WP_Post $post): void
+    public function save(int $postId, $post = null): void
     {
-        if (!current_user_can('edit_post', $postId)) {
+        // Get order - works for both HPOS and legacy
+        $order = wc_get_order($postId);
+        
+        if (!$order) {
+            return;
+        }
+        
+        if (!current_user_can('edit_shop_order', $postId)) {
             return;
         }
         
         if (!isset($_POST[self::NONCE_FIELD]) || !wp_verify_nonce($_POST[self::NONCE_FIELD], self::NONCE_ACTION)) {
-            return;
-        }
-        
-        $order = wc_get_order($postId);
-        
-        if (!$order) {
             return;
         }
         
