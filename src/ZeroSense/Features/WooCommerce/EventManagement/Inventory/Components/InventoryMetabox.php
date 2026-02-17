@@ -170,7 +170,7 @@ class InventoryMetabox
                     font-weight: 600;
                     border-radius: 3px;
                     text-transform: uppercase;
-                    margin-left: 6px;
+                    margin-right: 6px;
                 }
                 .zs-inventory-badge-auto {
                     background: #d7f0ff;
@@ -199,8 +199,9 @@ class InventoryMetabox
                     display: block;
                     margin-top: 2px;
                 }
-                .zs-inventory-save-btn:not(.show) {
-                    display: none !important;
+                .zs-inventory-save-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
                 }
                 .zs-inventory-save-btn.is-saving {
                     opacity: 0.7;
@@ -257,7 +258,7 @@ class InventoryMetabox
                         <span class="dashicons dashicons-lock"></span>
                         <span class="lock-text"><?php esc_html_e('Locked', 'zero-sense'); ?></span>
                     </button>
-                    <button type="button" class="zs-inventory-save-btn" title="<?php esc_attr_e('Save inventory changes', 'zero-sense'); ?>">
+                    <button type="button" class="zs-inventory-save-btn" disabled title="<?php esc_attr_e('Save inventory changes', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-download"></span>
                         <?php esc_html_e('Save', 'zero-sense'); ?>
                     </button>
@@ -294,6 +295,11 @@ class InventoryMetabox
                                 <?php endif; ?>
                             </td>
                             <td>
+                                <?php if ($hasOverride): ?>
+                                    <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
+                                <?php elseif ($autoValue > 0): ?>
+                                    <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
+                                <?php endif; ?>
                                 <input 
                                     type="number" 
                                     name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
@@ -303,11 +309,6 @@ class InventoryMetabox
                                     class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
                                     disabled
                                 />
-                                <?php if ($hasOverride): ?>
-                                    <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
-                                <?php elseif ($autoValue > 0): ?>
-                                    <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
-                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($hasOverride): ?>
@@ -377,7 +378,7 @@ class InventoryMetabox
                 var $td = $input.parent();
                 $td.find('.zs-inventory-badge').remove();
                 if (autoValue > 0) {
-                    $input.after('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    $input.before('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                 }
                 
                 $(this).remove();
@@ -396,7 +397,7 @@ class InventoryMetabox
                     var $td = $input.parent();
                     $td.find('.zs-inventory-badge').remove();
                     if (autoValue > 0) {
-                        $input.after('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                        $input.before('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     }
                 });
                 
@@ -424,7 +425,7 @@ class InventoryMetabox
                     
                     // Update badge to manual
                     $td.find('.zs-inventory-badge').remove();
-                    $input.after('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
+                    $input.before('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
                     
                     // Add reset icon if not present
                     var $resetTd = $input.closest('tr').find('td:last');
@@ -437,7 +438,7 @@ class InventoryMetabox
                     // Update badge to auto
                     $td.find('.zs-inventory-badge').remove();
                     if (autoValue > 0) {
-                        $input.after('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                        $input.before('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     }
                     
                     // Remove reset icon
@@ -448,12 +449,12 @@ class InventoryMetabox
                 updateSaveButton();
             });
             
-            // Update save button visibility
+            // Update save button state
             function updateSaveButton() {
                 if (dirtyFields.size > 0) {
-                    $('.zs-inventory-save-btn').addClass('show');
+                    $('.zs-inventory-save-btn').prop('disabled', false);
                 } else {
-                    $('.zs-inventory-save-btn').removeClass('show');
+                    $('.zs-inventory-save-btn').prop('disabled', true);
                 }
             }
             
