@@ -418,9 +418,11 @@ class Recipes implements FeatureInterface
 
         <script>
         (function($) {
+            console.log('ZS Recipes: Script loaded successfully');
             var ajaxUrl = '<?php echo $ajax_url; ?>';
             var nonce = '<?php echo $nonce; ?>';
             var rowCount = <?php echo max(0, count($ingredients)); ?>;
+            console.log('ZS Recipes: Config loaded. AJAX URL:', ajaxUrl, 'Nonce:', nonce);
             
             function initSelect(element) {
                 if (typeof jQuery.fn.selectWoo === 'undefined') {
