@@ -551,30 +551,33 @@ class InventoryMetabox
             
             <?php if (!empty($alerts)): ?>
                 <?php
-                // Contar alertas por tipo (excluyendo resueltas)
+                // Contar alertas por tipo (incluyendo resueltas)
                 $criticalCount = 0;
                 $maxCapacityCount = 0;
                 $lowStockCount = 0;
+                $resolvedCount = 0;
                 
                 foreach ($alerts as $materialKey => $alert) {
-                    if (AlertResolutionManager::isResolved($postId, $materialKey)) {
-                        continue;
-                    }
+                    $isResolved = AlertResolutionManager::isResolved($postId, $materialKey);
                     
-                    switch ($alert['alert_type']) {
-                        case AlertCalculator::ALERT_CRITICAL:
-                            $criticalCount++;
-                            break;
-                        case AlertCalculator::ALERT_MAX_CAPACITY:
-                            $maxCapacityCount++;
-                            break;
-                        case AlertCalculator::ALERT_LOW_STOCK:
-                            $lowStockCount++;
-                            break;
+                    if ($isResolved) {
+                        $resolvedCount++;
+                    } else {
+                        switch ($alert['alert_type']) {
+                            case AlertCalculator::ALERT_CRITICAL:
+                                $criticalCount++;
+                                break;
+                            case AlertCalculator::ALERT_MAX_CAPACITY:
+                                $maxCapacityCount++;
+                                break;
+                            case AlertCalculator::ALERT_LOW_STOCK:
+                                $lowStockCount++;
+                                break;
+                        }
                     }
                 }
                 
-                $totalAlerts = $criticalCount + $maxCapacityCount + $lowStockCount;
+                $totalAlerts = $criticalCount + $maxCapacityCount + $lowStockCount + $resolvedCount;
                 
                 if ($totalAlerts > 0):
                     $eventDate = $order->get_meta('zs_event_date', true);
@@ -614,6 +617,12 @@ class InventoryMetabox
                                     <span><?php echo $lowStockCount; ?> <?php echo AlertCalculator::getAlertLabel(AlertCalculator::ALERT_LOW_STOCK); ?></span>
                                 </div>
                             <?php endif; ?>
+                            <?php if ($resolvedCount > 0): ?>
+                                <div class="zs-alert-count">
+                                    <span class="dashicons dashicons-yes-alt alert-resolved"></span>
+                                    <span><?php echo $resolvedCount; ?> <?php _e('Resolved', 'zero-sense'); ?></span>
+                                </div>
+                            <?php endif; ?>
                             </div>
                         </div>
                         <div class="zs-stock-alerts-toggle">
@@ -622,23 +631,66 @@ class InventoryMetabox
                     </div>
                     
                     <div class="zs-alert-details">
-                        <?php foreach ($alerts as $materialKey => $alert): ?>
-                            <?php if (AlertResolutionManager::isResolved($postId, $materialKey)) continue; ?>
+                        <?php 
+                        // Ordenar alertas por severidad
+                        $sortedAlerts = [];
+                        foreach ($alerts as $materialKey => $alert) {
+                            $isResolved = AlertResolutionManager::isResolved($postId, $materialKey);
+                            $sortOrder = 999; // Default para resolved
+                            
+                            if (!$isResolved) {
+                                switch ($alert['alert_type']) {
+                                    case AlertCalculator::ALERT_CRITICAL:
+                                        $sortOrder = 1;
+                                        break;
+                                    case AlertCalculator::ALERT_MAX_CAPACITY:
+                                        $sortOrder = 2;
+                                        break;
+                                    case AlertCalculator::ALERT_LOW_STOCK:
+                                        $sortOrder = 3;
+                                        break;
+                                }
+                            }
+                            
+                            $sortedAlerts[] = [
+                                'material_key' => $materialKey,
+                                'alert' => $alert,
+                                'is_resolved' => $isResolved,
+                                'sort_order' => $sortOrder
+                            ];
+                        }
+                        
+                        // Ordenar por sort_order
+                        usort($sortedAlerts, function($a, $b) {
+                            return $a['sort_order'] - $b['sort_order'];
+                        });
+                        
+                        foreach ($sortedAlerts as $item):
+                            $materialKey = $item['material_key'];
+                            $alert = $item['alert'];
+                            $isItemResolved = $item['is_resolved'];
+                        ?>
                             <?php
                             $materialDef = $materials[$materialKey] ?? null;
                             $materialLabel = $materialDef ? $materialDef['label'] : $materialKey;
-                            $iconClass = AlertCalculator::getAlertIcon($alert['alert_type']);
-                            $alertClass = '';
-                            switch ($alert['alert_type']) {
-                                case AlertCalculator::ALERT_CRITICAL:
-                                    $alertClass = 'alert-critical';
-                                    break;
-                                case AlertCalculator::ALERT_MAX_CAPACITY:
-                                    $alertClass = 'alert-max-capacity';
-                                    break;
-                                case AlertCalculator::ALERT_LOW_STOCK:
-                                    $alertClass = 'alert-low-stock';
-                                    break;
+                            
+                            if ($isItemResolved) {
+                                $iconClass = 'dashicons-yes-alt';
+                                $alertClass = 'alert-resolved';
+                            } else {
+                                $iconClass = AlertCalculator::getAlertIcon($alert['alert_type']);
+                                $alertClass = '';
+                                switch ($alert['alert_type']) {
+                                    case AlertCalculator::ALERT_CRITICAL:
+                                        $alertClass = 'alert-critical';
+                                        break;
+                                    case AlertCalculator::ALERT_MAX_CAPACITY:
+                                        $alertClass = 'alert-max-capacity';
+                                        break;
+                                    case AlertCalculator::ALERT_LOW_STOCK:
+                                        $alertClass = 'alert-low-stock';
+                                        break;
+                                }
                             }
                             ?>
                             <div class="zs-alert-item">
@@ -646,16 +698,30 @@ class InventoryMetabox
                                     <span class="dashicons <?php echo $iconClass; ?> <?php echo $alertClass; ?>"></span>
                                     <strong><?php echo esc_html($materialLabel); ?>:</strong>
                                     <span>
-                                        <?php if ($alert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
-                                            <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
-                                        <?php elseif ($alert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
-                                            <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
+                                        <?php if ($isItemResolved): ?>
+                                            <?php 
+                                            $resolution = $resolutions[$materialKey] ?? null;
+                                            if ($resolution) {
+                                                $resolvedBy = get_userdata($resolution['resolved_by']);
+                                                $resolvedByName = $resolvedBy ? $resolvedBy->display_name : __('Unknown', 'zero-sense');
+                                                printf(__('Resolved by %s', 'zero-sense'), esc_html($resolvedByName));
+                                                if (!empty($resolution['notes'])) {
+                                                    echo ' - ' . esc_html($resolution['notes']);
+                                                }
+                                            }
+                                            ?>
                                         <?php else: ?>
-                                            <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $alert['usage_percent']); ?>
+                                            <?php if ($alert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
+                                                <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
+                                            <?php elseif ($alert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
+                                                <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $alert['total_needed'], $alert['total_stock']); ?>
+                                            <?php else: ?>
+                                                <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $alert['usage_percent']); ?>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </span>
                                 </div>
-                                <?php if (!empty($alert['conflicts'])): ?>
+                                <?php if (!$isItemResolved && !empty($alert['conflicts'])): ?>
                                     <div class="zs-alert-item-details">
                                         <?php _e('Conflicts with other orders:', 'zero-sense'); ?>
                                         <?php foreach ($alert['conflicts'] as $idx => $conflict): ?>
