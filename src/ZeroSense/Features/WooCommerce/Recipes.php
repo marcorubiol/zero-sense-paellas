@@ -488,23 +488,22 @@ class Recipes implements FeatureInterface
                         }
                     });
                     
-                    $(element).on('select2:selecting', function(e) {
-                        var data = e.params.args.data;
-                        console.log('ZS Recipes: select2:selecting event fired', data);
+                    $(element).on('select2:select', function(e) {
+                        var data = e.params.data;
+                        console.log('ZS Recipes: select2:select event fired', data);
                         
                         // Check if it's a new tag (not an existing ingredient)
                         if (data && data.newTag === true) {
-                            console.log('ZS Recipes: New tag detected, preventing default and creating ingredient:', data.text);
-                            e.preventDefault();
+                            console.log('ZS Recipes: New tag detected, creating ingredient:', data.text);
                             
-                            // Close the dropdown
-                            $(element).select2('close');
-                            
-                            // Create the ingredient
+                            // Get the clean name
                             var cleanName = data.text.replace(' (crear nuevo)', '');
-                            createIngredient(cleanName, element);
                             
-                            return false;
+                            // Clear the select immediately
+                            $(element).val(null).trigger('change');
+                            
+                            // Create the ingredient via AJAX
+                            createIngredient(cleanName, element);
                         } else {
                             console.log('ZS Recipes: Existing ingredient selected:', data);
                         }
@@ -658,23 +657,22 @@ class Recipes implements FeatureInterface
                         }
                     });
                     
-                    $(element).on('select2:selecting', function(e) {
-                        var data = e.params.args.data;
-                        console.log('ZS Recipes (Utensils): select2:selecting event fired', data);
+                    $(element).on('select2:select', function(e) {
+                        var data = e.params.data;
+                        console.log('ZS Recipes (Utensils): select2:select event fired', data);
                         
                         // Check if it's a new tag (not an existing utensil)
                         if (data && data.newTag === true) {
-                            console.log('ZS Recipes (Utensils): New tag detected, preventing default and creating utensil:', data.text);
-                            e.preventDefault();
+                            console.log('ZS Recipes (Utensils): New tag detected, creating utensil:', data.text);
                             
-                            // Close the dropdown
-                            $(element).select2('close');
-                            
-                            // Create the utensil
+                            // Get the clean name
                             var cleanName = data.text.replace(' (crear nuevo)', '');
-                            createUtensil(cleanName, element);
                             
-                            return false;
+                            // Clear the select immediately
+                            $(element).val(null).trigger('change');
+                            
+                            // Create the utensil via AJAX
+                            createUtensil(cleanName, element);
                         } else {
                             console.log('ZS Recipes (Utensils): Existing utensil selected:', data);
                         }
