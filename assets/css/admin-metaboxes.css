@@ -239,7 +239,6 @@ button.zs-mb-link {
     background: #f6f7f7;
     color: var(--zs-mb-label-color);
     border-color: var(--zs-mb-border-color);
-    font-weight: 500;
 }
 
 .zs-btn.is-action:hover,
