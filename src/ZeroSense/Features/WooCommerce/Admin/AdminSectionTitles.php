@@ -68,16 +68,11 @@ class AdminSectionTitles implements FeatureInterface
                     $('#order_data h3').each(function() {
                         var elem = $(this);
                         
-                        if (elem.find('.zs-subtitle').length) {
-                            return; // Ya tiene subtítulo
+                        if (elem.find('.zs-section-badge').length) {
+                            return;
                         }
                         
-                        var html = elem.html();
                         var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
-                        
-                        // Encontrar y extraer el botón Edit
-                        var editLink = elem.find('a.edit_address');
-                        var editHtml = editLink.length ? editLink[0].outerHTML : '';
                         
                         if (firstWord === 'Billing' || firstWord === 'Facturación') {
                             elem.append('<span class="zs-badge zs-badge-auto zs-section-badge">Client</span>');
