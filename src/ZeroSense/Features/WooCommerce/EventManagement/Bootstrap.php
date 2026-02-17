@@ -215,7 +215,7 @@ class Bootstrap
             'label' => 'Budget email content',
             'type' => 'textarea',
             'translatable' => false,
-            'legacy_keys' => ['budget_email_content'],
+            'legacy_keys' => ['budget_emails_content'],
             'feature' => 'EventManagement',
         ]);
 
@@ -223,7 +223,7 @@ class Bootstrap
             'label' => 'Final details email content',
             'type' => 'textarea',
             'translatable' => false,
-            'legacy_keys' => ['final_details_email_content'],
+            'legacy_keys' => ['final_details_emails_content'],
             'feature' => 'EventManagement',
         ]);
 
