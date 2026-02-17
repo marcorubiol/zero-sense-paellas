@@ -34,7 +34,7 @@
 .zs-stock-table thead {
     position: sticky;
     top: 32px;
-    z-index: 100;
+    z-index: 5;
 }
 
 .zs-stock-table thead th {
@@ -76,7 +76,7 @@
 
 .zs-stock-table th.zs-sticky-col {
     background: #f5f5f5;
-    z-index: 11;
+    z-index: 15;
 }
 
 .zs-stock-table input.stock-input {
