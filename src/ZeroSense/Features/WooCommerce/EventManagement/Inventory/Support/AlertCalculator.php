@@ -236,22 +236,22 @@ class AlertCalculator
     }
     
     /**
-     * Obtiene el emoji del tipo de alerta
+     * Obtiene el icono dashicon del tipo de alerta
      * 
      * @param string $alertType
      * @return string
      */
-    public static function getAlertEmoji(string $alertType): string
+    public static function getAlertIcon(string $alertType): string
     {
         switch ($alertType) {
             case self::ALERT_CRITICAL:
-                return '🔴';
+                return 'dashicons-dismiss';
             case self::ALERT_MAX_CAPACITY:
-                return '🟠';
+                return 'dashicons-warning';
             case self::ALERT_LOW_STOCK:
-                return '🟡';
+                return 'dashicons-flag';
             default:
-                return '⚪';
+                return 'dashicons-info';
         }
     }
 }
