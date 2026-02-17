@@ -450,7 +450,6 @@ class InventoryMetabox
                     text-decoration: none;
                     font-size: 11px;
                     font-weight: 400;
-                    margin-left: 8px;
                     align-self: center;
                     line-height: 1;
                 }

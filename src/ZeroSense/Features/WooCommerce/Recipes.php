@@ -177,23 +177,27 @@ class Recipes implements FeatureInterface
         ?>
         <style>
             .zs-paella-mode-toggle {
-                background: #f0f0f1;
-                border: 1px solid #dcdcde;
-                border-radius: 8px;
-                padding: 20px;
+                background: #f9f9f9;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 15px;
                 margin: 20px 0;
             }
             .zs-paella-mode-header {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                margin-bottom: 12px;
+                gap: 10px;
+                margin-bottom: 8px;
+            }
+            .zs-paella-mode-header > span:first-child {
+                font-size: 24px;
+                line-height: 1;
             }
             .zs-paella-mode-switch {
                 position: relative;
                 display: inline-block;
-                width: 44px;
-                height: 24px;
+                width: 36px;
+                height: 20px;
             }
             .zs-paella-mode-switch input {
                 opacity: 0;
@@ -207,15 +211,15 @@ class Recipes implements FeatureInterface
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background-color: #ccc;
+                background-color: #ddd;
                 transition: .3s;
-                border-radius: 24px;
+                border-radius: 20px;
             }
             .zs-paella-mode-slider:before {
                 position: absolute;
                 content: "";
-                height: 18px;
-                width: 18px;
+                height: 14px;
+                width: 14px;
                 left: 3px;
                 bottom: 3px;
                 background-color: white;
@@ -226,13 +230,12 @@ class Recipes implements FeatureInterface
                 background-color: #2271b1;
             }
             input:checked + .zs-paella-mode-slider:before {
-                transform: translateX(20px);
+                transform: translateX(16px);
             }
             .zs-paella-mode-info {
-                color: #646970;
+                color: #666;
                 font-size: 13px;
                 line-height: 1.5;
-                margin-top: 8px;
             }
         </style>
         <div class="zs-recipes-metabox">
