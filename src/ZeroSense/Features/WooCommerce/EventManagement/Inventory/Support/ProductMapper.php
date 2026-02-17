@@ -49,7 +49,11 @@ class ProductMapper
         foreach ($order->get_items() as $itemId => $item) {
             $product = $item->get_product();
             
+            // DEBUG
+            error_log('🔍 Processing item #' . $itemId . ': ' . $item->get_name());
+            
             if (!$product) {
+                error_log('⚠️ No product found for item #' . $itemId);
                 continue;
             }
             
@@ -57,6 +61,10 @@ class ProductMapper
             // NIVEL 1: RECETA (La verdad absoluta para comida)
             // ---------------------------------------------------------
             $recipeId = $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            
+            // DEBUG
+            error_log('🔍 Product ID: ' . $product->get_id());
+            error_log('🔍 Recipe ID from meta: ' . var_export($recipeId, true));
             
             if ($recipeId) {
                 $recipe = get_post($recipeId);
