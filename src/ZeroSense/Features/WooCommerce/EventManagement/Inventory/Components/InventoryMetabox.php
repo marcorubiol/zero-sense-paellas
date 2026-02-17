@@ -157,17 +157,19 @@ class InventoryMetabox
                 }
                 .zs-inventory-metabox table th:nth-child(2),
                 .zs-inventory-metabox table td:nth-child(2) {
-                    width: 150px;
+                    width: 200px;
+                    text-align: right;
                 }
-                .zs-inventory-metabox table th:nth-child(3),
-                .zs-inventory-metabox table td:nth-child(3) {
-                    width: 50px;
+                .zs-inventory-quantity-wrapper {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    justify-content: flex-end;
                 }
                 .zs-inventory-badge-container {
                     display: inline-block;
-                    width: 50px;
-                    text-align: left;
-                    vertical-align: middle;
+                    min-width: 45px;
+                    text-align: center;
                 }
                 .zs-inventory-badge {
                     display: inline-block;
@@ -189,13 +191,16 @@ class InventoryMetabox
                     cursor: pointer;
                     color: #2271b1;
                     transition: transform 0.2s ease;
+                    font-size: 16px;
+                    line-height: 1;
                 }
                 .zs-inventory-reset-icon:hover {
                     transform: rotate(-45deg);
                     color: #135e96;
                 }
                 .zs-inventory-reset-icon.hidden {
-                    display: none;
+                    visibility: hidden;
+                    width: 16px;
                 }
                 .zs-inventory-description {
                     font-size: 11px;
@@ -253,7 +258,7 @@ class InventoryMetabox
                 <div class="zs-inventory-controls">
                     <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
-                        <?php esc_html_e('Recalculate', 'zero-sense'); ?>
+                        <?php esc_html_e('Recalculate All', 'zero-sense'); ?>
                     </button>
                     <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
@@ -270,15 +275,14 @@ class InventoryMetabox
                 <thead>
                     <tr>
                         <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                        <th><?php esc_html_e('Final Quantity', 'zero-sense'); ?></th>
-                        <th></th>
+                        <th style="text-align: right;"><?php esc_html_e('Quantity', 'zero-sense'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($categories as $catKey => $catLabel): ?>
                         <?php if (isset($groupedMaterials[$catKey])): ?>
                             <tr class="zs-inventory-category-header">
-                                <td colspan="4"><?php echo esc_html($catLabel); ?></td>
+                                <td colspan="2"><?php echo esc_html($catLabel); ?></td>
                             </tr>
                             <?php foreach ($groupedMaterials[$catKey] as $material): ?>
                         <?php
@@ -296,30 +300,28 @@ class InventoryMetabox
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span class="zs-inventory-badge-container">
-                                    <?php if ($hasOverride): ?>
-                                        <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
-                                    <?php elseif ($autoValue > 0): ?>
-                                        <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
-                                    <?php endif; ?>
-                                </span>
-                                <input 
-                                    type="number" 
-                                    name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
-                                    value="<?php echo esc_attr(($hasOverride ? $overrideValue : $autoValue) ?: ''); ?>"
-                                    data-auto="<?php echo esc_attr($autoValue); ?>"
-                                    min="0"
-                                    class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
-                                    disabled
-                                />
-                            </td>
-                            <td>
-                                <?php if ($hasOverride): ?>
-                                    <span class="dashicons dashicons-update zs-inventory-reset-icon hidden" 
+                                <div class="zs-inventory-quantity-wrapper">
+                                    <span class="dashicons dashicons-update zs-inventory-reset-icon <?php echo $hasOverride ? '' : 'hidden'; ?>" 
                                        data-material="<?php echo esc_attr($materialKey); ?>"
                                        title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
                                     </span>
-                                <?php endif; ?>
+                                    <span class="zs-inventory-badge-container">
+                                        <?php if ($hasOverride): ?>
+                                            <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
+                                        <?php elseif ($autoValue > 0): ?>
+                                            <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <input 
+                                        type="number" 
+                                        name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
+                                        value="<?php echo esc_attr(($hasOverride ? $overrideValue : $autoValue) ?: ''); ?>"
+                                        data-auto="<?php echo esc_attr($autoValue); ?>"
+                                        min="0"
+                                        class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
+                                        disabled
+                                    />
+                                </div>
                             </td>
                         </tr>
                             <?php endforeach; ?>
@@ -392,7 +394,7 @@ class InventoryMetabox
                     $container.html('');
                 }
                 
-                $(this).remove();
+                $(this).addClass('hidden');
             });
             
             // Recalculate all
@@ -443,27 +445,28 @@ class InventoryMetabox
                     $input.addClass('zs-inventory-override');
                     
                     // Update badge to manual
-                    var $container = $td.find('.zs-inventory-badge-container');
+                    var $wrapper = $td.find('.zs-inventory-quantity-wrapper');
+                    var $container = $wrapper.find('.zs-inventory-badge-container');
                     $container.html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
                     
-                    // Add reset icon if not present
-                    var $resetTd = $input.closest('tr').find('td:last');
-                    if (!$resetTd.find('.zs-inventory-reset-icon').length) {
-                        $resetTd.html('<span class="dashicons dashicons-update zs-inventory-reset-icon" data-material="' + materialKey + '" title="<?php echo esc_js(__('Reset to auto', 'zero-sense')); ?>"></span>');
-                    }
+                    // Show reset icon
+                    var $resetIcon = $wrapper.find('.zs-inventory-reset-icon');
+                    $resetIcon.removeClass('hidden');
                 } else {
                     $input.removeClass('zs-inventory-override');
                     
                     // Update badge to auto
-                    var $container = $td.find('.zs-inventory-badge-container');
+                    var $wrapper = $td.find('.zs-inventory-quantity-wrapper');
+                    var $container = $wrapper.find('.zs-inventory-badge-container');
                     if (autoValue > 0) {
                         $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     } else {
                         $container.html('');
                     }
                     
-                    // Remove reset icon
-                    $input.closest('tr').find('.zs-inventory-reset-icon').remove();
+                    // Hide reset icon
+                    var $resetIcon = $wrapper.find('.zs-inventory-reset-icon');
+                    $resetIcon.addClass('hidden');
                 }
                 
             });
