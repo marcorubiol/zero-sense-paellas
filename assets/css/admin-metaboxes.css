@@ -180,6 +180,8 @@
     width: 14px;
     height: 14px;
     line-height: 1.4;
+    display: flex;
+    align-items: center;
 }
 
 /* Remove variant — red hover for destructive inline actions */
