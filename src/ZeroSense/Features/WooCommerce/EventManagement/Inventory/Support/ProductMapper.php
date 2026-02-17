@@ -46,19 +46,8 @@ class ProductMapper
         
         // Return cached result if available (same request)
         if (isset(self::$analysisCache[$orderId])) {
-            error_log('📦 CACHE HIT for Order #' . $orderId . ' - has_barra_lliure: ' . (self::$analysisCache[$orderId]['has_barra_lliure'] ? 'YES' : 'NO'));
             return self::$analysisCache[$orderId];
         }
-        
-        // DEBUG: Log caller to understand flow
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
-        $caller = '';
-        foreach ($backtrace as $i => $trace) {
-            if (isset($trace['class']) && isset($trace['function'])) {
-                $caller .= ($i > 0 ? ' <- ' : '') . $trace['class'] . '::' . $trace['function'];
-            }
-        }
-        error_log('🔍 CACHE MISS for Order #' . $orderId . ' - Caller: ' . $caller);
         
         $result = [
             'has_entrants' => false,
@@ -73,10 +62,7 @@ class ProductMapper
         $barraTermIds = self::getTermIds(self::BARRA_CATEGORY_SLUGS);
         $entrantsTermIds = self::getTermIds(self::ENTRANT_CATEGORY_SLUGS);
         
-        $items = $order->get_items();
-        error_log('   Items count: ' . count($items));
-        
-        foreach ($items as $itemId => $item) {
+        foreach ($order->get_items() as $itemId => $item) {
             $product = $item->get_product();
             
             if (!$product) {
@@ -147,31 +133,24 @@ class ProductMapper
             // NIVEL 2: CATEGORÍA (Fallback para Servicios/Staff)
             // ---------------------------------------------------------
             // Si no tenía receta (o no era comida), miramos categorías
+            // WPML: Siempre usar el producto original para verificar categorías
             
             $productId = $item->get_product_id();
-            
-            // DEBUG: Log each product check
-            $productCategories = wp_get_object_terms($productId, 'product_cat', ['fields' => 'ids']);
-            error_log('   Product #' . $productId . ' (' . $product->get_name() . ') categories: ' . json_encode($productCategories));
-            error_log('   Checking against barraTermIds: ' . json_encode($barraTermIds));
+            $originalProductId = self::resolveOriginalProductId($productId);
             
             // Barra Libre (suele venderse por horas, sin receta de cocina)
-            $hasBarra = !empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $productId);
-            error_log('   has_term result: ' . ($hasBarra ? 'TRUE' : 'FALSE'));
-            
-            if ($hasBarra) {
+            if (!empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $originalProductId)) {
                 $result['has_barra_lliure'] = true;
             }
             
             // Entrants (si venden "Pack Aperitivo" sin receta detallada)
-            if (!empty($entrantsTermIds) && has_term($entrantsTermIds, 'product_cat', $productId)) {
+            if (!empty($entrantsTermIds) && has_term($entrantsTermIds, 'product_cat', $originalProductId)) {
                 $result['has_entrants'] = true;
             }
         }
         
         // Cache result for this request
         self::$analysisCache[$orderId] = $result;
-        error_log('   ➡️ RESULT: has_barra_lliure=' . ($result['has_barra_lliure'] ? 'YES' : 'NO') . ', has_entrants=' . ($result['has_entrants'] ? 'YES' : 'NO'));
         
         return $result;
     }
