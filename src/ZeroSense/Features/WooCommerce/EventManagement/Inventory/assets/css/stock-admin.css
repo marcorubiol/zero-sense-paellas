@@ -19,16 +19,19 @@
 }
 
 .zs-stock-table-wrapper {
-    overflow-x: auto;
     background: white;
     border: 1px solid #ccd0d4;
     box-shadow: 0 1px 1px rgba(0,0,0,.04);
     margin-bottom: 60px;
+    overflow-x: visible;
+    overflow-y: visible;
 }
 
 .zs-stock-table {
     margin: 0;
     border: none;
+    width: 100%;
+    min-width: 100%;
 }
 
 .zs-stock-table thead {
