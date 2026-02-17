@@ -81,14 +81,6 @@
     text-align: left;
 }
 
-/* Section subheaders inside email actions — not all-caps */
-#zs-automatic-actions .zs-mb-subheader,
-#zs-unavailable-actions .zs-mb-subheader {
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: var(--zs-mb-label-size, 13px);
-    color: var(--zs-mb-label-color);
-}
 .zero-sense-flowmattic-metabox .zs-footnote{
     font-size:11px;
     color: var(--zs-mb-description-color);

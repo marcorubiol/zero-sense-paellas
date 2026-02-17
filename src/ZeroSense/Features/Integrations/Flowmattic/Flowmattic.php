@@ -549,7 +549,6 @@ class Flowmattic implements FeatureInterface
             echo '</button>';
             
             echo '<div id="zs-automatic-actions" style="display:none;">';
-            echo '<h4 class="zs-mb-subheader" style="margin-bottom:12px;">' . esc_html__('Automatic Email Actions', 'zero-sense') . '</h4>';
             
             $statusOptions = $this->getStatusOptions();
             
