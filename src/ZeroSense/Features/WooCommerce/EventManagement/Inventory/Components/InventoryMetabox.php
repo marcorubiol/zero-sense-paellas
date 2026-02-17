@@ -258,7 +258,7 @@ class InventoryMetabox
                 <div class="zs-inventory-controls">
                     <button type="button" class="zs-inventory-recalc-btn" title="<?php esc_attr_e('Recalculate all from order data', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-update"></span>
-                        <?php esc_html_e('Recalculate All', 'zero-sense'); ?>
+                        <?php esc_html_e('Recalculate all', 'zero-sense'); ?>
                     </button>
                     <button type="button" class="zs-inventory-lock-btn" data-locked="true" title="<?php esc_attr_e('Click to unlock for editing', 'zero-sense'); ?>">
                         <span class="dashicons dashicons-lock"></span>
