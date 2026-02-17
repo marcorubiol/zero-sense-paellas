@@ -47,8 +47,11 @@ class BricksDynamicTags implements FeatureInterface
 
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
     private const META_RECIPE_INGREDIENTS = 'zs_recipe_ingredients';
+    private const META_RECIPE_UTENSILS = 'zs_recipe_utensils';
     private const TAX_INGREDIENT = 'zs_ingredient';
+    private const TAX_UTENSIL = 'zs_utensil';
     private const CPT_RECIPE = 'zs_recipe';
+    private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
     
     private const META_EVENT_ADULTS = 'zs_event_adults';
     private const META_EVENT_CHILDREN = 'zs_event_children_5_to_8';

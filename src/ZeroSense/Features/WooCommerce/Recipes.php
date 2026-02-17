@@ -748,10 +748,44 @@ class Recipes implements FeatureInterface
 
         if ($out === []) {
             delete_post_meta($postId, self::META_INGREDIENTS);
+        } else {
+            update_post_meta($postId, self::META_INGREDIENTS, $out);
+        }
+
+        // Save utensils
+        $rawUtensils = $_POST['zs_recipe_utensils'] ?? null;
+        if (!is_array($rawUtensils)) {
+            delete_post_meta($postId, self::META_UTENSILS);
             return;
         }
 
-        update_post_meta($postId, self::META_INGREDIENTS, $out);
+        $utensilIds = isset($rawUtensils['utensil']) && is_array($rawUtensils['utensil']) ? $rawUtensils['utensil'] : [];
+        $utensilQtys = isset($rawUtensils['qty']) && is_array($rawUtensils['qty']) ? $rawUtensils['qty'] : [];
+        $utensilPaxRatios = isset($rawUtensils['pax_ratio']) && is_array($rawUtensils['pax_ratio']) ? $rawUtensils['pax_ratio'] : [];
+
+        $outUtensils = [];
+        $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios));
+        for ($i = 0; $i < $countUtensils; $i++) {
+            $id = isset($utensilIds[$i]) ? (int) $utensilIds[$i] : 0;
+            $qty = isset($utensilQtys[$i]) ? (float) $utensilQtys[$i] : 0.0;
+            $paxRatio = isset($utensilPaxRatios[$i]) ? (int) $utensilPaxRatios[$i] : 1;
+
+            if ($id <= 0 || $qty <= 0 || $paxRatio < 1) {
+                continue;
+            }
+
+            $outUtensils[] = [
+                'utensil' => $id,
+                'qty' => $qty,
+                'pax_ratio' => $paxRatio,
+            ];
+        }
+
+        if ($outUtensils === []) {
+            delete_post_meta($postId, self::META_UTENSILS);
+        } else {
+            update_post_meta($postId, self::META_UTENSILS, $outUtensils);
+        }
     }
 
     public function enqueueAdminAssets(string $hook): void
@@ -901,6 +935,114 @@ class Recipes implements FeatureInterface
         wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $displayName]);
     }
 
+    public function ajaxUtensilSearch(): void
+    {
+        if (!current_user_can('edit_posts')) {
+            wp_send_json(['results' => []]);
+        }
+
+        $nonce = isset($_GET['nonce']) ? sanitize_text_field(wp_unslash((string) $_GET['nonce'])) : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
+            wp_send_json(['results' => []]);
+        }
+
+        $q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
+
+        $terms = get_terms([
+            'taxonomy' => self::TAX_UTENSIL,
+            'hide_empty' => false,
+            'number' => 100,
+            'suppress_filters' => true,
+        ]);
+
+        $results = [];
+        if (is_array($terms) && $q !== '') {
+            $normalizedQuery = $this->normalizeIngredientName($q);
+            
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    $normalizedTermName = $this->normalizeIngredientName($term->name);
+                    
+                    if (mb_strpos($normalizedTermName, $normalizedQuery, 0, 'UTF-8') !== false) {
+                        $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
+                    }
+                }
+            }
+        } elseif (is_array($terms) && $q === '') {
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
+                }
+            }
+        }
+
+        $results = array_slice($results, 0, 25);
+
+        wp_send_json([
+            'results' => $results,
+        ]);
+    }
+
+    public function ajaxUtensilCreate(): void
+    {
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'forbidden']);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash((string) $_POST['nonce'])) : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
+            wp_send_json_error(['message' => 'invalid_nonce']);
+        }
+
+        $rawName = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
+        if ($rawName === '') {
+            wp_send_json_error(['message' => 'empty']);
+        }
+
+        $normalizedName = $this->normalizeIngredientName($rawName);
+        $displayName = $this->capitalizeIngredientName($rawName);
+
+        $terms = get_terms([
+            'taxonomy' => self::TAX_UTENSIL,
+            'hide_empty' => false,
+            'number' => 100,
+            'suppress_filters' => true,
+        ]);
+
+        if (is_array($terms)) {
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    $existingNormalized = $this->normalizeIngredientName($term->name);
+                    if ($existingNormalized === $normalizedName) {
+                        wp_send_json_success(['id' => (int) $term->term_id, 'text' => $term->name]);
+                    }
+                }
+            }
+        }
+
+        $created = wp_insert_term($displayName, self::TAX_UTENSIL);
+        
+        if (is_wp_error($created)) {
+            if ($created->get_error_code() === 'term_exists') {
+                $termId = $created->get_error_data('term_exists');
+                if ($termId) {
+                    $term = get_term($termId, self::TAX_UTENSIL);
+                    if ($term instanceof WP_Term) {
+                        wp_send_json_success(['id' => (int) $term->term_id, 'text' => $term->name]);
+                    }
+                }
+            }
+            
+            wp_send_json_error(['message' => 'create_failed']);
+        }
+        
+        if (!is_array($created) || !isset($created['term_id'])) {
+            wp_send_json_error(['message' => 'create_failed']);
+        }
+
+        wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $displayName]);
+    }
+
     public function renderProductRecipeField(): void
     {
         global $post;
@@ -977,13 +1119,18 @@ class Recipes implements FeatureInterface
         return $originalId ? (int) $originalId : $productId;
     }
 
-    private function resolveOriginalTermId(int $termId): int
+    private function resolveOriginalTermId(int $termId, string $taxonomy = null): int
     {
         if (!defined('ICL_SITEPRESS_VERSION')) {
             return $termId;
         }
+        
+        if ($taxonomy === null) {
+            $taxonomy = self::TAX_INGREDIENT;
+        }
+        
         $defaultLang = apply_filters('wpml_default_language', null);
-        $originalId  = apply_filters('wpml_object_id', $termId, self::TAX_INGREDIENT, true, $defaultLang);
+        $originalId  = apply_filters('wpml_object_id', $termId, $taxonomy, true, $defaultLang);
         return $originalId ? (int) $originalId : $termId;
     }
 
