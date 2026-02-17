@@ -1893,26 +1893,6 @@ class Flowmattic implements FeatureInterface
                 }
             });
             
-            // Handle toggle for automatic actions
-            var automaticToggleBtn = document.getElementById("zs-toggle-automatic-actions");
-            if (automaticToggleBtn) {
-                automaticToggleBtn.addEventListener("click", function() {
-                    var automaticDiv = document.getElementById("zs-automatic-actions");
-                    var icon = this.querySelector(".dashicons");
-                    
-                    if (automaticDiv.style.display === "none") {
-                        automaticDiv.style.display = "block";
-                        icon.classList.remove("dashicons-arrow-right");
-                        icon.classList.add("dashicons-arrow-down");
-                        this.innerHTML = this.innerHTML.replace("Show", "Hide");
-                    } else {
-                        automaticDiv.style.display = "none";
-                        icon.classList.remove("dashicons-arrow-down");
-                        icon.classList.add("dashicons-arrow-right");
-                        this.innerHTML = this.innerHTML.replace("Hide", "Show");
-                    }
-                });
-            }
         });
         </script>';
     }
