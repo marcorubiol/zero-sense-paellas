@@ -514,7 +514,7 @@ class Flowmattic implements FeatureInterface
             echo sprintf(esc_html__('Show %d unavailable actions', 'zero-sense'), count($unavailableTriggers));
             echo '</button>';
             
-            echo '<div id="zs-unavailable-actions" style="display:none;margin-left:16px;">';
+            echo '<div id="zs-unavailable-actions" style="display:none;">';
             foreach ($unavailableTriggers as $trigger) {
                 $buttonText = $trigger['email_config']['description'] ?? $trigger['title'];
                 $availableStates = $trigger['email_config']['manual_states'] ?? [];
