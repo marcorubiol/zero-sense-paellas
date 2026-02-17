@@ -481,7 +481,17 @@ class Recipes implements FeatureInterface
                         if (data && data.newTag === true) {
                             console.log('ZS Recipes: New tag detected, creating ingredient:', data.text);
                             e.preventDefault();
-                            createIngredient(data.text.replace(' (crear nuevo)', ''), element);
+                            e.stopPropagation();
+                            
+                            // Close the dropdown
+                            $(element).select2('close');
+                            
+                            // Clear the temporary selection
+                            $(element).val(null).trigger('change');
+                            
+                            // Create the ingredient
+                            var cleanName = data.text.replace(' (crear nuevo)', '');
+                            createIngredient(cleanName, element);
                         } else {
                             console.log('ZS Recipes: Existing ingredient selected:', data);
                         }
@@ -630,7 +640,17 @@ class Recipes implements FeatureInterface
                         if (data && data.newTag === true) {
                             console.log('ZS Recipes (Utensils): New tag detected, creating utensil:', data.text);
                             e.preventDefault();
-                            createUtensil(data.text.replace(' (crear nuevo)', ''), element);
+                            e.stopPropagation();
+                            
+                            // Close the dropdown
+                            $(element).select2('close');
+                            
+                            // Clear the temporary selection
+                            $(element).val(null).trigger('change');
+                            
+                            // Create the utensil
+                            var cleanName = data.text.replace(' (crear nuevo)', '');
+                            createUtensil(cleanName, element);
                         } else {
                             console.log('ZS Recipes (Utensils): Existing utensil selected:', data);
                         }
