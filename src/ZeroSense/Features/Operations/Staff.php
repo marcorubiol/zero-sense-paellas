@@ -52,6 +52,8 @@ class Staff implements FeatureInterface
         add_action('wp_ajax_zs_update_role_order', [$this, 'ajaxUpdateRoleOrder']);
         add_filter('get_terms_args', [$this, 'orderRoleTerms'], 10, 2);
         add_filter('get_terms', [$this, 'sortRoleTerms'], 10, 3);
+        add_action('pre_delete_term', [$this, 'protectCoreRoles'], 10, 2);
+        add_filter('user_has_cap', [$this, 'preventCoreRoleDeletion'], 10, 3);
     }
     
     public function sortRoleTerms(array $terms, array $taxonomies, array $args): array
@@ -256,6 +258,74 @@ class Staff implements FeatureInterface
         });
         </script>
         <?php
+    }
+
+    /**
+     * Core roles that cannot be deleted (used for material calculations)
+     */
+    private function getCoreRoles(): array
+    {
+        return [
+            'cap-de-bolo',
+            'cuiner-a',
+            'ajudant-a-de-cuina',
+            'cambrer-a-barra',
+            'cockteler-a',
+            'tallador-a-de-pernil',
+        ];
+    }
+    
+    /**
+     * Prevent deletion of core roles
+     */
+    public function protectCoreRoles($term_id, $taxonomy): void
+    {
+        if ($taxonomy !== self::TAX_ROLE) {
+            return;
+        }
+        
+        $term = get_term($term_id, $taxonomy);
+        if (!$term || is_wp_error($term)) {
+            return;
+        }
+        
+        if (in_array($term->slug, $this->getCoreRoles(), true)) {
+            wp_die(
+                __('This role cannot be deleted as it is required for automatic material calculations.', 'zero-sense'),
+                __('Protected Role', 'zero-sense'),
+                ['back_link' => true]
+            );
+        }
+    }
+    
+    /**
+     * Remove delete capability for core roles
+     */
+    public function preventCoreRoleDeletion($allcaps, $caps, $args): array
+    {
+        // Check if this is a delete_term capability check
+        if (!isset($args[0]) || $args[0] !== 'delete_term') {
+            return $allcaps;
+        }
+        
+        // Get term ID from args
+        $term_id = $args[2] ?? 0;
+        if (!$term_id) {
+            return $allcaps;
+        }
+        
+        // Check if it's our taxonomy
+        $term = get_term($term_id);
+        if (!$term || is_wp_error($term) || $term->taxonomy !== self::TAX_ROLE) {
+            return $allcaps;
+        }
+        
+        // Prevent deletion of core roles
+        if (in_array($term->slug, $this->getCoreRoles(), true)) {
+            $allcaps['delete_term'] = false;
+        }
+        
+        return $allcaps;
     }
 
     public function getPriority(): int

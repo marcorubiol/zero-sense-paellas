@@ -72,17 +72,16 @@ class MaterialCalculator
         
         // Roles que necesitan ropa de cocina (xaquetes, bandanes, davantals cuiners)
         $cuinerRoles = [
-            'jefe-de-voluntarios',
-            'cocineros',
-            'ayudantes',
+            'cap-de-bolo',           // Cap de Bolo
+            'cuiner-a',              // Cuiner/a
+            'ajudant-a-de-cuina',    // Ajudant/a de cuina
         ];
         
         // Roles que necesitan ropa de servicio (davantals cambrers)
         $cambrerRoles = [
-            'camareros',
-            'barra',
-            'coqueteles',
-            'tallador-de-pernil',
+            'cambrer-a-barra',       // Cambrer/a - Barra
+            'cockteler-a',           // Cockteler/a
+            'tallador-a-de-pernil',  // Tallador/a de pernil
         ];
         
         // El formato del meta es: [['role' => 'slug', 'staff_id' => id], ...]
