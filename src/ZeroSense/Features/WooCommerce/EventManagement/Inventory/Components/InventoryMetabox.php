@@ -101,8 +101,11 @@ class InventoryMetabox
                     cursor: default;
                 }
                 .zs-inventory-override {
-                    border: 2px solid #ff9800 !important;
-                    background: #fff3e0 !important;
+                    border-left: 3px solid #ff9800 !important;
+                    border-top: 1px solid #ddd !important;
+                    border-right: 1px solid #ddd !important;
+                    border-bottom: 1px solid #ddd !important;
+                    background: white !important;
                 }
                 .zs-inventory-category-header {
                     background: #f0f0f1;
@@ -189,14 +192,14 @@ class InventoryMetabox
                 }
                 .zs-inventory-reset-icon {
                     cursor: pointer;
-                    color: #2271b1;
-                    transition: transform 0.2s ease;
+                    color: #666;
+                    transition: all 0.2s ease;
                     font-size: 16px;
                     line-height: 1;
                 }
                 .zs-inventory-reset-icon:hover {
                     transform: rotate(-45deg);
-                    color: #135e96;
+                    color: #2271b1;
                 }
                 .zs-inventory-reset-icon.hidden {
                     visibility: hidden;
