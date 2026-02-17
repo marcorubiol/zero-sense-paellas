@@ -472,32 +472,38 @@ class Flowmattic implements FeatureInterface
             
             // Check email status for display purposes only (manual buttons are never disabled)
             $emailStatus = $this->getEmailSendStatus($workflowId, $orderId);
-            $statusText = '';
+            $badgeHtml = '';
+            $statusAttr = '';
             
             if ($emailStatus) {
                 switch ($emailStatus) {
                     case self::EMAIL_STATUS_AUTO:
-                        $statusText = '<small class="zs-email-status zs-email-status-auto">✓ ' . esc_html__('Sent automatically', 'zero-sense') . '</small>';
+                        $badgeHtml = '<span class="zs-badge-type zs-badge-auto">AUTO</span>';
+                        $statusAttr = 'auto';
                         break;
                     case self::EMAIL_STATUS_MANUAL:
-                        $statusText = '<small class="zs-email-status zs-email-status-man">✓ ' . esc_html__('Sent manually', 'zero-sense') . '</small>';
+                        $badgeHtml = '<span class="zs-badge-type zs-badge-man">MANUAL</span>';
+                        $statusAttr = 'manual';
                         break;
                     case self::EMAIL_STATUS_ERROR:
-                        $statusText = '<small class="zs-email-status zs-email-status-error">✗ ' . esc_html__('Failed to send', 'zero-sense') . '</small>';
+                        $badgeHtml = '<span class="zs-badge-type zs-badge-error">ERROR</span>';
+                        $statusAttr = 'error';
                         break;
                     case self::EMAIL_STATUS_SKIPPED:
-                        $statusText = '<small class="zs-email-status zs-email-status-skipped">– ' . esc_html__('Skipped (send once)', 'zero-sense') . '</small>';
+                        $badgeHtml = '<span class="zs-badge-type zs-badge-skipped">SKIPPED</span>';
+                        $statusAttr = 'skipped';
                         break;
                 }
             }
             
-            echo '<div class="zs-email-action-item">';
+            $itemClass = 'zs-email-action-item' . ($statusAttr ? ' zs-email-status-' . $statusAttr : '');
+            echo '<div class="' . esc_attr($itemClass) . '">';
             echo '<button type="button" class="zs-btn is-action zs-manual-email-btn ' . esc_attr($buttonCssClass) . '" data-workflow-id="' . esc_attr($workflowId) . '" data-order-id="' . esc_attr($orderId) . '">';
-            echo esc_html($buttonText);
-            echo '</button>';
-            if ($statusText) {
-                echo '<br>' . $statusText;
+            echo '<span class="zs-email-btn-label">' . esc_html($buttonText) . '</span>';
+            if ($badgeHtml) {
+                echo $badgeHtml;
             }
+            echo '</button>';
             echo '</div>';
         }
         
@@ -720,33 +726,37 @@ class Flowmattic implements FeatureInterface
                                     prependLatest();
                                     
                                     // Update button badge in real-time
-                                    const buttonContainer = btn.parentElement;
-                                    let existingBadge = buttonContainer.querySelector('.zs-email-status');
-                                    
-                                    // Create badge HTML based on status
-                                    let badgeHtml = '';
-                                    if (st === 'manual') {
-                                        badgeHtml = '<small class="zs-email-status zs-email-status-man">✓ <?php echo esc_js(__('Sent manually', 'zero-sense')); ?></small>';
-                                    } else if (st === 'auto') {
-                                        badgeHtml = '<small class="zs-email-status zs-email-status-auto">✓ <?php echo esc_js(__('Sent automatically', 'zero-sense')); ?></small>';
-                                    } else if (st === 'error') {
-                                        badgeHtml = '<small class="zs-email-status zs-email-status-error">✗ <?php echo esc_js(__('Failed to send', 'zero-sense')); ?></small>';
-                                    } else if (st === 'skipped') {
-                                        badgeHtml = '<small class="zs-email-status zs-email-status-skipped">– <?php echo esc_js(__('Skipped (send once)', 'zero-sense')); ?></small>';
-                                    }
-                                    
-                                    if (badgeHtml) {
+                                    const wrapper = btn.parentElement;
+                                    let existingBadge = btn.querySelector('.zs-badge-type');
+
+                                    const badgeMap = {
+                                        manual: ['zs-badge-man',     'MANUAL'],
+                                        auto:   ['zs-badge-auto',    'AUTO'],
+                                        error:  ['zs-badge-error',   'ERROR'],
+                                        skipped:['zs-badge-skipped', 'SKIPPED'],
+                                    };
+                                    const statusClassMap = {
+                                        manual: 'zs-email-status-manual',
+                                        auto:   'zs-email-status-auto',
+                                        error:  'zs-email-status-error',
+                                        skipped:'zs-email-status-skipped',
+                                    };
+
+                                    if (badgeMap[st]) {
+                                        const [badgeClass, badgeText] = badgeMap[st];
                                         if (existingBadge) {
-                                            // Update existing badge
-                                            existingBadge.outerHTML = badgeHtml;
+                                            existingBadge.className = 'zs-badge-type ' + badgeClass;
+                                            existingBadge.textContent = badgeText;
                                         } else {
-                                            // Add new badge after button
-                                            const br = document.createElement('br');
-                                            buttonContainer.appendChild(br);
-                                            const temp = document.createElement('div');
-                                            temp.innerHTML = badgeHtml;
-                                            buttonContainer.appendChild(temp.firstChild);
+                                            const span = document.createElement('span');
+                                            span.className = 'zs-badge-type ' + badgeClass;
+                                            span.textContent = badgeText;
+                                            btn.appendChild(span);
                                         }
+                                        // Update wrapper status class
+                                        wrapper.className = wrapper.className
+                                            .replace(/\bzs-email-status-\w+/g, '')
+                                            .trim() + ' ' + statusClassMap[st];
                                     }
                                     
                                     return;

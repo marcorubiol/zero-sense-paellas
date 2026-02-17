@@ -25,7 +25,40 @@
 /* Standalone email action button (outside grid) */
 .zs-manual-email-btn {
     width: 100%;
-    justify-content: center;
+    justify-content: space-between;
+}
+
+/* Label takes remaining space, badge stays right */
+.zs-manual-email-btn .zs-email-btn-label {
+    flex: 1;
+    text-align: center;
+}
+
+/* Error badge — uses existing color token */
+.zs-badge-error {
+    background: color-mix(in srgb, var(--zs-color-error, #DC2626) 12%, white 88%);
+    color: var(--zs-color-error, #DC2626);
+}
+
+/* Wrapper tinting when a status is present */
+.zs-email-action-item.zs-email-status-auto .zs-btn {
+    border-color: color-mix(in srgb, var(--zs-color-auto, #2271b1) 30%, white 70%);
+    background: color-mix(in srgb, var(--zs-color-auto, #2271b1) 5%, white 95%);
+}
+
+.zs-email-action-item.zs-email-status-manual .zs-btn {
+    border-color: color-mix(in srgb, var(--zs-color-manual, #d67136) 30%, white 70%);
+    background: color-mix(in srgb, var(--zs-color-manual, #d67136) 5%, white 95%);
+}
+
+.zs-email-action-item.zs-email-status-error .zs-btn {
+    border-color: color-mix(in srgb, var(--zs-color-error, #DC2626) 30%, white 70%);
+    background: color-mix(in srgb, var(--zs-color-error, #DC2626) 5%, white 95%);
+}
+
+.zs-email-action-item.zs-email-status-skipped .zs-btn {
+    border-color: color-mix(in srgb, var(--zs-color-skip, #374151) 20%, white 80%);
+    background: color-mix(in srgb, var(--zs-color-skip, #374151) 4%, white 96%);
 }
 
 /* Section separator — just a top border, no box */
