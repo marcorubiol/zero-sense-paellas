@@ -138,7 +138,7 @@ class Recipes implements FeatureInterface
     {
         add_meta_box(
             'zs_recipe_ingredients',
-            __('Recipe ingredients', 'zero-sense'),
+            __('Recipe', 'zero-sense'),
             [$this, 'renderRecipeMetabox'],
             self::CPT,
             'normal',
@@ -239,6 +239,7 @@ class Recipes implements FeatureInterface
             }
         </style>
         <div class="zs-recipes-metabox">
+            <h3 style="margin-top:0; margin-bottom:10px; font-size:14px;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
@@ -332,6 +333,7 @@ class Recipes implements FeatureInterface
 
             <!-- Utensils Section (hidden if paella mode is ON) -->
             <div class="zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
+                <h3 style="margin-top:0; margin-bottom:10px; font-size:14px;"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
                 <table class="widefat striped" style="margin-top:8px;">
                     <thead>
                         <tr>
@@ -475,8 +477,9 @@ class Recipes implements FeatureInterface
                         var data = e.params.data;
                         
                         // Check if it's a new tag (not an existing ingredient)
-                        if (data && (data.newTag || String(parseInt(data.id, 10)) !== String(data.id))) {
-                            createIngredient(data.id, element);
+                        if (data && data.newTag === true) {
+                            e.preventDefault();
+                            createIngredient(data.text.replace(' (crear nuevo)', ''), element);
                         }
                     });
                 }
@@ -612,8 +615,10 @@ class Recipes implements FeatureInterface
                     $(element).on('select2:select', function(e) {
                         var data = e.params.data;
                         
-                        if (data && (data.newTag || String(parseInt(data.id, 10)) !== String(data.id))) {
-                            createUtensil(data.id, element);
+                        // Check if it's a new tag (not an existing utensil)
+                        if (data && data.newTag === true) {
+                            e.preventDefault();
+                            createUtensil(data.text.replace(' (crear nuevo)', ''), element);
                         }
                     });
                 }
