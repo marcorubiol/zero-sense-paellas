@@ -115,7 +115,7 @@
     box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
     width: 300px;
     min-width: 300px;
-    max-width: 300px;
+    max-width: 50vw;
 }
 
 .zs-stock-table td.zs-sticky-col {
@@ -123,6 +123,12 @@
     left: 0;
     z-index: 10;
     transform: translateZ(0);
+    overflow: hidden;
+}
+
+.zs-stock-table td.zs-sticky-col > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .zs-stock-table tbody tr:nth-child(even):not(.zs-category-header) td.zs-sticky-col {
