@@ -470,25 +470,32 @@ class InventoryMetabox
                 }
                 .zs-alert-resolve-btn {
                     display: inline-block;
-                    padding: 4px 10px;
-                    background: #2271b1;
+                    padding: 6px 12px;
+                    background: #50575e;
                     color: white;
                     border: none;
                     border-radius: 3px;
-                    font-size: 11px;
+                    font-size: 12px;
                     cursor: pointer;
-                    margin-top: 6px;
+                    white-space: nowrap;
+                    flex-shrink: 0;
                 }
                 .zs-alert-resolve-btn:hover {
-                    background: #135e96;
+                    background: #3c434a;
                 }
                 .zs-alert-notes-input {
-                    width: 100%;
-                    margin-top: 6px;
-                    padding: 6px;
+                    flex: 1;
+                    padding: 6px 8px;
                     border: 1px solid #ddd;
                     border-radius: 3px;
                     font-size: 12px;
+                    min-width: 0;
+                }
+                .zs-alert-resolve-controls {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                    margin-top: 8px;
                 }
                 .zs-alert-undo-btn {
                     color: #2271b1;
@@ -727,40 +734,58 @@ class InventoryMetabox
                                                             <?php endif; ?>
                                                         </div>
                                                     <?php else: ?>
-                                                        <div style="margin-top: 8px; font-size: 12px; color: #666;">
-                                                            <?php if ($materialAlert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
-                                                                <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
-                                                            <?php elseif ($materialAlert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
-                                                                <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
-                                                            <?php else: ?>
-                                                                <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $materialAlert['usage_percent']); ?>
-                                                            <?php endif; ?>
+                                                        <div style="margin-top: 8px; font-size: 12px; color: #666; display: flex; align-items: flex-start; gap: 6px;">
+                                                            <?php
+                                                            $alertIconClass = AlertCalculator::getAlertIcon($materialAlert['alert_type']);
+                                                            $alertCssClass = '';
+                                                            switch ($materialAlert['alert_type']) {
+                                                                case AlertCalculator::ALERT_CRITICAL:
+                                                                    $alertCssClass = 'alert-critical';
+                                                                    break;
+                                                                case AlertCalculator::ALERT_MAX_CAPACITY:
+                                                                    $alertCssClass = 'alert-max-capacity';
+                                                                    break;
+                                                                case AlertCalculator::ALERT_LOW_STOCK:
+                                                                    $alertCssClass = 'alert-low-stock';
+                                                                    break;
+                                                            }
+                                                            ?>
+                                                            <span class="dashicons <?php echo $alertIconClass; ?> <?php echo $alertCssClass; ?>" style="flex-shrink: 0; margin-top: 2px;"></span>
+                                                            <div style="flex: 1;">
+                                                                <?php if ($materialAlert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
+                                                                    <?php printf(__('Insufficient stock: %d units needed in total for all events on this day, only %d available', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
+                                                                <?php elseif ($materialAlert['alert_type'] === AlertCalculator::ALERT_MAX_CAPACITY): ?>
+                                                                    <?php printf(__('Max capacity reached: %d/%d units used for all events on this day', 'zero-sense'), $materialAlert['total_needed'], $materialAlert['total_stock']); ?>
+                                                                <?php else: ?>
+                                                                    <?php printf(__('Low stock: %d%% capacity used', 'zero-sense'), $materialAlert['usage_percent']); ?>
+                                                                <?php endif; ?>
                                                             
-                                                            <?php if (!empty($materialAlert['conflicts'])): ?>
-                                                                <div style="margin-top: 4px;">
-                                                                    <?php _e('Conflicts with other orders:', 'zero-sense'); ?>
-                                                                    <?php foreach ($materialAlert['conflicts'] as $idx => $conflict): ?>
-                                                                        <?php if ($idx > 0) echo ', '; ?>
-                                                                        <a href="<?php echo esc_url(admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')); ?>" 
-                                                                           target="_blank" 
-                                                                           style="color: #2271b1;">
-                                                                            #<?php echo $conflict['order_id']; ?>
-                                                                        </a>
-                                                                    <?php endforeach; ?>
+                                                                <?php if (!empty($materialAlert['conflicts'])): ?>
+                                                                    <div style="margin-top: 4px;">
+                                                                        <?php _e('Conflicts with other orders:', 'zero-sense'); ?>
+                                                                        <?php foreach ($materialAlert['conflicts'] as $idx => $conflict): ?>
+                                                                            <?php if ($idx > 0) echo ', '; ?>
+                                                                            <a href="<?php echo esc_url(admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')); ?>" 
+                                                                               target="_blank" 
+                                                                               style="color: #2271b1;">
+                                                                                #<?php echo $conflict['order_id']; ?>
+                                                                            </a>
+                                                                        <?php endforeach; ?>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                                
+                                                                <div class="zs-alert-resolve-controls">
+                                                                    <input type="text" 
+                                                                           class="zs-alert-notes-input" 
+                                                                           placeholder="<?php esc_attr_e('Notes (optional): e.g., Rented 2 extra units...', 'zero-sense'); ?>"
+                                                                           data-material-key="<?php echo esc_attr($materialKey); ?>">
+                                                                    <button type="button" 
+                                                                            class="zs-alert-resolve-btn"
+                                                                            data-order-id="<?php echo esc_attr($postId); ?>"
+                                                                            data-material-key="<?php echo esc_attr($materialKey); ?>">
+                                                                        ✓ <?php _e('Mark as Resolved', 'zero-sense'); ?>
+                                                                    </button>
                                                                 </div>
-                                                            <?php endif; ?>
-                                                            
-                                                            <div style="margin-top: 6px;">
-                                                                <input type="text" 
-                                                                       class="zs-alert-notes-input" 
-                                                                       placeholder="<?php esc_attr_e('Notes (optional): e.g., Rented 2 extra units...', 'zero-sense'); ?>"
-                                                                       data-material-key="<?php echo esc_attr($materialKey); ?>">
-                                                                <button type="button" 
-                                                                        class="zs-alert-resolve-btn"
-                                                                        data-order-id="<?php echo esc_attr($postId); ?>"
-                                                                        data-material-key="<?php echo esc_attr($materialKey); ?>">
-                                                                    ✓ <?php _e('Mark as Resolved', 'zero-sense'); ?>
-                                                                </button>
                                                             </div>
                                                         </div>
                                                     <?php endif; ?>
