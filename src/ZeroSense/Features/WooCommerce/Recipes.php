@@ -488,24 +488,21 @@ class Recipes implements FeatureInterface
                         }
                     });
                     
-                    $(element).on('select2:select', function(e) {
-                        var data = e.params.data;
-                        console.log('ZS Recipes: select2:select event fired', data);
+                    $(element).on('change', function(e) {
+                        var val = $(this).val();
+                        console.log('ZS Recipes: Select changed, value:', val);
                         
-                        // Check if it's a new tag (not an existing ingredient)
-                        if (data && data.newTag === true) {
-                            console.log('ZS Recipes: New tag detected, creating ingredient:', data.text);
+                        // Check if value is a string (new tag) instead of numeric ID
+                        if (val && isNaN(val)) {
+                            console.log('ZS Recipes: Non-numeric value detected (new tag):', val);
                             
-                            // Get the clean name
-                            var cleanName = data.text.replace(' (crear nuevo)', '');
+                            // Clear the select
+                            $(element).val(null).trigger('change.select2');
                             
-                            // Clear the select immediately
-                            $(element).val(null).trigger('change');
-                            
-                            // Create the ingredient via AJAX
-                            createIngredient(cleanName, element);
+                            // Create the ingredient
+                            createIngredient(val, element);
                         } else {
-                            console.log('ZS Recipes: Existing ingredient selected:', data);
+                            console.log('ZS Recipes: Existing ingredient ID selected:', val);
                         }
                     });
                 }
@@ -657,24 +654,21 @@ class Recipes implements FeatureInterface
                         }
                     });
                     
-                    $(element).on('select2:select', function(e) {
-                        var data = e.params.data;
-                        console.log('ZS Recipes (Utensils): select2:select event fired', data);
+                    $(element).on('change', function(e) {
+                        var val = $(this).val();
+                        console.log('ZS Recipes (Utensils): Select changed, value:', val);
                         
-                        // Check if it's a new tag (not an existing utensil)
-                        if (data && data.newTag === true) {
-                            console.log('ZS Recipes (Utensils): New tag detected, creating utensil:', data.text);
+                        // Check if value is a string (new tag) instead of numeric ID
+                        if (val && isNaN(val)) {
+                            console.log('ZS Recipes (Utensils): Non-numeric value detected (new tag):', val);
                             
-                            // Get the clean name
-                            var cleanName = data.text.replace(' (crear nuevo)', '');
+                            // Clear the select
+                            $(element).val(null).trigger('change.select2');
                             
-                            // Clear the select immediately
-                            $(element).val(null).trigger('change');
-                            
-                            // Create the utensil via AJAX
-                            createUtensil(cleanName, element);
+                            // Create the utensil
+                            createUtensil(val, element);
                         } else {
-                            console.log('ZS Recipes (Utensils): Existing utensil selected:', data);
+                            console.log('ZS Recipes (Utensils): Existing utensil ID selected:', val);
                         }
                     });
                 }
