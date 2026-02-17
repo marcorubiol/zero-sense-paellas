@@ -27,11 +27,15 @@ class InventoryMetabox
      */
     public function addMetabox(): void
     {
+        $screen = wc_get_container()->get(\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class)->custom_orders_table_usage_is_enabled()
+            ? wc_get_page_screen_id('shop-order')
+            : 'shop_order';
+        
         add_meta_box(
             'zs_inventory_materials',
             __('Inventory & Materials', 'zero-sense'),
             [$this, 'render'],
-            'shop_order',
+            $screen,
             'normal',
             'high'
         );
