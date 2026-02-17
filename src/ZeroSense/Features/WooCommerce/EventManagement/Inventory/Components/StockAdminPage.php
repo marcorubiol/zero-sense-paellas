@@ -82,9 +82,35 @@ class StockAdminPage
         
         // Obtener materiales
         $materials = MaterialDefinitions::getAll();
+        $parentCategories = MaterialDefinitions::getParentCategories();
+        
+        // Agrupar por parent_category
+        $groupedByParent = [];
+        foreach ($materials as $material) {
+            $parentCat = $material['parent_category'] ?? 'altres';
+            if (!isset($groupedByParent[$parentCat])) {
+                $groupedByParent[$parentCat] = [];
+            }
+            $groupedByParent[$parentCat][] = $material;
+        }
         
         // Obtener stock actual
         $stock = StockManager::getAllStockMatrix();
+        
+        // Labels de categorías
+        $categoryLabels = [
+            'paelles' => 'Paelles',
+            'cremadors' => 'Cremadors',
+            'equipament_cuina' => 'Equipament de Cuina',
+            'roba_personal' => 'Roba i Vestimenta',
+            'textils_neteja' => 'Textils i Neteja',
+            'caixes_contenidors' => 'Caixes i Contenidors',
+            'refrigeracio' => 'Refrigeració',
+            'utensilis_servir' => 'Utensilis per Servir',
+            'mobiliari_esdeveniments' => 'Mobiliari i Esdeveniments',
+            'vaixella_menatge' => 'Vaixella i Menatge',
+            'altres' => 'Altres',
+        ];
         
         ?>
         <div class="wrap zs-stock-admin-page">
@@ -137,58 +163,54 @@ class StockAdminPage
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
-                        $currentCategory = '';
-                        foreach ($materials as $material): 
-                            // Mostrar header de categoría si cambia
-                            if ($currentCategory !== $material['category']):
-                                $currentCategory = $material['category'];
-                                $categoryLabels = [
-                                    'paelles' => 'Paelles',
-                                    'cremadors' => 'Cremadors',
-                                    'equipament_cuina' => 'Equipament de Cuina',
-                                    'roba_personal' => 'Roba i Vestimenta',
-                                    'textils_neteja' => 'Textils i Neteja',
-                                    'caixes_contenidors' => 'Caixes i Contenidors',
-                                    'refrigeracio' => 'Refrigeració',
-                                    'utensilis_servir' => 'Utensilis per Servir',
-                                    'mobiliari_esdeveniments' => 'Mobiliari i Esdeveniments',
-                                    'vaixella_menatge' => 'Vaixella i Menatge',
-                                    'altres' => 'Altres',
-                                ];
-                                $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
-                        ?>
-                            <tr class="zs-category-header">
+                        <?php foreach ($groupedByParent as $parentKey => $materialsInParent): ?>
+                            <!-- Parent Category Header -->
+                            <tr class="zs-parent-category-header">
                                 <td colspan="<?php echo count($serviceAreas) + 1; ?>">
-                                    <?php echo esc_html($categoryLabel); ?>
+                                    <strong><?php echo esc_html($parentCategories[$parentKey] ?? $parentKey); ?></strong>
                                 </td>
                             </tr>
-                        <?php endif; ?>
-                        
-                            <tr data-material="<?php echo esc_attr($material['key']); ?>" data-category="<?php echo esc_attr($material['category']); ?>">
-                                <td class="zs-sticky-col">
-                                    <strong><?php echo esc_html($material['label']); ?></strong>
-                                    <?php if (!empty($material['description'])): ?>
-                                        <br><small style="color: #666; font-weight: normal;"><?php echo esc_html($material['description']); ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <?php foreach ($serviceAreas as $area): ?>
-                                    <?php
-                                    $key = $material['key'] . '|' . $area->term_id;
-                                    $quantity = $stock[$key] ?? 0;
-                                    ?>
-                                    <td>
-                                        <input 
-                                            type="number" 
-                                            class="stock-input"
-                                            data-key="<?php echo esc_attr($key); ?>"
-                                            value="<?php echo esc_attr($quantity); ?>"
-                                            min="0"
-                                            disabled
-                                        />
+                            
+                            <?php 
+                            $currentCategory = '';
+                            foreach ($materialsInParent as $material): 
+                                // Mostrar header de categoría si cambia
+                                if ($currentCategory !== $material['category']):
+                                    $currentCategory = $material['category'];
+                                    $categoryLabel = $categoryLabels[$currentCategory] ?? ucfirst($currentCategory);
+                            ?>
+                                <tr class="zs-category-header">
+                                    <td colspan="<?php echo count($serviceAreas) + 1; ?>">
+                                        <?php echo esc_html($categoryLabel); ?>
                                     </td>
-                                <?php endforeach; ?>
-                            </tr>
+                                </tr>
+                            <?php endif; ?>
+                            
+                                <tr data-material="<?php echo esc_attr($material['key']); ?>" data-category="<?php echo esc_attr($material['category']); ?>" data-parent="<?php echo esc_attr($parentKey); ?>">
+                                    <td class="zs-sticky-col">
+                                        <strong><?php echo esc_html($material['label']); ?></strong>
+                                        <?php if (!empty($material['description'])): ?>
+                                            <br><small style="color: #666; font-weight: normal;"><?php echo esc_html($material['description']); ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <?php foreach ($serviceAreas as $area): ?>
+                                        <?php
+                                        $key = $material['key'] . '|' . $area->term_id;
+                                        $quantity = $stock[$key] ?? 0;
+                                        ?>
+                                        <td>
+                                            <input 
+                                                type="number" 
+                                                class="stock-input"
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                value="<?php echo esc_attr($quantity); ?>"
+                                                min="0"
+                                                disabled
+                                            />
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
