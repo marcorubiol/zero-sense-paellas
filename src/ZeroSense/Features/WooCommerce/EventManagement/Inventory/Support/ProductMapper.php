@@ -28,6 +28,11 @@ class ProductMapper
     private static $termIdsCache = [];
     
     /**
+     * Cache de análisis de pedidos (para evitar inconsistencias en múltiples llamadas)
+     */
+    private static $analysisCache = [];
+    
+    /**
      * Analiza order items usando LÓGICA WATERFALL:
      * 1. Recetas (preciso para comida)
      * 2. Categorías (fallback para servicios)
@@ -37,6 +42,14 @@ class ProductMapper
      */
     public static function analyzeOrder(WC_Order $order): array
     {
+        $orderId = $order->get_id();
+        
+        // Return cached result if available (same request)
+        if (isset(self::$analysisCache[$orderId])) {
+            error_log('   📦 Using cached analysis for Order #' . $orderId);
+            return self::$analysisCache[$orderId];
+        }
+        
         $result = [
             'has_entrants' => false,
             'has_barra_lliure' => false,
@@ -140,6 +153,9 @@ class ProductMapper
                 $result['has_entrants'] = true;
             }
         }
+        
+        // Cache result for this request
+        self::$analysisCache[$orderId] = $result;
         
         return $result;
     }
