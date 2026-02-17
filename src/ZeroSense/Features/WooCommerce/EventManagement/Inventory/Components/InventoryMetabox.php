@@ -19,7 +19,8 @@ class InventoryMetabox
     public function register(): void
     {
         add_action('add_meta_boxes', [$this, 'addMetabox']);
-        add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20, 2);
+        // Priority 50: Run AFTER WooCommerce saves order items (priority 10-40)
+        add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 50, 2);
         add_action('wp_ajax_zs_save_inventory', [$this, 'ajaxSave']);
     }
     
