@@ -22,7 +22,7 @@ class StockAdminPage
     public function addMenuPage(): void
     {
         add_submenu_page(
-            'zs-event-operations',
+            'event-operations',
             __('Stock Management', 'zero-sense'),
             __('Stock Management', 'zero-sense'),
             'manage_woocommerce',

@@ -37,9 +37,12 @@ class Bootstrap
     
     private function initializeInventorySystem(): void
     {
-        // Create database tables on plugin activation
-        register_activation_hook(__FILE__, function() {
-            Schema::createTables();
+        // Create database tables if they don't exist
+        add_action('admin_init', function() {
+            if (get_option('zs_inventory_tables_created') !== '1.0.0') {
+                Schema::createTables();
+                update_option('zs_inventory_tables_created', '1.0.0');
+            }
         });
     }
 
