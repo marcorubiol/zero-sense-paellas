@@ -431,23 +431,27 @@ class Recipes implements FeatureInterface
                 }
                 
                 if (!$(element).data('select2')) {
-    $(element).selectWoo({
+                    console.log('ZS Recipes: Initializing SelectWoo on element:', element);
+                    $(element).selectWoo({
                         width: '100%',
                         tags: true,
                         tokenSeparators: [','],
                         createTag: function(params) {
                             var term = $.trim(params.term);
+                            console.log('ZS Recipes: createTag called with term:', term);
                             if (term === '') {
                                 return null;
                             }
-                            return {
+                            var tag = {
                                 id: term,
                                 text: term + ' (crear nuevo)',
                                 newTag: true
                             };
+                            console.log('ZS Recipes: Created tag:', tag);
+                            return tag;
                         },
                         insertTag: function(data, tag) {
-                            // Insert the tag at the end of the results
+                            console.log('ZS Recipes: insertTag called. Tag:', tag, 'Data length:', data.length);
                             data.push(tag);
                         },
                         ajax: {
@@ -488,9 +492,35 @@ class Recipes implements FeatureInterface
                         }
                     });
                     
+                    // Log ALL possible Select2/SelectWoo events
+                    $(element).on('select2:opening', function(e) {
+                        console.log('ZS Recipes: EVENT select2:opening');
+                    });
+                    $(element).on('select2:open', function(e) {
+                        console.log('ZS Recipes: EVENT select2:open');
+                    });
+                    $(element).on('select2:closing', function(e) {
+                        console.log('ZS Recipes: EVENT select2:closing');
+                    });
+                    $(element).on('select2:close', function(e) {
+                        console.log('ZS Recipes: EVENT select2:close');
+                    });
+                    $(element).on('select2:selecting', function(e) {
+                        console.log('ZS Recipes: EVENT select2:selecting', e.params);
+                    });
+                    $(element).on('select2:select', function(e) {
+                        console.log('ZS Recipes: EVENT select2:select', e.params);
+                    });
+                    $(element).on('select2:unselecting', function(e) {
+                        console.log('ZS Recipes: EVENT select2:unselecting', e.params);
+                    });
+                    $(element).on('select2:unselect', function(e) {
+                        console.log('ZS Recipes: EVENT select2:unselect', e.params);
+                    });
+                    
                     $(element).on('change', function(e) {
                         var val = $(this).val();
-                        console.log('ZS Recipes: Select changed, value:', val);
+                        console.log('ZS Recipes: EVENT change, value:', val, 'Type:', typeof val);
                         
                         // Check if value is a string (new tag) instead of numeric ID
                         if (val && isNaN(val)) {
