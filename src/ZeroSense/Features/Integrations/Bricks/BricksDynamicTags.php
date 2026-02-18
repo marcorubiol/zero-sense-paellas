@@ -3109,51 +3109,47 @@ class BricksDynamicTags implements FeatureInterface
             $roleNames[$term->slug] = $term->name;
         }
 
-        // Build HTML output
-        $html = '<div class="zs-event-staff-list">';
-        
+        // Build HTML output — one fdr-card__field per role
+        $html = '';
+
         foreach ($staffByRole as $roleSlug => $staffIds) {
             $roleName = $roleNames[$roleSlug] ?? ucfirst(str_replace('-', ' ', $roleSlug));
-            
-            $html .= '<div class="zs-staff-role-group">';
-            $html .= '<h4 class="zs-staff-role-title">' . esc_html($roleName) . '</h4>';
-            $html .= '<ul class="zs-staff-members">';
-            
+
+            $members = [];
             foreach ($staffIds as $staffId) {
                 $staffPost = get_post($staffId);
                 if (!$staffPost) {
                     continue;
                 }
-                
-                $name = $staffPost->post_title;
+
+                $name  = esc_html($staffPost->post_title);
                 $phone = get_post_meta($staffId, 'zs_staff_phone', true);
                 $email = get_post_meta($staffId, 'zs_staff_email', true);
-                
-                $html .= '<li class="zs-staff-member">';
-                $html .= '<span class="zs-staff-name">' . esc_html($name) . '</span>';
-                
+
+                $contact = '';
                 if ($phone || $email) {
-                    $html .= ' <span class="zs-staff-contact">(';
+                    $parts = [];
                     if ($phone) {
-                        $html .= '<a href="tel:' . esc_attr($phone) . '" class="zs-staff-phone">' . esc_html($phone) . '</a>';
-                    }
-                    if ($phone && $email) {
-                        $html .= ', ';
+                        $parts[] = '<a href="tel:' . esc_attr($phone) . '" class="zs-staff-phone">' . esc_html($phone) . '</a>';
                     }
                     if ($email) {
-                        $html .= '<a href="mailto:' . esc_attr($email) . '" class="zs-staff-email">' . esc_html($email) . '</a>';
+                        $parts[] = '<a href="mailto:' . esc_attr($email) . '" class="zs-staff-email">' . esc_html($email) . '</a>';
                     }
-                    $html .= ')</span>';
+                    $contact = ' <span class="zs-staff-contact">(' . implode(', ', $parts) . ')</span>';
                 }
-                
-                $html .= '</li>';
+
+                $members[] = '<span class="zs-staff-name">' . $name . '</span>' . $contact;
             }
-            
-            $html .= '</ul>';
+
+            if (empty($members)) {
+                continue;
+            }
+
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($roleName) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . implode('<br>', $members) . '</span>';
             $html .= '</div>';
         }
-        
-        $html .= '</div>';
 
         return $html;
     }
