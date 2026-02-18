@@ -784,19 +784,19 @@ class BricksDynamicTags implements FeatureInterface
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
-            return '[DEBUG: order not found for id=' . $orderId . ']';
+            return '';
         }
 
         $schemaRegistry = SchemaRegistry::getInstance();
         $schema = $schemaRegistry->get($schemaKey);
         
         if ($schema === null) {
-            return '[DEBUG: schema "' . $schemaKey . '" not registered]';
+            return '';
         }
         
         $schemaData = $schema->getSchema();
         if (!is_array($schemaData) || $schemaData === []) {
-            return '[DEBUG: schemaData empty for "' . $schemaKey . '"]';
+            return '';
         }
 
         $metaKey = $schema->getMetaKey();
@@ -805,7 +805,7 @@ class BricksDynamicTags implements FeatureInterface
             $savedData = [];
         }
 
-        $html = '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">[DEBUG: ' . $schemaKey . ' loaded, ' . count($schemaData) . ' fields, savedData keys: ' . implode(', ', array_keys($savedData)) . ']</span></div>';
+        $html = '';
         
         foreach ($schemaData as $row) {
             if (!is_array($row)) {
