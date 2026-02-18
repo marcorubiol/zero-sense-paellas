@@ -756,6 +756,13 @@ class Recipes implements FeatureInterface
         }
 
         if ($screen->post_type === self::CPT) {
+            wp_enqueue_style(
+                'zs-admin-metaboxes',
+                plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/css/admin-metaboxes.css',
+                [],
+                '1.0'
+            );
+
             // Force enqueue WooCommerce styles
             wp_enqueue_style('woocommerce_admin_styles');
             
