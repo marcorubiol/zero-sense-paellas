@@ -248,33 +248,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Manual',
-            ],
-
-            // LOGÍSTICA — mobiliari
-            [
-                'key' => 'para_sols',
-                'label' => 'Para-sols',
-                'category' => 'mobiliari',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => 'Manual',
-            ],
-            [
-                'key' => 'carpa',
-                'label' => 'Carpa',
-                'category' => 'mobiliari',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => 'Manual',
-            ],
-            [
-                'key' => 'illuminacio',
-                'label' => 'Il·luminació',
-                'category' => 'mobiliari',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => 'Manual',
+                'description' => 'Càlcul automàtic: 1 cada 30 persones',
             ],
 
             // TEXTIL — roba personal

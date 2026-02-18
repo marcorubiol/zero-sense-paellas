@@ -282,6 +282,8 @@ class MaterialCalculator
             $result['caixa_gris_gran_extra'] = 1;
         }
         
+        $result['neveres_portatils'] = (int) ceil($guests / 30);
+        
         return $result;
     }
     
