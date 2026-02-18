@@ -38,7 +38,7 @@ class MaterialDefinitions
                 'category' => 'equipament_pesant',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per event',
+                'description' => '1 per event',
             ],
 
             // MATÈRIA PESADA — paelles
@@ -148,7 +148,7 @@ class MaterialDefinitions
                 'category' => 'equipament_pesant',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per cremador',
+                'description' => '1 per cremador',
             ],
             [
                 'key' => 'buta',
@@ -156,7 +156,7 @@ class MaterialDefinitions
                 'category' => 'equipament_pesant',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per cremador + 1 extra si >60pax',
+                'description' => '1 per cremador + 1 extra si >60pax',
             ],
 
             // LOGÍSTICA — cuina
@@ -174,7 +174,7 @@ class MaterialDefinitions
                 'category' => 'logistica_cuina',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per varietat de paella',
+                'description' => '1 per varietat de paella',
             ],
             [
                 'key' => 'catifes',
@@ -182,7 +182,7 @@ class MaterialDefinitions
                 'category' => 'logistica_cuina',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per paella',
+                'description' => '1 per paella',
             ],
             [
                 'key' => 'poals_fems',
@@ -190,7 +190,7 @@ class MaterialDefinitions
                 'category' => 'logistica_cuina',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 cada 20pax',
+                'description' => '1 cada 20pax',
             ],
             [
                 'key' => 'vitro_cremadors',
@@ -198,7 +198,7 @@ class MaterialDefinitions
                 'category' => 'logistica_cuina',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per paella',
+                'description' => '1 per paella',
             ],
 
             // LOGÍSTICA — caixes
@@ -208,7 +208,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per event',
+                'description' => '1 per event',
             ],
             [
                 'key' => 'caixa_gris_mitjana_paravents',
@@ -216,7 +216,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per event',
+                'description' => '1 per event',
             ],
             [
                 'key' => 'caixa_gris_petita_neteja',
@@ -224,7 +224,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per event',
+                'description' => '1 per event',
             ],
             [
                 'key' => 'caixa_marro_especies',
@@ -232,7 +232,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per event',
+                'description' => '1 per event',
             ],
             [
                 'key' => 'caixa_gris_gran_extra',
@@ -240,7 +240,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 si >60 persones',
+                'description' => '1 si >60 persones',
             ],
             [
                 'key' => 'neveres_portatils',
@@ -248,7 +248,7 @@ class MaterialDefinitions
                 'category' => 'caixes',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 cada 30 persones',
+                'description' => '1 cada 30 persones',
             ],
 
             // TEXTIL — roba personal
@@ -258,7 +258,7 @@ class MaterialDefinitions
                 'category' => 'roba_personal',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per cuiner assignat',
+                'description' => '1 per cuiner assignat',
             ],
             [
                 'key' => 'bandanes',
@@ -266,7 +266,7 @@ class MaterialDefinitions
                 'category' => 'roba_personal',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per cuiner assignat',
+                'description' => '1 per cuiner assignat',
             ],
             [
                 'key' => 'davantals_cuiners',
@@ -274,7 +274,7 @@ class MaterialDefinitions
                 'category' => 'roba_personal',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per cuiner assignat',
+                'description' => '1 per cuiner assignat',
             ],
             [
                 'key' => 'davantals_cambrers',
@@ -282,7 +282,7 @@ class MaterialDefinitions
                 'category' => 'roba_personal',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 per cambrer assignat',
+                'description' => '1 per cambrer assignat',
             ],
 
             // TEXTIL — teixits i neteja
@@ -292,7 +292,7 @@ class MaterialDefinitions
                 'category' => 'textils_neteja',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: 1 cada 15pax + 1 extra',
+                'description' => '1 cada 15pax + 1 extra',
             ],
             [
                 'key' => 'teles_negres',
@@ -300,7 +300,7 @@ class MaterialDefinitions
                 'category' => 'textils_neteja',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: mateix nombre que taules treball',
+                'description' => 'mateix nombre que taules treball',
             ],
             [
                 'key' => 'estovalles',
@@ -308,7 +308,7 @@ class MaterialDefinitions
                 'category' => 'textils_neteja',
                 'parent_category' => 'textil',
                 'unit' => 'u',
-                'description' => 'Càlcul automàtic: mateix nombre que taules treball',
+                'description' => 'mateix nombre que taules treball',
             ],
         ];
     }
