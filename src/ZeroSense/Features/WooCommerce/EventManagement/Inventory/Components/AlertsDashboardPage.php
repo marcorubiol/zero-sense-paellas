@@ -66,13 +66,6 @@ class AlertsDashboardPage
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
-        $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))));
-        wp_enqueue_script('zs-alerts-dashboard', $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/alerts-dashboard.js', ['jquery'], '1.0.0', true);
-        wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
-            'nonce'   => wp_create_nonce('zs_dismiss_inventory_alert'),
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-        ]);
-
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
         $orderIds = AlertCalculator::getOrderIdsWithReservations(7, 60);
         $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses) {
@@ -235,6 +228,44 @@ class AlertsDashboardPage
             .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
             .zs-alert-badge .zs-dismiss-alert:hover { color: #dc3545; }
         </style>
+        <script>
+        console.log('[ZS Alerts] Inline script running');
+        jQuery(function($) {
+            console.log('[ZS Alerts] jQuery ready');
+            var nonce = '<?php echo esc_js(wp_create_nonce('zs_dismiss_inventory_alert')); ?>';
+            var ajaxUrl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
+
+            $(document).on('click', '.zs-dismiss-alert', function(e) {
+                e.preventDefault();
+                console.log('[ZS Alerts] Dismiss clicked');
+                var $badge = $(this).closest('.zs-alert-badge');
+                var orderId = $badge.data('order');
+                var materialKey = $badge.data('material');
+                console.log('[ZS Alerts] order_id:', orderId, 'material_key:', materialKey);
+                $badge.css('opacity', 0.4);
+                $.post(ajaxUrl, {
+                    action: 'zs_dismiss_inventory_alert',
+                    nonce: nonce,
+                    order_id: orderId,
+                    material_key: materialKey
+                }, function(res) {
+                    console.log('[ZS Alerts] Response:', res);
+                    if (res.success) {
+                        var $row = $badge.closest('tr');
+                        $badge.remove();
+                        if ($row.find('.zs-alert-badge').length === 0) {
+                            $row.fadeOut(200, function() { $(this).remove(); });
+                        }
+                    } else {
+                        $badge.css('opacity', 1);
+                    }
+                }).fail(function(xhr, status, error) {
+                    console.error('[ZS Alerts] AJAX failed:', status, error, xhr.responseText);
+                    $badge.css('opacity', 1);
+                });
+            });
+        });
+        </script>
         <?php
     }
 }
