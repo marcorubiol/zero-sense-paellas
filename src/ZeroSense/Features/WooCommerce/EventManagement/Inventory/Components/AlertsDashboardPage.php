@@ -228,6 +228,42 @@ class AlertsDashboardPage
             .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
             .zs-alert-badge .zs-dismiss-alert:hover { color: #dc3545; }
         </style>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                var btn = e.target.closest('.zs-dismiss-alert');
+                if (!btn) return;
+                e.preventDefault();
+                var badge = btn.closest('.zs-alert-badge');
+                var orderId = badge.dataset.order;
+                var materialKey = badge.dataset.material;
+                badge.style.opacity = '0.4';
+                var formData = new FormData();
+                formData.append('action', 'zs_dismiss_inventory_alert');
+                formData.append('nonce', '<?php echo esc_js(wp_create_nonce('zs_dismiss_inventory_alert')); ?>');
+                formData.append('order_id', orderId);
+                formData.append('material_key', materialKey);
+                fetch('<?php echo esc_js(admin_url('admin-ajax.php')); ?>', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.success) {
+                        var row = badge.closest('tr');
+                        badge.remove();
+                        if (row && !row.querySelector('.zs-alert-badge')) {
+                            row.remove();
+                        }
+                    } else {
+                        badge.style.opacity = '1';
+                    }
+                })
+                .catch(function() { badge.style.opacity = '1'; });
+            });
+        });
+        </script>
         <?php
     }
 }
