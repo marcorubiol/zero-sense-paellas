@@ -278,6 +278,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_order_language_name}',         'label' => 'Order Language (Full Name)',    'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_intolerances}',                'label' => 'Intolerances & Allergies',      'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_recipes}',               'label' => 'Order Recipes (Detailed with Products)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_recipes_card}',          'label' => 'Order Recipes (Card fields — label/value per recipe)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_recipes_simple}',        'label' => 'Order Recipes (Simple List)',   'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_has_recipes}',           'label' => 'Order Has Recipes (1/0)',       'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_ingredients_total}',     'label' => 'Order Ingredients (Total Calculated)', 'group' => 'ZeroSense'];
@@ -452,6 +453,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_order_recipes}') {
             return $this->getOrderRecipes($post);
         }
+        if ($tag === '{zs_order_recipes_card}') {
+            return $this->getOrderRecipesCard($post);
+        }
         if ($tag === '{zs_order_recipes_simple}') {
             return $this->getOrderRecipesSimple($post);
         }
@@ -533,6 +537,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
         $content = str_replace('{zs_intolerances}',                $this->getMetaBoxFieldValue('intolerances', $post), $content);
         $content = str_replace('{zs_order_recipes}',               $this->getOrderRecipes($post),         $content);
+        $content = str_replace('{zs_order_recipes_card}',            $this->getOrderRecipesCard($post),     $content);
         $content = str_replace('{zs_order_recipes_simple}',        $this->getOrderRecipesSimple($post),   $content);
         $content = str_replace('{zs_order_has_recipes}',           $this->getOrderHasRecipes($post),      $content);
         $content = str_replace('{zs_order_ingredients_total}',     $this->getOrderIngredientsTotal($post), $content);
@@ -2112,6 +2117,105 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return implode(', ', $recipeNames);
+    }
+
+    /**
+     * Get recipes as fdr-card__field blocks (label = recipe name, value = ingredients inline)
+     */
+    private function getOrderRecipesCard($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Recipes Card');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $recipeGroups = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+            if (!isset($recipeGroups[$recipeId])) {
+                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
+            }
+            $recipeGroups[$recipeId]['total_qty'] += $qty;
+            $sumQty += $qty;
+        }
+
+        if (empty($recipeGroups) || $sumQty <= 0) {
+            return '';
+        }
+
+        $html = '';
+
+        foreach ($recipeGroups as $recipeId => $group) {
+            $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            $parts = [];
+
+            if (is_array($recipeIngredients)) {
+                foreach ($recipeIngredients as $ingRow) {
+                    if (!is_array($ingRow)) {
+                        continue;
+                    }
+                    $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                    $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                    $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+
+                    if ($termId <= 0 || $perPax <= 0 || $unit === '') {
+                        continue;
+                    }
+
+                    $amount = $eqItem * $perPax;
+                    if ($amount <= 0) {
+                        continue;
+                    }
+
+                    $normalized = $this->normalizeUnit($amount, $unit);
+                    $name = $this->getTranslatedIngredientName($termId, $orderLanguage);
+                    $parts[] = esc_html($name) . ' ' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']);
+                }
+            }
+
+            $value = !empty($parts) ? implode(' · ', $parts) : '—';
+
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($group['title']) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . $value . '</span>';
+            $html .= '</div>';
+        }
+
+        return $html;
     }
 
     /**
