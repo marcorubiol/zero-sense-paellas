@@ -2971,12 +2971,12 @@ class BricksDynamicTags implements FeatureInterface
         $orderLanguage = $this->getOrderLanguageCode($order);
         $eqTotal = $this->getEquivalentPax($order);
         if ($eqTotal <= 0) {
-            return '';
+            return '[DEBUG utensils: eqTotal=0]';
         }
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
-            return '';
+            return '[DEBUG utensils: no line items]';
         }
 
         $eligible = [];
@@ -3007,7 +3007,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if (empty($eligible) || $sumQty <= 0) {
-            return '';
+            return '[DEBUG utensils: no eligible items (products without recipe_id)]';
         }
 
         $totals = [];
@@ -3054,7 +3054,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if (empty($totals)) {
-            return '';
+            return '[DEBUG utensils: eligible=' . count($eligible) . ' but totals empty — recipes have no utensils, meta=' . self::META_RECIPE_UTENSILS . ']';
         }
 
         usort($totals, function(array $a, array $b): int {
@@ -3063,47 +3063,11 @@ class BricksDynamicTags implements FeatureInterface
             return $ta <=> $tb;
         });
 
-        // Get guest counts for header
-        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
-        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
-
-        $html = '<style>
-            :where(.zs-utensils-wrapper) { margin: 20px 0; }
-            :where(.zs-utensils-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
-            :where(.zs-event-utensils) { width: 100%; border-collapse: collapse; }
-            :where(.zs-event-utensils thead) { background: #333; color: white; }
-            :where(.zs-event-utensils th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
-            :where(.zs-event-utensils td) { padding: 8px; border: 1px solid #ddd; }
-            :where(.zs-event-utensils .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
-        </style>';
-        
-        $html .= '<div class="zs-utensils-wrapper">';
-        
-        // Info header with guest breakdown (without babies)
-        $html .= '<div class="zs-utensils-info">';
-        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
-        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
-        if ($children > 0) {
-            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
-        }
-        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
-        $html .= '</div>';
-
-        // Utensils table (simplified - only Utensil and TOTAL)
-        $html .= '<table class="zs-event-utensils">';
-        $html .= '<thead>';
-        $html .= '<tr>';
-        $html .= '<th class="zs-col-utensil">' . esc_html__('Utensil', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '</tr>';
-        $html .= '</thead>';
-        $html .= '<tbody>';
-
+        $items = [];
         foreach ($totals as $t) {
             $termId = (int) ($t['term_id'] ?? 0);
-            $unit = (string) ($t['unit'] ?? '');
-            $qty = (float) ($t['qty'] ?? 0);
+            $unit   = (string) ($t['unit'] ?? '');
+            $qty    = (float) ($t['qty'] ?? 0);
 
             if ($termId <= 0 || $qty <= 0 || $unit === '') {
                 continue;
@@ -3114,14 +3078,16 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            $html .= '<tr>';
-            $html .= '<td class="zs-col-utensil">' . esc_html($termName) . '</td>';
-            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</td>';
-            $html .= '</tr>';
+            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($qty)) . esc_html($unit) . '</span></li>';
         }
 
-        $html .= '</tbody>';
-        $html .= '</table>';
+        if (empty($items)) {
+            return '';
+        }
+
+        $html  = '<div class="brxe-div fdr-card__field">';
+        $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html__('Utensils', 'zero-sense') . '</span>';
+        $html .= '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
         $html .= '</div>';
 
         return $html;
