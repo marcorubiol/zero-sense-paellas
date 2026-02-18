@@ -19,7 +19,6 @@ class OrderAlertsColumn
         add_filter('manage_woocommerce_page_wc-orders_columns', [$this, 'addColumn']);
         add_action('manage_shop_order_posts_custom_column', [$this, 'renderColumn'], 10, 2);
         add_action('manage_woocommerce_page_wc-orders_custom_column', [$this, 'renderColumn'], 10, 2);
-        add_action('admin_head', [$this, 'inlineStyles']);
     }
 
     public function addColumn(array $columns): array
@@ -100,20 +99,4 @@ class OrderAlertsColumn
 
     }
 
-    public function inlineStyles(): void
-    {
-        $screen = get_current_screen();
-        if (!$screen || !in_array($screen->id, ['edit-shop_order', 'woocommerce_page_wc-orders'], true)) {
-            return;
-        }
-        ?>
-        <style>
-            .column-zs_stock_alerts { width: 50px; text-align: center !important; }
-            .column-zs_stock_alerts .dashicons { font-size: 18px; width: 18px; height: 18px; vertical-align: middle; }
-            .zs-col-alert-critical { color: #dc3545; }
-            .zs-col-alert-max-capacity { color: #fd7e14; }
-            .zs-col-alert-low-stock { color: #ffc107; }
-        </style>
-        <?php
-    }
 }
