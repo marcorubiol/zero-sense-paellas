@@ -805,7 +805,7 @@ class BricksDynamicTags implements FeatureInterface
             $savedData = [];
         }
 
-        $html = '<div class="zs-schema-list zs-' . esc_attr($schemaKey) . '-list">';
+        $html = '';
         
         foreach ($schemaData as $row) {
             if (!is_array($row)) {
@@ -845,14 +845,12 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             if (!$isEmpty || $type === 'bool') {
-                $html .= '<div class="zs-schema-item">';
-                $html .= '<strong>' . esc_html($finalLabel) . ':</strong> ';
-                $html .= '<span>' . esc_html($displayValue) . '</span>';
+                $html .= '<div class="brxe-div fdr-card__field">';
+                $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($finalLabel) . '</span>';
+                $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($displayValue) . '</span>';
                 $html .= '</div>';
             }
         }
-        
-        $html .= '</div>';
         
         return $html;
     }
