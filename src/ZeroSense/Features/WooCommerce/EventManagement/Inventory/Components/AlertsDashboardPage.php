@@ -32,8 +32,10 @@ class AlertsDashboardPage
 
         $userId    = get_current_user_id();
         $dismissed = get_user_meta($userId, self::DISMISSED_META_KEY, true) ?: [];
-        $dismissed[$orderId . '_' . $materialKey] = time();
+        $key = $orderId . '_' . $materialKey;
+        $dismissed[$key] = time();
         update_user_meta($userId, self::DISMISSED_META_KEY, $dismissed);
+        error_log('[ZS Dismiss] Saved key: ' . $key . ' | All dismissed: ' . json_encode(array_keys($dismissed)));
 
         wp_send_json_success();
     }
