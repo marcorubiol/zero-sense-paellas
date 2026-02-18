@@ -8,7 +8,7 @@ class AlertsDashboardPage
 {
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenuPage']);
+        add_action('admin_menu', [$this, 'addMenuPage'], 5);
     }
 
     public function addMenuPage(): void

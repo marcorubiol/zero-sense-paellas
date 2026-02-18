@@ -11,7 +11,7 @@ class StockAdminPage
      */
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenuPage']);
+        add_action('admin_menu', [$this, 'addMenuPage'], 15);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('wp_ajax_zs_update_stock', [$this, 'ajaxUpdateStock']);
     }
