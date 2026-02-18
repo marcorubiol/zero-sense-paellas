@@ -1086,32 +1086,34 @@ class Recipes implements FeatureInterface
         echo '</div>';
         
         echo '</div>';
-        
-        // JavaScript for contextual actions
-        echo '<script>';
-        echo 'jQuery(document).ready(function($) {';
-        echo '    var $select = $("#zs_recipe_id");';
-        echo '    var $actions = $("#zs-recipe-context-actions");';
-        echo '    var $editBtn = $("#zs-recipe-edit-btn");';
-        echo '    var baseEditUrl = "' . esc_js(admin_url('post.php')) . '?post=";';
-        echo '    ';
-        echo '    function toggleActions(recipeId) {';
-        echo '        recipeId = parseInt(recipeId || $select.val() || 0);';
-        echo '        if (recipeId > 0) {';
-        echo '            $editBtn.attr("href", baseEditUrl + recipeId + "&action=edit").show();';
-        echo '            $actions.slideDown(200);';
-        echo '        } else {';
-        echo '            $editBtn.hide();';
-        echo '            $actions.slideUp(200);';
-        echo '        }';
-        echo '    }';
-        echo '    ';
-        echo '    $select.on("change select2:select select2:unselect", function(e) {';
-        echo '        toggleActions($(this).val());';
-        echo '    });';
-        echo '    toggleActions(); // Initial state';
-        echo '});';
-        echo '</script>';
+
+        // Enqueue JS via wp_add_inline_script to avoid breaking WooCommerce's JSON serialization
+        $baseEditUrl = esc_js(admin_url('post.php'));
+        $js = <<<JS
+        jQuery(document).ready(function($) {
+            var \$select  = $('#zs_recipe_id');
+            var \$actions = $('#zs-recipe-context-actions');
+            var \$editBtn = $('#zs-recipe-edit-btn');
+            var baseEditUrl = '{$baseEditUrl}?post=';
+
+            function toggleActions(recipeId) {
+                recipeId = parseInt(recipeId || \$select.val() || 0);
+                if (recipeId > 0) {
+                    \$editBtn.attr('href', baseEditUrl + recipeId + '&action=edit').show();
+                    \$actions.slideDown(200);
+                } else {
+                    \$editBtn.hide();
+                    \$actions.slideUp(200);
+                }
+            }
+
+            \$select.on('change select2:select select2:unselect', function() {
+                toggleActions($(this).val());
+            });
+            toggleActions();
+        });
+JS;
+        wp_add_inline_script('jquery', $js);
     }
 
     public function saveProductRecipeField($product): void
