@@ -57,6 +57,7 @@ class AlertsDashboardPage
 
     public function enqueueAssets(string $hook): void
     {
+        error_log('[ZS AlertsDashboard] enqueueAssets hook: ' . $hook);
         if ($hook !== 'event-operations_page_zs-inventory-alerts') {
             return;
         }
@@ -68,11 +69,11 @@ class AlertsDashboardPage
             ['dashicons'],
             '1.0.0'
         );
-        $pluginRoot = dirname(__FILE__, 8);
-        $jsUrl = plugins_url('assets/js/alerts-dashboard.js', $pluginRoot . '/zero-sense.php');
-        $jsVer = filemtime($pluginRoot . '/assets/js/alerts-dashboard.js') ?: '1.0.0';
+        $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(__FILE__, 8));
+        $basePath = defined('ZERO_SENSE_PATH') ? ZERO_SENSE_PATH : dirname(__FILE__, 8) . '/';
+        $jsVer = file_exists($basePath . 'assets/js/alerts-dashboard.js') ? filemtime($basePath . 'assets/js/alerts-dashboard.js') : '1.0.0';
         wp_enqueue_script('jquery');
-        wp_enqueue_script('zs-alerts-dashboard', $jsUrl, ['jquery'], $jsVer, true);
+        wp_enqueue_script('zs-alerts-dashboard', $baseUrl . 'assets/js/alerts-dashboard.js', ['jquery'], $jsVer, true);
         wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce'   => wp_create_nonce('zs_dismiss_inventory_alert'),
