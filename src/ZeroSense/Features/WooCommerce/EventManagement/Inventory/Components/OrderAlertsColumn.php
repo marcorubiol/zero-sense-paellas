@@ -28,7 +28,7 @@ class OrderAlertsColumn
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_status') {
-                $new['zs_stock_alerts'] = '<span class="dashicons dashicons-warning" title="' . esc_attr__('Stock Alerts', 'zero-sense') . '"></span>';
+                $new['zs_stock_alerts'] = esc_html__('Stock', 'zero-sense');
             }
         }
         if (!isset($new['zs_stock_alerts'])) {
@@ -98,9 +98,6 @@ class OrderAlertsColumn
             esc_attr($title)
         );
 
-        if ($activeCount > 1) {
-            echo '<sup style="font-size:10px; font-weight:600; margin-left:1px;">' . $activeCount . '</sup>';
-        }
     }
 
     public function inlineStyles(): void
