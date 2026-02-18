@@ -2202,16 +2202,16 @@ class BricksDynamicTags implements FeatureInterface
                     }
 
                     $normalized = $this->normalizeUnit($amount, $unit);
-                    $name = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $parts[] = esc_html($name) . ' ' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']);
+                    $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
+                    $parts[] = '<p class="zs-recipe-ingredient">' . esc_html($ingName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></p>';
                 }
             }
 
-            $value = !empty($parts) ? implode(' · ', $parts) : '—';
+            $value = !empty($parts) ? implode('', $parts) : '<p>—</p>';
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($group['title']) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . $value . '</span>';
+            $html .= '<div class="brxe-text-basic fdr-card__field-value">' . $value . '</div>';
             $html .= '</div>';
         }
 
