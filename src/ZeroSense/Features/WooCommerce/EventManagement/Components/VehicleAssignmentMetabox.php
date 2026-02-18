@@ -144,6 +144,29 @@ class VehicleAssignmentMetabox
                     return $('#post_ID').val() || $('input[name="post_ID"]').val() || $('input[name="order_id"]').val();
                 }
 
+                function getAssignedVehicleIds(excludeRow) {
+                    var ids = [];
+                    $('.zs-vehicle-hidden-input').each(function() {
+                        if (excludeRow && $(this).closest('.zs-assignment-row')[0] === excludeRow[0]) return;
+                        var v = $(this).val();
+                        if (v) ids.push(String(v));
+                    });
+                    return ids;
+                }
+
+                function buildVehicleOptions($select, currentId) {
+                    var assigned = getAssignedVehicleIds($select.closest('.zs-assignment-row')[0] ? $select.closest('.zs-assignment-row') : null);
+                    $select.find('option:not([value=""])').remove();
+                    if (typeof zsAllVehicles !== 'undefined') {
+                        $.each(zsAllVehicles, function(i, v) {
+                            var vid = String(v.id);
+                            if (assigned.indexOf(vid) !== -1 && vid !== String(currentId)) return;
+                            var label = v.name + (v.plate ? ' (' + v.plate + ')' : '');
+                            $select.append($('<option></option>').val(v.id).text(label).data('plate', v.plate));
+                        });
+                    }
+                }
+
                 function saveAssignments($excludeRow) {
                     var ids = [];
                     $('.zs-vehicle-hidden-input').each(function() {
@@ -196,6 +219,8 @@ class VehicleAssignmentMetabox
                             $btn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>');
                         }
                     } else {
+                        var currentId = $row.find('.zs-vehicle-hidden-input').val();
+                        buildVehicleOptions($select, currentId);
                         $display.addClass('zs-hidden');
                         $select.removeClass('zs-hidden');
                         if ($select.hasClass('select2-hidden-accessible')) $select.selectWoo('destroy');
@@ -247,12 +272,7 @@ class VehicleAssignmentMetabox
                     var $select  = $('<select class="zs-vehicle-select"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select vehicle...', 'zero-sense')); ?></option>');
 
-                    if (typeof zsAllVehicles !== 'undefined') {
-                        $.each(zsAllVehicles, function(i, v) {
-                            var label = v.name + (v.plate ? ' (' + v.plate + ')' : '');
-                            $select.append($('<option></option>').val(v.id).text(label).data('plate', v.plate));
-                        });
-                    }
+                    buildVehicleOptions($select, null);
 
                     var $editBtn   = $('<button type="button" class="zs-btn is-neutral zs-vehicle-edit"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
                     var $removeBtn = $('<button type="button" class="zs-btn is-destructive zs-vehicle-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
