@@ -3251,7 +3251,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($roleName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . implode('', $members) . '</span>';
+            $html .= '<div class="brxe-text-basic fdr-card__field-value">' . implode('', $members) . '</div>';
             $html .= '</div>';
         }
 
