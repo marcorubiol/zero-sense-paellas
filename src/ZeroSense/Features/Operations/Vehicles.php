@@ -73,7 +73,7 @@ class Vehicles implements FeatureInterface
             'public'           => false,
             'show_ui'          => true,
             'show_in_menu'     => 'event-operations',
-            'menu_position'    => 58,
+            'menu_position'    => 66,
             'supports'         => ['title'],
             'capability_type'  => 'post',
             'map_meta_cap'     => true,
