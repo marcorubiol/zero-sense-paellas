@@ -384,134 +384,108 @@ class BricksDynamicTags implements FeatureInterface
             return $tag;
         }
 
-        if ($tag === '{woo_zs_order_id}') {
+        // Normalize legacy tag aliases to canonical {zs_*} before dispatching
+        $tag = $this->normalizeLegacyTag($tag);
+
+        // --- Canonical {zs_*} dispatch ---
+
+        if ($tag === '{zs_order_id}') {
             return $this->getOrderId($post);
         }
-
-        if ($tag === '{woo_zs_order_number}') {
+        if ($tag === '{zs_order_number}') {
             return $this->getOrderNumber($post);
         }
-
-        if ($tag === '{woo_order_note}') {
+        if ($tag === '{zs_order_note}') {
             return $this->getOrderNote($post);
         }
-
-        if (strpos($tag, '{woo_billing_') === 0) {
-            $field = $this->stripTag($tag, 'woo_billing_');
-            return $this->getBillingFieldValue($field, $post);
+        if (strpos($tag, '{zs_billing_') === 0) {
+            return $this->getBillingFieldValue($this->stripTag($tag, 'zs_billing_'), $post);
         }
-
-        if (strpos($tag, '{woo_shipping_') === 0) {
-            $field = $this->stripTag($tag, 'woo_shipping_');
-            return $this->getShippingFieldValue($field, $post);
+        if (strpos($tag, '{zs_shipping_') === 0) {
+            return $this->getShippingFieldValue($this->stripTag($tag, 'zs_shipping_'), $post);
         }
-
-        if ($tag === '{woo_zs_event_service_location_name}') {
+        if ($tag === '{zs_event_service_location_name}') {
             return $this->getServiceLocationName($post);
         }
-
-        if ($tag === '{woo_mb_event_staff_all}') {
+        if ($tag === '{zs_event_staff_all}') {
             return $this->getEventStaffFormatted($post);
         }
-
-        if (strpos($tag, '{woo_mb_') === 0) {
-            $field = $this->stripTag($tag, 'woo_mb_');
-            return $this->getMetaBoxFieldValue($field, $post);
-        }
-
-        if ($tag === '{woo_ops_notes}') {
+        if ($tag === '{zs_ops_notes}') {
             return $this->getOpsNotesValue($post);
         }
-
-        // Dynamic schema tag handling
-        $schemaRegistry = SchemaRegistry::getInstance();
-        foreach ($schemaRegistry->getKeys() as $schemaKey) {
-            // List tag: {woo_material_list}, {woo_workspace_list}
-            if ($tag === '{woo_' . $schemaKey . '_list}') {
-                return $this->getSchemaList($schemaKey, $post);
-            }
-            
-            // Individual field tags: {woo_material_field_name}, {woo_workspace_field_name}
-            if (strpos($tag, '{woo_' . $schemaKey . '_') === 0) {
-                $field = $this->stripTag($tag, 'woo_' . $schemaKey . '_');
-                return $this->getSchemaFieldValue($schemaKey, $field, $post);
-            }
-        }
-
-        if ($tag === '{woo_zs_event_media}') {
+        if ($tag === '{zs_event_media}') {
             return $this->getEventMediaGallery($post);
         }
-
-        if ($tag === '{woo_zs_event_media_urls}') {
+        if ($tag === '{zs_event_media_urls}') {
             return $this->getEventMediaUrls($post);
         }
-
-        if ($tag === '{woo_zs_order_products}') {
+        if ($tag === '{zs_order_products}') {
             return $this->getOrderProducts($post);
         }
-
-        if ($tag === '{woo_zs_order_products_simple}') {
+        if ($tag === '{zs_order_products_simple}') {
             return $this->getOrderProductsSimple($post);
         }
-
-        if ($tag === '{woo_zs_order_products_count}') {
+        if ($tag === '{zs_order_products_count}') {
             return $this->getOrderProductsCount($post);
         }
-
-        if ($tag === '{woo_zs_order_products_by_category}') {
+        if ($tag === '{zs_order_products_by_category}') {
             return $this->getOrderProductsByCategory($post);
         }
-
-        if ($tag === '{woo_zs_order_last_modified}') {
+        if ($tag === '{zs_order_last_modified}') {
             return $this->getOrderLastModified($post);
         }
-
-        if ($tag === '{woo_zs_order_last_modified_date}') {
+        if ($tag === '{zs_order_last_modified_date}') {
             return $this->getOrderLastModified($post, 'date');
         }
-
-        if ($tag === '{woo_zs_order_last_modified_time}') {
+        if ($tag === '{zs_order_last_modified_time}') {
             return $this->getOrderLastModified($post, 'time');
         }
-
-        if ($tag === '{woo_zs_order_language}') {
+        if ($tag === '{zs_order_language}') {
             return $this->getOrderLanguage($post);
         }
-
-        if ($tag === '{woo_zs_order_language_name}') {
+        if ($tag === '{zs_order_language_name}') {
             return $this->getOrderLanguage($post, true);
         }
-
-        if ($tag === '{woo_zs_intolerances}') {
+        if ($tag === '{zs_intolerances}') {
             return $this->getMetaBoxFieldValue('intolerances', $post);
         }
-
-        if ($tag === '{woo_zs_order_recipes}') {
+        if ($tag === '{zs_order_recipes}') {
             return $this->getOrderRecipes($post);
         }
-
-        if ($tag === '{woo_zs_order_recipes_simple}') {
+        if ($tag === '{zs_order_recipes_simple}') {
             return $this->getOrderRecipesSimple($post);
         }
-
-        if ($tag === '{woo_zs_order_has_recipes}') {
+        if ($tag === '{zs_order_has_recipes}') {
             return $this->getOrderHasRecipes($post);
         }
-
-        if ($tag === '{woo_zs_order_ingredients_total}') {
+        if ($tag === '{zs_order_ingredients_total}') {
             return $this->getOrderIngredientsTotal($post);
         }
-
-        if ($tag === '{woo_zs_order_ingredients_simple}') {
+        if ($tag === '{zs_order_ingredients_simple}') {
             return $this->getOrderIngredientsSimple($post);
         }
-
-        if ($tag === '{woo_zs_order_utensils_total}') {
+        if ($tag === '{zs_order_utensils_total}') {
             return $this->getOrderUtensilsTotal($post);
         }
-
-        if ($tag === '{woo_zs_order_utensils_simple}') {
+        if ($tag === '{zs_order_utensils_simple}') {
             return $this->getOrderUtensilsSimple($post);
+        }
+
+        // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
+        $schemaRegistry = SchemaRegistry::getInstance();
+        foreach ($schemaRegistry->getKeys() as $schemaKey) {
+            if ($tag === '{zs_' . $schemaKey . '_list}') {
+                return $this->getSchemaList($schemaKey, $post);
+            }
+            if (strpos($tag, '{zs_' . $schemaKey . '_') === 0) {
+                return $this->getSchemaFieldValue($schemaKey, $this->stripTag($tag, 'zs_' . $schemaKey . '_'), $post);
+            }
+        }
+
+        // MetaBox fields: {zs_event_start_time}, {zs_event_total_guests}, etc.
+        if (strpos($tag, '{zs_') === 0) {
+            $field = $this->stripTag($tag, 'zs_');
+            return $this->getMetaBoxFieldValue($field, $post);
         }
 
         return $tag;
@@ -527,64 +501,58 @@ class BricksDynamicTags implements FeatureInterface
             return $content;
         }
 
-        $content = $this->replaceTagsInContent($content, $post, 'woo_billing_', function (string $field) use ($post): string {
+        // Normalize all legacy tags to canonical {zs_*} first
+        $content = $this->normalizeLegacyContent($content);
+
+        // --- Canonical {zs_*} replacements ---
+
+        $content = $this->replaceTagsInContent($content, $post, 'zs_billing_', function (string $field) use ($post): string {
             return $this->getBillingFieldValue($field, $post);
         });
-
-        $content = $this->replaceTagsInContent($content, $post, 'woo_shipping_', function (string $field) use ($post): string {
+        $content = $this->replaceTagsInContent($content, $post, 'zs_shipping_', function (string $field) use ($post): string {
             return $this->getShippingFieldValue($field, $post);
         });
 
-        $content = str_replace('{woo_zs_order_id}', $this->getOrderId($post), $content);
-        $content = str_replace('{woo_zs_order_number}', $this->getOrderNumber($post), $content);
-        $content = str_replace('{woo_order_note}', $this->getOrderNote($post), $content);
+        $content = str_replace('{zs_order_id}',     $this->getOrderId($post),     $content);
+        $content = str_replace('{zs_order_number}', $this->getOrderNumber($post), $content);
+        $content = str_replace('{zs_order_note}',   $this->getOrderNote($post),   $content);
 
-        $content = str_replace('{woo_zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
+        $content = str_replace('{zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
+        $content = str_replace('{zs_event_staff_all}',             $this->getEventStaffFormatted($post), $content);
+        $content = str_replace('{zs_ops_notes}',                   $this->getOpsNotesValue($post),       $content);
+        $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),   $content);
+        $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),      $content);
+        $content = str_replace('{zs_order_products}',              $this->getOrderProducts($post),       $content);
+        $content = str_replace('{zs_order_products_simple}',       $this->getOrderProductsSimple($post), $content);
+        $content = str_replace('{zs_order_products_count}',        $this->getOrderProductsCount($post),  $content);
+        $content = str_replace('{zs_order_products_by_category}',  $this->getOrderProductsByCategory($post), $content);
+        $content = str_replace('{zs_order_last_modified}',         $this->getOrderLastModified($post),        $content);
+        $content = str_replace('{zs_order_last_modified_date}',    $this->getOrderLastModified($post, 'date'), $content);
+        $content = str_replace('{zs_order_last_modified_time}',    $this->getOrderLastModified($post, 'time'), $content);
+        $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),        $content);
+        $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
+        $content = str_replace('{zs_intolerances}',                $this->getMetaBoxFieldValue('intolerances', $post), $content);
+        $content = str_replace('{zs_order_recipes}',               $this->getOrderRecipes($post),         $content);
+        $content = str_replace('{zs_order_recipes_simple}',        $this->getOrderRecipesSimple($post),   $content);
+        $content = str_replace('{zs_order_has_recipes}',           $this->getOrderHasRecipes($post),      $content);
+        $content = str_replace('{zs_order_ingredients_total}',     $this->getOrderIngredientsTotal($post), $content);
+        $content = str_replace('{zs_order_ingredients_simple}',    $this->getOrderIngredientsSimple($post), $content);
+        $content = str_replace('{zs_order_utensils_total}',        $this->getOrderUtensilsTotal($post),   $content);
+        $content = str_replace('{zs_order_utensils_simple}',       $this->getOrderUtensilsSimple($post),  $content);
 
-        $content = str_replace('{woo_mb_event_staff_all}', $this->getEventStaffFormatted($post), $content);
-
-        $content = $this->replaceTagsInContent($content, $post, 'woo_mb_', function (string $field) use ($post): string {
-            return $this->getMetaBoxFieldValue($field, $post);
-        });
-
-        $content = str_replace('{woo_ops_notes}', $this->getOpsNotesValue($post), $content);
-
-        // Dynamic schema content replacement
+        // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
         foreach ($schemaRegistry->getKeys() as $schemaKey) {
-            // Replace list tags
-            $content = str_replace('{woo_' . $schemaKey . '_list}', $this->getSchemaList($schemaKey, $post), $content);
-            
-            // Replace individual field tags
-            $content = $this->replaceTagsInContent($content, $post, 'woo_' . $schemaKey . '_', function (string $field) use ($post, $schemaKey): string {
+            $content = str_replace('{zs_' . $schemaKey . '_list}', $this->getSchemaList($schemaKey, $post), $content);
+            $content = $this->replaceTagsInContent($content, $post, 'zs_' . $schemaKey . '_', function (string $field) use ($post, $schemaKey): string {
                 return $this->getSchemaFieldValue($schemaKey, $field, $post);
             });
         }
 
-        $content = str_replace('{woo_zs_event_media}', $this->getEventMediaGallery($post), $content);
-        $content = str_replace('{woo_zs_event_media_urls}', $this->getEventMediaUrls($post), $content);
-
-        $content = str_replace('{woo_zs_order_products}', $this->getOrderProducts($post), $content);
-        $content = str_replace('{woo_zs_order_products_simple}', $this->getOrderProductsSimple($post), $content);
-        $content = str_replace('{woo_zs_order_products_count}', $this->getOrderProductsCount($post), $content);
-        $content = str_replace('{woo_zs_order_products_by_category}', $this->getOrderProductsByCategory($post), $content);
-
-        $content = str_replace('{woo_zs_order_last_modified}', $this->getOrderLastModified($post), $content);
-        $content = str_replace('{woo_zs_order_last_modified_date}', $this->getOrderLastModified($post, 'date'), $content);
-        $content = str_replace('{woo_zs_order_last_modified_time}', $this->getOrderLastModified($post, 'time'), $content);
-
-        $content = str_replace('{woo_zs_order_language}', $this->getOrderLanguage($post), $content);
-        $content = str_replace('{woo_zs_order_language_name}', $this->getOrderLanguage($post, true), $content);
-
-        $content = str_replace('{woo_zs_intolerances}', $this->getMetaBoxFieldValue('intolerances', $post), $content);
-
-        $content = str_replace('{woo_zs_order_recipes}', $this->getOrderRecipes($post), $content);
-        $content = str_replace('{woo_zs_order_recipes_simple}', $this->getOrderRecipesSimple($post), $content);
-        $content = str_replace('{woo_zs_order_has_recipes}', $this->getOrderHasRecipes($post), $content);
-        $content = str_replace('{woo_zs_order_ingredients_total}', $this->getOrderIngredientsTotal($post), $content);
-        $content = str_replace('{woo_zs_order_ingredients_simple}', $this->getOrderIngredientsSimple($post), $content);
-        $content = str_replace('{woo_zs_order_utensils_total}', $this->getOrderUtensilsTotal($post), $content);
-        $content = str_replace('{woo_zs_order_utensils_simple}', $this->getOrderUtensilsSimple($post), $content);
+        // MetaBox fields: {zs_event_start_time}, {zs_event_total_guests}, etc.
+        $content = $this->replaceTagsInContent($content, $post, 'zs_', function (string $field) use ($post): string {
+            return $this->getMetaBoxFieldValue($field, $post);
+        });
 
         return $content;
     }
@@ -610,6 +578,139 @@ class BricksDynamicTags implements FeatureInterface
     private function stripTag(string $tag, string $prefix): string
     {
         return str_replace(['{' . $prefix, '}'], '', $tag);
+    }
+
+    /**
+     * Map a single legacy tag to its canonical {zs_*} equivalent.
+     * Called in renderTag() before dispatch.
+     */
+    private function normalizeLegacyTag(string $tag): string
+    {
+        // Static 1-to-1 mappings
+        $map = [
+            '{woo_zs_order_id}'                      => '{zs_order_id}',
+            '{woo_zs_order_number}'                  => '{zs_order_number}',
+            '{woo_order_note}'                       => '{zs_order_note}',
+            '{woo_zs_event_service_location_name}'   => '{zs_event_service_location_name}',
+            '{woo_mb_event_staff_all}'               => '{zs_event_staff_all}',
+            '{woo_ops_notes}'                        => '{zs_ops_notes}',
+            '{woo_zs_event_media}'                   => '{zs_event_media}',
+            '{woo_zs_event_media_urls}'              => '{zs_event_media_urls}',
+            '{woo_zs_order_products}'                => '{zs_order_products}',
+            '{woo_zs_order_products_simple}'         => '{zs_order_products_simple}',
+            '{woo_zs_order_products_count}'          => '{zs_order_products_count}',
+            '{woo_zs_order_products_by_category}'    => '{zs_order_products_by_category}',
+            '{woo_zs_order_last_modified}'           => '{zs_order_last_modified}',
+            '{woo_zs_order_last_modified_date}'      => '{zs_order_last_modified_date}',
+            '{woo_zs_order_last_modified_time}'      => '{zs_order_last_modified_time}',
+            '{woo_zs_order_language}'                => '{zs_order_language}',
+            '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
+            '{woo_zs_intolerances}'                  => '{zs_intolerances}',
+            '{woo_zs_order_recipes}'                 => '{zs_order_recipes}',
+            '{woo_zs_order_recipes_simple}'          => '{zs_order_recipes_simple}',
+            '{woo_zs_order_has_recipes}'             => '{zs_order_has_recipes}',
+            '{woo_zs_order_ingredients_total}'       => '{zs_order_ingredients_total}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_order_ingredients_simple}',
+            '{woo_zs_order_utensils_total}'          => '{zs_order_utensils_total}',
+            '{woo_zs_order_utensils_simple}'         => '{zs_order_utensils_simple}',
+        ];
+
+        if (isset($map[$tag])) {
+            return $map[$tag];
+        }
+
+        // {woo_billing_*} → {zs_billing_*}
+        if (strpos($tag, '{woo_billing_') === 0) {
+            return '{zs_billing_' . substr($tag, strlen('{woo_billing_'));
+        }
+
+        // {woo_shipping_*} → {zs_shipping_*}
+        if (strpos($tag, '{woo_shipping_') === 0) {
+            return '{zs_shipping_' . substr($tag, strlen('{woo_shipping_'));
+        }
+
+        // {woo_mb_*} → {zs_*}
+        if (strpos($tag, '{woo_mb_') === 0) {
+            return '{zs_' . substr($tag, strlen('{woo_mb_'));
+        }
+
+        // {woo_<schemaKey>_*} → {zs_<schemaKey>_*}
+        $schemaRegistry = SchemaRegistry::getInstance();
+        foreach ($schemaRegistry->getKeys() as $schemaKey) {
+            if (strpos($tag, '{woo_' . $schemaKey . '_') === 0) {
+                return '{zs_' . substr($tag, strlen('{woo_'));
+            }
+        }
+
+        return $tag;
+    }
+
+    /**
+     * Normalize all legacy tags inside a content string to canonical {zs_*}.
+     * Called in renderContent() before processing.
+     */
+    private function normalizeLegacyContent(string $content): string
+    {
+        // Prefix-based bulk replacements (order matters: most specific first)
+        $prefixMap = [
+            'woo_billing_'  => 'zs_billing_',
+            'woo_shipping_' => 'zs_shipping_',
+            'woo_mb_'       => 'zs_',
+        ];
+
+        foreach ($prefixMap as $old => $new) {
+            $content = preg_replace_callback(
+                '/\{' . preg_quote($old, '/') . '([^}]*)\}/',
+                static function (array $m) use ($new): string {
+                    return '{' . $new . $m[1] . '}';
+                },
+                $content
+            ) ?? $content;
+        }
+
+        // Static 1-to-1 replacements
+        $map = [
+            '{woo_zs_order_id}'                      => '{zs_order_id}',
+            '{woo_zs_order_number}'                  => '{zs_order_number}',
+            '{woo_order_note}'                       => '{zs_order_note}',
+            '{woo_zs_event_service_location_name}'   => '{zs_event_service_location_name}',
+            '{woo_ops_notes}'                        => '{zs_ops_notes}',
+            '{woo_zs_event_media}'                   => '{zs_event_media}',
+            '{woo_zs_event_media_urls}'              => '{zs_event_media_urls}',
+            '{woo_zs_order_products}'                => '{zs_order_products}',
+            '{woo_zs_order_products_simple}'         => '{zs_order_products_simple}',
+            '{woo_zs_order_products_count}'          => '{zs_order_products_count}',
+            '{woo_zs_order_products_by_category}'    => '{zs_order_products_by_category}',
+            '{woo_zs_order_last_modified}'           => '{zs_order_last_modified}',
+            '{woo_zs_order_last_modified_date}'      => '{zs_order_last_modified_date}',
+            '{woo_zs_order_last_modified_time}'      => '{zs_order_last_modified_time}',
+            '{woo_zs_order_language}'                => '{zs_order_language}',
+            '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
+            '{woo_zs_intolerances}'                  => '{zs_intolerances}',
+            '{woo_zs_order_recipes}'                 => '{zs_order_recipes}',
+            '{woo_zs_order_recipes_simple}'          => '{zs_order_recipes_simple}',
+            '{woo_zs_order_has_recipes}'             => '{zs_order_has_recipes}',
+            '{woo_zs_order_ingredients_total}'       => '{zs_order_ingredients_total}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_order_ingredients_simple}',
+            '{woo_zs_order_utensils_total}'          => '{zs_order_utensils_total}',
+            '{woo_zs_order_utensils_simple}'         => '{zs_order_utensils_simple}',
+        ];
+
+        $content = str_replace(array_keys($map), array_values($map), $content);
+
+        // Schema keys: {woo_<schemaKey>_*} → {zs_<schemaKey>_*}
+        $schemaRegistry = SchemaRegistry::getInstance();
+        foreach ($schemaRegistry->getKeys() as $schemaKey) {
+            $content = preg_replace_callback(
+                '/\{woo_' . preg_quote($schemaKey, '/') . '_([^}]*)\}/',
+                static function (array $m) use ($schemaKey): string {
+                    return '{zs_' . $schemaKey . '_' . $m[1] . '}';
+                },
+                $content
+            ) ?? $content;
+        }
+
+        return $content;
     }
 
     private function getBillingFieldValue(string $field, $post): string

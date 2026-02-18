@@ -1093,7 +1093,7 @@ class Recipes implements FeatureInterface
         echo '    var $select = $("#zs_recipe_id");';
         echo '    var $actions = $("#zs-recipe-context-actions");';
         echo '    var $editBtn = $("#zs-recipe-edit-btn");';
-        echo '    var baseEditUrl = "' . admin_url('post.php?post=') . '";';
+        echo '    var baseEditUrl = "' . esc_js(admin_url('post.php')) . '?post=";';
         echo '    ';
         echo '    function toggleActions(recipeId) {';
         echo '        recipeId = parseInt(recipeId || $select.val() || 0);';
