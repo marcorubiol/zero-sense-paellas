@@ -11,6 +11,45 @@ class AlertsAdminNotice
     public function register(): void
     {
         add_action('admin_notices', [$this, 'render']);
+        add_action('admin_footer', [$this, 'renderScript']);
+    }
+
+    public function renderScript(): void
+    {
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+        ?>
+        <script>
+        jQuery(function($) {
+            $(document).on('click', '.zs-dismiss-alert', function(e) {
+                e.preventDefault();
+                var $badge = $(this).closest('.zs-alert-badge');
+                var orderId = $badge.data('order');
+                var materialKey = $badge.data('material');
+                $badge.css('opacity', 0.4);
+                $.post(ajaxurl, {
+                    action: 'zs_dismiss_inventory_alert',
+                    nonce: '<?php echo esc_js(wp_create_nonce('zs_dismiss_inventory_alert')); ?>',
+                    order_id: orderId,
+                    material_key: materialKey
+                }, function(res) {
+                    if (res.success) {
+                        var $row = $badge.closest('tr');
+                        $badge.remove();
+                        if ($row.find('.zs-alert-badge').length === 0) {
+                            $row.fadeOut(200, function() { $(this).remove(); });
+                        }
+                    } else {
+                        $badge.css('opacity', 1);
+                    }
+                }).fail(function() {
+                    $badge.css('opacity', 1);
+                });
+            });
+        });
+        </script>
+        <?php
     }
 
     public function render(): void

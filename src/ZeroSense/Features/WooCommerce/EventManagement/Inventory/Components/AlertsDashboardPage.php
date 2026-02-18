@@ -228,44 +228,6 @@ class AlertsDashboardPage
             .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
             .zs-alert-badge .zs-dismiss-alert:hover { color: #dc3545; }
         </style>
-        <script>
-        console.log('[ZS Alerts] Inline script running');
-        jQuery(function($) {
-            console.log('[ZS Alerts] jQuery ready');
-            var nonce = '<?php echo esc_js(wp_create_nonce('zs_dismiss_inventory_alert')); ?>';
-            var ajaxUrl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
-
-            $(document).on('click', '.zs-dismiss-alert', function(e) {
-                e.preventDefault();
-                console.log('[ZS Alerts] Dismiss clicked');
-                var $badge = $(this).closest('.zs-alert-badge');
-                var orderId = $badge.data('order');
-                var materialKey = $badge.data('material');
-                console.log('[ZS Alerts] order_id:', orderId, 'material_key:', materialKey);
-                $badge.css('opacity', 0.4);
-                $.post(ajaxUrl, {
-                    action: 'zs_dismiss_inventory_alert',
-                    nonce: nonce,
-                    order_id: orderId,
-                    material_key: materialKey
-                }, function(res) {
-                    console.log('[ZS Alerts] Response:', res);
-                    if (res.success) {
-                        var $row = $badge.closest('tr');
-                        $badge.remove();
-                        if ($row.find('.zs-alert-badge').length === 0) {
-                            $row.fadeOut(200, function() { $(this).remove(); });
-                        }
-                    } else {
-                        $badge.css('opacity', 1);
-                    }
-                }).fail(function(xhr, status, error) {
-                    console.error('[ZS Alerts] AJAX failed:', status, error, xhr.responseText);
-                    $badge.css('opacity', 1);
-                });
-            });
-        });
-        </script>
         <?php
     }
 }
