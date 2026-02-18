@@ -136,8 +136,6 @@ class OrderOps implements FeatureInterface
             $reordered['email'] = $email_field;
         }
 
-        $reordered['location_link'] = $location_link_field;
-
         // Add Venue Name field
         $venue_name_field = [
             'label' => __('Venue Name', 'zero-sense'),
@@ -173,6 +171,7 @@ class OrderOps implements FeatureInterface
         
         $reordered['venue_name'] = $venue_name_field;
         $reordered['venue_phone'] = $venue_phone_field;
+        $reordered['location_link'] = $location_link_field;
 
         return $reordered;
     }
