@@ -39,14 +39,12 @@
 }
 
 /* Shipping custom fields: two-column layout (matches WooCommerce specificity) */
+
+
 #order_data .order_data_column .form-field._shipping_venue_phone_field,
 #order_data .order_data_column .form-field._shipping_phone_field {
     float: right;
     clear: right;
-}
-#order_data .order_data_column .form-field._shipping_venue_phone_field,
-#order_data .order_data_column .form-field._shipping_phone_field {
-    clear: both;
 }
 #order_data .order_data_column .form-field._shipping_location_link_field {
     width: 100%;
