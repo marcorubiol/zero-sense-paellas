@@ -2971,12 +2971,12 @@ class BricksDynamicTags implements FeatureInterface
         $orderLanguage = $this->getOrderLanguageCode($order);
         $eqTotal = $this->getEquivalentPax($order);
         if ($eqTotal <= 0) {
-            return '[DEBUG utensils: eqTotal=0]';
+            return '';
         }
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
-            return '[DEBUG utensils: no line items]';
+            return '';
         }
 
         $eligible = [];
@@ -3007,7 +3007,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if (empty($eligible) || $sumQty <= 0) {
-            return '[DEBUG utensils: no eligible items (products without recipe_id)]';
+            return '';
         }
 
         $totals = [];
@@ -3054,7 +3054,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if (empty($totals)) {
-            return '[DEBUG utensils: eligible=' . count($eligible) . ' but totals empty — recipes have no utensils, meta=' . self::META_RECIPE_UTENSILS . ']';
+            return '';
         }
 
         usort($totals, function(array $a, array $b): int {
