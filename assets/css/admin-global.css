@@ -38,17 +38,26 @@
   color: #c3c4c7 !important;
 }
 
-/* Venue Name + Venue Phone: side by side in shipping section */
-#order_data ._shipping_venue_name_field,
-#order_data ._shipping_venue_phone_field {
+/* Shipping custom fields: two-column layout */
+#order_data ._shipping_email_field,
+#order_data ._shipping_venue_name_field {
     float: left;
     width: 48%;
     clear: none;
-}
-#order_data ._shipping_venue_name_field {
     margin-right: 4%;
 }
+#order_data ._shipping_phone_field,
+#order_data ._shipping_venue_phone_field {
+    float: right;
+    width: 48%;
+    clear: right;
+}
+#order_data ._shipping_phone_field + p,
 #order_data ._shipping_venue_phone_field + p {
+    clear: both;
+}
+#order_data ._shipping_location_link_field {
+    width: 100%;
     clear: both;
 }
 
