@@ -118,6 +118,7 @@ class DataExposer
             'staff_coqueteles' => self::getStaffByRole($order, 'coqueteles'),
             'staff_tallador_pernil' => self::getStaffByRole($order, 'tallador-pernil'),
             'staff_all_formatted' => self::getAllStaffFormatted($order),
+            'vehicles'            => self::getVehiclesFormatted($order),
         ];
     }
 
@@ -166,6 +167,29 @@ class DataExposer
         }
 
         return implode(', ', $staffNames);
+    }
+
+    /**
+     * Get vehicles assigned to an order
+     */
+    private static function getVehiclesFormatted(WC_Order $order): string
+    {
+        $vehicleIds = $order->get_meta(MetaKeys::EVENT_VEHICLES, true);
+        if (!is_array($vehicleIds) || empty($vehicleIds)) {
+            return '';
+        }
+
+        $parts = [];
+        foreach ($vehicleIds as $vehicleId) {
+            $post = get_post((int) $vehicleId);
+            if (!$post) {
+                continue;
+            }
+            $plate = get_post_meta($post->ID, 'zs_vehicle_plate', true);
+            $parts[] = $post->post_title . ($plate ? ' (' . $plate . ')' : '');
+        }
+
+        return implode(', ', $parts);
     }
 
     /**

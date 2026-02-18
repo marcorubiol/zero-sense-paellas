@@ -23,15 +23,7 @@ class MaterialDefinitions
     public static function getAll(): array
     {
         return [
-            // MATÈRIA PESADA — vehicle & carreto
-            [
-                'key' => 'vehicle',
-                'label' => 'Cotxe',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => 'Manual',
-            ],
+            // MATÈRIA PESADA — carreto
             [
                 'key' => 'carreto',
                 'label' => 'Carretó',
