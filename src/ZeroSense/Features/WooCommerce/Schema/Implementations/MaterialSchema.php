@@ -44,4 +44,9 @@ class MaterialSchema extends AbstractSchemaAdminPage
     {
         return __('Material & Logistics', 'zero-sense');
     }
+    
+    public function getPriority(): int
+    {
+        return 20; // Higher priority than Workspace (25) to appear first
+    }
 }
