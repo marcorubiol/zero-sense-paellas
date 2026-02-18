@@ -129,7 +129,10 @@ class InventoryMetabox
         $categoryLabels = [
             'paelles' => 'Paelles',
             'cremadors' => 'Cremadors',
+            'equipament_pesant' => 'Equipament Pesant',
             'equipament_cuina' => 'Equipament Cuina',
+            'logistica_cuina' => 'Logística Cuina',
+            'caixes' => 'Caixes',
             'roba_personal' => 'Vestimenta Staff',
             'textils_neteja' => 'Vestimenta Taules',
             'caixes_contenidors' => 'Caixes i Contenidors',
