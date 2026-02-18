@@ -28,7 +28,16 @@ class AlertsAdminNotice
             return;
         }
 
-        $dashboardUrl = admin_url('admin.php?page=zs-inventory-alerts');
+        $screen = get_current_screen();
+        $isOrderPage = $screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true);
+
+        if ($isOrderPage) {
+            $linkUrl   = '#zs_inventory_materials';
+            $linkLabel = __('View Alerts', 'zero-sense');
+        } else {
+            $linkUrl   = admin_url('admin.php?page=zs-inventory-alerts');
+            $linkLabel = __('View Alerts Dashboard', 'zero-sense');
+        }
 
         if ($critical > 0) {
             printf(
@@ -37,8 +46,8 @@ class AlertsAdminNotice
                     __('Inventory alert: <strong>%d critical</strong> material(s) with insufficient stock.', 'zero-sense'),
                     $critical
                 ),
-                esc_url($dashboardUrl),
-                esc_html__('View Alerts Dashboard', 'zero-sense')
+                esc_url($linkUrl),
+                esc_html($linkLabel)
             );
         }
 
@@ -49,8 +58,8 @@ class AlertsAdminNotice
                     __('Inventory alert: <strong>%d</strong> material(s) at max capacity.', 'zero-sense'),
                     $maxCapacity
                 ),
-                esc_url($dashboardUrl),
-                esc_html__('View Alerts Dashboard', 'zero-sense')
+                esc_url($linkUrl),
+                esc_html($linkLabel)
             );
         }
     }
