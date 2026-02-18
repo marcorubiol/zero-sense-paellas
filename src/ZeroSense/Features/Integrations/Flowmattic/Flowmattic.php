@@ -1658,7 +1658,7 @@ class Flowmattic implements FeatureInterface
         // Short description
         $shortDesc = $this->getShortDescription($latest['description']);
         
-        // Render compact cell (styles loaded via admin-metaboxes.css)
+        // Render compact cell (styles loaded via admin-components.css)
         echo '<div class="zs-sent-emails-cell zs-cell">';
         echo '<div class="zs-title" title="' . esc_attr($latest['description']) . '">' . $badge . '<span>' . esc_html($shortDesc) . '</span></div>';
         echo '<small class="zs-time" title="' . esc_attr($latest['formatted_time']) . '">' . esc_html($latest['formatted_time']) . '</small>';

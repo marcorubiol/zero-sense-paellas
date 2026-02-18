@@ -809,8 +809,8 @@ class Recipes implements FeatureInterface
 
         if ($screen->post_type === self::CPT) {
             wp_enqueue_style(
-                'zs-admin-metaboxes',
-                plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/css/admin-metaboxes.css',
+                'zs-admin-components',
+                plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/css/admin-components.css',
                 [],
                 '1.0'
             );

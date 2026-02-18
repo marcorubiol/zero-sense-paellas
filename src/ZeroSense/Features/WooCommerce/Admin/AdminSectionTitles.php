@@ -40,7 +40,7 @@ class AdminSectionTitles implements FeatureInterface
         add_action('init', [$this, 'registerWpmlStrings'], 20);
         
         // Admin CSS para estilos de subtítulos y ocultar inicialmente
-        add_action('admin_head', [$this, 'addAdminStyles']);
+        // CSS moved to admin-components.css
     }
 
     public function getPriority(): int
@@ -129,61 +129,4 @@ JAVASCRIPT;
         );
     }
 
-    /**
-     * Add custom admin styles para subtítulos
-     */
-    public function addAdminStyles(): void
-    {
-        $screen = get_current_screen();
-        
-        // Verificar si estamos en página de pedidos (Classic o HPOS)
-        if (!$screen || !HposCompatibility::isOrderEditScreen()) {
-            return;
-        }
-        ?>
-        <style>
-            /* Hide initially to avoid visual jump */
-            #order_data h3 {
-                visibility: hidden;
-                margin-top: 2px !important;
-            }
-
-            /* Card label below the heading */
-            .zs-subtitle {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                font-size: 12px;
-                font-weight: 600;
-                color: var(--zs-mb-label-color, #1d2327);
-                padding: 5px 10px;
-                border-radius: 0 0 var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px);
-                margin-bottom: 0;
-                line-height: 1.4;
-            }
-
-            .zs-subtitle-client {
-                background: #DCFCE7;
-                border-left: 3px solid #16A34A;
-                color: #14532D;
-            }
-
-            .zs-subtitle-venue {
-                background: #E0E7FF;
-                border-left: 3px solid #4F46E5;
-                color: #1E1B4B;
-            }
-
-            .zs-subtitle-edit a {
-                color: var(--zs-mb-description-color, #646970);
-                text-decoration: none;
-                opacity: 0.7;
-            }
-
-            .zs-subtitle-edit a:hover {
-                opacity: 1;
-            }
-        </style>
-        <?php
     }
-}

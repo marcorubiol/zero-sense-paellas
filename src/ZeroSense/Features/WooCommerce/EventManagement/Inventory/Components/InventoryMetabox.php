@@ -51,7 +51,7 @@ class InventoryMetabox
         wp_enqueue_style(
             'zero-sense-admin-inventory',
             plugin_dir_url(ZERO_SENSE_FILE) . 'assets/css/admin-inventory.css',
-            ['zero-sense-admin-metaboxes'],
+            ['zero-sense-admin-components'],
             $cssVer
         );
     }

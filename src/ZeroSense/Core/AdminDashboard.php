@@ -83,14 +83,14 @@ class AdminDashboard
         // Enqueue metaboxes styles for order edit pages (Classic + HPOS)
         $screen = get_current_screen();
         if ($screen && in_array($screen->id, ['shop_order', 'edit-shop_order', 'woocommerce_page_wc-orders'], true)) {
-            $metaboxes_css_path = plugin_dir_path(ZERO_SENSE_FILE) . 'assets/css/admin-metaboxes.css';
-            if (file_exists($metaboxes_css_path)) {
-                $metaboxes_css_ver = (string) filemtime($metaboxes_css_path);
+            $components_css_path = plugin_dir_path(ZERO_SENSE_FILE) . 'assets/css/admin-components.css';
+            if (file_exists($components_css_path)) {
+                $components_css_ver = (string) filemtime($components_css_path);
                 wp_enqueue_style(
-                    'zero-sense-admin-metaboxes',
-                    plugin_dir_url(ZERO_SENSE_FILE) . 'assets/css/admin-metaboxes.css',
+                    'zero-sense-admin-components',
+                    plugin_dir_url(ZERO_SENSE_FILE) . 'assets/css/admin-components.css',
                     [],
-                    $metaboxes_css_ver
+                    $components_css_ver
                 );
             }
         }

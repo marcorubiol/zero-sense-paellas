@@ -903,3 +903,49 @@ input:checked + .zs-slider:before {
 .zs-deposits-table .zs-switch {
     display: inline-block;
 }
+
+/* =================================================================
+   ADMIN SECTION SUBTITLES
+   ================================================================= */
+
+/* Hide initially to avoid visual jump */
+#order_data h3 {
+    visibility: hidden;
+    margin-top: 2px !important;
+}
+
+/* Card label below the heading */
+.zs-subtitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--zs-mb-label-color, #1d2327);
+    padding: 5px 10px;
+    border-radius: 0 0 var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px);
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+.zs-subtitle-client {
+    background: #DCFCE7;
+    border-left: 3px solid #16A34A;
+    color: #14532D;
+}
+
+.zs-subtitle-venue {
+    background: #E0E7FF;
+    border-left: 3px solid #4F46E5;
+    color: #1E1B4B;
+}
+
+.zs-subtitle-edit a {
+    color: var(--zs-mb-description-color, #646970);
+    text-decoration: none;
+    opacity: 0.7;
+}
+
+.zs-subtitle-edit a:hover {
+    opacity: 1;
+}
