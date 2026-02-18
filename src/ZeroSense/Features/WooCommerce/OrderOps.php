@@ -192,6 +192,18 @@ class OrderOps implements FeatureInterface
             FieldChangeTracker::compareAndTrack($orderId, self::META_OPS_NOTES, $order->get_meta(self::META_OPS_NOTES, true), $newValue);
             $order->update_meta_data(self::META_OPS_NOTES, $newValue);
         }
+
+        // Save Venue Name
+        if (isset($_POST['_shipping_venue_name'])) {
+            $newValue = sanitize_text_field((string) $_POST['_shipping_venue_name']);
+            $order->update_meta_data('_shipping_venue_name', $newValue);
+        }
+
+        // Save Venue Phone
+        if (isset($_POST['_shipping_venue_phone'])) {
+            $newValue = sanitize_text_field((string) $_POST['_shipping_venue_phone']);
+            $order->update_meta_data('_shipping_venue_phone', $newValue);
+        }
     }
 
     private function registerMetaFields(): void
