@@ -924,7 +924,7 @@ input:checked + .zs-slider:before {
     color: var(--zs-mb-label-color, #1d2327);
     padding: 5px 10px;
     border-radius: 0 0 var(--zs-mb-radius, 4px) var(--zs-mb-radius, 4px);
-    margin-bottom: 0;
+    margin-top: .5em;
     line-height: 1.4;
 }
 
