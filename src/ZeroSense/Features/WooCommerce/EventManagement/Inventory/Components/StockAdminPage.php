@@ -26,7 +26,7 @@ class StockAdminPage
             __('Equipment Stock', 'zero-sense'),
             __('Equipment Stock', 'zero-sense'),
             'manage_woocommerce',
-            'zs-stock-management',
+            'zs-equipment-stock',
             [$this, 'render']
         );
     }
@@ -36,7 +36,7 @@ class StockAdminPage
      */
     public function enqueueAssets(string $hook): void
     {
-        if ($hook !== 'event-operations_page_zs-stock-management') {
+        if ($hook !== 'event-operations_page_zs-equipment-stock') {
             return;
         }
         

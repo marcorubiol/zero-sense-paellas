@@ -47,9 +47,9 @@ class Bootstrap
     {
         // Create database tables if they don't exist
         add_action('admin_init', function() {
-            if (get_option('zs_inventory_tables_created') !== '1.0.0') {
+            if (get_option('zs_equipment_tables_created') !== '1.0.0') {
                 Schema::createTables();
-                update_option('zs_inventory_tables_created', '1.0.0');
+                update_option('zs_equipment_tables_created', '1.0.0');
             }
         });
     }

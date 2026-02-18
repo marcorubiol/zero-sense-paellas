@@ -3,7 +3,7 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support;
 
 class AlertResolutionManager
 {
-    const META_KEY = 'zs_inventory_alert_resolutions';
+    const META_KEY = 'zs_equipment_alert_resolutions';
     
     /**
      * Guarda una resolución de alerta
@@ -26,10 +26,10 @@ class AlertResolutionManager
         
         update_post_meta($orderId, self::META_KEY, $resolutions);
 
-        delete_transient('zs_active_inventory_alerts');
+        delete_transient('zs_active_equipment_alerts');
 
         // FlowMattic trigger
-        do_action('zs_inventory_alert_resolved', [
+        do_action('zs_equipment_alert_resolved', [
             'order_id' => $orderId,
             'material_key' => $materialKey,
             'notes' => $notes,
@@ -99,7 +99,7 @@ class AlertResolutionManager
                 update_post_meta($orderId, self::META_KEY, $resolutions);
             }
 
-            delete_transient('zs_active_inventory_alerts');
+            delete_transient('zs_active_equipment_alerts');
         }
     }
     

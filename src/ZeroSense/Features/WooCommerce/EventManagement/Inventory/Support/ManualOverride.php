@@ -5,7 +5,7 @@ use WC_Order;
 
 class ManualOverride
 {
-    const META_KEY = 'zs_inventory_manual_overrides';
+    const META_KEY = 'zs_equipment_manual_overrides';
     
     /**
      * Guarda overrides manuales para un pedido

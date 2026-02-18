@@ -12,8 +12,8 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\AlertResolu
 
 class InventoryMetabox
 {
-    const NONCE_FIELD = 'zs_inventory_nonce';
-    const NONCE_ACTION = 'zs_inventory_save';
+    const NONCE_FIELD = 'zs_equipment_nonce';
+    const NONCE_ACTION = 'zs_equipment_save';
     
     /**
      * Registra el metabox
@@ -23,10 +23,10 @@ class InventoryMetabox
         add_action('add_meta_boxes', [$this, 'addMetabox']);
         // Priority 50: Run AFTER WooCommerce saves order items (priority 10-40)
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 50, 2);
-        add_action('wp_ajax_zs_save_inventory', [$this, 'ajaxSave']);
-        add_action('wp_ajax_zs_clear_inventory_overrides', [$this, 'ajaxClearOverrides']);
-        add_action('wp_ajax_zs_resolve_inventory_alert', [$this, 'ajaxResolveAlert']);
-        add_action('wp_ajax_zs_undo_inventory_alert_resolution', [$this, 'ajaxUndoAlertResolution']);
+        add_action('wp_ajax_zs_save_equipment', [$this, 'ajaxSave']);
+        add_action('wp_ajax_zs_clear_equipment_overrides', [$this, 'ajaxClearOverrides']);
+        add_action('wp_ajax_zs_resolve_stock_alert', [$this, 'ajaxResolveAlert']);
+        add_action('wp_ajax_zs_undo_stock_alert', [$this, 'ajaxUndoAlertResolution']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
 
@@ -62,7 +62,7 @@ class InventoryMetabox
     public function addMetabox(): void
     {
         add_meta_box(
-            'zs_inventory_materials',
+            'zs_event_equipment',
             __('Event Equipment', 'zero-sense'),
             [$this, 'render'],
             wc_get_page_screen_id('shop-order'),
@@ -621,7 +621,7 @@ class InventoryMetabox
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'zs_clear_inventory_overrides',
+                        action: 'zs_clear_equipment_overrides',
                         nonce: nonce,
                         order_id: orderId
                     },
@@ -738,7 +738,7 @@ class InventoryMetabox
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'zs_save_inventory',
+                        action: 'zs_save_equipment',
                         nonce: nonce,
                         order_id: orderId,
                         inventory: data
@@ -854,7 +854,7 @@ class InventoryMetabox
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'zs_resolve_inventory_alert',
+                        action: 'zs_resolve_stock_alert',
                         nonce: nonce,
                         order_id: orderId,
                         material_key: materialKey,
@@ -894,7 +894,7 @@ class InventoryMetabox
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'zs_undo_inventory_alert_resolution',
+                        action: 'zs_undo_stock_alert',
                         nonce: nonce,
                         order_id: orderId,
                         material_key: materialKey

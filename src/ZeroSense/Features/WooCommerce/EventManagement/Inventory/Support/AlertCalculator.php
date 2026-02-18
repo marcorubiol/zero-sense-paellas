@@ -269,12 +269,12 @@ class AlertCalculator
         $alerts = self::calculateAlerts($order, $materials);
 
         foreach ($alerts as $materialKey => $alert) {
-            do_action('zs_inventory_alert_detected', array_merge($alert, [
+            do_action('zs_equipment_alert_detected', array_merge($alert, [
                 'order_id' => $order->get_id(),
             ]));
         }
 
-        delete_transient('zs_active_inventory_alerts');
+        delete_transient('zs_active_equipment_alerts');
 
         return $alerts;
     }

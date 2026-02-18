@@ -18,7 +18,7 @@ class AlertsDashboardPage
             __('Stock Alerts', 'zero-sense'),
             __('Stock Alerts', 'zero-sense'),
             'manage_woocommerce',
-            'zs-inventory-alerts',
+            'zs-stock-alerts',
             [$this, 'render']
         );
     }
@@ -87,7 +87,7 @@ class AlertsDashboardPage
             return strcmp($aDate, $bDate);
         });
 
-        $baseUrl = admin_url('admin.php?page=zs-inventory-alerts');
+        $baseUrl = admin_url('admin.php?page=zs-stock-alerts');
 
         ?>
         <div class="wrap">
@@ -136,7 +136,7 @@ class AlertsDashboardPage
                             $orderId = $group['order_id'];
                             $order   = wc_get_order($orderId);
                             $eventDate = $order ? $order->get_meta('zs_event_date', true) : '';
-                            $orderUrl  = ($order ? $order->get_edit_order_url() : admin_url('post.php?post=' . $orderId . '&action=edit')) . '#zs_inventory_materials';
+                            $orderUrl  = ($order ? $order->get_edit_order_url() : admin_url('post.php?post=' . $orderId . '&action=edit')) . '#zs_event_equipment';
                         ?>
                             <tr>
                                 <td>

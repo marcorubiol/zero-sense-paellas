@@ -5,7 +5,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\AlertCalcul
 
 class AlertsAdminNotice
 {
-    const TRANSIENT_KEY = 'zs_active_inventory_alerts';
+    const TRANSIENT_KEY = 'zs_active_equipment_alerts';
     const TRANSIENT_TTL = 300; // 5 minutes
 
     public function register(): void
@@ -30,17 +30,17 @@ class AlertsAdminNotice
         $screen = get_current_screen();
 
         // No mostrar el notice en el propio dashboard de alertas
-        if (isset($_GET['page']) && $_GET['page'] === 'zs-inventory-alerts') {
+        if (isset($_GET['page']) && $_GET['page'] === 'zs-stock-alerts') {
             return;
         }
 
         $isOrderPage = $screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true);
 
         if ($isOrderPage) {
-            $linkUrl   = '#zs_inventory_materials';
+            $linkUrl   = '#zs_event_equipment';
             $linkLabel = __('View Alerts', 'zero-sense');
         } else {
-            $linkUrl   = admin_url('admin.php?page=zs-inventory-alerts');
+            $linkUrl   = admin_url('admin.php?page=zs-stock-alerts');
             $linkLabel = __('View Alerts Dashboard', 'zero-sense');
         }
 

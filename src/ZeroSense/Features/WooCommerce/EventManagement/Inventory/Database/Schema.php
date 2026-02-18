@@ -9,7 +9,7 @@ class Schema
     public static function getStockTableName(): string
     {
         global $wpdb;
-        return $wpdb->prefix . 'zs_inventory_stock';
+        return $wpdb->prefix . 'zs_equipment_stock';
     }
 
     /**
@@ -18,7 +18,7 @@ class Schema
     public static function getReservationsTableName(): string
     {
         global $wpdb;
-        return $wpdb->prefix . 'zs_inventory_reservations';
+        return $wpdb->prefix . 'zs_equipment_reservations';
     }
 
     /**
