@@ -466,7 +466,7 @@
 
 .zs-alert-resolution {
     margin-top: 6px;
-    padding: 8px;
+    padding: 6px 12px;
     background: #f0f6fc;
     border-left: 3px solid #2271b1;
     font-size: 12px;
@@ -476,7 +476,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
 }
 
 .zs-alert-resolution-info {

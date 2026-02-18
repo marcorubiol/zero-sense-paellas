@@ -1027,7 +1027,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html = '<div class="zs-order-products">';
+        $html = '<ul class="zs-order-products">';
         
         foreach ($order->get_items() as $item) {
             if (!method_exists($item, 'get_product') || !$item->get_product()) {
@@ -1038,32 +1038,32 @@ class BricksDynamicTags implements FeatureInterface
             $quantity = $item->get_quantity();
             $name = $item->get_name();
             
-            $html .= '<div class="zs-product-item">';
-            $html .= '<strong>' . esc_html($name) . '</strong>';
+            $html .= '<li class="zs-menu-product">';
+            $html .= esc_html($name);
             
             if ($quantity > 1) {
-                $html .= ' <span class="zs-quantity">(' . esc_html($quantity) . 'x)</span>';
+                $html .= ' <span class="zs-menu-quantity">(' . esc_html($quantity) . 'x)</span>';
             }
             
             // Show product attributes if it's a variable product
             if ($product->is_type('variation')) {
                 $attributes = $product->get_variation_attributes();
                 if (!empty($attributes)) {
-                    $html .= '<div class="zs-attributes">';
+                    $html .= '<ul class="zs-attributes">';
                     foreach ($attributes as $attr_name => $attr_value) {
                         if ($attr_value) {
                             $label = wc_attribute_label(str_replace('attribute_', '', $attr_name));
-                            $html .= '<small>' . esc_html($label) . ': ' . esc_html($attr_value) . '</small>';
+                            $html .= '<li><small>' . esc_html($label) . ': ' . esc_html($attr_value) . '</small></li>';
                         }
                     }
-                    $html .= '</div>';
+                    $html .= '</ul>';
                 }
             }
             
-            $html .= '</div>';
+            $html .= '</li>';
         }
         
-        $html .= '</div>';
+        $html .= '</ul>';
         
         return $html;
     }
