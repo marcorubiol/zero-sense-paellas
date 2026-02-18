@@ -144,7 +144,7 @@ class AlertsDashboardPage
                         ?>
                             <tr>
                                 <td>
-                                    <a href="<?php echo esc_url(wc_get_order_admin_url($orderId) . '#zs_inventory_materials'); ?>" style="font-weight:600;">
+                                    <a href="<?php echo esc_url(($order ? $order->get_edit_order_url() : admin_url('post.php?post=' . $orderId . '&action=edit')) . '#zs_inventory_materials'); ?>" style="font-weight:600;">
                                         #<?php echo $orderId; ?>
                                     </a>
                                     <?php if ($order): ?>
@@ -173,7 +173,7 @@ class AlertsDashboardPage
                                     <?php if (!empty($alert['conflicts'])): ?>
                                         <?php foreach ($alert['conflicts'] as $idx => $conflict): ?>
                                             <?php if ($idx > 0) echo ', '; ?>
-                                            <a href="<?php echo esc_url(wc_get_order_admin_url($conflict['order_id']) . '#zs_inventory_materials'); ?>" target="_blank">
+                                            <a href="<?php $co = wc_get_order($conflict['order_id']); echo esc_url(($co ? $co->get_edit_order_url() : admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')) . '#zs_inventory_materials'); ?>" target="_blank">
                                                 #<?php echo $conflict['order_id']; ?>
                                             </a>
                                         <?php endforeach; ?>
