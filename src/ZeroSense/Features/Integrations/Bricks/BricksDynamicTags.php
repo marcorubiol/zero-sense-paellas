@@ -2715,47 +2715,11 @@ class BricksDynamicTags implements FeatureInterface
             return $ta <=> $tb;
         });
 
-        // Get guest counts for header
-        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
-        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
-
-        $html = '<style>
-            :where(.zs-ingredients-wrapper) { margin: 20px 0; }
-            :where(.zs-ingredients-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
-            :where(.zs-event-ingredients) { width: 100%; border-collapse: collapse; }
-            :where(.zs-event-ingredients thead) { background: #333; color: white; }
-            :where(.zs-event-ingredients th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
-            :where(.zs-event-ingredients td) { padding: 8px; border: 1px solid #ddd; }
-            :where(.zs-event-ingredients .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
-        </style>';
-        
-        $html .= '<div class="zs-ingredients-wrapper">';
-        
-        // Info header with guest breakdown (without babies)
-        $html .= '<div class="zs-ingredients-info">';
-        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
-        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
-        if ($children > 0) {
-            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
-        }
-        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
-        $html .= '</div>';
-
-        // Ingredients table (simplified - only Ingredient and TOTAL)
-        $html .= '<table class="zs-event-ingredients">';
-        $html .= '<thead>';
-        $html .= '<tr>';
-        $html .= '<th class="zs-col-ingredient">' . esc_html__('Ingredient', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '</tr>';
-        $html .= '</thead>';
-        $html .= '<tbody>';
-
+        $items = [];
         foreach ($totals as $t) {
             $termId = (int) ($t['term_id'] ?? 0);
-            $unit = (string) ($t['unit'] ?? '');
-            $qty = (float) ($t['qty'] ?? 0);
+            $unit   = (string) ($t['unit'] ?? '');
+            $qty    = (float) ($t['qty'] ?? 0);
 
             if ($termId <= 0 || $qty <= 0 || $unit === '') {
                 continue;
@@ -2766,19 +2730,17 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            // Normalize units (g/kg, ml/l)
             $normalized = $this->normalizeUnit($qty, $unit);
-            $normalizedQty = $normalized['qty'];
-            $normalizedUnit = $normalized['unit'];
-
-            $html .= '<tr>';
-            $html .= '<td class="zs-col-ingredient">' . esc_html($termName) . '</td>';
-            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($normalizedQty)) . ' ' . esc_html($normalizedUnit) . '</td>';
-            $html .= '</tr>';
+            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></li>';
         }
 
-        $html .= '</tbody>';
-        $html .= '</table>';
+        if (empty($items)) {
+            return '';
+        }
+
+        $html  = '<div class="brxe-div fdr-card__field">';
+        $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html__('Shopping list', 'zero-sense') . '</span>';
+        $html .= '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
         $html .= '</div>';
 
         return $html;
