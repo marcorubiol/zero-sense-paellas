@@ -1027,7 +1027,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html = '<ul class="zs-order-products">';
+        $items = [];
         
         foreach ($order->get_items() as $item) {
             if (!method_exists($item, 'get_product') || !$item->get_product()) {
@@ -1038,34 +1038,34 @@ class BricksDynamicTags implements FeatureInterface
             $quantity = $item->get_quantity();
             $name = $item->get_name();
             
-            $html .= '<li class="zs-menu-product">';
-            $html .= esc_html($name);
+            $itemHtml = '<li class="zs-menu-product">' . esc_html($name);
             
             if ($quantity > 1) {
-                $html .= ' <span class="zs-menu-quantity">(' . esc_html($quantity) . 'x)</span>';
+                $itemHtml .= ' <span class="zs-menu-quantity">(' . esc_html($quantity) . 'x)</span>';
             }
             
             // Show product attributes if it's a variable product
             if ($product->is_type('variation')) {
                 $attributes = $product->get_variation_attributes();
                 if (!empty($attributes)) {
-                    $html .= '<ul class="zs-attributes">';
+                    $attrItems = [];
                     foreach ($attributes as $attr_name => $attr_value) {
                         if ($attr_value) {
                             $label = wc_attribute_label(str_replace('attribute_', '', $attr_name));
-                            $html .= '<li><small>' . esc_html($label) . ': ' . esc_html($attr_value) . '</small></li>';
+                            $attrItems[] = '<li><small>' . esc_html($label) . ': ' . esc_html($attr_value) . '</small></li>';
                         }
                     }
-                    $html .= '</ul>';
+                    if (!empty($attrItems)) {
+                        $itemHtml .= '<ul class="zs-attributes">' . implode('', $attrItems) . '</ul>';
+                    }
                 }
             }
             
-            $html .= '</li>';
+            $itemHtml .= '</li>';
+            $items[] = $itemHtml;
         }
         
-        $html .= '</ul>';
-        
-        return $html;
+        return '<ul class="zs-order-products">' . implode('', $items) . '</ul>';
     }
 
     private function getOrderProductsSimple($post): string
