@@ -847,7 +847,8 @@ class BricksDynamicTags implements FeatureInterface
             if (!$isEmpty || $type === 'bool') {
                 $html .= '<div class="brxe-div fdr-card__field">';
                 $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($finalLabel) . '</span>';
-                $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($displayValue) . '</span>';
+                $formattedValue = $type === 'textarea' ? nl2br(esc_html($displayValue)) : esc_html($displayValue);
+                $html .= '<span class="brxe-text-basic fdr-card__field-value">' . $formattedValue . '</span>';
                 $html .= '</div>';
             }
         }
