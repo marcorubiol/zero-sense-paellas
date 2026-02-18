@@ -38,23 +38,20 @@ class MaterialCalculator
         // Calcular taules treball
         $result = array_merge($result, self::calculateTaulesTreball($totalGuests, $analysis));
         
-        // Calcular equipament cuina
-        $result = array_merge($result, self::calculateEquipamentCuina($totalGuests, $analysis, $result));
+        // Calcular logística cuina
+        $result = array_merge($result, self::calculateLogisticaCuina($totalGuests, $analysis, $result));
+        
+        // Calcular items fixos (1 per event)
+        $result = array_merge($result, self::calculateFixed());
+        
+        // Calcular caixes condicionals
+        $result = array_merge($result, self::calculateCaixesCondicionals($totalGuests));
         
         // Calcular roba personal
         $result = array_merge($result, self::calculateRobaPersonal($staffCount));
         
-        // Calcular textils i neteja
-        $result = array_merge($result, self::calculateTextilsNeteja($totalGuests, $result));
-        
-        // Calcular refrigeració
-        $result = array_merge($result, self::calculateRefrigeracio($totalGuests, $analysis));
-        
-        // Calcular vaixella i menatge
-        $result = array_merge($result, self::calculateVaixellaMenatge($totalGuests, $analysis));
-        
-        // Calcular caixes i contenidors
-        $result = array_merge($result, self::calculateCaixesContenidors($totalGuests));
+        // Calcular textil
+        $result = array_merge($result, self::calculateTextil($totalGuests, $result));
         
         return $result;
     }
@@ -163,11 +160,11 @@ class MaterialCalculator
         // Definición de capacidades de paellas (pax promedio)
         $paellaSizes = [
             ['key' => 'paella_135cm', 'min' => 60, 'max' => 80, 'avg' => 70, 'cremador' => 'cremador_90cm'],
-            ['key' => 'paella_115cm', 'min' => 40, 'max' => 60, 'avg' => 50, 'cremador' => 'cremador_70cm'],
+            ['key' => 'paella_115cm', 'min' => 40, 'max' => 60, 'avg' => 50, 'cremador' => 'cremador_90cm'],
             ['key' => 'paella_100cm', 'min' => 25, 'max' => 40, 'avg' => 32, 'cremador' => 'cremador_90cm'],
             ['key' => 'paella_90cm', 'min' => 15, 'max' => 25, 'avg' => 20, 'cremador' => 'cremador_70cm'],
             ['key' => 'paella_80cm', 'min' => 12, 'max' => 15, 'avg' => 13, 'cremador' => 'cremador_70cm'],
-            ['key' => 'paella_70cm', 'min' => 8, 'max' => 12, 'avg' => 10, 'cremador' => 'cremador_70cm'],
+            ['key' => 'paella_70cm', 'min' => 8, 'max' => 12, 'avg' => 10, 'cremador' => 'cremador_60cm'],
             ['key' => 'paella_65cm', 'min' => 6, 'max' => 9, 'avg' => 7, 'cremador' => 'cremador_50cm'],
             ['key' => 'paella_55cm', 'min' => 4, 'max' => 6, 'avg' => 5, 'cremador' => 'cremador_50cm'],
         ];
@@ -224,10 +221,10 @@ class MaterialCalculator
         // Potes/Trípodes: 1 por cremador
         $result['potes_tripodes'] = $totalCremadors;
         
-        // Butà: 1 por cremador + extras si >60pax
+        // Butà: 1 por cremador + 1 extra si >60pax
         $result['buta'] = $totalCremadors;
         if ($guests > 60) {
-            $result['buta'] += 2;
+            $result['buta'] += 1;
         }
         
         // Catifes: 1 por paella
@@ -237,9 +234,9 @@ class MaterialCalculator
     }
     
     /**
-     * EQUIPAMENT CUINA
+     * LOGÍSTICA CUINA
      */
-    private static function calculateEquipamentCuina(int $guests, array $analysis, array $currentResult): array
+    private static function calculateLogisticaCuina(int $guests, array $analysis, array $currentResult): array
     {
         $result = [];
         
@@ -250,8 +247,40 @@ class MaterialCalculator
         // Poals fems: 1 cada 20pax
         $result['poals_fems'] = (int) ceil($guests / 20);
         
-        // Vitro/Cremadors: 1 o 2 fijos
-        $result['vitro_cremadors'] = $guests > 50 ? 2 : 1;
+        // Vitro/Cremadors: 1 per paella
+        $totalPaelles = 0;
+        foreach (['paella_55cm','paella_65cm','paella_70cm','paella_80cm','paella_90cm','paella_100cm','paella_115cm','paella_135cm'] as $k) {
+            $totalPaelles += $currentResult[$k] ?? 0;
+        }
+        $result['vitro_cremadors'] = $totalPaelles;
+        
+        return $result;
+    }
+    
+    /**
+     * ITEMS FIXOS (1 per event)
+     */
+    private static function calculateFixed(): array
+    {
+        return [
+            'carreto'                    => 1,
+            'caixa_gris_gran_utensilis'  => 1,
+            'caixa_gris_mitjana_paravents' => 1,
+            'caixa_gris_petita_neteja'   => 1,
+            'caixa_marro_especies'       => 1,
+        ];
+    }
+    
+    /**
+     * CAIXES CONDICIONALS
+     */
+    private static function calculateCaixesCondicionals(int $guests): array
+    {
+        $result = [];
+        
+        if ($guests > 60) {
+            $result['caixa_gris_gran_extra'] = 1;
+        }
         
         return $result;
     }
@@ -279,9 +308,9 @@ class MaterialCalculator
     }
     
     /**
-     * TEXTILS I NETEJA
+     * TEXTIL
      */
-    private static function calculateTextilsNeteja(int $guests, array $currentResult): array
+    private static function calculateTextil(int $guests, array $currentResult): array
     {
         $result = [];
         
@@ -296,78 +325,6 @@ class MaterialCalculator
         // Estovalles: mismo número que taules
         if (isset($currentResult['taules_treball'])) {
             $result['estovalles'] = $currentResult['taules_treball'];
-        }
-        
-        return $result;
-    }
-    
-    /**
-     * REFRIGERACIÓ
-     */
-    private static function calculateRefrigeracio(int $guests, array $analysis): array
-    {
-        $result = [];
-        
-        // Neveres portàtils
-        // Para cuina: 1 cada 40pax
-        $neveresCuina = (int) ceil($guests / 40);
-        
-        // Para openbar: 1 cada 15pax
-        $neveresBar = 0;
-        if ($analysis['has_barra_lliure']) {
-            $neveresBar = (int) ceil($guests / 15);
-        }
-        
-        $result['neveres_portatils'] = $neveresCuina + $neveresBar;
-        
-        // Poal refrigerador begudes: Para openbar >25pax
-        if ($analysis['has_barra_lliure'] && $guests > 25) {
-            $result['poal_refrigerador_begudes'] = 1;
-        }
-        
-        return $result;
-    }
-    
-    /**
-     * VAIXELLA I MENATGE
-     */
-    private static function calculateVaixellaMenatge(int $guests, array $analysis): array
-    {
-        $result = [];
-        
-        if ($analysis['has_barra_lliure']) {
-            // Font aigua 8L: Para openbar
-            $result['font_aigua_8l'] = 1;
-            
-            // Cubiteres llautó: 1 cada 15pax
-            $result['cubiteres_llauto'] = (int) ceil($guests / 15);
-            
-            // Cubiteres gel: 1 cada 30pax
-            $result['cubiteres_gel'] = (int) ceil($guests / 30);
-            
-            // Pinzes gel: mismo que cubiteres gel
-            $result['pinzes_gel'] = $result['cubiteres_gel'];
-            
-            // Copes vi tritan: 2 por persona
-            $result['copes_vi_tritan'] = $guests * 2;
-            
-            // Gots reutilitzables: 3 por persona
-            $result['gots_reutilitzables_plastic'] = $guests * 3;
-        }
-        
-        return $result;
-    }
-    
-    /**
-     * CAIXES I CONTENIDORS
-     */
-    private static function calculateCaixesContenidors(int $guests): array
-    {
-        $result = [];
-        
-        // Caixa gris gran extra: Para eventos grandes (+60pax)
-        if ($guests > 60) {
-            $result['caixa_gris_gran_extra'] = 1;
         }
         
         return $result;
