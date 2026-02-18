@@ -1271,15 +1271,15 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($categorizedProducts as $category) {
-            $productsHtml = '';
+            $items = [];
             foreach ($category['products'] as $product) {
                 $qty = $product['quantity'] > 1 ? ' <span class="zs-menu-quantity">(' . esc_html($product['quantity']) . 'x)</span>' : '';
-                $productsHtml .= '<p class="zs-menu-product">' . esc_html($product['name']) . $qty . '</p>';
+                $items[] = '<li class="zs-menu-product">' . esc_html($product['name']) . $qty . '</li>';
             }
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($category['name']) . '</span>';
-            $html .= '<div class="brxe-text-basic fdr-card__field-value">' . $productsHtml . '</div>';
+            $html .= '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
             $html .= '</div>';
         }
 
