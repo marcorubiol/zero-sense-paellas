@@ -245,198 +245,98 @@ class BricksDynamicTags implements FeatureInterface
      */
     public function registerDynamicTags(array $tags): array
     {
+        // --- NEW {zs_*} tags (canonical) ---
+
         foreach (self::BILLING_FIELDS as $field => $label) {
-            $tags[] = [
-                'name' => '{woo_billing_' . $field . '}',
-                'label' => $label,
-                'group' => 'WooCommerce',
-            ];
+            $tags[] = ['name' => '{zs_billing_' . $field . '}', 'label' => $label, 'group' => 'ZeroSense'];
         }
 
         foreach (self::SHIPPING_FIELDS as $field => $label) {
-            $tags[] = [
-                'name' => '{woo_shipping_' . $field . '}',
-                'label' => $label,
-                'group' => 'WooCommerce',
-            ];
+            $tags[] = ['name' => '{zs_shipping_' . $field . '}', 'label' => $label, 'group' => 'ZeroSense'];
         }
 
-        $tags[] = [
-            'name' => '{woo_zs_order_id}',
-            'label' => 'Order ID',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_number}',
-            'label' => 'Order Number',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_order_note}',
-            'label' => 'Customer Note',
-            'group' => 'WooCommerce',
-        ];
+        $tags[] = ['name' => '{zs_order_id}',           'label' => 'Order ID',       'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_number}',       'label' => 'Order Number',   'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_note}',         'label' => 'Customer Note',  'group' => 'ZeroSense'];
 
         foreach ($this->getMetaBoxFields() as $field => $label) {
-            $tags[] = [
-                'name' => '{woo_mb_' . $field . '}',
-                'label' => $label,
-                'group' => 'WooCommerce',
-            ];
+            $tags[] = ['name' => '{zs_' . $field . '}', 'label' => $label, 'group' => 'ZeroSense'];
         }
 
-        $tags[] = [
-            'name' => '{woo_zs_event_service_location_name}',
-            'label' => 'Event Service Location (Name)',
-            'group' => 'WooCommerce',
-        ];
+        $tags[] = ['name' => '{zs_event_service_location_name}', 'label' => 'Event Service Location (Name)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_ops_notes}',                   'label' => 'Ops Notes',                    'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_event_media}',                 'label' => 'Event Media Gallery',           'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_event_media_urls}',            'label' => 'Event Media URLs (comma-separated)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_products}',              'label' => 'Order Products (Menu)',         'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_products_simple}',       'label' => 'Order Products (Simple List)',  'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_products_count}',        'label' => 'Order Products Count',          'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_products_by_category}',  'label' => 'Order Products (Grouped by Category)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_last_modified}',         'label' => 'Order Last Modified (Date & Time)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_last_modified_date}',    'label' => 'Order Last Modified (Date Only)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_last_modified_time}',    'label' => 'Order Last Modified (Time Only)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_language}',              'label' => 'Order Language',                'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_language_name}',         'label' => 'Order Language (Full Name)',    'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_intolerances}',                'label' => 'Intolerances & Allergies',      'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_recipes}',               'label' => 'Order Recipes (Detailed with Products)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_recipes_simple}',        'label' => 'Order Recipes (Simple List)',   'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_has_recipes}',           'label' => 'Order Has Recipes (1/0)',       'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_ingredients_total}',     'label' => 'Order Ingredients (Total Calculated)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_ingredients_simple}',    'label' => 'Order Ingredients (Simple - Only Total)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_utensils_total}',        'label' => 'Order Utensils (Total Calculated)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_utensils_simple}',       'label' => 'Order Utensils (Simple - Only Total)', 'group' => 'ZeroSense'];
 
-        foreach (self::OPS_FIELDS as $field => $label) {
-            $tags[] = [
-                'name' => '{woo_ops_' . $field . '}',
-                'label' => $label,
-                'group' => 'WooCommerce',
-            ];
-        }
-
-        // Dynamic schema tags - auto-generated from SchemaRegistry
+        // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
         foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
             $schemaTitle = $schema->getSchemaTitle();
-            
-            // Individual field tags
             foreach ($this->getSchemaFields($schemaKey) as $field => $label) {
-                $tags[] = [
-                    'name' => '{woo_' . $schemaKey . '_' . $field . '}',
-                    'label' => $label . ' (' . $schemaTitle . ')',
-                    'group' => 'WooCommerce',
-                ];
+                $tags[] = ['name' => '{zs_' . $schemaKey . '_' . $field . '}', 'label' => $label . ' (' . $schemaTitle . ')', 'group' => 'ZeroSense'];
             }
-            
-            // Complete list tag
-            $tags[] = [
-                'name' => '{woo_' . $schemaKey . '_list}',
-                'label' => $schemaTitle . ' (Complete List)',
-                'group' => 'WooCommerce',
-            ];
+            $tags[] = ['name' => '{zs_' . $schemaKey . '_list}', 'label' => $schemaTitle . ' (Complete List)', 'group' => 'ZeroSense'];
         }
 
-        $tags[] = [
-            'name' => '{woo_zs_event_media}',
-            'label' => 'Event Media Gallery',
-            'group' => 'WooCommerce',
-        ];
+        // --- LEGACY aliases (kept for backward compatibility — remove after migration) ---
 
-        $tags[] = [
-            'name' => '{woo_zs_event_media_urls}',
-            'label' => 'Event Media URLs (comma-separated)',
-            'group' => 'WooCommerce',
-        ];
-
-        // Order Products (Menu)
-        $tags[] = [
-            'name' => '{woo_zs_order_products}',
-            'label' => 'Order Products (Menu)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_products_simple}',
-            'label' => 'Order Products (Simple List)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_products_count}',
-            'label' => 'Order Products Count',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_products_by_category}',
-            'label' => 'Order Products (Grouped by Category)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_last_modified}',
-            'label' => 'Order Last Modified (Date & Time)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_last_modified_date}',
-            'label' => 'Order Last Modified (Date Only)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_last_modified_time}',
-            'label' => 'Order Last Modified (Time Only)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_language}',
-            'label' => 'Order Language',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_language_name}',
-            'label' => 'Order Language (Full Name)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_intolerances}',
-            'label' => 'Intolerances & Allergies',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_recipes}',
-            'label' => 'Order Recipes (Detailed with Products)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_recipes_simple}',
-            'label' => 'Order Recipes (Simple List)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_has_recipes}',
-            'label' => 'Order Has Recipes (1/0)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_ingredients_total}',
-            'label' => 'Order Ingredients (Total Calculated)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_ingredients_simple}',
-            'label' => 'Order Ingredients (Simple - Only Total)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_utensils_total}',
-            'label' => 'Order Utensils (Total Calculated)',
-            'group' => 'WooCommerce',
-        ];
-
-        $tags[] = [
-            'name' => '{woo_zs_order_utensils_simple}',
-            'label' => 'Order Utensils (Simple - Only Total)',
-            'group' => 'WooCommerce',
-        ];
+        foreach (self::BILLING_FIELDS as $field => $label) {
+            $tags[] = ['name' => '{woo_billing_' . $field . '}', 'label' => '[legacy] ' . $label, 'group' => 'ZeroSense (legacy)'];
+        }
+        foreach (self::SHIPPING_FIELDS as $field => $label) {
+            $tags[] = ['name' => '{woo_shipping_' . $field . '}', 'label' => '[legacy] ' . $label, 'group' => 'ZeroSense (legacy)'];
+        }
+        $tags[] = ['name' => '{woo_zs_order_id}',     'label' => '[legacy] Order ID',     'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_number}', 'label' => '[legacy] Order Number', 'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_order_note}',      'label' => '[legacy] Customer Note','group' => 'ZeroSense (legacy)'];
+        foreach ($this->getMetaBoxFields() as $field => $label) {
+            $tags[] = ['name' => '{woo_mb_' . $field . '}', 'label' => '[legacy] ' . $label, 'group' => 'ZeroSense (legacy)'];
+        }
+        $tags[] = ['name' => '{woo_zs_event_service_location_name}', 'label' => '[legacy] Event Service Location (Name)', 'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_ops_notes}',                      'label' => '[legacy] Ops Notes',                    'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_event_media}',                 'label' => '[legacy] Event Media Gallery',           'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_event_media_urls}',            'label' => '[legacy] Event Media URLs',              'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_products}',              'label' => '[legacy] Order Products (Menu)',         'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_products_simple}',       'label' => '[legacy] Order Products (Simple List)',  'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_products_count}',        'label' => '[legacy] Order Products Count',          'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_products_by_category}',  'label' => '[legacy] Order Products (Grouped by Category)', 'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_last_modified}',         'label' => '[legacy] Order Last Modified',           'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_last_modified_date}',    'label' => '[legacy] Order Last Modified (Date)',    'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_last_modified_time}',    'label' => '[legacy] Order Last Modified (Time)',    'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_language}',              'label' => '[legacy] Order Language',                'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_language_name}',         'label' => '[legacy] Order Language (Full Name)',    'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_intolerances}',                'label' => '[legacy] Intolerances & Allergies',      'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_recipes}',               'label' => '[legacy] Order Recipes',                 'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_recipes_simple}',        'label' => '[legacy] Order Recipes (Simple)',        'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy] Order Has Recipes',             'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy] Order Ingredients Total',       'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy] Order Ingredients Simple',      'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_utensils_total}',        'label' => '[legacy] Order Utensils Total',          'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_utensils_simple}',       'label' => '[legacy] Order Utensils Simple',         'group' => 'ZeroSense (legacy)'];
+        foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
+            $schemaTitle = $schema->getSchemaTitle();
+            foreach ($this->getSchemaFields($schemaKey) as $field => $label) {
+                $tags[] = ['name' => '{woo_' . $schemaKey . '_' . $field . '}', 'label' => '[legacy] ' . $label . ' (' . $schemaTitle . ')', 'group' => 'ZeroSense (legacy)'];
+            }
+            $tags[] = ['name' => '{woo_' . $schemaKey . '_list}', 'label' => '[legacy] ' . $schemaTitle . ' (Complete List)', 'group' => 'ZeroSense (legacy)'];
+        }
 
         return $tags;
     }
@@ -1372,9 +1272,15 @@ class BricksDynamicTags implements FeatureInterface
     {
         $value = '';
 
-        // Map MetaBox field name to ZeroSense meta key
+        // Primary: resolve directly as zs_ + field (e.g. zs_event_team_arrival_time)
+        $directMetaKey = 'zs_' . $field;
+        
+        // Fallback: legacy mapping for fields that have legacy keys
         $mapping = $this->getFieldMapping();
-        $metaKey = $mapping[$field] ?? $field;
+        $legacyMetaKey = $mapping[$field] ?? null;
+        
+        // Use legacy key only if it exists, otherwise use direct key
+        $metaKey = $legacyMetaKey ?? $directMetaKey;
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
