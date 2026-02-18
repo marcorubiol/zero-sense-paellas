@@ -259,6 +259,22 @@ class Bootstrap
             'feature' => 'EventManagement',
         ]);
 
+        $registry->register('_shipping_venue_name', [
+            'label' => 'Venue Name',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['venue_name'],
+            'feature' => 'EventManagement',
+        ]);
+
+        $registry->register('_shipping_venue_phone', [
+            'label' => 'Venue Phone',
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => ['venue_phone'],
+            'feature' => 'EventManagement',
+        ]);
+
         $registry->register(MetaKeys::EVENT_STAFF, [
             'label' => $labels[MetaKeys::EVENT_STAFF] ?? 'Event staff',
             'type' => 'array',
