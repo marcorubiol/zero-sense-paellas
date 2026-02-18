@@ -68,14 +68,11 @@ class AlertsDashboardPage
             ['dashicons'],
             '1.0.0'
         );
+        $pluginRoot = dirname(__FILE__, 8);
+        $jsUrl = plugins_url('assets/js/alerts-dashboard.js', $pluginRoot . '/zero-sense.php');
+        $jsVer = filemtime($pluginRoot . '/assets/js/alerts-dashboard.js') ?: '1.0.0';
         wp_enqueue_script('jquery');
-        wp_enqueue_script(
-            'zs-alerts-dashboard',
-            defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL . 'assets/js/alerts-dashboard.js' : '',
-            ['jquery'],
-            '1.0.0',
-            true
-        );
+        wp_enqueue_script('zs-alerts-dashboard', $jsUrl, ['jquery'], $jsVer, true);
         wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce'   => wp_create_nonce('zs_dismiss_inventory_alert'),
