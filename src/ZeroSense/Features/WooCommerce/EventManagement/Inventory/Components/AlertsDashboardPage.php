@@ -55,23 +55,17 @@ class AlertsDashboardPage
         );
     }
 
-    public function enqueueAssets(string $hook): void
+    public function enqueueAssets(): void
     {
-        error_log('[ZS AlertsDashboard] enqueueAssets hook: ' . $hook);
-        if ($hook !== 'event-operations_page_zs-inventory-alerts') {
+        if (!isset($_GET['page']) || $_GET['page'] !== 'zs-inventory-alerts') {
             return;
         }
 
-        wp_enqueue_style('dashicons');
-        wp_enqueue_style(
-            'zs-admin-inventory',
-            defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL . 'assets/css/admin-inventory.css' : '',
-            ['dashicons'],
-            '1.0.0'
-        );
-        $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(__FILE__, 8));
+        $baseUrl  = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(__FILE__, 8));
         $basePath = defined('ZERO_SENSE_PATH') ? ZERO_SENSE_PATH : dirname(__FILE__, 8) . '/';
-        $jsVer = file_exists($basePath . 'assets/js/alerts-dashboard.js') ? filemtime($basePath . 'assets/js/alerts-dashboard.js') : '1.0.0';
+        $jsFile   = $basePath . 'assets/js/alerts-dashboard.js';
+        $jsVer    = file_exists($jsFile) ? filemtime($jsFile) : '1.0.0';
+
         wp_enqueue_script('jquery');
         wp_enqueue_script('zs-alerts-dashboard', $baseUrl . 'assets/js/alerts-dashboard.js', ['jquery'], $jsVer, true);
         wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
