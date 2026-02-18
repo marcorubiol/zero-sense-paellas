@@ -265,7 +265,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $tags[] = ['name' => '{zs_event_service_location_name}', 'label' => 'Event Service Location (Name)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_ops_notes}',                   'label' => 'Ops Notes',                    'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_event_ops_notes}',             'label' => 'Ops Notes',                    'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_event_media}',                 'label' => 'Event Media Gallery',           'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_event_media_urls}',            'label' => 'Event Media URLs (comma-separated)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_products}',              'label' => 'Order Products (Menu)',         'group' => 'ZeroSense'];
@@ -277,13 +277,11 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_order_last_modified_time}',    'label' => 'Order Last Modified (Time Only)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_language}',              'label' => 'Order Language',                'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_language_name}',         'label' => 'Order Language (Full Name)',    'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_intolerances}',                'label' => 'Intolerances & Allergies',      'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_event_intolerances}',          'label' => 'Intolerances & Allergies',      'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_card}',                 'label' => 'Recipe Card (label/value per recipe)',           'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_simple}',               'label' => 'Recipe Names (Simple List)',                     'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_recipe_has}',                  'label' => 'Has Recipes (1/0)',                              'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_exists}',               'label' => 'Has Recipes (1/0)',                              'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_ingredients_total}',    'label' => 'Recipe Ingredients (Total Calculated)',          'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_recipe_ingredients_simple}',   'label' => 'Recipe Ingredients (Shopping list with header)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_recipe_ingredients_list}',     'label' => 'Recipe Ingredients (Shopping list with header)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
@@ -327,9 +325,9 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{woo_zs_intolerances}',                'label' => '[legacy] Intolerances & Allergies',      'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_recipes}',               'label' => '[legacy → zs_recipe_card] Order Recipes',                 'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_recipes_simple}',        'label' => '[legacy → zs_recipe_simple] Order Recipes (Simple)',        'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy → zs_recipe_has] Order Has Recipes',                'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy → zs_recipe_exists] Order Has Recipes',             'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy → zs_recipe_ingredients_total] Ingredients Total',  'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy → zs_recipe_ingredients_simple] Ingredients Simple','group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy → zs_recipe_ingredients_total] Ingredients Simple', 'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_utensils_total}',        'label' => '[legacy → zs_recipe_utensils_total] Utensils Total',        'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_utensils_simple}',       'label' => '[legacy → zs_recipe_utensils_simple] Utensils Simple',      'group' => 'ZeroSense (legacy)'];
         foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
@@ -415,7 +413,7 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_event_staff_all}') {
             return $this->getEventStaffFormatted($post);
         }
-        if ($tag === '{zs_ops_notes}') {
+        if ($tag === '{zs_event_ops_notes}') {
             return $this->getOpsNotesValue($post);
         }
         if ($tag === '{zs_event_media}') {
@@ -451,7 +449,7 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_order_language_name}') {
             return $this->getOrderLanguage($post, true);
         }
-        if ($tag === '{zs_intolerances}') {
+        if ($tag === '{zs_event_intolerances}') {
             return $this->getMetaBoxFieldValue('intolerances', $post);
         }
         if ($tag === '{zs_recipe_card}') {
@@ -460,17 +458,11 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_simple}') {
             return $this->getOrderRecipesSimple($post);
         }
-        if ($tag === '{zs_recipe_has}') {
+        if ($tag === '{zs_recipe_exists}') {
             return $this->getOrderHasRecipes($post);
         }
         if ($tag === '{zs_recipe_ingredients_total}') {
-            return $this->getOrderIngredientsTotal($post);
-        }
-        if ($tag === '{zs_recipe_ingredients_simple}') {
             return $this->getOrderIngredientsSimple($post);
-        }
-        if ($tag === '{zs_recipe_ingredients_list}') {
-            return $this->getOrderIngredientsList($post);
         }
         if ($tag === '{zs_recipe_utensils_total}') {
             return $this->getOrderUtensilsTotal($post);
@@ -531,7 +523,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
         $content = str_replace('{zs_event_staff_all}',             $this->getEventStaffFormatted($post), $content);
-        $content = str_replace('{zs_ops_notes}',                   $this->getOpsNotesValue($post),       $content);
+        $content = str_replace('{zs_event_ops_notes}',             $this->getOpsNotesValue($post),       $content);
         $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),   $content);
         $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),      $content);
         $content = str_replace('{zs_order_products}',              $this->getOrderProducts($post),       $content);
@@ -543,13 +535,11 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_order_last_modified_time}',    $this->getOrderLastModified($post, 'time'), $content);
         $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),        $content);
         $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
-        $content = str_replace('{zs_intolerances}',                $this->getMetaBoxFieldValue('intolerances', $post), $content);
+        $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('intolerances', $post), $content);
         $content = str_replace('{zs_recipe_card}',                $this->getOrderRecipesCard($post),       $content);
         $content = str_replace('{zs_recipe_simple}',              $this->getOrderRecipesSimple($post),     $content);
-        $content = str_replace('{zs_recipe_has}',                 $this->getOrderHasRecipes($post),        $content);
-        $content = str_replace('{zs_recipe_ingredients_total}',   $this->getOrderIngredientsTotal($post),  $content);
-        $content = str_replace('{zs_recipe_ingredients_simple}',  $this->getOrderIngredientsSimple($post), $content);
-        $content = str_replace('{zs_recipe_ingredients_list}',    $this->getOrderIngredientsList($post),   $content);
+        $content = str_replace('{zs_recipe_exists}',              $this->getOrderHasRecipes($post),        $content);
+        $content = str_replace('{zs_recipe_ingredients_total}',   $this->getOrderIngredientsSimple($post), $content);
         $content = str_replace('{zs_recipe_utensils_total}',      $this->getOrderUtensilsTotal($post),     $content);
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getOrderUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getOrderUtensilsList($post),      $content);
@@ -607,7 +597,7 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_order_note}'                       => '{zs_order_note}',
             '{woo_zs_event_service_location_name}'   => '{zs_event_service_location_name}',
             '{woo_mb_event_staff_all}'               => '{zs_event_staff_all}',
-            '{woo_ops_notes}'                        => '{zs_ops_notes}',
+            '{woo_ops_notes}'                        => '{zs_event_ops_notes}',
             '{woo_zs_event_media}'                   => '{zs_event_media}',
             '{woo_zs_event_media_urls}'              => '{zs_event_media_urls}',
             '{woo_zs_order_products}'                => '{zs_order_products}',
@@ -619,12 +609,12 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_last_modified_time}'      => '{zs_order_last_modified_time}',
             '{woo_zs_order_language}'                => '{zs_order_language}',
             '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
-            '{woo_zs_intolerances}'                  => '{zs_intolerances}',
+            '{woo_zs_intolerances}'                  => '{zs_event_intolerances}',
             '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
             '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
-            '{woo_zs_order_has_recipes}'             => '{zs_recipe_has}',
+            '{woo_zs_order_has_recipes}'             => '{zs_recipe_exists}',
             '{woo_zs_order_ingredients_total}'       => '{zs_recipe_ingredients_total}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_simple}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_total}',
             '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
             '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
         ];
@@ -688,7 +678,7 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_number}'                  => '{zs_order_number}',
             '{woo_order_note}'                       => '{zs_order_note}',
             '{woo_zs_event_service_location_name}'   => '{zs_event_service_location_name}',
-            '{woo_ops_notes}'                        => '{zs_ops_notes}',
+            '{woo_ops_notes}'                        => '{zs_event_ops_notes}',
             '{woo_zs_event_media}'                   => '{zs_event_media}',
             '{woo_zs_event_media_urls}'              => '{zs_event_media_urls}',
             '{woo_zs_order_products}'                => '{zs_order_products}',
@@ -700,12 +690,12 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_last_modified_time}'      => '{zs_order_last_modified_time}',
             '{woo_zs_order_language}'                => '{zs_order_language}',
             '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
-            '{woo_zs_intolerances}'                  => '{zs_intolerances}',
+            '{woo_zs_intolerances}'                  => '{zs_event_intolerances}',
             '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
             '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
-            '{woo_zs_order_has_recipes}'             => '{zs_recipe_has}',
+            '{woo_zs_order_has_recipes}'             => '{zs_recipe_exists}',
             '{woo_zs_order_ingredients_total}'       => '{zs_recipe_ingredients_total}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_simple}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_total}',
             '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
             '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
         ];
