@@ -96,13 +96,13 @@ class VehicleAssignmentMetabox
                         $name  = $vehiclePost ? $vehiclePost->post_title : '';
                         $plate = $vehicleId > 0 ? get_post_meta($vehicleId, self::META_PLATE, true) : '';
                         ?>
-                        <div class="zs-staff-row" data-vehicle-id="<?php echo esc_attr($vehicleId); ?>">
+                        <div class="zs-assignment-row" data-vehicle-id="<?php echo esc_attr($vehicleId); ?>">
                             <input type="hidden" name="zs_event_vehicles[]" value="<?php echo esc_attr($vehicleId); ?>" class="zs-vehicle-hidden-input">
 
-                            <div class="zs-staff-display">
+                            <div class="zs-assignment-display">
                                 <strong><?php echo esc_html($name); ?></strong>
                                 <?php if ($plate): ?>
-                                    <span class="zs-staff-info"><?php echo esc_html($plate); ?></span>
+                                    <span class="zs-assignment-info"><?php echo esc_html($plate); ?></span>
                                 <?php endif; ?>
                             </div>
 
@@ -147,7 +147,7 @@ class VehicleAssignmentMetabox
                 function saveAssignments($excludeRow) {
                     var ids = [];
                     $('.zs-vehicle-hidden-input').each(function() {
-                        if ($excludeRow && $(this).closest('.zs-staff-row')[0] === $excludeRow[0]) return;
+                        if ($excludeRow && $(this).closest('.zs-assignment-row')[0] === $excludeRow[0]) return;
                         var v = $(this).val();
                         if (v) ids.push(v);
                     });
@@ -166,8 +166,8 @@ class VehicleAssignmentMetabox
                 // Change button
                 $(document).on('click', '.zs-vehicle-edit', function() {
                     var $btn     = $(this);
-                    var $row     = $btn.closest('.zs-staff-row');
-                    var $display = $row.find('.zs-staff-display');
+                    var $row     = $btn.closest('.zs-assignment-row');
+                    var $display = $row.find('.zs-assignment-display');
                     var $select  = $row.find('.zs-vehicle-select');
 
                     if ($select.is(':visible')) {
@@ -179,7 +179,7 @@ class VehicleAssignmentMetabox
 
                             $row.find('.zs-vehicle-hidden-input').val(val);
                             $display.find('strong').text(name);
-                            $display.find('.zs-staff-info').text(plate);
+                            $display.find('.zs-assignment-info').text(plate);
 
                             if ($select.hasClass('select2-hidden-accessible')) $select.selectWoo('destroy');
                             $select.addClass('zs-hidden');
@@ -228,7 +228,7 @@ class VehicleAssignmentMetabox
                             $select.find('option[value="' + val + '"]').remove();
                             var newOpt = new Option(vehicleName, response.data.id, true, true);
                             $select.append(newOpt).trigger('change');
-                            $select.closest('.zs-staff-row').find('.zs-vehicle-edit').click();
+                            $select.closest('.zs-assignment-row').find('.zs-vehicle-edit').click();
                         } else {
                             alert('Error: ' + (response.data || 'Unknown error'));
                             $select.val('').trigger('change');
@@ -241,9 +241,9 @@ class VehicleAssignmentMetabox
                     e.preventDefault();
                     var $btn = $(this);
 
-                    var $newRow = $('<div class="zs-staff-row"></div>');
+                    var $newRow = $('<div class="zs-assignment-row"></div>');
                     var $hidden  = $('<input type="hidden" class="zs-vehicle-hidden-input" name="zs_event_vehicles[]" value="">');
-                    var $display = $('<div class="zs-staff-display zs-hidden"><strong></strong><span class="zs-staff-info"></span></div>');
+                    var $display = $('<div class="zs-assignment-display zs-hidden"><strong></strong><span class="zs-assignment-info"></span></div>');
                     var $select  = $('<select class="zs-vehicle-select"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select vehicle...', 'zero-sense')); ?></option>');
 
@@ -274,7 +274,7 @@ class VehicleAssignmentMetabox
                 // Remove vehicle
                 $(document).on('click', '.zs-vehicle-remove', function() {
                     var $btn = $(this);
-                    var $row = $btn.closest('.zs-staff-row');
+                    var $row = $btn.closest('.zs-assignment-row');
 
                     $btn.prop('disabled', true).text('<?php echo esc_js(__('Removing...', 'zero-sense')); ?>');
                     $row.css({ opacity: '0.5', transition: 'opacity 0.3s ease' });

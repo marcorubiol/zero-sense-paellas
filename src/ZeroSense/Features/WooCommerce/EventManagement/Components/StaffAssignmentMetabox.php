@@ -258,12 +258,12 @@ class StaffAssignmentMetabox
                                 $phone = $staffId > 0 ? get_post_meta($staffId, self::META_PHONE, true) : '';
                                 $email = $staffId > 0 ? get_post_meta($staffId, self::META_EMAIL, true) : '';
                                 ?>
-                                <div class="zs-staff-row" data-staff-id="<?php echo esc_attr($staffId); ?>">
+                                <div class="zs-assignment-row" data-staff-id="<?php echo esc_attr($staffId); ?>">
                                     <input type="hidden" name="zs_event_staff[<?php echo esc_attr($roleSlug); ?>][]" value="<?php echo esc_attr($staffId); ?>" class="zs-staff-hidden-input">
                                     
-                                    <div class="zs-staff-display">
+                                    <div class="zs-assignment-display">
                                         <strong><?php echo esc_html($staffName); ?></strong>
-                                        <span class="zs-staff-info">
+                                        <span class="zs-assignment-info">
                                             <?php if ($phone || $email): ?>
                                                 <?php if ($phone): ?>
                                                     📞 <?php echo esc_html($phone); ?>
@@ -341,8 +341,8 @@ class StaffAssignmentMetabox
                 
                 // Handle edit/change button
                 $(document).on('click', '.zs-staff-edit', function() {
-                    var $row = $(this).closest('.zs-staff-row');
-                    var $display = $row.find('.zs-staff-display');
+                    var $row = $(this).closest('.zs-assignment-row');
+                    var $display = $row.find('.zs-assignment-display');
                     var $select = $row.find('.zs-staff-select');
                     var $editBtn = $(this);
                     
@@ -367,7 +367,7 @@ class StaffAssignmentMetabox
                                 if (phone && email) infoHtml += ' | ';
                                 if (email) infoHtml += '✉️ ' + email;
                             }
-                            $display.find('.zs-staff-info').html(infoHtml);
+                            $display.find('.zs-assignment-info').html(infoHtml);
                             
                             // Ensure display is properly styled
                             $display.css({
@@ -473,7 +473,7 @@ class StaffAssignmentMetabox
                 $(document).on('change', '.zs-staff-select', function() {
                     var $select = $(this);
                     var value = $select.val();
-                    var $row = $select.closest('.zs-staff-row');
+                    var $row = $select.closest('.zs-assignment-row');
                     var $section = $row.closest('.zs-staff-role-section');
                     var $option = $select.find('option:selected');
                     
@@ -481,7 +481,7 @@ class StaffAssignmentMetabox
                     if (value && value.indexOf('new:') !== 0) {
                         var alreadyAssigned = false;
                         $section.find('.zs-staff-hidden-input').each(function() {
-                            if ($(this).val() === value && $(this).closest('.zs-staff-row')[0] !== $row[0]) {
+                            if ($(this).val() === value && $(this).closest('.zs-assignment-row')[0] !== $row[0]) {
                                 alreadyAssigned = true;
                                 return false;
                             }
@@ -545,10 +545,10 @@ class StaffAssignmentMetabox
                     var role = $btn.data('role');
                     var $section = $btn.closest('.zs-staff-role-section');
                     
-                    var $newRow = $('<div class="zs-staff-row"></div>');
+                    var $newRow = $('<div class="zs-assignment-row"></div>');
                     
                     var $hiddenInput = $('<input type="hidden" class="zs-staff-hidden-input" name="zs_event_staff[' + role + '][]" value="">');
-                    var $display = $('<div class="zs-staff-display zs-hidden"><strong></strong><span class="zs-staff-info"></span></div>');
+                    var $display = $('<div class="zs-assignment-display zs-hidden"><strong></strong><span class="zs-assignment-info"></span></div>');
                     
                     var $select = $('<select class="zs-staff-select" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
@@ -625,7 +625,7 @@ class StaffAssignmentMetabox
                 // Remove staff member
                 $(document).on('click', '.zs-staff-remove', function() {
                     var $btn = $(this);
-                    var $row = $btn.closest('.zs-staff-row');
+                    var $row = $btn.closest('.zs-assignment-row');
                     
                     // Disable button and show feedback
                     $btn.prop('disabled', true).text('<?php echo esc_js(__('Removing...', 'zero-sense')); ?>');
@@ -651,7 +651,7 @@ class StaffAssignmentMetabox
                             $(this).find('.zs-staff-hidden-input').each(function() {
                                 var $input = $(this);
                                 // Skip the row being removed
-                                if ($input.closest('.zs-staff-row')[0] !== $row[0]) {
+                                if ($input.closest('.zs-assignment-row')[0] !== $row[0]) {
                                     var staffId = $input.val();
                                     if (staffId) {
                                         staffData[role].push(staffId);
