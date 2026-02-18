@@ -3196,8 +3196,12 @@ class BricksDynamicTags implements FeatureInterface
         ]);
 
         $roleNames = [];
-        foreach ($roleTerms as $term) {
-            $roleNames[$term->slug] = $term->name;
+        if (!is_wp_error($roleTerms)) {
+            foreach ($roleTerms as $term) {
+                if ($term instanceof \WP_Term) {
+                    $roleNames[$term->slug] = $term->name;
+                }
+            }
         }
 
         // Build HTML output — one fdr-card__field per role
