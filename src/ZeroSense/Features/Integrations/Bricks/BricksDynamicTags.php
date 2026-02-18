@@ -3021,25 +3021,21 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             $recipeUtensils = get_post_meta($recipeId, self::META_RECIPE_UTENSILS, true);
-            error_log('[ZS utensils] recipeId=' . $recipeId . ' raw=' . print_r($recipeUtensils, true));
             if (!is_array($recipeUtensils)) {
                 continue;
             }
 
             foreach ($recipeUtensils as $utensilRow) {
                 if (!is_array($utensilRow)) {
-                    error_log('[ZS utensils] row not array: ' . print_r($utensilRow, true));
                     continue;
                 }
 
                 $termId = isset($utensilRow['utensil']) ? (int) $utensilRow['utensil'] : 0;
                 $perRatio = isset($utensilRow['pax_ratio']) ? (float) $utensilRow['pax_ratio'] : 0.0;
                 $baseQty = isset($utensilRow['qty']) ? (float) $utensilRow['qty'] : 0.0;
-                $unit = isset($utensilRow['unit']) ? sanitize_key((string) $utensilRow['unit']) : '';
+                $unit = isset($utensilRow['unit']) && $utensilRow['unit'] !== '' ? sanitize_key((string) $utensilRow['unit']) : 'u';
 
-                error_log('[ZS utensils] termId=' . $termId . ' perRatio=' . $perRatio . ' baseQty=' . $baseQty . ' unit=' . $unit);
-
-                if ($termId <= 0 || $perRatio <= 0 || $baseQty <= 0 || $unit === '') {
+                if ($termId <= 0 || $perRatio <= 0 || $baseQty <= 0) {
                     continue;
                 }
 
