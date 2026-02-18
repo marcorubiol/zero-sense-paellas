@@ -1087,33 +1087,33 @@ class Recipes implements FeatureInterface
         
         echo '</div>';
 
-        // Enqueue JS via wp_add_inline_script to avoid breaking WooCommerce's JSON serialization
         $baseEditUrl = esc_js(admin_url('post.php'));
-        $js = <<<JS
+        ?>
+        <script>
         jQuery(document).ready(function($) {
-            var \$select  = $('#zs_recipe_id');
-            var \$actions = $('#zs-recipe-context-actions');
-            var \$editBtn = $('#zs-recipe-edit-btn');
-            var baseEditUrl = '{$baseEditUrl}?post=';
+            var $select  = $('#zs_recipe_id');
+            var $actions = $('#zs-recipe-context-actions');
+            var $editBtn = $('#zs-recipe-edit-btn');
+            var baseEditUrl = '<?php echo $baseEditUrl; ?>?post=';
 
             function toggleActions(recipeId) {
-                recipeId = parseInt(recipeId || \$select.val() || 0);
+                recipeId = parseInt(recipeId || $select.val() || 0);
                 if (recipeId > 0) {
-                    \$editBtn.attr('href', baseEditUrl + recipeId + '&action=edit').show();
-                    \$actions.slideDown(200);
+                    $editBtn.attr('href', baseEditUrl + recipeId + '&action=edit').show();
+                    $actions.slideDown(200);
                 } else {
-                    \$editBtn.hide();
-                    \$actions.slideUp(200);
+                    $editBtn.hide();
+                    $actions.slideUp(200);
                 }
             }
 
-            \$select.on('change select2:select select2:unselect', function() {
+            $select.on('change select2:select select2:unselect', function() {
                 toggleActions($(this).val());
             });
             toggleActions();
         });
-JS;
-        wp_add_inline_script('jquery', $js);
+        </script>
+        <?php
     }
 
     public function saveProductRecipeField($product): void
