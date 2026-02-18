@@ -23,8 +23,8 @@ class StockAdminPage
     {
         add_submenu_page(
             'event-operations',
-            __('Stock Management', 'zero-sense'),
-            __('Stock Management', 'zero-sense'),
+            __('Equipment Stock', 'zero-sense'),
+            __('Equipment Stock', 'zero-sense'),
             'manage_woocommerce',
             'zs-stock-management',
             [$this, 'render']
@@ -111,7 +111,7 @@ class StockAdminPage
         
         ?>
         <div class="wrap zs-stock-admin-page">
-            <h1><?php esc_html_e('Stock Management', 'zero-sense'); ?></h1>
+            <h1><?php esc_html_e('Equipment Stock', 'zero-sense'); ?></h1>
             
             <!-- Explicación -->
             <div class="zs-stock-help" style="background: #fff; border-left: 4px solid #2271b1; padding: 12px 15px; margin: 15px 0; box-shadow: 0 1px 1px rgba(0,0,0,.04);">

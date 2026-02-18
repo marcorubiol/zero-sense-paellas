@@ -15,8 +15,8 @@ class AlertsDashboardPage
     {
         add_submenu_page(
             'event-operations',
-            __('Inventory Alerts', 'zero-sense'),
-            __('Inventory Alerts', 'zero-sense'),
+            __('Stock Alerts', 'zero-sense'),
+            __('Stock Alerts', 'zero-sense'),
             'manage_woocommerce',
             'zs-inventory-alerts',
             [$this, 'render']
@@ -91,7 +91,7 @@ class AlertsDashboardPage
 
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Inventory Alerts', 'zero-sense'); ?></h1>
+            <h1><?php esc_html_e('Stock Alerts', 'zero-sense'); ?></h1>
 
             <?php if (empty($allAlerts)): ?>
                 <div class="notice notice-success inline" style="margin-top: 15px;">

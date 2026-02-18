@@ -63,7 +63,7 @@ class InventoryMetabox
     {
         add_meta_box(
             'zs_inventory_materials',
-            __('Inventory & Materials', 'zero-sense'),
+            __('Event Equipment', 'zero-sense'),
             [$this, 'render'],
             wc_get_page_screen_id('shop-order'),
             'normal',
