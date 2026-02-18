@@ -141,6 +141,7 @@ class OrderOps implements FeatureInterface
         // Add Venue Name field
         $venue_name_field = [
             'label' => __('Venue Name', 'zero-sense'),
+            'class' => 'first',
         ];
         
         if ($context === 'view' && $order instanceof WC_Order) {

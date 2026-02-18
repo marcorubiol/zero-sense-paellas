@@ -81,7 +81,7 @@ class AdminSectionTitles implements FeatureInterface
                             elem.after('<div class="zs-subtitle zs-subtitle-client">Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
                             if (editLink.length) editLink.remove();
-                            elem.after('<div class="zs-subtitle zs-subtitle-venue">Venue/Wedding Planner' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                            elem.after('<div class="zs-subtitle zs-subtitle-venue">Wedding Planner - Venue' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
                         }
                     });
                     
@@ -121,7 +121,7 @@ JAVASCRIPT;
         wpml_register_string(
             'zero-sense',
             'shipping_section_title',
-            'Venue/Wedding Planner',
+            'Wedding Planner - Venue',
             [
                 'name' => 'Shipping Section Title',
                 'context' => 'WooCommerce Admin Order Page'
