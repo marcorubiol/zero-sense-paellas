@@ -6,10 +6,41 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDef
 
 class AlertsDashboardPage
 {
+    const DISMISSED_META_KEY = 'zs_dismissed_inventory_alerts';
+
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenuPage']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_action('wp_ajax_zs_dismiss_inventory_alert', [$this, 'ajaxDismiss']);
+    }
+
+    public function ajaxDismiss(): void
+    {
+        check_ajax_referer('zs_dismiss_inventory_alert', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized', 403);
+        }
+
+        $orderId     = (int) ($_POST['order_id'] ?? 0);
+        $materialKey = sanitize_key($_POST['material_key'] ?? '');
+
+        if (!$orderId || !$materialKey) {
+            wp_send_json_error('Invalid params', 400);
+        }
+
+        $userId    = get_current_user_id();
+        $dismissed = get_user_meta($userId, self::DISMISSED_META_KEY, true) ?: [];
+        $dismissed[$orderId . '_' . $materialKey] = time();
+        update_user_meta($userId, self::DISMISSED_META_KEY, $dismissed);
+
+        wp_send_json_success();
+    }
+
+    private function getDismissed(): array
+    {
+        return get_user_meta(get_current_user_id(), self::DISMISSED_META_KEY, true) ?: [];
     }
 
     public function addMenuPage(): void
@@ -53,6 +84,12 @@ class AlertsDashboardPage
         });
         $allAlerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
         $materials = MaterialDefinitions::getAll();
+
+        // Filter out per-user dismissed alerts
+        $dismissed = $this->getDismissed();
+        $allAlerts = array_values(array_filter($allAlerts, function ($a) use ($dismissed) {
+            return !isset($dismissed[$a['order_id'] . '_' . $a['material_key']]);
+        }));
 
         // Counts per type
         $counts = [
@@ -176,10 +213,11 @@ class AlertsDashboardPage
                                             ? sprintf('-%d', $alert['shortage'])
                                             : $alert['usage_percent'] . '%';
                                     ?>
-                                        <span style="display:inline-flex; align-items:center; gap:4px; background:#f6f7f7; border:1px solid #ddd; border-left:3px solid <?php echo esc_attr($color); ?>; border-radius:3px; padding:3px 8px; font-size:12px;" title="<?php echo esc_attr($label); ?>">
+                                        <span class="zs-alert-badge" data-order="<?php echo $alert['order_id']; ?>" data-material="<?php echo esc_attr($alert['material_key']); ?>" style="display:inline-flex; align-items:center; gap:4px; background:#f6f7f7; border:1px solid #ddd; border-left:3px solid <?php echo esc_attr($color); ?>; border-radius:3px; padding:3px 8px; font-size:12px;" title="<?php echo esc_attr($label); ?>">
                                             <span class="dashicons <?php echo esc_attr($icon); ?>" style="color:<?php echo esc_attr($color); ?>; font-size:14px; width:14px; height:14px;"></span>
                                             <strong><?php echo esc_html($materialLabel); ?></strong>
                                             <span style="color:#666;"><?php echo esc_html($detail); ?></span>
+                                            <button class="zs-dismiss-alert" title="<?php esc_attr_e('Dismiss for me', 'zero-sense'); ?>" style="background:none;border:none;cursor:pointer;padding:0 0 0 4px;color:#999;font-size:14px;line-height:1;">&times;</button>
                                         </span>
                                     <?php endforeach; ?>
                                     </div>
@@ -198,7 +236,37 @@ class AlertsDashboardPage
         </div>
         <style>
             .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
+            .zs-alert-badge .zs-dismiss-alert:hover { color: #dc3545; }
         </style>
+        <script>
+        (function($) {
+            var nonce = <?php echo json_encode(wp_create_nonce('zs_dismiss_inventory_alert')); ?>;
+            $(document).on('click', '.zs-dismiss-alert', function(e) {
+                e.preventDefault();
+                var $badge = $(this).closest('.zs-alert-badge');
+                var orderId = $badge.data('order');
+                var materialKey = $badge.data('material');
+                $badge.css('opacity', 0.4);
+                $.post(ajaxurl, {
+                    action: 'zs_dismiss_inventory_alert',
+                    nonce: nonce,
+                    order_id: orderId,
+                    material_key: materialKey
+                }, function(res) {
+                    if (res.success) {
+                        $badge.remove();
+                        // If row has no more badges, remove the row
+                        var $row = $badge.closest('tr');
+                        if ($row.find('.zs-alert-badge').length === 0) {
+                            $row.fadeOut(200, function() { $(this).remove(); });
+                        }
+                    } else {
+                        $badge.css('opacity', 1);
+                    }
+                });
+            });
+        })(jQuery);
+        </script>
         <?php
     }
 }
