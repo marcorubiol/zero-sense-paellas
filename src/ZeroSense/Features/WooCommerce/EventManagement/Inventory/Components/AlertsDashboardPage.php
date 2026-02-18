@@ -45,8 +45,13 @@ class AlertsDashboardPage
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
+        $allowedStatuses = ['deposit-paid', 'fully-paid'];
         $orderIds = AlertCalculator::getOrderIdsWithReservations(7, 60);
-        $alerts   = AlertCalculator::getAlertsForOrders($orderIds);
+        $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses) {
+            $order = wc_get_order($id);
+            return $order && in_array($order->get_status(), $allowedStatuses, true);
+        });
+        $alerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
         $materials = MaterialDefinitions::getAll();
 
         $criticalCount    = 0;
