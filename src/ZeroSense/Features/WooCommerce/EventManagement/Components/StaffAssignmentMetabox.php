@@ -695,64 +695,6 @@ class StaffAssignmentMetabox
             });
         })(jQuery);
         </script>
-
-        <style>
-            /* SelectWoo optgroup styling */
-            .select2-container--default .select2-results__group {
-                font-weight: 600;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                color: #1d2327;
-                padding: 8px 12px 4px 12px !important;
-                margin: 0 !important;
-                background: #f6f7f7;
-                border-bottom: 1px solid #dcdcde;
-            }
-            
-            /* Remove all inconsistent padding/margins from options */
-            .select2-container--default .select2-results__option {
-                padding: 6px 12px !important;
-                margin: 0 !important;
-                font-size: 13px;
-            }
-            
-            /* Remove the extra padding that Select2 adds to selected items */
-            .select2-container--default .select2-results__option[aria-selected] {
-                padding: 6px 12px !important;
-            }
-            
-            .select2-container--default .select2-results__option[aria-selected=true] {
-                padding: 6px 12px !important;
-            }
-            
-            /* Ensure highlighted state also has consistent padding */
-            .select2-container--default .select2-results__option--highlighted[aria-selected] {
-                padding: 6px 12px !important;
-            }
-            
-            /* Different background for "Others" group */
-            .select2-results__options[aria-expanded] > .select2-results__option:not([role="group"]) {
-                background: #fff;
-            }
-            
-            /* Highlight options from "Others" group with subtle background */
-            .select2-results__options .select2-results__option[data-has-role="false"] {
-                background: #f9f9f9;
-                font-style: italic;
-            }
-            
-            .select2-results__options .select2-results__option[data-has-role="false"]:hover,
-            .select2-results__options .select2-results__option[data-has-role="false"].select2-results__option--highlighted {
-                background: #e8f4f8 !important;
-            }
-            
-            /* Remove any default Select2 margins on the results container */
-            .select2-results__options {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-        </style>
         <?php
     }
 
