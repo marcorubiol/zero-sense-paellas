@@ -79,8 +79,6 @@ class OrderStatuses implements FeatureInterface
         add_filter('bulk_actions-edit-shop_order', [$this, 'filterBulkActions']);
         add_filter('bulk_actions-woocommerce_page_wc-orders', [$this, 'filterBulkActions']);
         add_filter('woocommerce_reports_order_statuses', [$this, 'exposeStatusesForReports']);
-        add_action('admin_head', [$this, 'injectAdminStyles']);
-
         if (is_admin()) {
             add_filter('woocommerce_shop_order_list_table_query_args', [$this, 'filterHposOrderList'], 999);
             add_action('pre_get_posts', [$this, 'filterClassicOrdersList'], 999);
@@ -223,18 +221,6 @@ class OrderStatuses implements FeatureInterface
     }
 
     /**
-     * Inject dashboard CSS so the admin list shows consistent colours.
-     */
-    public function injectAdminStyles(): void
-    {
-        if (!is_admin()) {
-            return;
-        }
-
-        echo '<style>' . $this->getAdminCss() . '</style>';
-    }
-
-    /**
      * Filter HPOS list table (new WooCommerce) to hide Cancelled/Not Available in "All" view.
      */
     public function filterHposOrderList(array $args): array
@@ -302,23 +288,6 @@ class OrderStatuses implements FeatureInterface
         }
 
         return $result;
-    }
-
-    /**
-     * CSS fragment for the admin list colouring.
-     */
-    private function getAdminCss(): string
-    {
-        return implode('', [
-            'mark.order-status{font-size:12px!important;}',
-            'mark.order-status.status-not-available{background-color:#eeeeee!important;color:#757575!important;}',
-            'mark.order-status.status-budget-requested{background:#ede7f6!important;color:#7e57c2!important;}',
-            'mark.order-status.status-pending{background:#fffde7!important;color:#bfa73c!important;}',
-            'mark.order-status.status-deposit-paid{background:#fff3e6!important;color:#c7a067!important;}',
-            'mark.order-status.status-fully-paid{background:#c8e6c9!important;color:#2e7d32!important;}',
-            'mark.order-status.status-completed{background:#2e7d32!important;color:#fff!important;}',
-            'mark.order-status.status-cancelled{background:#ffebee!important;color:#e53935!important;}',
-        ]);
     }
 
     /**

@@ -214,7 +214,7 @@ class InventoryMetabox
                             <?php if ($resolvedCount > 0): ?>
                                 <div class="zs-alert-count">
                                     <span class="dashicons dashicons-yes-alt alert-resolved"></span>
-                                    <span><?php echo $resolvedCount; ?> <?php _e('Resolved', 'zero-sense'); ?></span>
+                                    <span><?php echo $resolvedCount; ?> <?php _e('Alert Resolved', 'zero-sense'); ?></span>
                                 </div>
                             <?php endif; ?>
                             </div>

@@ -949,3 +949,114 @@ input:checked + .zs-slider:before {
 .zs-subtitle-edit a:hover {
     opacity: 1;
 }
+
+/* =================================================================
+   ORDER STATUS BADGES (Orders list)
+   ================================================================= */
+
+mark.order-status { font-size: 12px !important; }
+mark.order-status.status-not-available { background-color: #eeeeee !important; color: #757575 !important; }
+mark.order-status.status-budget-requested { background: #ede7f6 !important; color: #7e57c2 !important; }
+mark.order-status.status-pending { background: #fffde7 !important; color: #bfa73c !important; }
+mark.order-status.status-deposit-paid { background: #fff3e6 !important; color: #c7a067 !important; }
+mark.order-status.status-fully-paid { background: #c8e6c9 !important; color: #2e7d32 !important; }
+mark.order-status.status-completed { background: #2e7d32 !important; color: #fff !important; }
+mark.order-status.status-cancelled { background: #ffebee !important; color: #e53935 !important; }
+
+/* =================================================================
+   SHIPPING CUSTOM FIELDS LAYOUT (Order edit)
+   ================================================================= */
+
+#order_data .order_data_column ._shipping_phone_field { float: right; clear: right; }
+#order_data .order_data_column ._shipping_email_field { margin-top: 13px; }
+#order_data .order_data_column ._shipping_location_link_field { width: 100%; clear: both; }
+
+/* =================================================================
+   EVENT SHEET LINK (Order edit column)
+   ================================================================= */
+
+.zs-event-sheet-link {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 2px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    color: #2271b1;
+    line-height: 1;
+    margin-left: 2px;
+    float: right;
+}
+
+.zs-event-sheet-link:hover {
+    border: 2px solid var(--wp-admin-theme-color, #00a0d2);
+}
+
+.zs-event-sheet-link .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+}
+
+.order-preview {
+    display: none;
+}
+
+/* =================================================================
+   STOCK ALERTS COLUMN (Orders list)
+   ================================================================= */
+
+.column-zs_stock_alerts { width: 50px; text-align: center !important; }
+.column-zs_stock_alerts .dashicons { font-size: 18px; width: 18px; height: 18px; vertical-align: middle; }
+.zs-col-alert-critical { color: #dc3545; }
+.zs-col-alert-max-capacity { color: #fd7e14; }
+.zs-col-alert-low-stock { color: #ffc107; }
+
+/* =================================================================
+   SELECT2 / SELECTWOO OPTGROUP STYLING (Staff metabox)
+   ================================================================= */
+
+.select2-container--default .select2-results__group {
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #1d2327;
+    padding: 8px 12px 4px 12px !important;
+    margin: 0 !important;
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.select2-container--default .select2-results__option {
+    padding: 6px 12px !important;
+    margin: 0 !important;
+    font-size: 13px;
+}
+
+.select2-container--default .select2-results__option[aria-selected],
+.select2-container--default .select2-results__option[aria-selected=true],
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    padding: 6px 12px !important;
+}
+
+.select2-results__options[aria-expanded] > .select2-results__option:not([role="group"]) {
+    background: #fff;
+}
+
+.select2-results__options .select2-results__option[data-has-role="false"] {
+    background: #f9f9f9;
+    font-style: italic;
+}
+
+.select2-results__options .select2-results__option[data-has-role="false"]:hover,
+.select2-results__options .select2-results__option[data-has-role="false"].select2-results__option--highlighted {
+    background: #e8f4f8 !important;
+}
+
+.select2-results__options {
+    margin: 0 !important;
+    padding: 0 !important;
+}
