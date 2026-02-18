@@ -130,16 +130,6 @@ class MaterialCalculator
             $taules = (int) ceil($guests / 20);
         }
         
-        // +1 si hay entrants
-        if ($analysis['has_entrants']) {
-            $taules++;
-        }
-        
-        // +1 si hay barra libre
-        if ($analysis['has_barra_lliure']) {
-            $taules++;
-        }
-        
         return ['taules_treball' => $taules];
     }
     

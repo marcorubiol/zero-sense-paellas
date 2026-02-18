@@ -23,7 +23,7 @@ class MaterialDefinitions
     public static function getAll(): array
     {
         return [
-            // MATÈRIA PESADA — carreto
+            // MATÈRIA PESADA — equipament pesant
             [
                 'key' => 'carreto',
                 'label' => 'Carretó',
@@ -31,6 +31,22 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per event',
+            ],
+            [
+                'key' => 'potes_tripodes',
+                'label' => 'Potes / Trípodes',
+                'category' => 'equipament_pesant',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador',
+            ],
+            [
+                'key' => 'buta',
+                'label' => 'Butà',
+                'category' => 'equipament_pesant',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador + 1 extra si >60pax',
             ],
 
             // MATÈRIA PESADA — paelles
@@ -133,24 +149,6 @@ class MaterialDefinitions
                 'description' => '1 per cada paella de 100cm, 115cm o 135cm',
             ],
 
-            // MATÈRIA PESADA — potes & butà
-            [
-                'key' => 'potes_tripodes',
-                'label' => 'Potes / Trípodes',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador',
-            ],
-            [
-                'key' => 'buta',
-                'label' => 'Butà',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador + 1 extra si >60pax',
-            ],
-
             // LOGÍSTICA — cuina
             [
                 'key' => 'taules_treball',
@@ -158,7 +156,7 @@ class MaterialDefinitions
                 'category' => 'logistica_cuina',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => '≤20pax:1, ≤35:2, ≤50:3, ≤70:4, >70:ceil/20. +1 si entrants, +1 si openbar',
+                'description' => '≤20pax:1, ≤35:2, ≤50:3, ≤70:4, >70:ceil/20',
             ],
             [
                 'key' => 'cassoles',
