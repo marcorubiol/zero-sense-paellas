@@ -6,41 +6,9 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDef
 
 class AlertsDashboardPage
 {
-    const DISMISSED_META_KEY = 'zs_dismissed_inventory_alerts';
-
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenuPage']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueueAssets'], 10, 1);
-        add_action('wp_ajax_zs_dismiss_inventory_alert', [$this, 'ajaxDismiss']);
-    }
-
-    public function ajaxDismiss(): void
-    {
-        check_ajax_referer('zs_dismiss_inventory_alert', 'nonce');
-
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Unauthorized', 403);
-        }
-
-        $orderId     = (int) ($_POST['order_id'] ?? 0);
-        $materialKey = sanitize_key($_POST['material_key'] ?? '');
-
-        if (!$orderId || !$materialKey) {
-            wp_send_json_error('Invalid params', 400);
-        }
-
-        $userId    = get_current_user_id();
-        $dismissed = get_user_meta($userId, self::DISMISSED_META_KEY, true) ?: [];
-        $dismissed[$orderId . '_' . $materialKey] = time();
-        update_user_meta($userId, self::DISMISSED_META_KEY, $dismissed);
-
-        wp_send_json_success();
-    }
-
-    private function getDismissed(): array
-    {
-        return get_user_meta(get_current_user_id(), self::DISMISSED_META_KEY, true) ?: [];
     }
 
     public function addMenuPage(): void
@@ -53,11 +21,6 @@ class AlertsDashboardPage
             'zs-inventory-alerts',
             [$this, 'render']
         );
-    }
-
-    public function enqueueAssets(string $hook): void
-    {
-        // intentionally empty — scripts are enqueued in render()
     }
 
     public function render(): void
@@ -74,12 +37,6 @@ class AlertsDashboardPage
         });
         $allAlerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
         $materials = MaterialDefinitions::getAll();
-
-        // Filter out per-user dismissed alerts
-        $dismissed = $this->getDismissed();
-        $allAlerts = array_values(array_filter($allAlerts, function ($a) use ($dismissed) {
-            return !isset($dismissed[$a['order_id'] . '_' . $a['material_key']]);
-        }));
 
         // Counts per type
         $counts = [
@@ -207,7 +164,6 @@ class AlertsDashboardPage
                                             <span class="dashicons <?php echo esc_attr($icon); ?>" style="color:<?php echo esc_attr($color); ?>; font-size:14px; width:14px; height:14px;"></span>
                                             <strong><?php echo esc_html($materialLabel); ?></strong>
                                             <span style="color:#666;"><?php echo esc_html($detail); ?></span>
-                                            <button class="zs-dismiss-alert" title="<?php esc_attr_e('Dismiss for me', 'zero-sense'); ?>" style="background:none;border:none;cursor:pointer;padding:0 0 0 4px;color:#999;font-size:14px;line-height:1;">&times;</button>
                                         </span>
                                     <?php endforeach; ?>
                                     </div>
@@ -226,44 +182,7 @@ class AlertsDashboardPage
         </div>
         <style>
             .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
-            .zs-alert-badge .zs-dismiss-alert:hover { color: #dc3545; }
         </style>
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('click', function(e) {
-                var btn = e.target.closest('.zs-dismiss-alert');
-                if (!btn) return;
-                e.preventDefault();
-                var badge = btn.closest('.zs-alert-badge');
-                var orderId = badge.dataset.order;
-                var materialKey = badge.dataset.material;
-                badge.style.opacity = '0.4';
-                var formData = new FormData();
-                formData.append('action', 'zs_dismiss_inventory_alert');
-                formData.append('nonce', '<?php echo esc_js(wp_create_nonce('zs_dismiss_inventory_alert')); ?>');
-                formData.append('order_id', orderId);
-                formData.append('material_key', materialKey);
-                fetch('<?php echo esc_js(admin_url('admin-ajax.php')); ?>', {
-                    method: 'POST',
-                    body: formData,
-                    credentials: 'same-origin'
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res.success) {
-                        var row = badge.closest('tr');
-                        badge.remove();
-                        if (row && !row.querySelector('.zs-alert-badge')) {
-                            row.remove();
-                        }
-                    } else {
-                        badge.style.opacity = '1';
-                    }
-                })
-                .catch(function() { badge.style.opacity = '1'; });
-            });
-        });
-        </script>
         <?php
     }
 }
