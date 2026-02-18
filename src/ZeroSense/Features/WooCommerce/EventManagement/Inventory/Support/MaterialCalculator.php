@@ -230,19 +230,15 @@ class MaterialCalculator
     {
         $result = [];
         
-        // Cassoles: 1 por variedad de paella
-        $varieties = array_unique($analysis['paella_varieties']);
-        $result['cassoles'] = count($varieties);
+        // Cassoles: 1 por receta de paella
+        $result['cassoles'] = count($analysis['paella_items']);
         
         // Poals fems: 1 cada 20pax
         $result['poals_fems'] = (int) ceil($guests / 20);
         
-        // Vitro/Cremadors: 1 per paella
-        $totalPaelles = 0;
-        foreach (['paella_55cm','paella_65cm','paella_70cm','paella_80cm','paella_90cm','paella_100cm','paella_115cm','paella_135cm'] as $k) {
-            $totalPaelles += $currentResult[$k] ?? 0;
-        }
-        $result['vitro_cremadors'] = $totalPaelles;
+        // Vitro: 1 per varietat de paella
+        $varieties = array_unique($analysis['paella_varieties']);
+        $result['vitro'] = count($varieties);
         
         return $result;
     }

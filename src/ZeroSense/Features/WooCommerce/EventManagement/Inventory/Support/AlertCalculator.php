@@ -4,6 +4,8 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support;
 use WC_Order;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database\Schema;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\ReservationManager;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\AlertResolutionManager;
 
 class AlertCalculator
 {
@@ -253,5 +255,98 @@ class AlertCalculator
             default:
                 return 'dashicons-info';
         }
+    }
+
+    /**
+     * Calcula alertas y dispara hook + invalida transient de notice
+     *
+     * @param WC_Order $order
+     * @param array $materials ['material_key' => quantity]
+     * @return array
+     */
+    public static function calculateAndNotify(WC_Order $order, array $materials): array
+    {
+        $alerts = self::calculateAlerts($order, $materials);
+
+        foreach ($alerts as $materialKey => $alert) {
+            do_action('zs_inventory_alert_detected', array_merge($alert, [
+                'order_id' => $order->get_id(),
+            ]));
+        }
+
+        delete_transient('zs_active_inventory_alerts');
+
+        return $alerts;
+    }
+
+    /**
+     * Obtiene alertas activas (sin resolver) para un conjunto de pedidos.
+     * Usado por el dashboard global y el admin notice.
+     *
+     * @param array $orderIds
+     * @return array [ ['order_id', 'event_date', 'service_area_id', 'material_key', 'alert_type', ...] ]
+     */
+    public static function getAlertsForOrders(array $orderIds): array
+    {
+        if (empty($orderIds)) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($orderIds as $orderId) {
+            $order = wc_get_order($orderId);
+            if (!$order) {
+                continue;
+            }
+
+            $materials = ReservationManager::get($orderId);
+            if (empty($materials)) {
+                continue;
+            }
+
+            $alerts = self::calculateAlerts($order, $materials);
+            if (empty($alerts)) {
+                continue;
+            }
+
+            $resolutions = AlertResolutionManager::getResolutions($orderId);
+
+            foreach ($alerts as $materialKey => $alert) {
+                if (AlertResolutionManager::isResolved($orderId, $materialKey)) {
+                    continue;
+                }
+
+                $result[] = array_merge($alert, [
+                    'order_id' => $orderId,
+                ]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Obtiene IDs de pedidos con reservas activas en un rango de fechas.
+     *
+     * @param int $daysBefore
+     * @param int $daysAfter
+     * @return int[]
+     */
+    public static function getOrderIdsWithReservations(int $daysBefore = 7, int $daysAfter = 30): array
+    {
+        global $wpdb;
+
+        $table = Schema::getReservationsTableName();
+        $from  = date('Y-m-d', strtotime("-{$daysBefore} days"));
+        $to    = date('Y-m-d', strtotime("+{$daysAfter} days"));
+
+        $rows = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT order_id FROM {$table} WHERE event_date BETWEEN %s AND %s",
+            $from,
+            $to
+        ));
+
+        return array_map('intval', $rows ?: []);
     }
 }

@@ -12,17 +12,6 @@ class ProductMapper
     const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
     
     /**
-     * Category slugs BASE (español) para fallback
-     * Solo para servicios que NO tienen receta (barra, staff)
-     * 
-     * IMPORTANTE: Usar el slug del idioma por defecto (español).
-     * WPML resolverá automáticamente a las traducciones:
-     * - ES: "barras-libres" → CA: "barres-lliures" → EN: "open-bar"
-     */
-    const ENTRANT_CATEGORY_SLUGS = ['entrantes', 'aperitivos'];
-    const BARRA_CATEGORY_SLUGS = ['barras-libres'];
-    
-    /**
      * Cache de term IDs
      */
     private static $termIdsCache = [];
@@ -50,17 +39,10 @@ class ProductMapper
         }
         
         $result = [
-            'has_entrants' => false,
-            'has_barra_lliure' => false,
             'paella_varieties' => [],
             'paella_count' => 0,
             'paella_items' => [],
-            'staff_count' => ['cuiner' => 0, 'cambrer' => 0],
         ];
-        
-        // Pre-carga de categorías (Safety Net para servicios sin receta)
-        $barraTermIds = self::getTermIds(self::BARRA_CATEGORY_SLUGS);
-        $entrantsTermIds = self::getTermIds(self::ENTRANT_CATEGORY_SLUGS);
         
         foreach ($order->get_items() as $itemId => $item) {
             $product = $item->get_product();
@@ -119,34 +101,10 @@ class ProductMapper
                         continue; // ✅ Procesado por receta, skip categorías
                     }
                     
-                    // Detectar entrants por receta
-                    if (mb_stripos($recipeName, 'entrante', 0, 'UTF-8') !== false || 
-                        mb_stripos($recipeName, 'ensalada', 0, 'UTF-8') !== false ||
-                        mb_stripos($recipeName, 'aperitivo', 0, 'UTF-8') !== false) {
-                        $result['has_entrants'] = true;
-                        continue;
-                    }
+                    // No further recipe-based detection needed
                 }
             }
             
-            // ---------------------------------------------------------
-            // NIVEL 2: CATEGORÍA (Fallback para Servicios/Staff)
-            // ---------------------------------------------------------
-            // Si no tenía receta (o no era comida), miramos categorías
-            // WPML: Siempre usar el producto original para verificar categorías
-            
-            $productId = $item->get_product_id();
-            $originalProductId = self::resolveOriginalProductId($productId);
-            
-            // Barra Libre (suele venderse por horas, sin receta de cocina)
-            if (!empty($barraTermIds) && has_term($barraTermIds, 'product_cat', $originalProductId)) {
-                $result['has_barra_lliure'] = true;
-            }
-            
-            // Entrants (si venden "Pack Aperitivo" sin receta detallada)
-            if (!empty($entrantsTermIds) && has_term($entrantsTermIds, 'product_cat', $originalProductId)) {
-                $result['has_entrants'] = true;
-            }
         }
         
         // Cache result for this request

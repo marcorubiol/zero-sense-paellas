@@ -25,7 +25,9 @@ class AlertResolutionManager
         ];
         
         update_post_meta($orderId, self::META_KEY, $resolutions);
-        
+
+        delete_transient('zs_active_inventory_alerts');
+
         // FlowMattic trigger
         do_action('zs_inventory_alert_resolved', [
             'order_id' => $orderId,
@@ -96,6 +98,8 @@ class AlertResolutionManager
             } else {
                 update_post_meta($orderId, self::META_KEY, $resolutions);
             }
+
+            delete_transient('zs_active_inventory_alerts');
         }
     }
     

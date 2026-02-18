@@ -101,7 +101,7 @@ class InventoryMetabox
         $final = ManualOverride::apply($calculated, $overrides);
         
         // Calcular alertas de stock
-        $alerts = !empty($calculated) ? AlertCalculator::calculateAlerts($order, $final) : [];
+        $alerts = !empty($calculated) ? AlertCalculator::calculateAndNotify($order, $final) : [];
         
         // Obtener resoluciones de alertas
         $resolutions = AlertResolutionManager::getResolutions($postId);
@@ -130,16 +130,10 @@ class InventoryMetabox
             'paelles' => 'Paelles',
             'cremadors' => 'Cremadors',
             'equipament_pesant' => 'Equipament Pesant',
-            'equipament_cuina' => 'Equipament Cuina',
             'logistica_cuina' => 'Logística Cuina',
             'caixes' => 'Caixes',
             'roba_personal' => 'Vestimenta Staff',
             'textils_neteja' => 'Vestimenta Taules',
-            'caixes_contenidors' => 'Caixes i Contenidors',
-            'refrigeracio' => 'Refrigeració',
-            'utensilis_servir' => 'Utensilis Servir',
-            'mobiliari_esdeveniments' => 'Mobiliari Esdeveniments',
-            'vaixella_menatge' => 'Vaixella i Menatge',
             'altres' => 'Altres',
         ];
         
@@ -951,10 +945,16 @@ class InventoryMetabox
         // Procesar campos del formulario
         $newOverrides = $_POST['zs_inventory'] ?? [];
         
+        $allowedStatuses = ['deposit-paid', 'fully-paid'];
+        
         // Si el formulario está vacío (locked), mantener overrides existentes
         if (empty($newOverrides)) {
-            $final = ManualOverride::apply($calculated, $existingOverrides);
-            ReservationManager::createOrUpdate($postId, $final);
+            if (in_array($order->get_status(), $allowedStatuses)) {
+                $final = ManualOverride::apply($calculated, $existingOverrides);
+                ReservationManager::createOrUpdate($postId, $final);
+            } else {
+                ReservationManager::deleteAll($postId);
+            }
             return;
         }
         
@@ -980,8 +980,12 @@ class InventoryMetabox
         // Aplicar overrides finales
         $final = ManualOverride::apply($calculated, $actualOverrides);
         
-        // Crear/actualizar reservas
-        ReservationManager::createOrUpdate($postId, $final);
+        // Crear/actualizar reservas solo si el pedido está confirmado
+        if (in_array($order->get_status(), $allowedStatuses)) {
+            ReservationManager::createOrUpdate($postId, $final);
+        } else {
+            ReservationManager::deleteAll($postId);
+        }
     }
     
     /**
@@ -1021,8 +1025,13 @@ class InventoryMetabox
         $calculated = MaterialCalculator::calculate($order);
         $final = ManualOverride::apply($calculated, $mergedOverrides);
         
-        // Crear/actualizar reservas
-        ReservationManager::createOrUpdate($orderId, $final);
+        // Crear/actualizar reservas solo si el pedido está confirmado
+        $allowedStatuses = ['deposit-paid', 'fully-paid'];
+        if (in_array($order->get_status(), $allowedStatuses)) {
+            ReservationManager::createOrUpdate($orderId, $final);
+        } else {
+            ReservationManager::deleteAll($orderId);
+        }
         
         wp_send_json_success(['message' => 'Inventory saved successfully']);
     }
@@ -1056,8 +1065,13 @@ class InventoryMetabox
         // Recalcular materiales finales (solo automáticos)
         $calculated = MaterialCalculator::calculate($order);
         
-        // Actualizar reservas con valores automáticos
-        ReservationManager::createOrUpdate($orderId, $calculated);
+        // Actualizar reservas solo si el pedido está confirmado
+        $allowedStatuses = ['deposit-paid', 'fully-paid'];
+        if (in_array($order->get_status(), $allowedStatuses)) {
+            ReservationManager::createOrUpdate($orderId, $calculated);
+        } else {
+            ReservationManager::deleteAll($orderId);
+        }
         
         wp_send_json_success(['message' => 'All overrides cleared successfully']);
     }

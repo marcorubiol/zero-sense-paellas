@@ -183,12 +183,12 @@ class MaterialDefinitions
                 'description' => '1 cada 20pax',
             ],
             [
-                'key' => 'vitro_cremadors',
-                'label' => 'Vitro / Cremadors',
+                'key' => 'vitro',
+                'label' => 'Vitro',
                 'category' => 'logistica_cuina',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
-                'description' => '1 per paella',
+                'description' => '1 per varietat de paella',
             ],
             [
                 'key' => 'neveres_portatils',
