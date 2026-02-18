@@ -2732,12 +2732,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html  = '<div class="brxe-div fdr-card__field">';
-        $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html__('Shopping list', 'zero-sense') . '</span>';
-        $html .= '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
-        $html .= '</div>';
-
-        return $html;
+        return '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
     }
 
     private function getOrderIngredientsList($post): string
