@@ -50,12 +50,6 @@ class OrderAlertsColumn
             return;
         }
 
-        $allowedStatuses = ['deposit-paid', 'fully-paid'];
-        if (!in_array($order->get_status(), $allowedStatuses, true)) {
-            echo '<span style="color:#ccc;">—</span>';
-            return;
-        }
-
         $materials = ReservationManager::get($orderId);
 
         if (empty($materials)) {

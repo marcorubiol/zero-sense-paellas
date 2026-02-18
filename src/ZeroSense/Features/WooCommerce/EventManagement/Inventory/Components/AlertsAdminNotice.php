@@ -21,10 +21,9 @@ class AlertsAdminNotice
 
         $counts = $this->getCounts();
 
-        $critical    = $counts['critical'] ?? 0;
-        $maxCapacity = $counts['max_capacity'] ?? 0;
+        $critical = $counts['critical'] ?? 0;
 
-        if ($critical === 0 && $maxCapacity === 0) {
+        if ($critical === 0) {
             return;
         }
 
@@ -49,7 +48,12 @@ class AlertsAdminNotice
             printf(
                 '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
                 sprintf(
-                    __('Inventory alert: <strong>%d critical</strong> material(s) with insufficient stock.', 'zero-sense'),
+                    _n(
+                        'Inventory alert: there is <strong>%d event in the next 30 days with a critical stock shortage</strong> — not enough material available.',
+                        'Inventory alert: there are <strong>%d events in the next 30 days with a critical stock shortage</strong> — not enough material available.',
+                        $critical,
+                        'zero-sense'
+                    ),
                     $critical
                 ),
                 esc_url($linkUrl),
@@ -57,17 +61,6 @@ class AlertsAdminNotice
             );
         }
 
-        if ($maxCapacity > 0) {
-            printf(
-                '<div class="notice notice-warning is-dismissible"><p>⚠️ %s <a href="%s">%s</a></p></div>',
-                sprintf(
-                    __('Inventory alert: <strong>%d</strong> material(s) at max capacity.', 'zero-sense'),
-                    $maxCapacity
-                ),
-                esc_url($linkUrl),
-                esc_html($linkLabel)
-            );
-        }
     }
 
     private function getCounts(): array
