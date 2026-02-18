@@ -281,7 +281,8 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_card}',                 'label' => 'Recipe Card (label/value per recipe)',           'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_simple}',               'label' => 'Recipe Names (Simple List)',                     'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_exists}',               'label' => 'Has Recipes (1/0)',                              'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_recipe_ingredients_total}',    'label' => 'Recipe Ingredients (Total Calculated)',          'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_total_ingredients_list}',   'label' => 'Recipe Ingredients Total (List)',                'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_total_ingredients_simple}', 'label' => 'Recipe Ingredients Total (Inline — one field per ingredient)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
@@ -326,8 +327,8 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{woo_zs_order_recipes}',               'label' => '[legacy → zs_recipe_card] Order Recipes',                 'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_recipes_simple}',        'label' => '[legacy → zs_recipe_simple] Order Recipes (Simple)',        'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy → zs_recipe_exists] Order Has Recipes',             'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy → zs_recipe_ingredients_total] Ingredients Total',  'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy → zs_recipe_ingredients_total] Ingredients Simple', 'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy → zs_recipe_total_ingredients_list] Ingredients Total',  'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy → zs_recipe_total_ingredients_list] Ingredients Simple', 'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_utensils_total}',        'label' => '[legacy → zs_recipe_utensils_total] Utensils Total',        'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_utensils_simple}',       'label' => '[legacy → zs_recipe_utensils_simple] Utensils Simple',      'group' => 'ZeroSense (legacy)'];
         foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
@@ -461,11 +462,11 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_exists}') {
             return $this->getRecipeExists($post);
         }
-        if ($tag === '{zs_recipe_ingredients_total}') {
-            return $this->getRecipeIngredientsTotal($post);
+        if ($tag === '{zs_recipe_total_ingredients_list}') {
+            return $this->getRecipeTotalIngredientsList($post);
         }
-        if ($tag === '{zs_recipe_ingredients_simple}') {
-            return $this->getRecipeIngredientsSimple($post);
+        if ($tag === '{zs_recipe_total_ingredients_simple}') {
+            return $this->getRecipeTotalIngredientsSimple($post);
         }
         if ($tag === '{zs_recipe_utensils_total}') {
             return $this->getRecipeUtensilsTotal($post);
@@ -542,8 +543,8 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_card}',                $this->getRecipeCard($post),       $content);
         $content = str_replace('{zs_recipe_simple}',              $this->getRecipeSimple($post),     $content);
         $content = str_replace('{zs_recipe_exists}',              $this->getRecipeExists($post),        $content);
-        $content = str_replace('{zs_recipe_ingredients_total}',   $this->getRecipeIngredientsTotal($post),  $content);
-        $content = str_replace('{zs_recipe_ingredients_simple}',  $this->getRecipeIngredientsSimple($post), $content);
+        $content = str_replace('{zs_recipe_total_ingredients_list}',   $this->getRecipeTotalIngredientsList($post),   $content);
+        $content = str_replace('{zs_recipe_total_ingredients_simple}', $this->getRecipeTotalIngredientsSimple($post), $content);
         $content = str_replace('{zs_recipe_utensils_total}',      $this->getRecipeUtensilsTotal($post),     $content);
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
@@ -617,8 +618,8 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
             '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
             '{woo_zs_order_has_recipes}'             => '{zs_recipe_exists}',
-            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_ingredients_total}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_total}',
+            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_total_ingredients_list}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_total_ingredients_list}',
             '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
             '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
         ];
@@ -698,8 +699,8 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
             '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
             '{woo_zs_order_has_recipes}'             => '{zs_recipe_exists}',
-            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_ingredients_total}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_total}',
+            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_total_ingredients_list}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_total_ingredients_list}',
             '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
             '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
         ];
@@ -2601,6 +2602,125 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '</tbody>';
         $html .= '</table>';
         $html .= '</div>';
+
+        return $html;
+    }
+
+    private function getRecipeTotalIngredientsList($post): string
+    {
+        return $this->getRecipeIngredientsSimple($post);
+    }
+
+    private function getRecipeTotalIngredientsSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Recipe Ingredients Simple');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            if (!is_array($recipeIngredients)) {
+                continue;
+            }
+            foreach ($recipeIngredients as $ingRow) {
+                if (!is_array($ingRow)) {
+                    continue;
+                }
+                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
+                    continue;
+                }
+                $amount = $eqItem * $perPax;
+                if ($amount <= 0) {
+                    continue;
+                }
+                $k = $termId . '|' . $unit;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        usort($totals, function(array $a, array $b): int {
+            return ($a['term_id'] ?? 0) <=> ($b['term_id'] ?? 0);
+        });
+
+        $html = '';
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $unit   = (string) ($t['unit'] ?? '');
+            $qty    = (float) ($t['qty'] ?? 0);
+            if ($termId <= 0 || $qty <= 0 || $unit === '') {
+                continue;
+            }
+            $termName = $this->getTranslatedIngredientName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
+            $normalized = $this->normalizeUnit($qty, $unit);
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span>';
+            $html .= '</div>';
+        }
 
         return $html;
     }
