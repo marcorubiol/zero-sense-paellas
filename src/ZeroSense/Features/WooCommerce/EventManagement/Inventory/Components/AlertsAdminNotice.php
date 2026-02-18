@@ -79,7 +79,7 @@ class AlertsAdminNotice
         }
 
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
-        $orderIds = AlertCalculator::getOrderIdsWithReservations(7, 60);
+        $orderIds = AlertCalculator::getOrderIdsWithReservations(1, 30);
         $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses) {
             $order = wc_get_order($id);
             return $order && in_array($order->get_status(), $allowedStatuses, true);

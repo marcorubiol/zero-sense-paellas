@@ -30,7 +30,7 @@ class AlertsDashboardPage
         }
 
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
-        $orderIds = AlertCalculator::getOrderIdsWithReservations(7, 60);
+        $orderIds = AlertCalculator::getOrderIdsWithReservations(1, null);
         $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses) {
             $order = wc_get_order($id);
             return $order && in_array($order->get_status(), $allowedStatuses, true);
@@ -95,7 +95,7 @@ class AlertsDashboardPage
 
             <?php if (empty($allAlerts)): ?>
                 <div class="notice notice-success inline" style="margin-top: 15px;">
-                    <p><?php esc_html_e('No active inventory alerts in the next 60 days.', 'zero-sense'); ?></p>
+                    <p><?php esc_html_e('No active inventory alerts in the next 30 days.', 'zero-sense'); ?></p>
                 </div>
             <?php else: ?>
 
@@ -174,7 +174,7 @@ class AlertsDashboardPage
                 </table>
 
                 <p style="color:#666; font-size:12px; margin-top:10px;">
-                    <?php esc_html_e('Showing unresolved alerts for orders with events between 7 days ago and 60 days ahead. Open an order to resolve alerts.', 'zero-sense'); ?>
+                    <?php esc_html_e('Showing unresolved alerts for all upcoming orders (from yesterday onwards). Open an order to resolve alerts.', 'zero-sense'); ?>
                 </p>
 
                 <?php endif; ?>

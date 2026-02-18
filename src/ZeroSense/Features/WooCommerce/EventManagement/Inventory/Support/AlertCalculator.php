@@ -330,22 +330,29 @@ class AlertCalculator
      * Obtiene IDs de pedidos con reservas activas en un rango de fechas.
      *
      * @param int $daysBefore
-     * @param int $daysAfter
+     * @param int|null $daysAfter null = sin límite futuro
      * @return int[]
      */
-    public static function getOrderIdsWithReservations(int $daysBefore = 7, int $daysAfter = 30): array
+    public static function getOrderIdsWithReservations(int $daysBefore = 1, ?int $daysAfter = 30): array
     {
         global $wpdb;
 
         $table = Schema::getReservationsTableName();
         $from  = date('Y-m-d', strtotime("-{$daysBefore} days"));
-        $to    = date('Y-m-d', strtotime("+{$daysAfter} days"));
 
-        $rows = $wpdb->get_col($wpdb->prepare(
-            "SELECT DISTINCT order_id FROM {$table} WHERE event_date BETWEEN %s AND %s",
-            $from,
-            $to
-        ));
+        if ($daysAfter === null) {
+            $rows = $wpdb->get_col($wpdb->prepare(
+                "SELECT DISTINCT order_id FROM {$table} WHERE event_date >= %s",
+                $from
+            ));
+        } else {
+            $to   = date('Y-m-d', strtotime("+{$daysAfter} days"));
+            $rows = $wpdb->get_col($wpdb->prepare(
+                "SELECT DISTINCT order_id FROM {$table} WHERE event_date BETWEEN %s AND %s",
+                $from,
+                $to
+            ));
+        }
 
         return array_map('intval', $rows ?: []);
     }
