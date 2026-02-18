@@ -3230,23 +3230,21 @@ class BricksDynamicTags implements FeatureInterface
                 $phone = get_post_meta($staffId, 'zs_staff_phone', true);
                 $email = get_post_meta($staffId, 'zs_staff_email', true);
 
-                $contact = '';
+                $contactHtml = '';
                 if ($phone || $email) {
-                    $parts = [];
+                    $contactInner = '';
                     if ($phone) {
-                        $parts[] = '<a href="tel:' . esc_attr($phone) . '" class="zs-staff-phone">' . esc_html($phone) . '</a>';
+                        $contactInner .= '<p><a href="tel:' . esc_attr($phone) . '" class="zs-staff-phone">' . esc_html($phone) . '</a></p>';
                     }
                     if ($email) {
-                        $parts[] = '<a href="mailto:' . esc_attr($email) . '" class="zs-staff-email">' . esc_html($email) . '</a>';
+                        $contactInner .= '<p><a href="mailto:' . esc_attr($email) . '" class="zs-staff-email">' . esc_html($email) . '</a></p>';
                     }
-                    $contact = implode(', ', $parts);
+                    $contactHtml = '<span class="zs-staff-contact">' . $contactInner . '</span>';
                 }
 
                 $memberHtml = '<span class="zs-staff-member">';
                 $memberHtml .= '<p class="zs-staff-name">' . $name . '</p>';
-                if ($contact !== '') {
-                    $memberHtml .= '<p class="zs-staff-contact">' . $contact . '</p>';
-                }
+                $memberHtml .= $contactHtml;
                 $memberHtml .= '</span>';
                 $members[] = $memberHtml;
             }
