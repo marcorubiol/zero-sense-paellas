@@ -128,7 +128,7 @@ class AlertsDashboardPage
                         <tr>
                             <th style="width:180px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
                             <th style="width:110px;"><?php esc_html_e('Event Date', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Alerts', 'zero-sense'); ?></th>
+                            <th><?php esc_html_e('Unresolved Alerts', 'zero-sense'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
