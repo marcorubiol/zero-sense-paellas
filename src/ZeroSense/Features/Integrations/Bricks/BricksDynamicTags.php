@@ -325,13 +325,13 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{woo_zs_order_language}',              'label' => '[legacy] Order Language',                'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_language_name}',         'label' => '[legacy] Order Language (Full Name)',    'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_intolerances}',                'label' => '[legacy] Intolerances & Allergies',      'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_recipes}',               'label' => '[legacy] Order Recipes',                 'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_recipes_simple}',        'label' => '[legacy] Order Recipes (Simple)',        'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy] Order Has Recipes',             'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy] Order Ingredients Total',       'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy] Order Ingredients Simple',      'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_utensils_total}',        'label' => '[legacy] Order Utensils Total',          'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_utensils_simple}',       'label' => '[legacy] Order Utensils Simple',         'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_recipes}',               'label' => '[legacy → zs_recipe_card] Order Recipes',                 'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_recipes_simple}',        'label' => '[legacy → zs_recipe_simple] Order Recipes (Simple)',        'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy → zs_recipe_has] Order Has Recipes',                'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy → zs_recipe_ingredients_total] Ingredients Total',  'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy → zs_recipe_ingredients_simple] Ingredients Simple','group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_utensils_total}',        'label' => '[legacy → zs_recipe_utensils_total] Utensils Total',        'group' => 'ZeroSense (legacy)'];
+        $tags[] = ['name' => '{woo_zs_order_utensils_simple}',       'label' => '[legacy → zs_recipe_utensils_simple] Utensils Simple',      'group' => 'ZeroSense (legacy)'];
         foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
             $schemaTitle = $schema->getSchemaTitle();
             foreach ($this->getSchemaFields($schemaKey) as $field => $label) {
