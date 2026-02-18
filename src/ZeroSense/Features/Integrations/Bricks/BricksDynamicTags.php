@@ -8,6 +8,9 @@ use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Core\MetaFieldRegistry;
 use ZeroSense\Features\WooCommerce\Schema\SchemaRegistry;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialCalculator;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDefinitions;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\ManualOverride;
 use WC_Order;
 use WP_Post;
 
@@ -286,6 +289,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -477,6 +481,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_utensils_list}') {
             return $this->getRecipeUtensilsList($post);
         }
+        if ($tag === '{zs_inventory_list}') {
+            return $this->getInventoryList($post);
+        }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -548,6 +555,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_utensils_total}',      $this->getRecipeUtensilsTotal($post),     $content);
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
+        $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -3236,6 +3244,46 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($roleName) . '</span>';
             $html .= '<div class="brxe-text-basic fdr-card__field-value">' . implode('', $members) . '</div>';
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    private function getInventoryList($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Inventory & Materials');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $calculated = MaterialCalculator::calculate($order);
+        $overrides  = ManualOverride::get($orderId);
+        $final      = ManualOverride::apply($calculated, $overrides);
+
+        if (empty($final)) {
+            return '';
+        }
+
+        $definitions = [];
+        foreach (MaterialDefinitions::getAll() as $mat) {
+            $definitions[$mat['key']] = $mat['label'];
+        }
+
+        $html = '';
+        foreach ($final as $key => $qty) {
+            if ($qty <= 0) {
+                continue;
+            }
+            $label = $definitions[$key] ?? ucwords(str_replace('_', ' ', $key));
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($label) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html((string) $qty) . '</span>';
             $html .= '</div>';
         }
 
