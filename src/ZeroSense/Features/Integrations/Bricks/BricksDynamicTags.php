@@ -1201,56 +1201,72 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // Group products by category
+        // Pre-populate categories in their configured order
+        $orderedTerms = get_terms([
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => false,
+            'orderby'    => 'term_order',
+            'order'      => 'ASC',
+        ]);
+
         $categorizedProducts = [];
-        
+
+        if (!is_wp_error($orderedTerms)) {
+            foreach ($orderedTerms as $term) {
+                if ($term->slug === 'uncategorized') {
+                    continue;
+                }
+                $categorizedProducts[$term->term_id] = [
+                    'name'     => $term->name,
+                    'slug'     => $term->slug,
+                    'products' => [],
+                ];
+            }
+        }
+
         foreach ($order->get_items() as $item) {
             if (!method_exists($item, 'get_product') || !$item->get_product()) {
                 continue;
             }
-            
-            $product = $item->get_product();
+
+            $product   = $item->get_product();
             $productId = $product->get_parent_id() ? $product->get_parent_id() : $product->get_id();
-            
-            // Get product categories
-            $terms = get_the_terms($productId, 'product_cat');
-            
+            $terms     = get_the_terms($productId, 'product_cat');
+
             if ($terms && !is_wp_error($terms)) {
                 foreach ($terms as $term) {
-                    // Skip uncategorized
                     if ($term->slug === 'uncategorized') {
                         continue;
                     }
-                    
                     if (!isset($categorizedProducts[$term->term_id])) {
                         $categorizedProducts[$term->term_id] = [
-                            'name' => $term->name,
-                            'slug' => $term->slug,
+                            'name'     => $term->name,
+                            'slug'     => $term->slug,
                             'products' => [],
                         ];
                     }
-                    
                     $categorizedProducts[$term->term_id]['products'][] = [
-                        'name' => $item->get_name(),
+                        'name'     => $item->get_name(),
                         'quantity' => $item->get_quantity(),
                     ];
                 }
             } else {
-                // Products without category
                 if (!isset($categorizedProducts[0])) {
                     $categorizedProducts[0] = [
-                        'name' => __('Other', 'zero-sense'),
-                        'slug' => 'other',
+                        'name'     => __('Other', 'zero-sense'),
+                        'slug'     => 'other',
                         'products' => [],
                     ];
                 }
-                
                 $categorizedProducts[0]['products'][] = [
-                    'name' => $item->get_name(),
+                    'name'     => $item->get_name(),
                     'quantity' => $item->get_quantity(),
                 ];
             }
         }
+
+        // Remove categories with no products from this order
+        $categorizedProducts = array_filter($categorizedProducts, fn($cat) => !empty($cat['products']));
 
         $html = '';
 
