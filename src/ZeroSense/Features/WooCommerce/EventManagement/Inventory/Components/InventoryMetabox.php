@@ -307,7 +307,7 @@ class InventoryMetabox
                                     <span class="dashicons <?php echo $iconClass; ?> <?php echo $alertClass; ?>"></span>
                                     <strong><?php echo esc_html($materialLabel); ?></strong>
                                     <a href="#" class="zs-alert-goto-material" data-material-key="<?php echo esc_attr($materialKey); ?>">
-                                        <?php _e('resolve', 'zero-sense'); ?> ⤵
+                                        <?php _e('fix', 'zero-sense'); ?> ⤵
                                     </a>
                                 </div>
                                 <div class="zs-alert-item-message">
