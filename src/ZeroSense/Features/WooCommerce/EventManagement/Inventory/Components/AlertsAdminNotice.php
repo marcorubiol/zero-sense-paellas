@@ -29,6 +29,12 @@ class AlertsAdminNotice
         }
 
         $screen = get_current_screen();
+
+        // No mostrar el notice en el propio dashboard de alertas
+        if (isset($_GET['page']) && $_GET['page'] === 'zs-inventory-alerts') {
+            return;
+        }
+
         $isOrderPage = $screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true);
 
         if ($isOrderPage) {

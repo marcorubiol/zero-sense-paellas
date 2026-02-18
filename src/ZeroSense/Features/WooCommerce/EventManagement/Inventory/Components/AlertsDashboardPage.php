@@ -51,102 +51,112 @@ class AlertsDashboardPage
             $order = wc_get_order($id);
             return $order && in_array($order->get_status(), $allowedStatuses, true);
         });
-        $alerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
+        $allAlerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
         $materials = MaterialDefinitions::getAll();
 
-        $criticalCount    = 0;
-        $maxCapacityCount = 0;
-        $lowStockCount    = 0;
-
-        foreach ($alerts as $alert) {
-            switch ($alert['alert_type']) {
-                case AlertCalculator::ALERT_CRITICAL:
-                    $criticalCount++;
-                    break;
-                case AlertCalculator::ALERT_MAX_CAPACITY:
-                    $maxCapacityCount++;
-                    break;
-                case AlertCalculator::ALERT_LOW_STOCK:
-                    $lowStockCount++;
-                    break;
+        // Counts per type
+        $counts = [
+            AlertCalculator::ALERT_CRITICAL     => 0,
+            AlertCalculator::ALERT_MAX_CAPACITY => 0,
+            AlertCalculator::ALERT_LOW_STOCK    => 0,
+        ];
+        foreach ($allAlerts as $alert) {
+            if (isset($counts[$alert['alert_type']])) {
+                $counts[$alert['alert_type']]++;
             }
         }
 
-        usort($alerts, function ($a, $b) {
-            $order = [
-                AlertCalculator::ALERT_CRITICAL    => 1,
-                AlertCalculator::ALERT_MAX_CAPACITY => 2,
-                AlertCalculator::ALERT_LOW_STOCK   => 3,
-            ];
-            $aOrder = $order[$a['alert_type']] ?? 9;
-            $bOrder = $order[$b['alert_type']] ?? 9;
-            if ($aOrder !== $bOrder) {
-                return $aOrder - $bOrder;
+        // Active filter
+        $filterType = isset($_GET['alert_type']) && array_key_exists($_GET['alert_type'], $counts)
+            ? sanitize_key($_GET['alert_type'])
+            : '';
+
+        $alerts = $filterType
+            ? array_values(array_filter($allAlerts, fn($a) => $a['alert_type'] === $filterType))
+            : $allAlerts;
+
+        // Group by order_id, keeping worst alert type per order
+        $severityOrder = [
+            AlertCalculator::ALERT_CRITICAL     => 1,
+            AlertCalculator::ALERT_MAX_CAPACITY => 2,
+            AlertCalculator::ALERT_LOW_STOCK    => 3,
+        ];
+
+        $byOrder = [];
+        foreach ($alerts as $alert) {
+            $oid = $alert['order_id'];
+            if (!isset($byOrder[$oid])) {
+                $byOrder[$oid] = ['order_id' => $oid, 'alerts' => [], 'worst' => $alert['alert_type']];
             }
-            return strcmp($a['event_date'] ?? '', $b['event_date'] ?? '');
+            $byOrder[$oid]['alerts'][] = $alert;
+            if (($severityOrder[$alert['alert_type']] ?? 9) < ($severityOrder[$byOrder[$oid]['worst']] ?? 9)) {
+                $byOrder[$oid]['worst'] = $alert['alert_type'];
+            }
+        }
+
+        // Sort groups by worst alert type, then by event date
+        uasort($byOrder, function ($a, $b) use ($severityOrder) {
+            $diff = ($severityOrder[$a['worst']] ?? 9) - ($severityOrder[$b['worst']] ?? 9);
+            if ($diff !== 0) return $diff;
+            $aDate = $a['alerts'][0]['event_date'] ?? '';
+            $bDate = $b['alerts'][0]['event_date'] ?? '';
+            return strcmp($aDate, $bDate);
         });
+
+        $baseUrl = admin_url('admin.php?page=zs-inventory-alerts');
 
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Inventory Alerts', 'zero-sense'); ?></h1>
 
-            <?php if (empty($alerts)): ?>
+            <?php if (empty($allAlerts)): ?>
                 <div class="notice notice-success inline" style="margin-top: 15px;">
                     <p><?php esc_html_e('No active inventory alerts in the next 60 days.', 'zero-sense'); ?></p>
                 </div>
             <?php else: ?>
 
-                <div style="display: flex; gap: 12px; margin: 15px 0; flex-wrap: wrap;">
-                    <?php if ($criticalCount > 0): ?>
-                        <div style="background:#fff; border-left:4px solid #dc3545; padding:12px 18px; box-shadow:0 1px 2px rgba(0,0,0,.08); border-radius:3px; display:flex; align-items:center; gap:8px;">
-                            <span class="dashicons dashicons-dismiss" style="color:#dc3545; font-size:20px; width:20px; height:20px;"></span>
-                            <strong style="font-size:22px;"><?php echo $criticalCount; ?></strong>
-                            <span style="color:#666;"><?php esc_html_e('Critical', 'zero-sense'); ?></span>
-                        </div>
-                    <?php endif; ?>
-                    <?php if ($maxCapacityCount > 0): ?>
-                        <div style="background:#fff; border-left:4px solid #fd7e14; padding:12px 18px; box-shadow:0 1px 2px rgba(0,0,0,.08); border-radius:3px; display:flex; align-items:center; gap:8px;">
-                            <span class="dashicons dashicons-warning" style="color:#fd7e14; font-size:20px; width:20px; height:20px;"></span>
-                            <strong style="font-size:22px;"><?php echo $maxCapacityCount; ?></strong>
-                            <span style="color:#666;"><?php esc_html_e('Max Capacity', 'zero-sense'); ?></span>
-                        </div>
-                    <?php endif; ?>
-                    <?php if ($lowStockCount > 0): ?>
-                        <div style="background:#fff; border-left:4px solid #ffc107; padding:12px 18px; box-shadow:0 1px 2px rgba(0,0,0,.08); border-radius:3px; display:flex; align-items:center; gap:8px;">
-                            <span class="dashicons dashicons-flag" style="color:#ffc107; font-size:20px; width:20px; height:20px;"></span>
-                            <strong style="font-size:22px;"><?php echo $lowStockCount; ?></strong>
-                            <span style="color:#666;"><?php esc_html_e('Low Stock', 'zero-sense'); ?></span>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                <?php
+                $tabs = [
+                    ''                                  => [__('All', 'zero-sense'),          array_sum($counts), ''],
+                    AlertCalculator::ALERT_CRITICAL     => [__('Critical', 'zero-sense'),     $counts[AlertCalculator::ALERT_CRITICAL],     '#dc3545'],
+                    AlertCalculator::ALERT_MAX_CAPACITY => [__('Max Capacity', 'zero-sense'), $counts[AlertCalculator::ALERT_MAX_CAPACITY], '#fd7e14'],
+                    AlertCalculator::ALERT_LOW_STOCK    => [__('Low Stock', 'zero-sense'),    $counts[AlertCalculator::ALERT_LOW_STOCK],    '#ffc107'],
+                ];
+                ?>
+                <ul class="subsubsub" style="margin-bottom:10px;">
+                    <?php foreach ($tabs as $type => [$label, $count, $color]): if ($count === 0 && $type !== '') continue; ?>
+                        <li>
+                            <a href="<?php echo esc_url($type ? add_query_arg('alert_type', $type, $baseUrl) : $baseUrl); ?>"
+                               <?php if ($filterType === $type): ?>style="font-weight:700;<?php if ($color): ?> color:<?php echo $color; ?>;<?php endif; ?>"<?php endif; ?>>
+                                <?php echo esc_html($label); ?>
+                                <span class="count">(<?php echo $count; ?>)</span>
+                            </a> |
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
 
-                <table class="widefat striped" style="margin-top: 10px;">
+                <?php if (empty($byOrder)): ?>
+                    <p><?php esc_html_e('No alerts match this filter.', 'zero-sense'); ?></p>
+                <?php else: ?>
+
+                <table class="widefat striped" style="margin-top: 5px;">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e('Order', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Event Date', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Alert', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Needed / Stock', 'zero-sense'); ?></th>
-                            <th><?php esc_html_e('Conflicts', 'zero-sense'); ?></th>
+                            <th style="width:180px;"><?php esc_html_e('Order', 'zero-sense'); ?></th>
+                            <th style="width:110px;"><?php esc_html_e('Event Date', 'zero-sense'); ?></th>
+                            <th><?php esc_html_e('Alerts', 'zero-sense'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($alerts as $alert):
-                            $orderId     = $alert['order_id'];
-                            $order       = wc_get_order($orderId);
-                            $eventDate   = $order ? $order->get_meta('zs_event_date', true) : '';
-                            $materialDef = $materials[$alert['material_key']] ?? null;
-                            $materialLabel = $materialDef ? $materialDef['label'] : ucwords(str_replace('_', ' ', $alert['material_key']));
-
-                            $iconClass = AlertCalculator::getAlertIcon($alert['alert_type']);
-                            $cssClass  = 'alert-' . str_replace('_', '-', $alert['alert_type']);
+                        <?php foreach ($byOrder as $group):
+                            $orderId = $group['order_id'];
+                            $order   = wc_get_order($orderId);
+                            $eventDate = $order ? $order->get_meta('zs_event_date', true) : '';
+                            $orderUrl  = ($order ? $order->get_edit_order_url() : admin_url('post.php?post=' . $orderId . '&action=edit')) . '#zs_inventory_materials';
                         ?>
                             <tr>
                                 <td>
-                                    <a href="<?php echo esc_url(($order ? $order->get_edit_order_url() : admin_url('post.php?post=' . $orderId . '&action=edit')) . '#zs_inventory_materials'); ?>" style="font-weight:600;">
-                                        #<?php echo $orderId; ?>
-                                    </a>
+                                    <a href="<?php echo esc_url($orderUrl); ?>" style="font-weight:600;">#<?php echo $orderId; ?></a>
                                     <?php if ($order): ?>
                                         <div style="font-size:11px; color:#666;"><?php echo esc_html($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()); ?></div>
                                     <?php endif; ?>
@@ -154,32 +164,25 @@ class AlertsDashboardPage
                                 <td>
                                     <?php echo $eventDate ? esc_html(date_i18n(get_option('date_format'), strtotime($eventDate))) : '—'; ?>
                                 </td>
-                                <td><?php echo esc_html($materialLabel); ?></td>
                                 <td>
-                                    <span style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600;">
-                                        <span class="dashicons <?php echo esc_attr($iconClass); ?> <?php echo esc_attr($cssClass); ?>" style="font-size:16px; width:16px; height:16px;"></span>
-                                        <?php echo esc_html(AlertCalculator::getAlertLabel($alert['alert_type'])); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php printf('%d / %d', $alert['total_needed'], $alert['total_stock']); ?>
-                                    <?php if ($alert['shortage'] > 0): ?>
-                                        <span style="color:#dc3545; font-size:11px;">(<?php printf(__('-%d shortage', 'zero-sense'), $alert['shortage']); ?>)</span>
-                                    <?php else: ?>
-                                        <span style="color:#666; font-size:11px;">(<?php echo $alert['usage_percent']; ?>%)</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if (!empty($alert['conflicts'])): ?>
-                                        <?php foreach ($alert['conflicts'] as $idx => $conflict): ?>
-                                            <?php if ($idx > 0) echo ', '; ?>
-                                            <a href="<?php $co = wc_get_order($conflict['order_id']); echo esc_url(($co ? $co->get_edit_order_url() : admin_url('post.php?post=' . $conflict['order_id'] . '&action=edit')) . '#zs_inventory_materials'); ?>" target="_blank">
-                                                #<?php echo $conflict['order_id']; ?>
-                                            </a>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        —
-                                    <?php endif; ?>
+                                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                    <?php foreach ($group['alerts'] as $alert):
+                                        $materialDef   = $materials[$alert['material_key']] ?? null;
+                                        $materialLabel = $materialDef ? $materialDef['label'] : ucwords(str_replace('_', ' ', $alert['material_key']));
+                                        $icon  = AlertCalculator::getAlertIcon($alert['alert_type']);
+                                        $color = AlertCalculator::getAlertColor($alert['alert_type']);
+                                        $label = AlertCalculator::getAlertLabel($alert['alert_type']);
+                                        $detail = $alert['shortage'] > 0
+                                            ? sprintf('-%d', $alert['shortage'])
+                                            : $alert['usage_percent'] . '%';
+                                    ?>
+                                        <span style="display:inline-flex; align-items:center; gap:4px; background:#f6f7f7; border:1px solid #ddd; border-left:3px solid <?php echo esc_attr($color); ?>; border-radius:3px; padding:3px 8px; font-size:12px;" title="<?php echo esc_attr($label); ?>">
+                                            <span class="dashicons <?php echo esc_attr($icon); ?>" style="color:<?php echo esc_attr($color); ?>; font-size:14px; width:14px; height:14px;"></span>
+                                            <strong><?php echo esc_html($materialLabel); ?></strong>
+                                            <span style="color:#666;"><?php echo esc_html($detail); ?></span>
+                                        </span>
+                                    <?php endforeach; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -190,12 +193,11 @@ class AlertsDashboardPage
                     <?php esc_html_e('Showing unresolved alerts for orders with events between 7 days ago and 60 days ahead. Open an order to resolve alerts.', 'zero-sense'); ?>
                 </p>
 
+                <?php endif; ?>
             <?php endif; ?>
         </div>
         <style>
-            .dashicons.alert-critical { color: #dc3545; }
-            .dashicons.alert-max-capacity { color: #fd7e14; }
-            .dashicons.alert-low-stock { color: #ffc107; }
+            .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
         </style>
         <?php
     }
