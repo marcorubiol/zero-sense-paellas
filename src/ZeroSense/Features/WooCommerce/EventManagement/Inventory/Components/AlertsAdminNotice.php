@@ -70,17 +70,11 @@ class AlertsAdminNotice
 
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
         $orderIds = AlertCalculator::getOrderIdsWithReservations(7, 60);
-        $debugInfo = [];
-        $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses, &$debugInfo) {
+        $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses) {
             $order = wc_get_order($id);
-            $status = $order ? $order->get_status() : 'not-found';
-            $debugInfo[$id] = $status;
-            return $order && in_array($status, $allowedStatuses, true);
+            return $order && in_array($order->get_status(), $allowedStatuses, true);
         });
-        error_log('[ZS AlertsAdminNotice] Orders with reservations: ' . json_encode($debugInfo));
-        error_log('[ZS AlertsAdminNotice] Orders after status filter: ' . json_encode(array_values($orderIds)));
         $alerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
-        error_log('[ZS AlertsAdminNotice] Alerts found: ' . json_encode(array_column($alerts, 'alert_type')));
 
         $counts = [
             'critical'     => 0,

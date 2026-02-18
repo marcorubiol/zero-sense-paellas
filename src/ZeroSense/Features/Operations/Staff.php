@@ -65,7 +65,7 @@ class Staff implements FeatureInterface
             return $terms;
         }
         
-        if (empty($terms)) {
+        if (empty($terms) || !($terms[0] instanceof \WP_Term)) {
             return $terms;
         }
         
