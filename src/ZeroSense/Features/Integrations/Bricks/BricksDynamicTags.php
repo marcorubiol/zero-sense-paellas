@@ -683,6 +683,8 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{woo_zs_order_has_recipes}', $this->getOrderHasRecipes($post), $content);
         $content = str_replace('{woo_zs_order_ingredients_total}', $this->getOrderIngredientsTotal($post), $content);
         $content = str_replace('{woo_zs_order_ingredients_simple}', $this->getOrderIngredientsSimple($post), $content);
+        $content = str_replace('{woo_zs_order_utensils_total}', $this->getOrderUtensilsTotal($post), $content);
+        $content = str_replace('{woo_zs_order_utensils_simple}', $this->getOrderUtensilsSimple($post), $content);
 
         return $content;
     }
@@ -2642,6 +2644,407 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '</div>';
 
         return $html;
+    }
+
+    /**
+     * Get total utensils table (sum of all recipes)
+     */
+    private function getOrderUtensilsTotal($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Utensils Total');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+
+            $recipeUtensils = get_post_meta($recipeId, self::META_RECIPE_UTENSILS, true);
+            if (!is_array($recipeUtensils)) {
+                continue;
+            }
+
+            foreach ($recipeUtensils as $utensilRow) {
+                if (!is_array($utensilRow)) {
+                    continue;
+                }
+
+                $termId = isset($utensilRow['utensil']) ? (int) $utensilRow['utensil'] : 0;
+                $perRatio = isset($utensilRow['pax_ratio']) ? (float) $utensilRow['pax_ratio'] : 0.0;
+                $baseQty = isset($utensilRow['qty']) ? (float) $utensilRow['qty'] : 0.0;
+                $unit = isset($utensilRow['unit']) ? sanitize_key((string) $utensilRow['unit']) : '';
+
+                if ($termId <= 0 || $perRatio <= 0 || $baseQty <= 0 || $unit === '') {
+                    continue;
+                }
+
+                // Formula: ceil(eqItem / perRatio) * baseQty
+                $amount = ceil($eqItem / $perRatio) * $baseQty;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $k = $termId . '|' . $unit;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        usort($totals, function(array $a, array $b): int {
+            $ta = $a['term_id'] ?? 0;
+            $tb = $b['term_id'] ?? 0;
+            return $ta <=> $tb;
+        });
+
+        // Get guest counts for header
+        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
+        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
+
+        $html = '<style>
+            :where(.zs-utensils-wrapper) { margin: 20px 0; }
+            :where(.zs-utensils-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+            :where(.zs-event-utensils) { width: 100%; border-collapse: collapse; }
+            :where(.zs-event-utensils thead) { background: #333; color: white; }
+            :where(.zs-event-utensils th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
+            :where(.zs-event-utensils td) { padding: 8px; border: 1px solid #ddd; }
+            :where(.zs-event-utensils .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
+            :where(.zs-event-utensils .zs-col-adults),
+            :where(.zs-event-utensils .zs-col-children),
+            :where(.zs-event-utensils .zs-col-babies) { text-align: center; }
+            :where(.zs-event-utensils thead .zs-col-adults),
+            :where(.zs-event-utensils thead .zs-col-children),
+            :where(.zs-event-utensils thead .zs-col-babies) { background: #555; font-size: 0.9em; }
+        </style>';
+        
+        $html .= '<div class="zs-utensils-wrapper">';
+        
+        // Info header with guest breakdown
+        $html .= '<div class="zs-utensils-info">';
+        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
+        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
+        if ($children > 0) {
+            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
+        }
+        if ($babies > 0) {
+            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('babies (0-4 years)', 'zero-sense');
+        }
+        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
+        $html .= '<br><small style="color: #666; margin-top: 5px; display: block;">';
+        $html .= esc_html__('Multipliers:', 'zero-sense') . ' ';
+        $html .= esc_html__('Adults', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT));
+        $html .= ', ' . esc_html__('Children', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT));
+        $html .= ', ' . esc_html__('Babies', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::BABY_WEIGHT));
+        $html .= '</small>';
+        $html .= '</div>';
+
+        // Utensils table
+        $html .= '<table class="zs-event-utensils">';
+        $html .= '<thead>';
+        $html .= '<tr>';
+        $html .= '<th class="zs-col-utensil">' . esc_html__('Utensil', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-adults">' . esc_html__('Adults', 'zero-sense') . ' (' . esc_html($adults) . ') ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT)) . '</th>';
+        if ($children > 0) {
+            $html .= '<th class="zs-col-children">' . esc_html__('Children', 'zero-sense') . ' (' . esc_html($children) . ') ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT)) . '</th>';
+        }
+        if ($babies > 0) {
+            $html .= '<th class="zs-col-babies">' . esc_html__('Babies', 'zero-sense') . ' (' . esc_html($babies) . ') ×' . esc_html($this->formatNumber(self::BABY_WEIGHT)) . '</th>';
+        }
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $unit = (string) ($t['unit'] ?? '');
+            $qty = (float) ($t['qty'] ?? 0);
+
+            if ($termId <= 0 || $qty <= 0 || $unit === '') {
+                continue;
+            }
+
+            $termName = $this->getTranslatedUtensilName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
+
+            // Calculate per-person amounts for reference
+            $perAdult = $adults > 0 ? $qty / $eqTotal : 0;
+            $perChild = $children > 0 ? ($qty / $eqTotal) * self::CHILD_WEIGHT : 0;
+            $perBaby = $babies > 0 ? ($qty / $eqTotal) * self::BABY_WEIGHT : 0;
+
+            $html .= '<tr>';
+            $html .= '<td class="zs-col-utensil">' . esc_html($termName) . '</td>';
+            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</td>';
+            $html .= '<td class="zs-col-adults">' . esc_html($this->formatNumber($perAdult * $adults)) . ' ' . esc_html($unit) . '</td>';
+            if ($children > 0) {
+                $html .= '<td class="zs-col-children">' . esc_html($this->formatNumber($perChild * $children)) . ' ' . esc_html($unit) . '</td>';
+            }
+            if ($babies > 0) {
+                $html .= '<td class="zs-col-babies">' . esc_html($this->formatNumber($perBaby * $babies)) . ' ' . esc_html($unit) . '</td>';
+            }
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody>';
+        $html .= '</table>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Get simplified utensils total (only Utensil and TOTAL columns)
+     */
+    private function getOrderUtensilsSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Utensils Simple');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+
+            $recipeUtensils = get_post_meta($recipeId, self::META_RECIPE_UTENSILS, true);
+            if (!is_array($recipeUtensils)) {
+                continue;
+            }
+
+            foreach ($recipeUtensils as $utensilRow) {
+                if (!is_array($utensilRow)) {
+                    continue;
+                }
+
+                $termId = isset($utensilRow['utensil']) ? (int) $utensilRow['utensil'] : 0;
+                $perRatio = isset($utensilRow['pax_ratio']) ? (float) $utensilRow['pax_ratio'] : 0.0;
+                $baseQty = isset($utensilRow['qty']) ? (float) $utensilRow['qty'] : 0.0;
+                $unit = isset($utensilRow['unit']) ? sanitize_key((string) $utensilRow['unit']) : '';
+
+                if ($termId <= 0 || $perRatio <= 0 || $baseQty <= 0 || $unit === '') {
+                    continue;
+                }
+
+                // Formula: ceil(eqItem / perRatio) * baseQty
+                $amount = ceil($eqItem / $perRatio) * $baseQty;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $k = $termId . '|' . $unit;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        usort($totals, function(array $a, array $b): int {
+            $ta = $a['term_id'] ?? 0;
+            $tb = $b['term_id'] ?? 0;
+            return $ta <=> $tb;
+        });
+
+        // Get guest counts for header
+        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
+        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
+
+        $html = '<style>
+            :where(.zs-utensils-wrapper) { margin: 20px 0; }
+            :where(.zs-utensils-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+            :where(.zs-event-utensils) { width: 100%; border-collapse: collapse; }
+            :where(.zs-event-utensils thead) { background: #333; color: white; }
+            :where(.zs-event-utensils th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
+            :where(.zs-event-utensils td) { padding: 8px; border: 1px solid #ddd; }
+            :where(.zs-event-utensils .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
+        </style>';
+        
+        $html .= '<div class="zs-utensils-wrapper">';
+        
+        // Info header with guest breakdown (without babies)
+        $html .= '<div class="zs-utensils-info">';
+        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
+        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
+        if ($children > 0) {
+            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
+        }
+        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
+        $html .= '</div>';
+
+        // Utensils table (simplified - only Utensil and TOTAL)
+        $html .= '<table class="zs-event-utensils">';
+        $html .= '<thead>';
+        $html .= '<tr>';
+        $html .= '<th class="zs-col-utensil">' . esc_html__('Utensil', 'zero-sense') . '</th>';
+        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $unit = (string) ($t['unit'] ?? '');
+            $qty = (float) ($t['qty'] ?? 0);
+
+            if ($termId <= 0 || $qty <= 0 || $unit === '') {
+                continue;
+            }
+
+            $termName = $this->getTranslatedUtensilName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
+
+            $html .= '<tr>';
+            $html .= '<td class="zs-col-utensil">' . esc_html($termName) . '</td>';
+            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody>';
+        $html .= '</table>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Get translated utensil name
+     */
+    private function getTranslatedUtensilName(int $termId, string $orderLanguage): string
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            $term = get_term($termId, self::TAX_UTENSIL);
+            return $term instanceof \WP_Term ? $term->name : '';
+        }
+
+        $translatedId = apply_filters('wpml_object_id', $termId, self::TAX_UTENSIL, false, $orderLanguage);
+        if (!$translatedId) {
+            $translatedId = $termId;
+        }
+
+        $term = get_term($translatedId, self::TAX_UTENSIL);
+        return $term instanceof \WP_Term ? $term->name : '';
     }
 
     /**

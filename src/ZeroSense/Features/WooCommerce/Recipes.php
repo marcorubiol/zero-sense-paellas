@@ -1062,7 +1062,56 @@ class Recipes implements FeatureInterface
 
         echo '</select>';
         echo '</p>';
+        
+        // Contextual actions for recipe management
+        echo '<div id="zs-recipe-context-actions" style="margin-top:8px; display:none;">';
+        echo '<div class="zs-recipe-actions-wrapper">';
+        
+        // Edit current recipe button
+        if ($current > 0) {
+            $editUrl = admin_url('post.php?post=' . $current . '&action=edit');
+            echo '<a href="' . esc_url($editUrl) . '" class="zs-btn zs-btn-neutral" target="_blank" style="margin-right:8px;">';
+            echo '<span class="dashicons dashicons-edit" style="font-size:14px; line-height:24px; margin-right:4px;"></span>';
+            echo esc_html__('Edit Recipe', 'zero-sense');
+            echo '</a>';
+        }
+        
+        // Add new recipe button
+        $newUrl = admin_url('post-new.php?post_type=zs_recipe');
+        echo '<a href="' . esc_url($newUrl) . '" class="zs-btn zs-btn-primary" target="_blank">';
+        echo '<span class="dashicons dashicons-plus" style="font-size:14px; line-height:24px; margin-right:4px;"></span>';
+        echo esc_html__('Add New Recipe', 'zero-sense');
+        echo '</a>';
+        
         echo '</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // JavaScript for contextual actions
+        echo '<script>';
+        echo 'jQuery(document).ready(function($) {';
+        echo '    var $select = $("#zs_recipe_id");';
+        echo '    var $actions = $("#zs-recipe-context-actions");';
+        echo '    var $editBtn = $actions.find("a").first();';
+        echo '    ';
+        echo '    function toggleActions() {';
+        echo '        var recipeId = parseInt($select.val() || 0);';
+        echo '        if (recipeId > 0) {';
+        echo '            // Update edit button URL';
+        echo '            var editUrl = "' . admin_url('post.php?post=') . '" + recipeId + "&action=edit";';
+        echo '            $editBtn.attr("href", editUrl).show();';
+        echo '            $actions.slideDown(200);';
+        echo '        } else {';
+        echo '            $editBtn.hide();';
+        echo '            $actions.slideUp(200);';
+        echo '        }';
+        echo '    }';
+        echo '    ';
+        echo '    $select.on("change", toggleActions);';
+        echo '    toggleActions(); // Initial state';
+        echo '});';
+        echo '</script>';
     }
 
     public function saveProductRecipeField($product): void
