@@ -138,6 +138,41 @@ class OrderOps implements FeatureInterface
 
         $reordered['location_link'] = $location_link_field;
 
+        // Add Venue Name field
+        $venue_name_field = [
+            'label' => __('Venue Name', 'zero-sense'),
+        ];
+        
+        if ($context === 'view' && $order instanceof WC_Order) {
+            $venue_name = $order->get_meta('_shipping_venue_name', true);
+            $venue_name = is_string($venue_name) ? $venue_name : '';
+            if ($venue_name !== '') {
+                $venue_name_field['value'] = esc_html($venue_name);
+            }
+        } elseif ($context === 'edit' && $order instanceof WC_Order) {
+            $venue_name = $order->get_meta('_shipping_venue_name', true);
+            $venue_name_field['value'] = is_string($venue_name) ? $venue_name : '';
+        }
+        
+        // Add Venue Phone field
+        $venue_phone_field = [
+            'label' => __('Venue Phone', 'zero-sense'),
+        ];
+        
+        if ($context === 'view' && $order instanceof WC_Order) {
+            $venue_phone = $order->get_meta('_shipping_venue_phone', true);
+            $venue_phone = is_string($venue_phone) ? $venue_phone : '';
+            if ($venue_phone !== '') {
+                $venue_phone_field['value'] = '<a href="' . esc_url('tel:' . $venue_phone) . '">' . esc_html($venue_phone) . '</a>';
+            }
+        } elseif ($context === 'edit' && $order instanceof WC_Order) {
+            $venue_phone = $order->get_meta('_shipping_venue_phone', true);
+            $venue_phone_field['value'] = is_string($venue_phone) ? $venue_phone : '';
+        }
+        
+        $reordered['venue_name'] = $venue_name_field;
+        $reordered['venue_phone'] = $venue_phone_field;
+
         return $reordered;
     }
 

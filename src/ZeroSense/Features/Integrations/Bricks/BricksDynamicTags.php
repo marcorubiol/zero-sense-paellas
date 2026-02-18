@@ -307,9 +307,8 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{woo_zs_order_id}',     'label' => '[legacy] Order ID',     'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_order_number}', 'label' => '[legacy] Order Number', 'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_order_note}',      'label' => '[legacy] Customer Note','group' => 'ZeroSense (legacy)'];
-        foreach ($this->getMetaBoxFields() as $field => $label) {
-            $tags[] = ['name' => '{woo_mb_' . $field . '}', 'label' => '[legacy] ' . $label, 'group' => 'ZeroSense (legacy)'];
-        }
+        // MetaBox fields now only generate {zs_*} tags to avoid duplication
+        // Legacy {woo_mb_*} tags are maintained only for existing hardcoded mappings
         $tags[] = ['name' => '{woo_zs_event_service_location_name}', 'label' => '[legacy] Event Service Location (Name)', 'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_ops_notes}',                      'label' => '[legacy] Ops Notes',                    'group' => 'ZeroSense (legacy)'];
         $tags[] = ['name' => '{woo_zs_event_media}',                 'label' => '[legacy] Event Media Gallery',           'group' => 'ZeroSense (legacy)'];
@@ -1634,7 +1633,7 @@ class BricksDynamicTags implements FeatureInterface
             [
                 'type' => 'list',
                 'title' => sprintf(__('Meta Box dynamic tags (%d)', 'zero-sense'), count($this->getMetaBoxFields())),
-                'items' => $this->generateDynamicTagsList('woo_mb_', $this->getMetaBoxFields()),
+                'items' => $this->generateDynamicTagsList('zs_', $this->getMetaBoxFields()),
             ],
             [
                 'type' => 'list',
@@ -1646,7 +1645,7 @@ class BricksDynamicTags implements FeatureInterface
             [
                 'type' => 'text',
                 'title' => sprintf(__('Total tags available: %d', 'zero-sense'), $this->getTotalTagsCount()),
-                'content' => __('All tags are automatically generated from code constants and MetaFieldRegistry. Add new fields to BILLING_FIELDS, SHIPPING_FIELDS, or register them in MetaFieldRegistry and they will appear here automatically.', 'zero-sense'),
+                'content' => __('MetaBox fields now generate only canonical {zs_*} tags. Legacy {woo_mb_*} tags are no longer generated for new fields. Add new fields to BILLING_FIELDS, SHIPPING_FIELDS, or register them in MetaFieldRegistry and they will appear as {zs_*} tags automatically.', 'zero-sense'),
             ],
             [
                 'type' => 'text',
