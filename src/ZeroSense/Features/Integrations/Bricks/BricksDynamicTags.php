@@ -3239,10 +3239,16 @@ class BricksDynamicTags implements FeatureInterface
                     if ($email) {
                         $parts[] = '<a href="mailto:' . esc_attr($email) . '" class="zs-staff-email">' . esc_html($email) . '</a>';
                     }
-                    $contact = ' <span class="zs-staff-contact">(' . implode(', ', $parts) . ')</span>';
+                    $contact = implode(', ', $parts);
                 }
 
-                $members[] = '<p class="zs-staff-member"><span class="zs-staff-name">' . $name . '</span>' . $contact . '</p>';
+                $memberHtml = '<span class="zs-staff-member">';
+                $memberHtml .= '<p class="zs-staff-name">' . $name . '</p>';
+                if ($contact !== '') {
+                    $memberHtml .= '<p class="zs-staff-contact">' . $contact . '</p>';
+                }
+                $memberHtml .= '</span>';
+                $members[] = $memberHtml;
             }
 
             if (empty($members)) {
