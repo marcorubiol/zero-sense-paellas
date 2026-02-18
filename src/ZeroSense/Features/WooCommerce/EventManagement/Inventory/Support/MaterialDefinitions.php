@@ -190,6 +190,14 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 per paella',
             ],
+            [
+                'key' => 'neveres_portatils',
+                'label' => 'Nevera portàtil',
+                'category' => 'logistica_cuina',
+                'parent_category' => 'logistica',
+                'unit' => 'u',
+                'description' => '1 cada 30 persones',
+            ],
 
             // LOGÍSTICA — caixes
             [
@@ -232,15 +240,6 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 si >60 persones',
             ],
-            [
-                'key' => 'neveres_portatils',
-                'label' => 'Nevera portàtil',
-                'category' => 'caixes',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => '1 cada 30 persones',
-            ],
-
             // TEXTIL — roba personal
             [
                 'key' => 'xaquetes',
