@@ -278,14 +278,15 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_order_language}',              'label' => 'Order Language',                'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_language_name}',         'label' => 'Order Language (Full Name)',    'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_intolerances}',                'label' => 'Intolerances & Allergies',      'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_recipes}',               'label' => 'Order Recipes (Detailed with Products)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_recipes_card}',          'label' => 'Order Recipes (Card fields — label/value per recipe)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_recipes_simple}',        'label' => 'Order Recipes (Simple List)',   'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_has_recipes}',           'label' => 'Order Has Recipes (1/0)',       'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_ingredients_total}',     'label' => 'Order Ingredients (Total Calculated)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_ingredients_simple}',    'label' => 'Order Ingredients (Simple - Only Total)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_utensils_total}',        'label' => 'Order Utensils (Total Calculated)', 'group' => 'ZeroSense'];
-        $tags[] = ['name' => '{zs_order_utensils_simple}',       'label' => 'Order Utensils (Simple - Only Total)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_card}',                 'label' => 'Recipe Card (label/value per recipe)',           'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_simple}',               'label' => 'Recipe Names (Simple List)',                     'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_has}',                  'label' => 'Has Recipes (1/0)',                              'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_ingredients_total}',    'label' => 'Recipe Ingredients (Total Calculated)',          'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_ingredients_simple}',   'label' => 'Recipe Ingredients (Shopping list with header)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_ingredients_list}',     'label' => 'Recipe Ingredients (Shopping list with header)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -453,29 +454,32 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_intolerances}') {
             return $this->getMetaBoxFieldValue('intolerances', $post);
         }
-        if ($tag === '{zs_order_recipes}') {
-            return $this->getOrderRecipes($post);
-        }
-        if ($tag === '{zs_order_recipes_card}') {
+        if ($tag === '{zs_recipe_card}') {
             return $this->getOrderRecipesCard($post);
         }
-        if ($tag === '{zs_order_recipes_simple}') {
+        if ($tag === '{zs_recipe_simple}') {
             return $this->getOrderRecipesSimple($post);
         }
-        if ($tag === '{zs_order_has_recipes}') {
+        if ($tag === '{zs_recipe_has}') {
             return $this->getOrderHasRecipes($post);
         }
-        if ($tag === '{zs_order_ingredients_total}') {
+        if ($tag === '{zs_recipe_ingredients_total}') {
             return $this->getOrderIngredientsTotal($post);
         }
-        if ($tag === '{zs_order_ingredients_simple}') {
+        if ($tag === '{zs_recipe_ingredients_simple}') {
             return $this->getOrderIngredientsSimple($post);
         }
-        if ($tag === '{zs_order_utensils_total}') {
+        if ($tag === '{zs_recipe_ingredients_list}') {
+            return $this->getOrderIngredientsList($post);
+        }
+        if ($tag === '{zs_recipe_utensils_total}') {
             return $this->getOrderUtensilsTotal($post);
         }
-        if ($tag === '{zs_order_utensils_simple}') {
+        if ($tag === '{zs_recipe_utensils_simple}') {
             return $this->getOrderUtensilsSimple($post);
+        }
+        if ($tag === '{zs_recipe_utensils_list}') {
+            return $this->getOrderUtensilsList($post);
         }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
@@ -540,14 +544,15 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),        $content);
         $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
         $content = str_replace('{zs_intolerances}',                $this->getMetaBoxFieldValue('intolerances', $post), $content);
-        $content = str_replace('{zs_order_recipes}',               $this->getOrderRecipes($post),         $content);
-        $content = str_replace('{zs_order_recipes_card}',            $this->getOrderRecipesCard($post),     $content);
-        $content = str_replace('{zs_order_recipes_simple}',        $this->getOrderRecipesSimple($post),   $content);
-        $content = str_replace('{zs_order_has_recipes}',           $this->getOrderHasRecipes($post),      $content);
-        $content = str_replace('{zs_order_ingredients_total}',     $this->getOrderIngredientsTotal($post), $content);
-        $content = str_replace('{zs_order_ingredients_simple}',    $this->getOrderIngredientsSimple($post), $content);
-        $content = str_replace('{zs_order_utensils_total}',        $this->getOrderUtensilsTotal($post),   $content);
-        $content = str_replace('{zs_order_utensils_simple}',       $this->getOrderUtensilsSimple($post),  $content);
+        $content = str_replace('{zs_recipe_card}',                $this->getOrderRecipesCard($post),       $content);
+        $content = str_replace('{zs_recipe_simple}',              $this->getOrderRecipesSimple($post),     $content);
+        $content = str_replace('{zs_recipe_has}',                 $this->getOrderHasRecipes($post),        $content);
+        $content = str_replace('{zs_recipe_ingredients_total}',   $this->getOrderIngredientsTotal($post),  $content);
+        $content = str_replace('{zs_recipe_ingredients_simple}',  $this->getOrderIngredientsSimple($post), $content);
+        $content = str_replace('{zs_recipe_ingredients_list}',    $this->getOrderIngredientsList($post),   $content);
+        $content = str_replace('{zs_recipe_utensils_total}',      $this->getOrderUtensilsTotal($post),     $content);
+        $content = str_replace('{zs_recipe_utensils_simple}',     $this->getOrderUtensilsSimple($post),    $content);
+        $content = str_replace('{zs_recipe_utensils_list}',       $this->getOrderUtensilsList($post),      $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -615,13 +620,13 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_language}'                => '{zs_order_language}',
             '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
             '{woo_zs_intolerances}'                  => '{zs_intolerances}',
-            '{woo_zs_order_recipes}'                 => '{zs_order_recipes}',
-            '{woo_zs_order_recipes_simple}'          => '{zs_order_recipes_simple}',
-            '{woo_zs_order_has_recipes}'             => '{zs_order_has_recipes}',
-            '{woo_zs_order_ingredients_total}'       => '{zs_order_ingredients_total}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_order_ingredients_simple}',
-            '{woo_zs_order_utensils_total}'          => '{zs_order_utensils_total}',
-            '{woo_zs_order_utensils_simple}'         => '{zs_order_utensils_simple}',
+            '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
+            '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
+            '{woo_zs_order_has_recipes}'             => '{zs_recipe_has}',
+            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_ingredients_total}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_simple}',
+            '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
+            '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
         ];
 
         if (isset($map[$tag])) {
@@ -696,13 +701,13 @@ class BricksDynamicTags implements FeatureInterface
             '{woo_zs_order_language}'                => '{zs_order_language}',
             '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
             '{woo_zs_intolerances}'                  => '{zs_intolerances}',
-            '{woo_zs_order_recipes}'                 => '{zs_order_recipes}',
-            '{woo_zs_order_recipes_simple}'          => '{zs_order_recipes_simple}',
-            '{woo_zs_order_has_recipes}'             => '{zs_order_has_recipes}',
-            '{woo_zs_order_ingredients_total}'       => '{zs_order_ingredients_total}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_order_ingredients_simple}',
-            '{woo_zs_order_utensils_total}'          => '{zs_order_utensils_total}',
-            '{woo_zs_order_utensils_simple}'         => '{zs_order_utensils_simple}',
+            '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
+            '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
+            '{woo_zs_order_has_recipes}'             => '{zs_recipe_has}',
+            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_ingredients_total}',
+            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_ingredients_simple}',
+            '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
+            '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
         ];
 
         $content = str_replace(array_keys($map), array_values($map), $content);
@@ -2745,6 +2750,11 @@ class BricksDynamicTags implements FeatureInterface
         return $html;
     }
 
+    private function getOrderIngredientsList($post): string
+    {
+        return $this->getOrderIngredientsSimple($post);
+    }
+
     /**
      * Get total utensils table (sum of all recipes)
      */
@@ -3063,13 +3073,13 @@ class BricksDynamicTags implements FeatureInterface
             return $ta <=> $tb;
         });
 
-        $items = [];
+        $html = '';
         foreach ($totals as $t) {
             $termId = (int) ($t['term_id'] ?? 0);
-            $unit   = (string) ($t['unit'] ?? '');
+            $unit   = (string) ($t['unit'] ?? 'u');
             $qty    = (float) ($t['qty'] ?? 0);
 
-            if ($termId <= 0 || $qty <= 0 || $unit === '') {
+            if ($termId <= 0 || $qty <= 0) {
                 continue;
             }
 
@@ -3078,6 +3088,120 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . esc_html($unit) . '</span>';
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    private function getOrderUtensilsList($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Utensils List');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($recipeId <= 0) {
+                continue;
+            }
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+            $recipeUtensils = get_post_meta($recipeId, self::META_RECIPE_UTENSILS, true);
+            if (!is_array($recipeUtensils)) {
+                continue;
+            }
+            foreach ($recipeUtensils as $utensilRow) {
+                if (!is_array($utensilRow)) {
+                    continue;
+                }
+                $termId = isset($utensilRow['utensil']) ? (int) $utensilRow['utensil'] : 0;
+                $perRatio = isset($utensilRow['pax_ratio']) ? (float) $utensilRow['pax_ratio'] : 0.0;
+                $baseQty = isset($utensilRow['qty']) ? (float) $utensilRow['qty'] : 0.0;
+                $unit = isset($utensilRow['unit']) && $utensilRow['unit'] !== '' ? sanitize_key((string) $utensilRow['unit']) : 'u';
+                if ($termId <= 0 || $perRatio <= 0 || $baseQty <= 0) {
+                    continue;
+                }
+                $amount = ceil($eqItem / $perRatio) * $baseQty;
+                if ($amount <= 0) {
+                    continue;
+                }
+                $k = $termId . '|' . $unit;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        usort($totals, function(array $a, array $b): int {
+            return ($a['term_id'] ?? 0) <=> ($b['term_id'] ?? 0);
+        });
+
+        $items = [];
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $unit   = (string) ($t['unit'] ?? 'u');
+            $qty    = (float) ($t['qty'] ?? 0);
+            if ($termId <= 0 || $qty <= 0) {
+                continue;
+            }
+            $termName = $this->getTranslatedUtensilName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
             $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($qty)) . esc_html($unit) . '</span></li>';
         }
 
