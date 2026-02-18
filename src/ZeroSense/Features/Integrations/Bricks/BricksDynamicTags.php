@@ -805,7 +805,7 @@ class BricksDynamicTags implements FeatureInterface
             $savedData = [];
         }
 
-        $html = '';
+        $html = '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">[DEBUG: workspace_list loaded, ' . count($schemaData) . ' fields, savedData keys: ' . implode(', ', array_keys($savedData)) . ']</span></div>';
         
         foreach ($schemaData as $row) {
             if (!is_array($row)) {
