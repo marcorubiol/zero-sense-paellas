@@ -335,10 +335,69 @@ class StaffAssignmentMetabox
             'use strict';
             
             $(document).ready(function() {
-                // Don't initialize selectWoo on page load for hidden selects
-                // They will be initialized when the user clicks "Change"
-                // This prevents issues with hidden elements
-                
+
+                function getAssignedStaffIds(excludeRow) {
+                    var ids = [];
+                    $('.zs-staff-hidden-input').each(function() {
+                        if (excludeRow && $(this).closest('.zs-assignment-row')[0] === excludeRow[0]) return;
+                        var v = $(this).val();
+                        if (v) ids.push(String(v));
+                    });
+                    return ids;
+                }
+
+                function buildStaffOptions($select, role, currentId) {
+                    var assigned = getAssignedStaffIds($select.closest('.zs-assignment-row')[0] ? $select.closest('.zs-assignment-row') : null);
+                    var roleLabel = (typeof zsRoleLabels !== 'undefined' && zsRoleLabels[role]) ? zsRoleLabels[role] : role;
+
+                    $select.find('option:not([value=""])').remove();
+                    $select.find('optgroup').remove();
+
+                    if (typeof zsStaffByRole === 'undefined' || !zsStaffByRole[role]) return;
+
+                    var available = [];
+                    var alreadyAssigned = [];
+
+                    $.each(zsStaffByRole[role], function(i, staff) {
+                        var sid = String(staff.id);
+                        if (assigned.indexOf(sid) !== -1 && sid !== String(currentId)) {
+                            alreadyAssigned.push(staff);
+                        } else {
+                            available.push(staff);
+                        }
+                    });
+
+                    // Available staff (with role first, then others)
+                    var withRole = [], withoutRole = [];
+                    $.each(available, function(i, s) {
+                        if (s.has_role) withRole.push(s); else withoutRole.push(s);
+                    });
+
+                    if (withRole.length > 0) {
+                        var $g = $('<optgroup></optgroup>').attr('label', roleLabel);
+                        $.each(withRole, function(i, s) {
+                            $g.append($('<option></option>').val(s.id).text(s.name).data('phone', s.phone).data('email', s.email).data('has-role', true));
+                        });
+                        $select.append($g);
+                    }
+                    if (withoutRole.length > 0) {
+                        var $g2 = $('<optgroup></optgroup>').attr('label', '<?php echo esc_js(__('OTHERS (will auto-assign role)', 'zero-sense')); ?>');
+                        $.each(withoutRole, function(i, s) {
+                            $g2.append($('<option></option>').val(s.id).text(s.name).data('phone', s.phone).data('email', s.email).data('has-role', false).data('assign-role', role));
+                        });
+                        $select.append($g2);
+                    }
+
+                    // Already assigned elsewhere — disabled at bottom
+                    if (alreadyAssigned.length > 0) {
+                        var $gDisabled = $('<optgroup></optgroup>').attr('label', '<?php echo esc_js(__('Already assigned in this event', 'zero-sense')); ?>');
+                        $.each(alreadyAssigned, function(i, s) {
+                            $gDisabled.append($('<option></option>').val(s.id).text(s.name).prop('disabled', true));
+                        });
+                        $select.append($gDisabled);
+                    }
+                }
+
                 // Handle edit/change button
                 $(document).on('click', '.zs-staff-edit', function() {
                     var $row = $(this).closest('.zs-assignment-row');
@@ -442,15 +501,17 @@ class StaffAssignmentMetabox
                         }
                     } else {
                         // Edit mode - show select, hide display
+                        var currentStaffId = $row.find('.zs-staff-hidden-input').val();
+                        var editRole = $select.data('role');
+                        buildStaffOptions($select, editRole, currentStaffId);
+
                         $display.addClass('zs-hidden');
                         $select.removeClass('zs-hidden');
                         
-                        // Destroy existing selectWoo if present
                         if ($select.hasClass('select2-hidden-accessible')) {
                             $select.selectWoo('destroy');
                         }
                         
-                        // Initialize selectWoo
                         $select.selectWoo({
                             width: '100%',
                             tags: true,
@@ -474,24 +535,12 @@ class StaffAssignmentMetabox
                     var $select = $(this);
                     var value = $select.val();
                     var $row = $select.closest('.zs-assignment-row');
-                    var $section = $row.closest('.zs-staff-role-section');
                     var $option = $select.find('option:selected');
-                    
-                    // Check if this staff member is already assigned in this role
-                    if (value && value.indexOf('new:') !== 0) {
-                        var alreadyAssigned = false;
-                        $section.find('.zs-staff-hidden-input').each(function() {
-                            if ($(this).val() === value && $(this).closest('.zs-assignment-row')[0] !== $row[0]) {
-                                alreadyAssigned = true;
-                                return false;
-                            }
-                        });
-                        
-                        if (alreadyAssigned) {
-                            alert('<?php echo esc_js(__('This staff member is already assigned to this role', 'zero-sense')); ?>');
-                            $select.val('').trigger('change');
-                            return;
-                        }
+
+                    // Block disabled options (already assigned elsewhere)
+                    if (value && $option.prop('disabled')) {
+                        $select.val('').trigger('change');
+                        return;
                     }
                     
                     // Check if it's a new staff member
@@ -552,54 +601,7 @@ class StaffAssignmentMetabox
                     
                     var $select = $('<select class="zs-staff-select" data-role="' + role + '"></select>');
                     $select.append('<option value=""><?php echo esc_js(__('Select staff member...', 'zero-sense')); ?></option>');
-                    
-                    // Get staff options from the global data
-                    if (typeof zsStaffByRole !== 'undefined' && zsStaffByRole[role]) {
-                        var withRole = [];
-                        var withoutRole = [];
-                        
-                        $.each(zsStaffByRole[role], function(index, staff) {
-                            if (staff.has_role) {
-                                withRole.push(staff);
-                            } else {
-                                withoutRole.push(staff);
-                            }
-                        });
-                        
-                        // Get role label
-                        var roleLabel = (typeof zsRoleLabels !== 'undefined' && zsRoleLabels[role]) ? zsRoleLabels[role] : role;
-                        
-                        // Add optgroup for staff with role
-                        if (withRole.length > 0) {
-                            var $optgroupWith = $('<optgroup label="' + roleLabel + '"></optgroup>');
-                            $.each(withRole, function(index, staff) {
-                                var $option = $('<option></option>')
-                                    .val(staff.id)
-                                    .text(staff.name)
-                                    .data('phone', staff.phone)
-                                    .data('email', staff.email)
-                                    .data('has-role', true);
-                                $optgroupWith.append($option);
-                            });
-                            $select.append($optgroupWith);
-                        }
-                        
-                        // Add optgroup for staff without role
-                        if (withoutRole.length > 0) {
-                            var $optgroupWithout = $('<optgroup label="<?php echo esc_js(__('OTHERS (will auto-assign role)', 'zero-sense')); ?>"></optgroup>');
-                            $.each(withoutRole, function(index, staff) {
-                                var $option = $('<option></option>')
-                                    .val(staff.id)
-                                    .text(staff.name)
-                                    .data('phone', staff.phone)
-                                    .data('email', staff.email)
-                                    .data('has-role', false)
-                                    .data('assign-role', role);
-                                $optgroupWithout.append($option);
-                            });
-                            $select.append($optgroupWithout);
-                        }
-                    }
+                    buildStaffOptions($select, role, null);
                     
                     var $editBtn = $('<button type="button" class="zs-btn is-neutral zs-staff-edit"><?php echo esc_js(__('Save', 'zero-sense')); ?></button>');
                     var $removeBtn = $('<button type="button" class="zs-btn is-destructive zs-staff-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button>');
