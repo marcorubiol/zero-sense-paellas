@@ -199,7 +199,7 @@ class Recipes implements FeatureInterface
                 $editUrl = get_edit_post_link($product->ID);
                 $status  = $product->post_status !== 'publish' ? ' <span style="color:#646970; font-size:11px;">(' . esc_html($product->post_status) . ')</span>' : '';
                 echo '<li style="padding:4px 0; border-bottom:1px solid #f0f0f1; font-size:13px;">';
-                echo '<a href="' . esc_url((string) $editUrl) . '" style="text-decoration:none;">' . esc_html($product->post_title) . '</a>' . $status;
+                echo '<a href="' . esc_url((string) $editUrl) . '" target="_blank" style="text-decoration:none;">' . esc_html($product->post_title) . '</a>' . $status;
                 echo '</li>';
             }
             echo '</ul>';
