@@ -57,23 +57,7 @@ class AlertsDashboardPage
 
     public function enqueueAssets(string $hook): void
     {
-        if ($hook !== 'event-operations_page_zs-inventory-alerts') {
-            return;
-        }
-
-        $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))));
-
-        wp_enqueue_script(
-            'zs-alerts-dashboard',
-            $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/alerts-dashboard.js',
-            ['jquery'],
-            '1.0.0',
-            true
-        );
-        wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
-            'nonce'   => wp_create_nonce('zs_dismiss_inventory_alert'),
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-        ]);
+        // intentionally empty — scripts are enqueued in render()
     }
 
     public function render(): void
@@ -81,6 +65,13 @@ class AlertsDashboardPage
         if (!current_user_can('manage_woocommerce')) {
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
+
+        $baseUrl = defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL : plugin_dir_url(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))));
+        wp_enqueue_script('zs-alerts-dashboard', $baseUrl . 'src/ZeroSense/Features/WooCommerce/EventManagement/Inventory/assets/js/alerts-dashboard.js', ['jquery'], '1.0.0', true);
+        wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
+            'nonce'   => wp_create_nonce('zs_dismiss_inventory_alert'),
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+        ]);
 
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
         $orderIds = AlertCalculator::getOrderIdsWithReservations(7, 60);
