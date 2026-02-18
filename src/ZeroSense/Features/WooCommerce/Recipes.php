@@ -49,6 +49,7 @@ class Recipes implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
 
         add_action('add_meta_boxes', [$this, 'addRecipeMetabox']);
+        add_action('add_meta_boxes', [$this, 'addLinkedProductsMetabox']);
         add_action('add_meta_boxes', [$this, 'removeDefaultMetaboxes']);
         add_action('save_post_' . self::CPT, [$this, 'saveRecipeMetabox'], 10, 2);
         
@@ -158,6 +159,57 @@ class Recipes implements FeatureInterface
             'normal',
             'high'
         );
+    }
+
+    public function addLinkedProductsMetabox(): void
+    {
+        add_meta_box(
+            'zs_recipe_linked_products',
+            __('Used in Products', 'zero-sense'),
+            [$this, 'renderLinkedProductsMetabox'],
+            self::CPT,
+            'side',
+            'default'
+        );
+    }
+
+    public function renderLinkedProductsMetabox(WP_Post $post): void
+    {
+        $products = get_posts([
+            'post_type'      => 'product',
+            'post_status'    => 'any',
+            'numberposts'    => -1,
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+            'meta_key'       => self::META_PRODUCT_RECIPE_ID,
+            'meta_value'     => $post->ID,
+            'suppress_filters' => true,
+        ]);
+
+        echo '<div style="padding:4px 0;">';
+
+        if (empty($products)) {
+            echo '<p style="color:#646970; font-size:12px; margin:0;">' . esc_html__('No products linked to this recipe.', 'zero-sense') . '</p>';
+        } else {
+            echo '<ul style="margin:0; padding:0; list-style:none;">';
+            foreach ($products as $product) {
+                if (!$product instanceof WP_Post) {
+                    continue;
+                }
+                $editUrl = get_edit_post_link($product->ID);
+                $status  = $product->post_status !== 'publish' ? ' <span style="color:#646970; font-size:11px;">(' . esc_html($product->post_status) . ')</span>' : '';
+                echo '<li style="padding:4px 0; border-bottom:1px solid #f0f0f1; font-size:13px;">';
+                echo '<a href="' . esc_url((string) $editUrl) . '" style="text-decoration:none;">' . esc_html($product->post_title) . '</a>' . $status;
+                echo '</li>';
+            }
+            echo '</ul>';
+            echo '<p style="color:#646970; font-size:11px; margin:8px 0 0;">' . sprintf(
+                esc_html(_n('%d product', '%d products', count($products), 'zero-sense')),
+                count($products)
+            ) . '</p>';
+        }
+
+        echo '</div>';
     }
 
     public function removeDefaultMetaboxes(): void
