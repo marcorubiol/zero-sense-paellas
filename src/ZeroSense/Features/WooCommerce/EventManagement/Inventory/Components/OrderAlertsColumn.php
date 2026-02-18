@@ -28,7 +28,7 @@ class OrderAlertsColumn
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_status') {
-                $new['zs_stock_alerts'] = esc_html__('Stock', 'zero-sense');
+                $new['zs_stock_alerts'] = esc_html__('Alerts', 'zero-sense');
             }
         }
         if (!isset($new['zs_stock_alerts'])) {
