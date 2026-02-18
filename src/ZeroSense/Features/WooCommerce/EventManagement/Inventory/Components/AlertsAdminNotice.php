@@ -30,34 +30,29 @@ class AlertsAdminNotice
 
         $dashboardUrl = admin_url('admin.php?page=zs-inventory-alerts');
 
-        $parts = [];
         if ($critical > 0) {
-            $parts[] = sprintf(
-                '<strong>%d %s</strong>',
-                $critical,
-                _n('critical', 'critical', $critical, 'zero-sense')
+            printf(
+                '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
+                sprintf(
+                    __('Inventory alert: <strong>%d critical</strong> material(s) with insufficient stock.', 'zero-sense'),
+                    $critical
+                ),
+                esc_url($dashboardUrl),
+                esc_html__('View Alerts Dashboard', 'zero-sense')
             );
         }
+
         if ($maxCapacity > 0) {
-            $parts[] = sprintf(
-                '<strong>%d %s</strong>',
-                $maxCapacity,
-                _n('at max capacity', 'at max capacity', $maxCapacity, 'zero-sense')
+            printf(
+                '<div class="notice notice-warning is-dismissible"><p>⚠️ %s <a href="%s">%s</a></p></div>',
+                sprintf(
+                    __('Inventory alert: <strong>%d</strong> material(s) at max capacity.', 'zero-sense'),
+                    $maxCapacity
+                ),
+                esc_url($dashboardUrl),
+                esc_html__('View Alerts Dashboard', 'zero-sense')
             );
         }
-
-        $type = $critical > 0 ? 'error' : 'warning';
-
-        printf(
-            '<div class="notice notice-%s"><p>⚠️ %s <a href="%s">%s</a></p></div>',
-            esc_attr($type),
-            sprintf(
-                __('Inventory alert: %s material(s) with stock issues.', 'zero-sense'),
-                implode(' + ', $parts)
-            ),
-            esc_url($dashboardUrl),
-            esc_html__('View Alerts Dashboard', 'zero-sense')
-        );
     }
 
     private function getCounts(): array
