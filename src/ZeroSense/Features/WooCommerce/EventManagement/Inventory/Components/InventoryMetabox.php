@@ -317,7 +317,7 @@ class InventoryMetabox
                                         if ($resolution) {
                                             $resolvedBy = get_userdata($resolution['resolved_by']);
                                             $resolvedByName = $resolvedBy ? $resolvedBy->display_name : __('Unknown', 'zero-sense');
-                                            printf(__('Resolved by %s', 'zero-sense'), esc_html($resolvedByName));
+                                            printf(__('Alert Resolved by %s', 'zero-sense'), esc_html($resolvedByName));
                                             if (!empty($resolution['notes'])) {
                                                 echo ' - ' . esc_html($resolution['notes']);
                                             }
@@ -412,7 +412,7 @@ class InventoryMetabox
                                                     <?php if ($isResolved): ?>
                                                         <div class="zs-alert-resolution">
                                                             <div class="zs-alert-resolution-header">
-                                                                <strong><?php _e('Resolved', 'zero-sense'); ?></strong>
+                                                                <strong><?php _e('Alert Resolved', 'zero-sense'); ?></strong>
                                                                 <a href="#" class="zs-alert-undo-btn" 
                                                                    data-order-id="<?php echo esc_attr($postId); ?>"
                                                                    data-material-key="<?php echo esc_attr($materialKey); ?>">
@@ -483,7 +483,7 @@ class InventoryMetabox
                                                                             class="zs-alert-resolve-btn"
                                                                             data-order-id="<?php echo esc_attr($postId); ?>"
                                                                             data-material-key="<?php echo esc_attr($materialKey); ?>">
-                                                                        ✓ <?php _e('Mark as Resolved', 'zero-sense'); ?>
+                                                                        ✓ <?php _e('Mark as Alert Resolved', 'zero-sense'); ?>
                                                                     </button>
                                                                 </div>
                                                             </div>
@@ -866,12 +866,12 @@ class InventoryMetabox
                             location.reload();
                         } else {
                             showToast(response.data.message || '<?php echo esc_js(__('Error resolving alert', 'zero-sense')); ?>', 'error');
-                            $btn.prop('disabled', false).html('✓ <?php echo esc_js(__('Mark as Resolved', 'zero-sense')); ?>');
+                            $btn.prop('disabled', false).html('✓ <?php echo esc_js(__('Mark as Alert Resolved', 'zero-sense')); ?>');
                         }
                     },
                     error: function() {
                         showToast('<?php echo esc_js(__('Connection error', 'zero-sense')); ?>', 'error');
-                        $btn.prop('disabled', false).html('✓ <?php echo esc_js(__('Mark as Resolved', 'zero-sense')); ?>');
+                        $btn.prop('disabled', false).html('✓ <?php echo esc_js(__('Mark as Alert Resolved', 'zero-sense')); ?>');
                     }
                 });
             });
