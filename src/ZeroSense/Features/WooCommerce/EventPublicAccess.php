@@ -37,7 +37,7 @@ class EventPublicAccess implements FeatureInterface
     public function init(): void
     {
         add_filter('query_vars', [$this, 'registerQueryVars']);
-        add_action('template_redirect', [$this, 'maybeResolveToken']);
+        add_action('template_redirect', [$this, 'maybeResolveToken'], 1);
 
         add_action('woocommerce_checkout_create_order', [$this, 'ensureTokenOnCheckout'], 5, 2);
         add_action('woocommerce_new_order', [$this, 'ensureTokenOnNewOrder'], 5, 1);
