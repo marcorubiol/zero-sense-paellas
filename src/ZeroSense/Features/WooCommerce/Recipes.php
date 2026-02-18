@@ -1060,30 +1060,18 @@ class Recipes implements FeatureInterface
             echo '<option value="' . esc_attr((string) $id) . '"' . selected($current, $id, false) . '>' . esc_html($recipe->post_title) . '</option>';
         }
 
+        echo '<option value="__new__" class="zs-recipe-new-option">&#43; ' . esc_html__('Add New Recipe', 'zero-sense') . '</option>';
         echo '</select>';
         echo '</p>';
         
-        // Contextual actions for recipe management
-        echo '<div id="zs-recipe-context-actions" style="margin-top:8px; display:none;">';
-        echo '<div class="zs-recipe-actions-wrapper">';
-        
-        // Edit current recipe button (always rendered, shown/hidden via JS)
+        // Edit action — only shown when a real recipe is selected
         $editUrl = $current > 0 ? admin_url('post.php?post=' . $current . '&action=edit') : '#';
-        $editStyle = $current > 0 ? 'margin-right:8px;' : 'margin-right:8px; display:none;';
-        echo '<a id="zs-recipe-edit-btn" href="' . esc_url($editUrl) . '" class="zs-btn zs-btn-neutral" target="_blank" style="' . $editStyle . '">';
-        echo '<span class="dashicons dashicons-edit" style="font-size:14px; line-height:24px; margin-right:4px;"></span>';
+        echo '<p id="zs-recipe-context-actions" style="margin-top:-8px; padding-left:162px; display:' . ($current > 0 ? 'block' : 'none') . ';">';
+        echo '<a id="zs-recipe-edit-btn" href="' . esc_url($editUrl) . '" target="_blank" style="font-size:12px; text-decoration:none; color:#2271b1;">';
+        echo '<span class="dashicons dashicons-edit" style="font-size:13px; line-height:1.6; vertical-align:middle; margin-right:2px;"></span>';
         echo esc_html__('Edit Recipe', 'zero-sense');
         echo '</a>';
-        
-        // Add new recipe button
-        $newUrl = admin_url('post-new.php?post_type=zs_recipe');
-        echo '<a href="' . esc_url($newUrl) . '" class="zs-btn zs-btn-primary" target="_blank">';
-        echo '<span class="dashicons dashicons-plus" style="font-size:14px; line-height:24px; margin-right:4px;"></span>';
-        echo esc_html__('Add New Recipe', 'zero-sense');
-        echo '</a>';
-        
-        echo '</div>';
-        echo '</div>';
+        echo '</p>';
         
         echo '</div>';
 
@@ -1107,8 +1095,16 @@ class Recipes implements FeatureInterface
                 }
             }
 
+            var newUrl = '<?php echo esc_js(admin_url('post-new.php?post_type=zs_recipe')); ?>';
+
             $select.on('change select2:select select2:unselect', function() {
-                toggleActions($(this).val());
+                var val = $(this).val();
+                if (val === '__new__') {
+                    window.open(newUrl, '_blank');
+                    $select.val('').trigger('change.select2');
+                    return;
+                }
+                toggleActions(val);
             });
             toggleActions();
         });
