@@ -38,6 +38,20 @@
   color: #c3c4c7 !important;
 }
 
+/* Venue Name + Venue Phone: side by side in shipping section */
+#order_data ._shipping_venue_name_field,
+#order_data ._shipping_venue_phone_field {
+    float: left;
+    width: 48%;
+    clear: none;
+}
+#order_data ._shipping_venue_name_field {
+    margin-right: 4%;
+}
+#order_data ._shipping_venue_phone_field + p {
+    clear: both;
+}
+
 /* Fix WooCommerce admin page content alignment */
 @media (min-width: 783px) {
   .woocommerce-admin-page #wpcontent{
