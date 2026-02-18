@@ -48,7 +48,7 @@
 #order_data .order_data_column ._shipping_phone_field + p {
     clear: both;
 }
-#order_data .order_data_column ._shipping_location_link_field {
+#order_data .order_data_column ._shipping_location_link_field + p {
     width: 100%;
     clear: both;
 }
