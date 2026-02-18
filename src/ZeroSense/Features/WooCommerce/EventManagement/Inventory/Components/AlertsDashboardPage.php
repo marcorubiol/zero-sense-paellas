@@ -32,10 +32,8 @@ class AlertsDashboardPage
 
         $userId    = get_current_user_id();
         $dismissed = get_user_meta($userId, self::DISMISSED_META_KEY, true) ?: [];
-        $key = $orderId . '_' . $materialKey;
-        $dismissed[$key] = time();
+        $dismissed[$orderId . '_' . $materialKey] = time();
         update_user_meta($userId, self::DISMISSED_META_KEY, $dismissed);
-        error_log('[ZS Dismiss] Saved key: ' . $key . ' | All dismissed: ' . json_encode(array_keys($dismissed)));
 
         wp_send_json_success();
     }
@@ -70,6 +68,18 @@ class AlertsDashboardPage
             ['dashicons'],
             '1.0.0'
         );
+        wp_enqueue_script('jquery');
+        wp_enqueue_script(
+            'zs-alerts-dashboard',
+            defined('ZERO_SENSE_URL') ? ZERO_SENSE_URL . 'assets/js/alerts-dashboard.js' : '',
+            ['jquery'],
+            '1.0.0',
+            true
+        );
+        wp_localize_script('zs-alerts-dashboard', 'zsAlerts', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('zs_dismiss_inventory_alert'),
+        ]);
     }
 
     public function render(): void
@@ -240,35 +250,6 @@ class AlertsDashboardPage
             .zs-alerts-dashboard .subsubsub { margin: 10px 0; }
             .zs-alert-badge .zs-dismiss-alert:hover { color: #dc3545; }
         </style>
-        <script>
-        (function($) {
-            var nonce = <?php echo json_encode(wp_create_nonce('zs_dismiss_inventory_alert')); ?>;
-            $(document).on('click', '.zs-dismiss-alert', function(e) {
-                e.preventDefault();
-                var $badge = $(this).closest('.zs-alert-badge');
-                var orderId = $badge.data('order');
-                var materialKey = $badge.data('material');
-                $badge.css('opacity', 0.4);
-                $.post(ajaxurl, {
-                    action: 'zs_dismiss_inventory_alert',
-                    nonce: nonce,
-                    order_id: orderId,
-                    material_key: materialKey
-                }, function(res) {
-                    if (res.success) {
-                        $badge.remove();
-                        // If row has no more badges, remove the row
-                        var $row = $badge.closest('tr');
-                        if ($row.find('.zs-alert-badge').length === 0) {
-                            $row.fadeOut(200, function() { $(this).remove(); });
-                        }
-                    } else {
-                        $badge.css('opacity', 1);
-                    }
-                });
-            });
-        })(jQuery);
-        </script>
         <?php
     }
 }
