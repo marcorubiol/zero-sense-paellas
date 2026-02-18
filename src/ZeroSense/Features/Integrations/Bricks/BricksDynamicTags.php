@@ -3242,7 +3242,7 @@ class BricksDynamicTags implements FeatureInterface
                     $contact = ' <span class="zs-staff-contact">(' . implode(', ', $parts) . ')</span>';
                 }
 
-                $members[] = '<span class="zs-staff-name">' . $name . '</span>' . $contact;
+                $members[] = '<p class="zs-staff-member"><span class="zs-staff-name">' . $name . '</span>' . $contact . '</p>';
             }
 
             if (empty($members)) {
@@ -3251,7 +3251,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($roleName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . implode('<br>', $members) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . implode('', $members) . '</span>';
             $html .= '</div>';
         }
 
