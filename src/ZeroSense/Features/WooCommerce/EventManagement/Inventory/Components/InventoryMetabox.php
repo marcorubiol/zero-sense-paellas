@@ -100,8 +100,11 @@ class InventoryMetabox
         // Aplicar overrides
         $final = ManualOverride::apply($calculated, $overrides);
         
-        // Calcular alertas de stock
-        $alerts = !empty($calculated) ? AlertCalculator::calculateAndNotify($order, $final) : [];
+        // Calcular alertas de stock solo si el pedido está confirmado
+        $allowedStatuses = ['deposit-paid', 'fully-paid'];
+        $alerts = (!empty($calculated) && in_array($order->get_status(), $allowedStatuses))
+            ? AlertCalculator::calculateAlerts($order, $final)
+            : [];
         
         // Obtener resoluciones de alertas
         $resolutions = AlertResolutionManager::getResolutions($postId);
