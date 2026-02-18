@@ -23,32 +23,6 @@ class MaterialDefinitions
     public static function getAll(): array
     {
         return [
-            // MATÈRIA PESADA — equipament pesant
-            [
-                'key' => 'carreto',
-                'label' => 'Carretó',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per event',
-            ],
-            [
-                'key' => 'potes_tripodes',
-                'label' => 'Potes / Trípodes',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador',
-            ],
-            [
-                'key' => 'buta',
-                'label' => 'Butà',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador + 1 extra si >60pax',
-            ],
-
             // MATÈRIA PESADA — paelles
             [
                 'key' => 'paella_55cm',
@@ -147,6 +121,32 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 100cm, 115cm o 135cm',
+            ],
+
+            // MATÈRIA PESADA — equipament pesant
+            [
+                'key' => 'carreto',
+                'label' => 'Carretó',
+                'category' => 'equipament_pesant',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per event',
+            ],
+            [
+                'key' => 'potes_tripodes',
+                'label' => 'Potes / Trípodes',
+                'category' => 'equipament_pesant',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador',
+            ],
+            [
+                'key' => 'buta',
+                'label' => 'Butà',
+                'category' => 'equipament_pesant',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador + 1 extra si >60pax',
             ],
 
             // LOGÍSTICA — cuina
