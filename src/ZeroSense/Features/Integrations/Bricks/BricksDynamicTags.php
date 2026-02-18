@@ -408,13 +408,13 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getShippingFieldValue($this->stripTag($tag, 'zs_shipping_'), $post);
         }
         if ($tag === '{zs_event_service_location_name}') {
-            return $this->getServiceLocationName($post);
+            return $this->getEventServiceLocationName($post);
         }
         if ($tag === '{zs_event_staff_all}') {
             return $this->getEventStaffFormatted($post);
         }
         if ($tag === '{zs_event_ops_notes}') {
-            return $this->getOpsNotesValue($post);
+            return $this->getEventOpsNotes($post);
         }
         if ($tag === '{zs_event_media}') {
             return $this->getEventMediaGallery($post);
@@ -453,25 +453,28 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getMetaBoxFieldValue('intolerances', $post);
         }
         if ($tag === '{zs_recipe_card}') {
-            return $this->getOrderRecipesCard($post);
+            return $this->getRecipeCard($post);
         }
         if ($tag === '{zs_recipe_simple}') {
-            return $this->getOrderRecipesSimple($post);
+            return $this->getRecipeSimple($post);
         }
         if ($tag === '{zs_recipe_exists}') {
-            return $this->getOrderHasRecipes($post);
+            return $this->getRecipeExists($post);
         }
         if ($tag === '{zs_recipe_ingredients_total}') {
-            return $this->getOrderIngredientsSimple($post);
+            return $this->getRecipeIngredientsTotal($post);
+        }
+        if ($tag === '{zs_recipe_ingredients_simple}') {
+            return $this->getRecipeIngredientsSimple($post);
         }
         if ($tag === '{zs_recipe_utensils_total}') {
-            return $this->getOrderUtensilsTotal($post);
+            return $this->getRecipeUtensilsTotal($post);
         }
         if ($tag === '{zs_recipe_utensils_simple}') {
-            return $this->getOrderUtensilsSimple($post);
+            return $this->getRecipeUtensilsSimple($post);
         }
         if ($tag === '{zs_recipe_utensils_list}') {
-            return $this->getOrderUtensilsList($post);
+            return $this->getRecipeUtensilsList($post);
         }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
@@ -521,9 +524,9 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_order_status}', $this->getOrderStatus($post), $content);
         $content = str_replace('{zs_order_note}',   $this->getOrderNote($post),   $content);
 
-        $content = str_replace('{zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
+        $content = str_replace('{zs_event_service_location_name}', $this->getEventServiceLocationName($post), $content);
         $content = str_replace('{zs_event_staff_all}',             $this->getEventStaffFormatted($post), $content);
-        $content = str_replace('{zs_event_ops_notes}',             $this->getOpsNotesValue($post),       $content);
+        $content = str_replace('{zs_event_ops_notes}',             $this->getEventOpsNotes($post),       $content);
         $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),   $content);
         $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),      $content);
         $content = str_replace('{zs_order_products}',              $this->getOrderProducts($post),       $content);
@@ -536,13 +539,14 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),        $content);
         $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
         $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('intolerances', $post), $content);
-        $content = str_replace('{zs_recipe_card}',                $this->getOrderRecipesCard($post),       $content);
-        $content = str_replace('{zs_recipe_simple}',              $this->getOrderRecipesSimple($post),     $content);
-        $content = str_replace('{zs_recipe_exists}',              $this->getOrderHasRecipes($post),        $content);
-        $content = str_replace('{zs_recipe_ingredients_total}',   $this->getOrderIngredientsSimple($post), $content);
-        $content = str_replace('{zs_recipe_utensils_total}',      $this->getOrderUtensilsTotal($post),     $content);
-        $content = str_replace('{zs_recipe_utensils_simple}',     $this->getOrderUtensilsSimple($post),    $content);
-        $content = str_replace('{zs_recipe_utensils_list}',       $this->getOrderUtensilsList($post),      $content);
+        $content = str_replace('{zs_recipe_card}',                $this->getRecipeCard($post),       $content);
+        $content = str_replace('{zs_recipe_simple}',              $this->getRecipeSimple($post),     $content);
+        $content = str_replace('{zs_recipe_exists}',              $this->getRecipeExists($post),        $content);
+        $content = str_replace('{zs_recipe_ingredients_total}',   $this->getRecipeIngredientsTotal($post),  $content);
+        $content = str_replace('{zs_recipe_ingredients_simple}',  $this->getRecipeIngredientsSimple($post), $content);
+        $content = str_replace('{zs_recipe_utensils_total}',      $this->getRecipeUtensilsTotal($post),     $content);
+        $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
+        $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -749,7 +753,7 @@ class BricksDynamicTags implements FeatureInterface
         return $this->wrapIfRecentlyChanged($value, '_billing_' . $field, $post);
     }
 
-    private function getOpsNotesValue($post): string
+    private function getEventOpsNotes($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -976,7 +980,7 @@ class BricksDynamicTags implements FeatureInterface
         return (string) $order->get_order_number();
     }
 
-    private function getServiceLocationName($post): string
+    private function getEventServiceLocationName($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2055,7 +2059,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Check if order has any products with recipes
      */
-    private function getOrderHasRecipes($post): string
+    private function getRecipeExists($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2094,7 +2098,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Get simple list of recipe names (comma-separated, no duplicates)
      */
-    private function getOrderRecipesSimple($post): string
+    private function getRecipeSimple($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2143,7 +2147,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Get recipes as fdr-card__field blocks (label = recipe name, value = ingredients inline)
      */
-    private function getOrderRecipesCard($post): string
+    private function getRecipeCard($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2242,7 +2246,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Get detailed recipes with products and calculated ingredients
      */
-    private function getOrderRecipes($post): string
+    private function getRecipes($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2393,7 +2397,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Get total ingredients table (sum of all recipes)
      */
-    private function getOrderIngredientsTotal($post): string
+    private function getRecipeIngredientsTotal($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2604,7 +2608,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Get simplified ingredients total (only Ingredient and TOTAL columns)
      */
-    private function getOrderIngredientsSimple($post): string
+    private function getRecipeIngredientsSimple($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2735,15 +2739,15 @@ class BricksDynamicTags implements FeatureInterface
         return '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
     }
 
-    private function getOrderIngredientsList($post): string
+    private function getRecipeIngredientsList($post): string
     {
-        return $this->getOrderIngredientsSimple($post);
+        return $this->getRecipeIngredientsSimple($post);
     }
 
     /**
      * Get total utensils table (sum of all recipes)
      */
-    private function getOrderUtensilsTotal($post): string
+    private function getRecipeUtensilsTotal($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -2951,7 +2955,7 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Get simplified utensils total (only Utensil and TOTAL columns)
      */
-    private function getOrderUtensilsSimple($post): string
+    private function getRecipeUtensilsSimple($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -3082,7 +3086,7 @@ class BricksDynamicTags implements FeatureInterface
         return $html;
     }
 
-    private function getOrderUtensilsList($post): string
+    private function getRecipeUtensilsList($post): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
