@@ -257,6 +257,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $tags[] = ['name' => '{zs_order_id}',           'label' => 'Order ID',       'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_number}',       'label' => 'Order Number',   'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_status}',       'label' => 'Order Status',   'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_note}',         'label' => 'Customer Note',  'group' => 'ZeroSense'];
 
         foreach ($this->getMetaBoxFields() as $field => $label) {
@@ -395,6 +396,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_order_number}') {
             return $this->getOrderNumber($post);
         }
+        if ($tag === '{zs_order_status}') {
+            return $this->getOrderStatus($post);
+        }
         if ($tag === '{zs_order_note}') {
             return $this->getOrderNote($post);
         }
@@ -518,6 +522,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $content = str_replace('{zs_order_id}',     $this->getOrderId($post),     $content);
         $content = str_replace('{zs_order_number}', $this->getOrderNumber($post), $content);
+        $content = str_replace('{zs_order_status}', $this->getOrderStatus($post), $content);
         $content = str_replace('{zs_order_note}',   $this->getOrderNote($post),   $content);
 
         $content = str_replace('{zs_event_service_location_name}', $this->getServiceLocationName($post), $content);
@@ -1012,6 +1017,21 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return $term->name;
+    }
+
+    private function getOrderStatus($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Status');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        return wc_get_order_status_name($order->get_status());
     }
 
     private function getOrderProducts($post): string
