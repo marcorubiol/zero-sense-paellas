@@ -16,7 +16,7 @@ class ProductAdmin
         woocommerce_wp_checkbox([
             'id'          => MetaKeys::PRODUCT_HAS_RABBIT_OPTION,
             'label'       => __('Rabbit option', 'zero-sense'),
-            'description' => __('Show with/without rabbit choice to the customer.', 'zero-sense'),
+            'description' => __('Enable rabbit/no-rabbit choice for this product.', 'zero-sense'),
         ]);
     }
 
