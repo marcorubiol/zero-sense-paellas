@@ -51,6 +51,11 @@
     clear: both;
 }
 
+/* Hide "Choose an action..." dropdown from Order Actions metabox (keep Move to Trash + Update) */
+#woocommerce-order-actions #actions {
+    display: none;
+}
+
 /* Fix WooCommerce admin page content alignment */
 @media (min-width: 783px) {
   .woocommerce-admin-page #wpcontent{
