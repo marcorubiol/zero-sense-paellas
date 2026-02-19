@@ -2437,7 +2437,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
                     if ($liqName === '') continue;
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($amount)) . 'L</span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($amount)) . ' l</span></div>';
                 }
             }
 
