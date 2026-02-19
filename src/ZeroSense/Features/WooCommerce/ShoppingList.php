@@ -180,7 +180,7 @@ class ShoppingList implements FeatureInterface
             'limit'      => -1,
             'return'     => 'ids',
             'status'     => $statuses,
-            'meta_query' => [['key' => self::META_EVENT_DATE, 'value' => [$from, $to], 'compare' => 'BETWEEN', 'type' => 'DATE']],
+            'meta_query' => [['key' => self::META_EVENT_DATE, 'value' => [$from, $to], 'compare' => 'BETWEEN', 'type' => 'CHAR']],
         ]) : 'skipped';
 
         // 4. Query with only loc filter
