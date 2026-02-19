@@ -272,6 +272,30 @@ class CheckoutFields
         echo '<label for="' . $intolerancesId . '">' . $intolerancesLabel . '</label>';
         echo '<textarea id="' . $intolerancesId . '" name="' . $intolerancesId . '" rows="4" style="width:100%;"></textarea>';
         echo '</p>';
+        
+        // Force shipping fields to be visible
+        echo '<h3>' . esc_html__('Shipping address', 'zero-sense') . '</h3>';
+        echo '<div class="woocommerce-shipping-fields__field-wrapper">';
+        
+        // Shipping city
+        $cityValue = $this->getUrlPrefill('city', '');
+        woocommerce_form_field('shipping_city', [
+            'type'     => 'text',
+            'label'    => __('City', 'woocommerce'),
+            'required' => false,
+            'class'    => ['form-row-wide'],
+            'default'  => $cityValue,
+        ], $cityValue);
+        
+        // Shipping address 2
+        woocommerce_form_field('shipping_address_2', [
+            'type'     => 'text',
+            'label'    => __('Apartment, suite, unit, etc. (optional)', 'woocommerce'),
+            'required' => false,
+            'class'    => ['form-row-wide'],
+        ], '');
+        
+        echo '</div>';
     }
 
     /**

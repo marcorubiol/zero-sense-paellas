@@ -10,9 +10,11 @@ class Recipes implements FeatureInterface
     private const CPT = 'zs_recipe';
     private const TAX_INGREDIENT = 'zs_ingredient';
     private const TAX_UTENSIL = 'zs_utensil';
+    private const TAX_LIQUID = 'zs_liquid';
 
     private const META_INGREDIENTS = 'zs_recipe_ingredients';
     private const META_UTENSILS = 'zs_recipe_utensils';
+    private const META_LIQUIDS = 'zs_recipe_liquids';
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
     private const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
     private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
@@ -61,6 +63,8 @@ class Recipes implements FeatureInterface
         add_action('wp_ajax_zs_ingredient_create', [$this, 'ajaxIngredientCreate']);
         add_action('wp_ajax_zs_utensil_search', [$this, 'ajaxUtensilSearch']);
         add_action('wp_ajax_zs_utensil_create', [$this, 'ajaxUtensilCreate']);
+        add_action('wp_ajax_zs_liquid_search', [$this, 'ajaxLiquidSearch']);
+        add_action('wp_ajax_zs_liquid_create', [$this, 'ajaxLiquidCreate']);
 
         add_action('woocommerce_product_options_general_product_data', [$this, 'renderProductRecipeField']);
         add_action('woocommerce_admin_process_product_object', [$this, 'saveProductRecipeField']);
@@ -70,8 +74,11 @@ class Recipes implements FeatureInterface
         add_filter('manage_' . self::TAX_INGREDIENT . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
         add_filter('manage_edit-' . self::TAX_UTENSIL . '_columns', [$this, 'addUsageColumn']);
         add_filter('manage_' . self::TAX_UTENSIL . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
+        add_filter('manage_edit-' . self::TAX_LIQUID . '_columns', [$this, 'addUsageColumn']);
+        add_filter('manage_' . self::TAX_LIQUID . '_custom_column', [$this, 'renderUsageColumn'], 10, 3);
         add_filter(self::TAX_INGREDIENT . '_row_actions', [$this, 'removeDeleteActionIfInUse'], 10, 2);
         add_filter(self::TAX_UTENSIL . '_row_actions', [$this, 'removeDeleteActionIfInUse'], 10, 2);
+        add_filter(self::TAX_LIQUID . '_row_actions', [$this, 'removeDeleteActionIfInUse'], 10, 2);
         add_filter('user_has_cap', [$this, 'preventTermDeletionCapability'], 10, 3);
         add_action('pre_delete_term', [$this, 'protectTermsInUse'], 10, 2);
         
@@ -141,6 +148,24 @@ class Recipes implements FeatureInterface
                 'update_item' => __('Update utensil', 'zero-sense'),
                 'add_new_item' => __('Add new utensil', 'zero-sense'),
                 'new_item_name' => __('New utensil name', 'zero-sense'),
+            ],
+            'public' => false,
+            'show_ui' => true,
+            'show_in_menu' => true,
+            'show_admin_column' => false,
+            'hierarchical' => false,
+        ]);
+
+        register_taxonomy(self::TAX_LIQUID, [self::CPT], [
+            'labels' => [
+                'name' => __('Liquids', 'zero-sense'),
+                'singular_name' => __('Liquid', 'zero-sense'),
+                'search_items' => __('Search liquids', 'zero-sense'),
+                'all_items' => __('All liquids', 'zero-sense'),
+                'edit_item' => __('Edit liquid', 'zero-sense'),
+                'update_item' => __('Update liquid', 'zero-sense'),
+                'add_new_item' => __('Add new liquid', 'zero-sense'),
+                'new_item_name' => __('New liquid name', 'zero-sense'),
             ],
             'public' => false,
             'show_ui' => true,
@@ -218,6 +243,7 @@ class Recipes implements FeatureInterface
         // Remove default tags metabox for our CPT
         remove_meta_box('tagsdiv-' . self::TAX_INGREDIENT, self::CPT, 'side');
         remove_meta_box('tagsdiv-' . self::TAX_UTENSIL, self::CPT, 'side');
+        remove_meta_box('tagsdiv-' . self::TAX_LIQUID, self::CPT, 'side');
     }
 
     public function renderRecipeMetabox(WP_Post $post): void
