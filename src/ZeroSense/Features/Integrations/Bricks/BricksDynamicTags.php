@@ -2684,69 +2684,12 @@ class BricksDynamicTags implements FeatureInterface
             return $ta <=> $tb;
         });
 
-        // Get guest counts for header
-        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
-        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
-
-        $html = '<style>
-            :where(.zs-utensils-wrapper) { margin: 20px 0; }
-            :where(.zs-utensils-info) { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
-            :where(.zs-event-utensils) { width: 100%; border-collapse: collapse; }
-            :where(.zs-event-utensils thead) { background: #333; color: white; }
-            :where(.zs-event-utensils th) { padding: 10px; text-align: left; border: 1px solid #ddd; }
-            :where(.zs-event-utensils td) { padding: 8px; border: 1px solid #ddd; }
-            :where(.zs-event-utensils .zs-col-total) { text-align: center; font-weight: bold; background: #fff3e0; color: #88614c; }
-            :where(.zs-event-utensils .zs-col-adults),
-            :where(.zs-event-utensils .zs-col-children),
-            :where(.zs-event-utensils .zs-col-babies) { text-align: center; }
-            :where(.zs-event-utensils thead .zs-col-adults),
-            :where(.zs-event-utensils thead .zs-col-children),
-            :where(.zs-event-utensils thead .zs-col-babies) { background: #555; font-size: 0.9em; }
-        </style>';
-        
-        $html .= '<div class="zs-utensils-wrapper">';
-        
-        // Info header with guest breakdown
-        $html .= '<div class="zs-utensils-info">';
-        $html .= '<strong>' . esc_html__('Guests:', 'zero-sense') . '</strong> ';
-        $html .= esc_html($adults) . ' ' . esc_html__('adults', 'zero-sense');
-        if ($children > 0) {
-            $html .= ' + ' . esc_html($children) . ' ' . esc_html__('children (5-8 years)', 'zero-sense');
-        }
-        if ($babies > 0) {
-            $html .= ' + ' . esc_html($babies) . ' ' . esc_html__('babies (0-4 years)', 'zero-sense');
-        }
-        $html .= ' = <strong>' . esc_html($this->formatNumber($eqTotal)) . ' ' . esc_html__('equivalent pax', 'zero-sense') . '</strong>';
-        $html .= '<br><small style="color: #666; margin-top: 5px; display: block;">';
-        $html .= esc_html__('Multipliers:', 'zero-sense') . ' ';
-        $html .= esc_html__('Adults', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT));
-        $html .= ', ' . esc_html__('Children', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT));
-        $html .= ', ' . esc_html__('Babies', 'zero-sense') . ' ×' . esc_html($this->formatNumber(self::BABY_WEIGHT));
-        $html .= '</small>';
-        $html .= '</div>';
-
-        // Utensils table
-        $html .= '<table class="zs-event-utensils">';
-        $html .= '<thead>';
-        $html .= '<tr>';
-        $html .= '<th class="zs-col-utensil">' . esc_html__('Utensil', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-total">' . esc_html__('TOTAL', 'zero-sense') . '</th>';
-        $html .= '<th class="zs-col-adults">' . esc_html__('Adults', 'zero-sense') . ' (' . esc_html($adults) . ') ×' . esc_html($this->formatNumber(self::ADULT_WEIGHT)) . '</th>';
-        if ($children > 0) {
-            $html .= '<th class="zs-col-children">' . esc_html__('Children', 'zero-sense') . ' (' . esc_html($children) . ') ×' . esc_html($this->formatNumber(self::CHILD_WEIGHT)) . '</th>';
-        }
-        if ($babies > 0) {
-            $html .= '<th class="zs-col-babies">' . esc_html__('Babies', 'zero-sense') . ' (' . esc_html($babies) . ') ×' . esc_html($this->formatNumber(self::BABY_WEIGHT)) . '</th>';
-        }
-        $html .= '</tr>';
-        $html .= '</thead>';
-        $html .= '<tbody>';
+        $html = '';
 
         foreach ($totals as $t) {
             $termId = (int) ($t['term_id'] ?? 0);
-            $unit = (string) ($t['unit'] ?? '');
-            $qty = (float) ($t['qty'] ?? 0);
+            $unit   = (string) ($t['unit'] ?? '');
+            $qty    = (float) ($t['qty'] ?? 0);
 
             if ($termId <= 0 || $qty <= 0 || $unit === '') {
                 continue;
@@ -2757,27 +2700,12 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            // Calculate per-person amounts for reference
-            $perAdult = $adults > 0 ? $qty / $eqTotal : 0;
-            $perChild = $children > 0 ? ($qty / $eqTotal) * self::CHILD_WEIGHT : 0;
-            $perBaby = $babies > 0 ? ($qty / $eqTotal) * self::BABY_WEIGHT : 0;
-
-            $html .= '<tr>';
-            $html .= '<td class="zs-col-utensil">' . esc_html($termName) . '</td>';
-            $html .= '<td class="zs-col-total">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</td>';
-            $html .= '<td class="zs-col-adults">' . esc_html($this->formatNumber($perAdult * $adults)) . ' ' . esc_html($unit) . '</td>';
-            if ($children > 0) {
-                $html .= '<td class="zs-col-children">' . esc_html($this->formatNumber($perChild * $children)) . ' ' . esc_html($unit) . '</td>';
-            }
-            if ($babies > 0) {
-                $html .= '<td class="zs-col-babies">' . esc_html($this->formatNumber($perBaby * $babies)) . ' ' . esc_html($unit) . '</td>';
-            }
-            $html .= '</tr>';
+            $normalized = $this->normalizeUnit($qty, $unit);
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="fdr-card__unit">' . esc_html($normalized['unit']) . '</span></span>';
+            $html .= '</div>';
         }
-
-        $html .= '</tbody>';
-        $html .= '</table>';
-        $html .= '</div>';
 
         return $html;
     }
