@@ -21,7 +21,7 @@ class AdminOrder
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('wp_ajax_' . self::AJAX_ACTION, [$this, 'handleAjaxUpdate']);
         add_action('wp_ajax_zs_deposits_reset_to_auto', [$this, 'handleResetToAuto']);
-        add_action('save_post_shop_order', [$this, 'saveDepositMeta'], 10, 2);
+        add_action('woocommerce_process_shop_order_meta', [$this, 'saveDepositMeta'], 10, 1);
     }
     public function allowEditingStatuses($isEditable, $order)
     {
@@ -39,12 +39,15 @@ class AdminOrder
 
     public function enqueueAssets($hook): void
     {
-        if ($hook !== 'post.php' && $hook !== 'post-new.php') {
+        $hposHook = 'woocommerce_page_wc-orders';
+        $isHposScreen = ($hook === $hposHook);
+        $isClassicScreen = ($hook === 'post.php' || $hook === 'post-new.php');
+        if (!$isHposScreen && !$isClassicScreen) {
             return;
         }
 
         $screen = get_current_screen();
-        if (!$screen || $screen->id !== 'shop_order') {
+        if (!$screen || $screen->id !== wc_get_page_screen_id('shop-order')) {
             return;
         }
 
@@ -300,12 +303,8 @@ class AdminOrder
         ]);
     }
 
-    public function saveDepositMeta($postId, $post): void
+    public function saveDepositMeta(int $orderId): void
     {
-        if (!$post || $post->post_type !== 'shop_order') {
-            return;
-        }
-
         if (!current_user_can('edit_shop_orders')) {
             return;
         }
@@ -319,13 +318,13 @@ class AdminOrder
             : '';
 
         $isValidDepositsNonce = ($nonce !== '') && wp_verify_nonce($nonce, 'zs_deposits_save_deposit_meta');
-        $isValidWpNonce = ($wpNonce !== '') && wp_verify_nonce($wpNonce, 'update-post_' . (int) $postId);
+        $isValidWpNonce = ($wpNonce !== '') && wp_verify_nonce($wpNonce, 'update-post_' . $orderId);
 
         if (!$isValidDepositsNonce && !$isValidWpNonce) {
             return;
         }
 
-        $order = wc_get_order($postId);
+        $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
             return;
         }

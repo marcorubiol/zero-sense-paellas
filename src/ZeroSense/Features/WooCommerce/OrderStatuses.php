@@ -226,7 +226,12 @@ class OrderStatuses implements FeatureInterface
     public function filterHposOrderList(array $args): array
     {
         if (isset($_GET['status'])) {
-            $statusParam = $_GET['status'];
+            $statusParam = wp_unslash($_GET['status']);
+            if (is_array($statusParam)) {
+                $statusParam = array_map('sanitize_key', $statusParam);
+            } else {
+                $statusParam = sanitize_key((string) $statusParam);
+            }
             if ((is_array($statusParam) && array_filter($statusParam, fn($s) => $s !== '' && $s !== 'all')) ||
                 (!is_array($statusParam) && $statusParam !== '' && $statusParam !== 'all')) {
                 return $args;

@@ -42,15 +42,7 @@ class EventManagement implements FeatureInterface
      */
     public function isEnabled(): bool
     {
-        return get_option('zs_event_management_enabled', true);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getOptionKey(): string
-    {
-        return 'zs_event_management_enabled';
+        return (bool) get_option('zs_event_management_enabled', true);
     }
 
     /**
@@ -91,11 +83,4 @@ class EventManagement implements FeatureInterface
         $bootstrap->boot();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getDependencies(): array
-    {
-        return ['woocommerce'];
-    }
 }

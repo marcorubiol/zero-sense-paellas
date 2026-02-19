@@ -21,11 +21,10 @@ use ZeroSense\Features\WooCommerce\Deposits\Integrations\OfflinePaymentHandler;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys;
 
 /**
- * Temporary bootstrapper for the Deposits module.
+ * Bootstrapper for the Deposits module.
  *
- * This placeholder keeps the feature from triggering fatal errors while the
- * legacy logic is migrated. Each subsystem (utils, checkout handlers, payment
- * integrations, etc.) will be wired here in upcoming commits.
+ * Wires all subsystems: meta field registration, checkout handlers,
+ * payment integrations, admin UI, persistence, and status sync.
  */
 class Bootstrap
 {

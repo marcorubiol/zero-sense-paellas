@@ -623,9 +623,9 @@ class MetaBoxMigrator
             $deleted = $wpdb->query($wpdb->prepare($sql, $params));
             
             $results['reset_count'] = $deleted ? $deleted : 0;
-            error_log('[ZS Migration] Reset ' . $results['reset_count'] . ' migration flags');
+            Logger::debug('[ZS Migration] Reset ' . $results['reset_count'] . ' migration flags');
         } else {
-            error_log('[ZS Migration] Resetting legacy migration status');
+            Logger::debug('[ZS Migration] Resetting legacy migration status');
             global $wpdb;
             
             $meta_keys = $this->getWatchedMetaKeys();
@@ -645,10 +645,10 @@ class MetaBoxMigrator
             $deleted = $wpdb->query($wpdb->prepare($sql, $params));
             
             $results['reset_count'] = $deleted ? $deleted : 0;
-            error_log('[ZS Migration] Reset ' . $results['reset_count'] . ' migration flags');
+            Logger::debug('[ZS Migration] Reset ' . $results['reset_count'] . ' migration flags');
         }
 
-        error_log('[ZS Migration] Migration status reset completed in ' . (microtime(true) - $start_time) . 's');
+        Logger::debug('[ZS Migration] Migration status reset completed in ' . (microtime(true) - $start_time) . 's');
         return $results;
     }
 
@@ -658,16 +658,16 @@ class MetaBoxMigrator
         $migrated_fields = [];
         $errors = [];
 
-        error_log('[ZS Migration] migrateOrder() called for order ' . $order_id);
+        Logger::debug('[ZS Migration] migrateOrder() called for order ' . $order_id);
 
         foreach (self::FIELD_MAPPING as $metabox_key => $zerosense_key) {
             // Read MetaBox data from the correct location (HPOS or legacy)
             if ($this->isHposEnabled()) {
                 $metabox_value = $order->get_meta($metabox_key, true);
-                error_log('[ZS Migration] HPOS read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
+                Logger::debug('[ZS Migration] HPOS read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
             } else {
                 $metabox_value = get_post_meta($order_id, $metabox_key, true);
-                error_log('[ZS Migration] Legacy read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
+                Logger::debug('[ZS Migration] Legacy read: ' . $metabox_key . ' = ' . var_export($metabox_value, true));
             }
 
             if ($metabox_value === '' || $metabox_value === null) {
@@ -718,12 +718,12 @@ class MetaBoxMigrator
                         'value' => $target_value,
                         'old_value' => $existing_value,
                     ];
-                    error_log('[ZS Migration] Migrated field: ' . $metabox_key . ' -> ' . $zerosense_key . ' (was: ' . var_export($existing_value, true) . ')');
+                    Logger::debug('[ZS Migration] Migrated field: ' . $metabox_key . ' -> ' . $zerosense_key . ' (was: ' . var_export($existing_value, true) . ')');
                 } else {
-                    error_log('[ZS Migration] Field ' . $zerosense_key . ' already has same value, skipping');
+                    Logger::debug('[ZS Migration] Field ' . $zerosense_key . ' already has same value, skipping');
                 }
             } else {
-                error_log('[ZS Migration] Field ' . $metabox_key . ' is empty, skipping');
+                Logger::debug('[ZS Migration] Field ' . $metabox_key . ' is empty, skipping');
             }
         }
 
@@ -754,13 +754,13 @@ class MetaBoxMigrator
             $order->update_meta_data('zs_metabox_migration_date', current_time('mysql'));
             $order->update_meta_data('zs_metabox_migration_version', ZERO_SENSE_VERSION);
             
-            error_log('[ZS Migration] Order ' . $order_id . ' marked as migrated with ' . count($migrated_fields) . ' fields');
+            Logger::debug('[ZS Migration] Order ' . $order_id . ' marked as migrated with ' . count($migrated_fields) . ' fields');
         } else {
             // Mark as skipped if no data was found to migrate
             $order->update_meta_data('zs_metabox_migrated', false);
             $order->update_meta_data('zs_metabox_migration_status', 'no_data_found');
             
-            error_log('[ZS Migration] Order ' . $order_id . ' has no MetaBox data to migrate, marking as skipped');
+            Logger::debug('[ZS Migration] Order ' . $order_id . ' has no MetaBox data to migrate, marking as skipped');
         }
 
         $order->update_meta_data('zs_metabox_migration_log', [
@@ -925,7 +925,7 @@ class MetaBoxMigrator
         $params = array_merge($statuses, $meta_keys);
         $all_order_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
         
-        error_log('[ZS Migration] Legacy getSampleOrders - Found ' . count($all_order_ids) . ' orders with MetaBox data');
+        Logger::debug('[ZS Migration] Legacy getSampleOrders - Found ' . count($all_order_ids) . ' orders with MetaBox data');
         
         $pending_order_ids = [];
         $checked = 0;
@@ -947,7 +947,7 @@ class MetaBoxMigrator
             $checked++;
         }
         
-        error_log('[ZS Migration] Legacy getSampleOrders - Filtered to ' . count($pending_order_ids) . ' pending orders (checked ' . $checked . ' orders)');
+        Logger::debug('[ZS Migration] Legacy getSampleOrders - Filtered to ' . count($pending_order_ids) . ' pending orders (checked ' . $checked . ' orders)');
         
         $order_ids = $pending_order_ids;
 

@@ -79,20 +79,6 @@ function zero_sense_init()
 }
 
 /**
- * Clear feature cache once to discover new Operations features
- * This runs once after the Operations directory was added to FeatureManager
- */
-add_action('admin_init', function() {
-    $flag = 'zs_operations_features_discovered_v3';
-    if (!get_option($flag, false)) {
-        delete_transient('zs_feature_classes_v' . ZERO_SENSE_VERSION);
-        delete_option('zs_operations_features_discovered'); // Clear old flag
-        delete_option('zs_operations_features_discovered_v2'); // Clear v2 flag
-        update_option($flag, true, false);
-    }
-}, 1);
-
-/**
  * Plugin activation callback
  */
 function zero_sense_activate()

@@ -62,11 +62,6 @@ class Gateways implements FeatureInterface
         if (class_exists(RedsysBizum::class)) {
             $methods[] = RedsysBizum::class;
         }
-        // Redsys Deposits gateway
-        $depositsGateway = '\\ZeroSense\\Features\\WooCommerce\\Deposits\\Integrations\\Redsys\\Gateway';
-        if (class_exists($depositsGateway)) {
-            $methods[] = $depositsGateway;
-        }
         return $methods;
     }
 

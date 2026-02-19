@@ -1,6 +1,8 @@
 <?php
 namespace ZeroSense\Features\WooCommerce\OrderPay\Components;
 
+use ZeroSense\Core\Logger;
+
 class BacsRedirects
 {
     public function __construct()
@@ -20,17 +22,13 @@ class BacsRedirects
             $status = $order->get_status();
             $redirect = $this->getRedirectUrl($language, $status);
             
-            // Log redirect decision (useful for troubleshooting)
-            if (defined('WP_DEBUG') && WP_DEBUG && $redirect) {
-                error_log(sprintf(
+            if ($redirect) {
+                Logger::debug(sprintf(
                     "[BACS] Redirecting Order #%d (status: %s) to custom page: %s",
                     $orderId,
                     $status,
                     $redirect
                 ));
-            }
-            
-            if ($redirect) {
                 $result['redirect'] = $redirect;
             }
         }

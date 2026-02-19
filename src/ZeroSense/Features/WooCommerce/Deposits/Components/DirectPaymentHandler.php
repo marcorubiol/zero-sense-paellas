@@ -2,6 +2,7 @@
 namespace ZeroSense\Features\WooCommerce\Deposits\Components;
 
 use WC_Order;
+use ZeroSense\Core\Logger;
 
 class DirectPaymentHandler
 {
@@ -53,14 +54,12 @@ class DirectPaymentHandler
             $order->set_payment_method($gateway);
             $order->save();
             
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log(sprintf(
-                    "[PAYMENT METHOD UPDATE] Order #%d | Changed from: %s → %s",
-                    $orderId,
-                    $currentMethod,
-                    $paymentMethod
-                ));
-            }
+            Logger::debug(sprintf(
+                "[PAYMENT METHOD UPDATE] Order #%d | Changed from: %s → %s",
+                $orderId,
+                $currentMethod,
+                $paymentMethod
+            ));
         }
 
         $result = $gateway->process_payment($orderId);

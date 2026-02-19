@@ -74,49 +74,31 @@ class CheckoutPageEnhancements implements FeatureInterface
 
     public function enqueueCheckoutScripts(): void
     {
-        // Sync localStorage location data to WC session on any WC page
-        if (function_exists('is_woocommerce') && (is_woocommerce() || is_cart() || is_checkout())) {
-            $ajaxUrl = esc_js(admin_url('admin-ajax.php'));
-            $js = '(function(){
-                var sa = localStorage.getItem(".location") || "";
-                var city = localStorage.getItem("city") || "";
-                var fd = new FormData();
-                fd.append("action", "zs_set_location_session");
-                fd.append("service_area", sa);
-                fd.append("city", city);
-                fetch("' . $ajaxUrl . '", {method:"POST", body:fd, credentials:"same-origin"});
-            })();';
-            wp_enqueue_script('jquery');
-            wp_add_inline_script('jquery', $js);
-        }
+        $plugin_root_url  = plugin_dir_url(ZERO_SENSE_FILE);
+        $plugin_root_path = plugin_dir_path(ZERO_SENSE_FILE);
 
-        // Prefill city field from localStorage on checkout page
-        if (function_exists('is_checkout') && is_checkout()) {
-            $js = '(function(){
-                var city = localStorage.getItem("city") || "";
-                if (!city) return;
-                function fillCity() {
-                    var field = document.getElementById("event_city_checkout");
-                    if (field && field.value === "") {
-                        field.value = city;
-                    }
-                }
-                if (document.readyState === "loading") {
-                    document.addEventListener("DOMContentLoaded", fillCity);
-                } else {
-                    fillCity();
-                }
-            })();';
-            wp_add_inline_script('jquery', $js);
+        // Sync localStorage location data to WC session + prefill city field
+        if (function_exists('is_woocommerce') && (is_woocommerce() || is_cart() || is_checkout())) {
+            $sync_js_rel = 'assets/js/checkout-location-sync.js';
+            $sync_js_ver = file_exists($plugin_root_path . $sync_js_rel)
+                ? (string) filemtime($plugin_root_path . $sync_js_rel)
+                : ZERO_SENSE_VERSION;
+            wp_enqueue_script(
+                'zero-sense-checkout-location-sync',
+                $plugin_root_url . $sync_js_rel,
+                [],
+                $sync_js_ver,
+                true
+            );
+            wp_localize_script('zero-sense-checkout-location-sync', 'zsLocationSync', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+            ]);
         }
 
         $is_checkout        = function_exists('is_checkout') ? is_checkout() : false;
         $is_order_received  = function_exists('is_wc_endpoint_url') ? is_wc_endpoint_url('order-received') : false;
         $is_checkout_page   = $is_checkout && !$is_order_received;
         $is_order_pay_page  = function_exists('is_wc_endpoint_url') ? is_wc_endpoint_url('order-pay') : false;
-
-        $plugin_root_url  = plugin_dir_url(ZERO_SENSE_FILE);
-        $plugin_root_path = plugin_dir_path(ZERO_SENSE_FILE);
 
         // Enqueue Terms JS only on checkout (not order-pay)
         if ($is_checkout_page && !$is_order_pay_page) {
