@@ -68,11 +68,11 @@
             html += '</div>';
         });
         html += '</div>';
-        html += '<div class="zs-sl__orders-footer">';
-        html += '<button type="button" class="btn--primary btn--outline" id="zs-sl-update">Actualitzar llista</button> ';
+        html += '</div>';
+        html += '<div class="zs-sl__list-actions">';
         html += '<button type="button" class="btn--neutral btn--outline" id="zs-sl-share">Copiar enllaç</button> ';
         html += '<button type="button" class="btn--neutral" id="zs-sl-print">Imprimir</button>';
-        html += '</div></div>';
+        html += '</div>';
         return html;
     }
 
@@ -123,8 +123,8 @@
         data.append('from', vals.from);
         data.append('to', vals.to);
         data.append('loc', vals.loc);
-        if (orderIds && orderIds.length > 0) {
-            data.append('item_keys', orderIds.join(','));
+        if (orderIds !== null) {
+            data.append('item_keys', orderIds.length > 0 ? orderIds.join(',') : '__none__');
         }
 
         fetch(ajaxUrl, { method: 'POST', body: data })
@@ -156,7 +156,6 @@
     function bindBodyEvents() {
         var checkAll   = document.getElementById('zs-sl-check-all');
         var uncheckAll = document.getElementById('zs-sl-uncheck-all');
-        var update     = document.getElementById('zs-sl-update');
         var share      = document.getElementById('zs-sl-share');
         function syncItemLabels(scope) {
             (scope || document).querySelectorAll('.zs-sl__item-check').forEach(function (el) {
@@ -170,8 +169,7 @@
         function scheduleAutoUpdate() {
             clearTimeout(autoUpdateTimer);
             autoUpdateTimer = setTimeout(function () {
-                var keys = getCheckedKeys();
-                doRequest(keys.length > 0 ? keys : null);
+                doRequest(getCheckedKeys());
             }, 600);
         }
 
@@ -223,12 +221,6 @@
                 scheduleAutoUpdate();
             });
         });
-        if (update) {
-            update.addEventListener('click', function () {
-                var keys = getCheckedKeys();
-                doRequest(keys.length > 0 ? keys : null);
-            });
-        }
         if (share) {
             share.addEventListener('click', function () {
                 if (!currentSignedUrl) { return; }
