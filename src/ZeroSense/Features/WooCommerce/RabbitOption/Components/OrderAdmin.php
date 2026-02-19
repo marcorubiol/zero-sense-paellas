@@ -15,7 +15,8 @@ class OrderAdmin
 
         // Editable select after each line item in admin
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderEditableChoice'], 10, 3);
-        add_action('woocommerce_before_save_order_items', [$this, 'saveEditableChoice'], 10, 1);
+        // woocommerce_after_order_object_save fires for both HPOS and legacy post-based orders
+        add_action('woocommerce_after_order_object_save', [$this, 'saveEditableChoiceFromOrder'], 10, 1);
     }
 
     public function formatMetaKey(string $displayKey, $meta, $item): string
@@ -75,9 +76,9 @@ class OrderAdmin
         <?php
     }
 
-    public function saveEditableChoice(int $orderId): void
+    public function saveEditableChoiceFromOrder(\WC_Abstract_Order $order): void
     {
-        if (empty($_POST['zs_rabbit_choice']) || !is_array($_POST['zs_rabbit_choice'])) {
+        if (!is_admin() || empty($_POST['zs_rabbit_choice']) || !is_array($_POST['zs_rabbit_choice'])) {
             return;
         }
 
