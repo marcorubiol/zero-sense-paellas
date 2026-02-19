@@ -83,9 +83,12 @@ class RedsysApi
 
     private function encrypt3DES(string $message, string $key): string
     {
-        $iv   = str_repeat("\0", 8);
-        $padded = $message . str_repeat("\0", (int) (ceil(strlen($message) / 8) * 8) - strlen($message));
-        $encrypted = openssl_encrypt($padded, 'des-ede3-cbc', $key, OPENSSL_RAW_DATA | OPENSSL_NO_PADDING, $iv);
-        return substr((string) $encrypted, 0, (int) (ceil(strlen($message) / 8) * 8));
+        $iv          = str_repeat("\0", 8);
+        $blockSize   = 8;
+        $msgLen      = strlen($message);
+        $paddedLen   = (int) (ceil(max($msgLen, 1) / $blockSize) * $blockSize);
+        $padded      = $message . str_repeat("\0", $paddedLen - $msgLen);
+        $encrypted   = openssl_encrypt($padded, 'des-ede3-cbc', $key, OPENSSL_RAW_DATA | OPENSSL_NO_PADDING, $iv);
+        return substr((string) $encrypted, 0, $paddedLen);
     }
 }

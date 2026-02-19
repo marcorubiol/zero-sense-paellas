@@ -1145,10 +1145,17 @@ class BricksDynamicTags implements FeatureInterface
         return $this->wrapIfRecentlyChanged($value, $fieldKey, $post);
     }
 
+    private ?int $resolvedOrderIdCache = null;
+    private bool $resolvedOrderIdCacheSet = false;
+
     private function resolveOrderId($contextPost = null): ?int
     {
         if ($contextPost instanceof WP_Post && get_post_type($contextPost->ID) === 'shop_order') {
             return (int) $contextPost->ID;
+        }
+
+        if ($this->resolvedOrderIdCacheSet) {
+            return $this->resolvedOrderIdCache;
         }
 
         global $post;
@@ -1178,15 +1185,21 @@ class BricksDynamicTags implements FeatureInterface
             if (isset($_GET['key']) && is_string($_GET['key']) && function_exists('wc_get_order_id_by_order_key')) {
                 $id = absint(wc_get_order_id_by_order_key(wp_unslash($_GET['key'])));
                 if ($id > 0) {
+                    $this->resolvedOrderIdCache = $id;
+                    $this->resolvedOrderIdCacheSet = true;
                     return $id;
                 }
             }
             if (isset($wp->query_vars['order-pay'])) {
-                $orderId = absint($wp->query_vars['order-pay']);
-                return $orderId;
+                $id = absint($wp->query_vars['order-pay']);
+                $this->resolvedOrderIdCache = $id ?: null;
+                $this->resolvedOrderIdCacheSet = true;
+                return $this->resolvedOrderIdCache;
             }
         }
 
+        $this->resolvedOrderIdCache = null;
+        $this->resolvedOrderIdCacheSet = true;
         return null;
     }
 
@@ -1807,15 +1820,15 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
-        // Convert ml to L if >= 1000ml (standardize to uppercase L)
+        // Convert ml to l if >= 1000ml (standardize to lowercase l)
         if ($unit === 'ml' && $qty >= 1000) {
             return [
                 'qty' => $qty / 1000,
-                'unit' => 'L'
+                'unit' => 'l'
             ];
         }
 
-        // Convert L to ml if < 1L (for consistency)
+        // Convert l to ml if < 1l (for consistency)
         if ($unit === 'l' && $qty < 1) {
             return [
                 'qty' => $qty * 1000,
@@ -1823,19 +1836,11 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
         
-        // Standardize lowercase l to uppercase L
-        if ($unit === 'l') {
-            return [
-                'qty' => $qty,
-                'unit' => 'L'
-            ];
-        }
-        
-        // Convert "u" to "uds." for better clarity
+        // Keep as is for other units (u, etc.)
         if ($unit === 'u') {
             return [
                 'qty' => $qty,
-                'unit' => 'uds.'
+                'unit' => 'u'
             ];
         }
 
@@ -3178,7 +3183,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . ' L</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . ' l</span>';
             $html .= '</div>';
         }
 

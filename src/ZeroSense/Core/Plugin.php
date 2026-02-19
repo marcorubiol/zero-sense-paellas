@@ -49,6 +49,7 @@ class Plugin
     {
         // Initialize feature manager
         $this->featureManager = new FeatureManager();
+        $this->featureManager->registerCacheInvalidation();
         $this->featureManager->discoverFeatures();
         $this->featureManager->initializeFeatures();
 

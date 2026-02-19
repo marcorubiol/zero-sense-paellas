@@ -345,17 +345,12 @@ class Gateway extends WC_Payment_Gateway
             }
 
             $callbackApi = new RedsysApi();
-            $decodedJson = $callbackApi->decodeMerchantParameters($mpB64);
+            $callbackApi->decodeMerchantParameters($mpB64);
 
-            $params = []; // decoded associative array
-            if ($decodedJson) {
-                $arr = json_decode($decodedJson, true);
-                if (is_array($arr)) { $params = $arr; }
-            }
-
-            // Extract fields
-            $dsOrder    = isset($params['Ds_Order']) ? (string) $params['Ds_Order'] : '';
-            $dsResponse = isset($params['Ds_Response']) ? (int) $params['Ds_Response'] : 999;
+            // Extract fields directly from decoded params
+            $dsOrder    = (string) ($callbackApi->getParameter('Ds_Order') ?? '');
+            $dsResponse = (int) ($callbackApi->getParameter('Ds_Response') ?? 999);
+            $params     = ['Ds_Amount' => $callbackApi->getParameter('Ds_Amount')];
 
             // Verify signature
             $signatureOk = false;
@@ -403,7 +398,7 @@ class Gateway extends WC_Payment_Gateway
 
                 // Decide target status and update metas — mirrors ReturnHandler::handleSuccess()
                 $intent = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
-                $amountRaw = isset($params['Ds_Amount']) ? ((float) $params['Ds_Amount'] / 100) : 0.0;
+                $amountRaw = (float) ($callbackApi->getParameter('Ds_Amount') ?? 0) / 100;
                 $orderTotal = (float) $order->get_total();
                 $depositAmountMeta = (float) ($order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true) ?: 0);
 

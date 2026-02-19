@@ -32,6 +32,17 @@ class FeatureManager
      * Auto-discover all features by scanning directories
      * Uses transient cache to avoid filesystem scans on every request
      */
+    public function registerCacheInvalidation(): void
+    {
+        add_action('update_option_zero_sense_settings', [$this, 'clearCache']);
+        add_action('update_option_zero_sense_features', [$this, 'clearCache']);
+    }
+
+    public function clearCache(): void
+    {
+        delete_transient('zs_feature_classes_v' . ZERO_SENSE_VERSION);
+    }
+
     public function discoverFeatures(): void
     {
         // Try to get cached feature class names
