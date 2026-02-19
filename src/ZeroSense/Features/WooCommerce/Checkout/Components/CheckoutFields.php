@@ -60,15 +60,18 @@ class CheckoutFields
             return;
         }
 
-        if (isset($_POST['service_area'])) {
-            $termId = absint($_POST['service_area']);
-            if ($termId > 0) {
-                WC()->session->set('zs_service_area', $this->normalizeToCanonicalTermId($termId));
-            }
+        $termId = isset($_POST['service_area']) ? absint($_POST['service_area']) : 0;
+        if ($termId > 0) {
+            WC()->session->set('zs_service_area', $this->normalizeToCanonicalTermId($termId));
+        } else {
+            WC()->session->set('zs_service_area', null);
         }
 
-        if (isset($_POST['city']) && $_POST['city'] !== '') {
-            WC()->session->set('zs_city', sanitize_text_field((string) $_POST['city']));
+        $city = isset($_POST['city']) ? sanitize_text_field((string) $_POST['city']) : '';
+        if ($city !== '') {
+            WC()->session->set('zs_city', $city);
+        } else {
+            WC()->session->set('zs_city', null);
         }
 
         wp_send_json_success();
@@ -352,6 +355,12 @@ class CheckoutFields
         }
         if (is_string($city) && $city !== '') {
             $order->set_shipping_city(sanitize_text_field($city));
+        }
+
+        // Clear location session data after saving to avoid leaking into future orders
+        if (function_exists('WC') && WC()->session) {
+            WC()->session->set('zs_city', null);
+            WC()->session->set('zs_service_area', null);
         }
     }
 

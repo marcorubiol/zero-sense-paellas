@@ -78,13 +78,12 @@ class CheckoutPageEnhancements implements FeatureInterface
         if (function_exists('is_woocommerce') && (is_woocommerce() || is_cart() || is_checkout())) {
             $ajaxUrl = esc_js(admin_url('admin-ajax.php'));
             $js = '(function(){
-                var sa = localStorage.getItem(".location");
-                var city = localStorage.getItem("city");
-                if (!sa && !city) return;
+                var sa = localStorage.getItem(".location") || "";
+                var city = localStorage.getItem("city") || "";
                 var fd = new FormData();
                 fd.append("action", "zs_set_location_session");
-                if (sa) fd.append("service_area", sa);
-                if (city) fd.append("city", city);
+                fd.append("service_area", sa);
+                fd.append("city", city);
                 fetch("' . $ajaxUrl . '", {method:"POST", body:fd, credentials:"same-origin"});
             })();';
             wp_enqueue_script('jquery');
