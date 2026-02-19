@@ -144,7 +144,7 @@
     transition: background 0.2s;
 }
 .zs-sl__item-check-label .zs-sl__switch-track {
-    background: var(--base-semi-light);
+    background: var(--base-trans-70) !important;
 }
 .zs-sl__switch-track::after {
     content: '';
@@ -159,7 +159,7 @@
     box-shadow: 0 1px 2px rgba(0,0,0,.2);
 }
 .zs-sl__switch input:checked + .zs-sl__switch-track {
-    background: var(--base-semi-dark);
+    background: var(--base);
 }
 .zs-sl__switch input:checked + .zs-sl__switch-track::after {
     transform: translateX(12px);
