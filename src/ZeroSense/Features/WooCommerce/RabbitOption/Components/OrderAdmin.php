@@ -14,9 +14,10 @@ class OrderAdmin
 
         // Editable toggle after each line item in admin
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderEditableChoice'], 10, 3);
-        // Classic editor + HPOS: both fire on "Update Order"
+        // Classic mode
         add_action('woocommerce_process_shop_order_meta', [$this, 'saveEditableChoice'], 20);
-        add_action('save_post_shop_order', [$this, 'saveEditableChoice'], 20);
+        // HPOS mode
+        add_action('woocommerce_update_order', [$this, 'saveEditableChoice'], 20);
     }
 
     public function formatMetaKey(string $displayKey, $meta, $item): string
@@ -93,6 +94,11 @@ class OrderAdmin
     public function saveEditableChoice(int $orderId): void
     {
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        // Only run when saving from the admin order edit screen
+        if (!is_admin() || empty($_POST) || !isset($_POST['order_id'], $_POST['woocommerce_meta_nonce'])) {
             return;
         }
 
