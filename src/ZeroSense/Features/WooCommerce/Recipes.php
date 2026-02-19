@@ -1695,7 +1695,7 @@ class Recipes implements FeatureInterface
             'kg' => __('kg', 'zero-sense'),
             'ml' => __('ml', 'zero-sense'),
             'l' => __('lit', 'zero-sense'),
-            'u' => __('ud', 'zero-sense'),
+            'u' => __('pcs', 'zero-sense'),
         ];
     }
 
@@ -1703,7 +1703,7 @@ class Recipes implements FeatureInterface
     {
         return [
             'l' => __('lit', 'zero-sense'),
-            'u' => __('ud', 'zero-sense'),
+            'u' => __('pcs', 'zero-sense'),
         ];
     }
 

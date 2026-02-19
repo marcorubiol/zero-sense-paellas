@@ -1809,7 +1809,7 @@ class BricksDynamicTags implements FeatureInterface
             'kg'  => 'kg',
             'ml'  => 'ml',
             'l'   => 'lit',
-            'u'   => 'ud',
+            'u'   => 'pcs',
         ];
 
         // Convert g to kg if >= 1000g
