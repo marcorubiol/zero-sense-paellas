@@ -1091,3 +1091,27 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     font-size: 12px;
     opacity: 0.9;
 }
+
+/* =================================================================
+   FDR CARD COLUMN ALIGNMENT
+   ================================================================= */
+
+.fdr-card__field-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.fdr-card__field-value .quantity {
+    text-align: right;
+    min-width: 60px;
+    font-weight: 500;
+}
+
+.fdr-card__field-value .unit {
+    text-align: left;
+    min-width: 40px;
+    font-weight: 400;
+    opacity: 0.8;
+}
