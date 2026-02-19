@@ -3323,7 +3323,10 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // WPML: resolve to original product
+        // Capture title in current (translated) language before resolving to original
+        $productName = esc_html(get_the_title($productId));
+
+        // WPML: resolve to original product for meta reads
         if (defined('ICL_SITEPRESS_VERSION')) {
             $defaultLang = apply_filters('wpml_default_language', null);
             $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
@@ -3337,7 +3340,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $labelWithout = esc_html__('Sin conejo', 'zero-sense');
-        $productName  = esc_html(get_the_title($productId));
         $infoText     = sprintf(
             /* translators: %s: product name */
             esc_html__('En la paella "%s", el conejo es un ingrediente típico, pero sabemos que en algunas culturas no es común; por eso, ofrecemos la opción de hacer la paella con o sin conejo.', 'zero-sense'),

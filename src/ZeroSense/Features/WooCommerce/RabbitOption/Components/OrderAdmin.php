@@ -15,7 +15,7 @@ class OrderAdmin
 
         // Editable select after each line item in admin
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderEditableChoice'], 10, 3);
-        add_action('woocommerce_process_shop_order_meta', [$this, 'saveEditableChoice']);
+        add_action('woocommerce_before_save_order_items', [$this, 'saveEditableChoice'], 10, 1);
     }
 
     public function formatMetaKey(string $displayKey, $meta, $item): string
