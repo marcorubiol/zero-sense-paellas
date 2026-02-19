@@ -1080,24 +1080,24 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
 }
 
 .zs-guest-validation.match input#event_total_guests {
-    border-color: color-mix(in srgb, #00a32a 30%, transparent 70%);
-    box-shadow: 0 0 0 1px color-mix(in srgb, #00a32a 20%, transparent 80%);
+    border-color: #00a32a !important;
+    box-shadow: 0 0 0 2px rgba(0, 163, 42, 0.2) !important;
 }
 
 .zs-guest-validation.lower {
-    color: #dba617;
+    color: #d67700 !important;
 }
 
 .zs-guest-validation.lower input#event_total_guests {
-    color: #dba617;
+    color: #d67700 !important;
 }
 
 .zs-guest-validation.higher {
-    color: #dba617;
+    color: #d67700 !important;
 }
 
 .zs-guest-validation.higher input#event_total_guests {
-    color: #dba617;
+    color: #d67700 !important;
 }
 
 .zs-guest-validation-message {
