@@ -89,7 +89,6 @@ class Gateway extends WC_Payment_Gateway
         // First honour WooCommerce's base checks
         if (!parent::is_available()) {
             if (!$isOrderPay) {
-                \ZeroSense\Core\Logger::debug($this->id . ' is_available: FAIL parent (enabled=' . $this->enabled . ')');
                 return false;
             }
         }
@@ -98,18 +97,13 @@ class Gateway extends WC_Payment_Gateway
         $requiredOptions = ['merchant_code', 'secret_key', 'terminal'];
         foreach ($requiredOptions as $option) {
             if (empty($this->get_option($option))) {
-                \ZeroSense\Core\Logger::debug($this->id . ' is_available: FAIL missing option=' . $option);
                 return false;
             }
         }
 
         // Require Redsys SDK in all cases (checkout and order-pay)
-        if (!class_exists('RedsyspurAPI')) {
-            \ZeroSense\Core\Logger::debug($this->id . ' is_available: FAIL RedsyspurAPI class not found');
-            return false;
-        }
+        if (!class_exists('RedsyspurAPI')) { return false; }
 
-        \ZeroSense\Core\Logger::debug($this->id . ' is_available: OK (isOrderPay=' . ($isOrderPay ? 'yes' : 'no') . ')');
         return true;
     }
 
