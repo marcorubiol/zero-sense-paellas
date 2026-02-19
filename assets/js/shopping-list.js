@@ -67,33 +67,15 @@
         if (!list || list.length === 0) {
             return '<div class="zs-sl__list-empty"><p>No hi ha ingredients per als pedidos seleccionats.</p></div>';
         }
-        var ingredients = list.filter(function (i) { return i.type === 'ingredient'; });
-        var liquids     = list.filter(function (i) { return i.type === 'liquid'; });
-        var html = '<div class="zs-sl__list" id="zs-sl-list">';
-
-        if (ingredients.length > 0) {
-            html += '<div class="zs-sl__list-section"><h3 class="zs-sl__section-title">Ingredients</h3><div class="zs-sl__list-items">';
-            ingredients.forEach(function (item) {
-                html += '<div class="zs-sl__list-item">';
-                html += '<span class="zs-sl__item-name">' + esc(item.name) + '</span>';
-                html += '<span class="zs-sl__item-qty">' + formatQty(item.qty) + ' <span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
-                html += '</div>';
-            });
-            html += '</div></div>';
-        }
-
-        if (liquids.length > 0) {
-            html += '<div class="zs-sl__list-section"><h3 class="zs-sl__section-title">Líquids</h3><div class="zs-sl__list-items">';
-            liquids.forEach(function (item) {
-                html += '<div class="zs-sl__list-item">';
-                html += '<span class="zs-sl__item-name">' + esc(item.name) + '</span>';
-                html += '<span class="zs-sl__item-qty">' + formatQty(item.qty) + ' <span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
-                html += '</div>';
-            });
-            html += '</div></div>';
-        }
-
-        html += '</div>';
+        list = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var html = '<div class="zs-sl__list print-only" id="zs-sl-list"><div class="zs-sl__list-items">';
+        list.forEach(function (item) {
+            html += '<div class="zs-sl__list-item">';
+            html += '<span class="zs-sl__item-name">' + esc(item.name) + '</span>';
+            html += '<span class="zs-sl__item-qty">' + formatQty(item.qty) + ' <span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
+            html += '</div>';
+        });
+        html += '</div></div>';
         return html;
     }
 

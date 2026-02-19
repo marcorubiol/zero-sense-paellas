@@ -171,17 +171,10 @@
 
 /* Shopping list */
 .zs-sl__list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-}
-.zs-sl__list-section {
     border: 1px solid #e0e0e0;
     border-radius: 6px;
     overflow: hidden;
-}
-.zs-sl__list-section .zs-sl__section-title {
-    margin: 0;
+    margin-top: 24px;
 }
 .zs-sl__list-items {
     padding: 8px 0;
@@ -215,10 +208,21 @@
 }
 
 /* Print */
+.print-only { display: block; }
+
 @media print {
     .no-print { display: none !important; }
-    .zs-sl__list { grid-template-columns: repeat(2, 1fr); }
-    .zs-sl__list-item { padding: 5px 12px; }
-    .zs-sl__section-title { padding: 8px 12px; }
-    body { font-size: 12px; }
+    .print-only { display: block !important; }
+
+    body * { visibility: hidden; }
+    .zs-sl__list, .zs-sl__list * { visibility: visible; }
+    .zs-sl__list {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        border: none;
+        margin: 0;
+    }
+    .zs-sl__list-item { padding: 5px 12px; font-size: 12px; }
 }
