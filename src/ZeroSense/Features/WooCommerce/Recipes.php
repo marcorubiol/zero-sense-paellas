@@ -14,6 +14,7 @@ class Recipes implements FeatureInterface
     private const META_INGREDIENTS = 'zs_recipe_ingredients';
     private const META_UTENSILS = 'zs_recipe_utensils';
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
+    private const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
     private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
 
     private const NONCE_FIELD = 'zs_recipe_nonce';
@@ -1134,6 +1135,28 @@ class Recipes implements FeatureInterface
         
         echo '</div>';
 
+        // --- Recipe without rabbit (conditional on _zs_has_rabbit_option) ---
+        $hasRabbit = get_post_meta($productId, '_zs_has_rabbit_option', true) === 'yes';
+        $currentNoRabbit = (int) get_post_meta($productId, self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+
+        echo '<div class="options_group" id="zs-recipe-no-rabbit-group" style="' . ($hasRabbit ? '' : 'display:none;') . '">';
+        echo '<p class="form-field">';
+        echo '<label for="zs_recipe_id_no_rabbit">' . esc_html__('Recipe without rabbit', 'zero-sense') . '</label>';
+        echo '<select id="zs_recipe_id_no_rabbit" name="zs_recipe_id_no_rabbit" class="wc-enhanced-select" style="width:50%;">';
+        echo '<option value="">' . esc_html__('None', 'zero-sense') . '</option>';
+
+        foreach ($recipes as $recipe) {
+            if (!$recipe instanceof WP_Post) {
+                continue;
+            }
+            $id = (int) $recipe->ID;
+            echo '<option value="' . esc_attr((string) $id) . '"' . selected($currentNoRabbit, $id, false) . '>' . esc_html($recipe->post_title) . '</option>';
+        }
+
+        echo '</select>';
+        echo '</p>';
+        echo '</div>';
+
         $baseEditUrl = esc_js(admin_url('post.php'));
         ?>
         <script>
@@ -1166,6 +1189,20 @@ class Recipes implements FeatureInterface
                 toggleActions(val);
             });
             toggleActions();
+
+            // Show/hide "Recipe without rabbit" based on rabbit option checkbox
+            var $rabbitCheck = $('#_zs_has_rabbit_option');
+            var $noRabbitGroup = $('#zs-recipe-no-rabbit-group');
+
+            function toggleNoRabbitField() {
+                if ($rabbitCheck.is(':checked')) {
+                    $noRabbitGroup.slideDown(200);
+                } else {
+                    $noRabbitGroup.slideUp(200);
+                }
+            }
+
+            $rabbitCheck.on('change', toggleNoRabbitField);
         });
         </script>
         <?php
@@ -1187,6 +1224,12 @@ class Recipes implements FeatureInterface
             } else {
                 delete_post_meta($originalId, self::META_PRODUCT_RECIPE_ID);
             }
+            $noRabbitId = isset($_POST[self::META_PRODUCT_RECIPE_NO_RABBIT]) ? (int) $_POST[self::META_PRODUCT_RECIPE_NO_RABBIT] : 0;
+            if ($noRabbitId > 0) {
+                update_post_meta($originalId, self::META_PRODUCT_RECIPE_NO_RABBIT, $noRabbitId);
+            } else {
+                delete_post_meta($originalId, self::META_PRODUCT_RECIPE_NO_RABBIT);
+            }
             return;
         }
 
@@ -1195,7 +1238,14 @@ class Recipes implements FeatureInterface
         } else {
             $product->delete_meta_data(self::META_PRODUCT_RECIPE_ID);
         }
-        
+
+        $noRabbitRecipeId = isset($_POST[self::META_PRODUCT_RECIPE_NO_RABBIT]) ? (int) $_POST[self::META_PRODUCT_RECIPE_NO_RABBIT] : 0;
+        if ($noRabbitRecipeId > 0) {
+            $product->update_meta_data(self::META_PRODUCT_RECIPE_NO_RABBIT, $noRabbitRecipeId);
+        } else {
+            $product->delete_meta_data(self::META_PRODUCT_RECIPE_NO_RABBIT);
+        }
+
         $product->save();
     }
 

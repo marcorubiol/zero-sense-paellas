@@ -134,16 +134,14 @@ class EventDetailsMetabox
                         <label for="event_total_guests">
                             <?php esc_html_e('Total guests', 'zero-sense'); ?>
                         </label>
-                        <div class="zs-mb-field-inline">
-                            <input type="number" 
-                                   id="event_total_guests" 
-                                   name="event_total_guests" 
-                                   value="<?php echo esc_attr($totalGuests); ?>" 
-                                   min="0"
-                                   class="short">
-                            <div id="zs-guests-validation" class="zs-guest-validation">
-                                <span class="zs-guest-validation-message"></span>
-                            </div>
+                        <input type="number" 
+                               id="event_total_guests" 
+                               name="event_total_guests" 
+                               value="<?php echo esc_attr($totalGuests); ?>" 
+                               min="0"
+                               class="short">
+                        <div id="zs-guests-validation" class="zs-guest-validation">
+                            <span class="zs-guest-validation-message"></span>
                         </div>
                     </div>
                 </div>

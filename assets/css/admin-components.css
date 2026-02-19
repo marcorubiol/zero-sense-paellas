@@ -1066,9 +1066,8 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
    ================================================================= */
 
 .zs-guest-validation {
-    display: flex;
-    align-items: center;
-    margin-left: 8px;
+    display: block;
+    margin-top: 4px;
     font-size: 13px;
     font-weight: 500;
     color: #646970;
@@ -1080,8 +1079,8 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
 }
 
 .zs-guest-validation.match input#event_total_guests {
-    border-color: #00a32a !important;
-    box-shadow: 0 0 0 2px rgba(0, 163, 42, 0.2) !important;
+    border: 2px solid #00a32a !important;
+    outline: none !important;
 }
 
 .zs-guest-validation.lower {

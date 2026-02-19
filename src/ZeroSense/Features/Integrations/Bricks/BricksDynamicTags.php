@@ -49,6 +49,8 @@ class BricksDynamicTags implements FeatureInterface
     ];
 
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
+    private const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
+    private const META_RABBIT_CHOICE = '_zs_rabbit_choice';
     private const META_RECIPE_INGREDIENTS = 'zs_recipe_ingredients';
     private const META_RECIPE_UTENSILS = 'zs_recipe_utensils';
     private const TAX_INGREDIENT = 'zs_ingredient';
@@ -290,6 +292,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -484,6 +487,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_inventory_list}') {
             return $this->getInventoryList($post);
         }
+        if ($tag === '{zs_rabbit_toggle}') {
+            return $this->getRabbitToggle($post);
+        }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -556,6 +562,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
+        $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post),            $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -3288,5 +3295,85 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return $html;
+    }
+
+    /**
+     * Render the rabbit toggle switch for the shop loop.
+     * Returns HTML only if the current product has _zs_has_rabbit_option = yes.
+     * Returns empty string otherwise (no output for products without rabbit option).
+     */
+    private function getRabbitToggle($post): string
+    {
+        $productId = 0;
+
+        if ($post instanceof WP_Post) {
+            $productId = $post->ID;
+        } elseif (is_numeric($post)) {
+            $productId = (int) $post;
+        }
+
+        if ($productId <= 0) {
+            global $product;
+            if (is_object($product) && method_exists($product, 'get_id')) {
+                $productId = $product->get_id();
+            }
+        }
+
+        if ($productId <= 0) {
+            return '';
+        }
+
+        // WPML: resolve to original product
+        if (defined('ICL_SITEPRESS_VERSION')) {
+            $defaultLang = apply_filters('wpml_default_language', null);
+            $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
+            if ($originalId) {
+                $productId = (int) $originalId;
+            }
+        }
+
+        if (get_post_meta($productId, '_zs_has_rabbit_option', true) !== 'yes') {
+            return '';
+        }
+
+        $labelWith    = esc_html__('Con conejo', 'zero-sense');
+        $labelWithout = esc_html__('Sin conejo', 'zero-sense');
+
+        return '<label class="zs-rabbit-toggle" aria-label="' . esc_attr__('Sin conejo', 'zero-sense') . '">'
+            . '<input type="checkbox" name="zs_rabbit_choice" value="without" class="zs-rabbit-toggle__input">'
+            . '<span class="zs-rabbit-toggle__track">'
+            . '<span class="zs-rabbit-toggle__thumb"></span>'
+            . '</span>'
+            . '<span class="zs-rabbit-toggle__label">' . $labelWithout . '</span>'
+            . '</label>'
+            . '<style>'
+            . '.zs-rabbit-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:14px;}'
+            . '.zs-rabbit-toggle__input{position:absolute;opacity:0;width:0;height:0;}'
+            . '.zs-rabbit-toggle__track{position:relative;display:inline-block;width:40px;height:22px;background:#ccc;border-radius:11px;transition:background .2s;flex-shrink:0;}'
+            . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track{background:#2271b1;}'
+            . '.zs-rabbit-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}'
+            . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track .zs-rabbit-toggle__thumb{transform:translateX(18px);}'
+            . '</style>';
+    }
+
+    /**
+     * Resolve the effective recipe ID for an order item, taking rabbit choice into account.
+     * If the item has _zs_rabbit_choice = 'without' and the product has zs_recipe_id_no_rabbit set,
+     * returns the no-rabbit recipe ID. Otherwise returns the standard recipe ID.
+     */
+    private function resolveRecipeIdForItem(\WC_Order_Item_Product $item, \WC_Product $product): int
+    {
+        $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+        if ($recipeId <= 0) {
+            return 0;
+        }
+
+        $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true);
+        if ($rabbitChoice !== 'without') {
+            return $recipeId;
+        }
+
+        $noRabbitId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+        return $noRabbitId > 0 ? $noRabbitId : $recipeId;
     }
 }
