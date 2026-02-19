@@ -285,11 +285,10 @@ class Recipes implements FeatureInterface
                 <div class="zs-paella-mode-info">
                     <p><?php esc_html_e('Enable to automatically calculate paella pans, burners and cassola size for this recipe.', 'zero-sense'); ?></p>
                 </div>
-            </div>
-
-            <div class="zs-paella-mode-notice" style="display:<?php echo $needsPaella === '1' ? 'block' : 'none'; ?>; background:#fff8e1; border-left:4px solid #f0a500; padding:10px 14px; margin:8px 0 4px; border-radius:3px; font-size:13px;">
-                <strong><?php esc_html_e('⚠️ Liquids section', 'zero-sense'); ?></strong><br>
-                <?php esc_html_e('Add all liquids used in this recipe (water, broth…) in the Liquids section below. The system uses these quantities to automatically select the right cassola size. Ingredients are always saved regardless of mode.', 'zero-sense'); ?>
+                <div class="zs-paella-mode-notice" style="display:<?php echo $needsPaella === '1' ? 'block' : 'none'; ?>; background:#e8f4fd; border-left:3px solid #72aee6; padding:8px 12px; margin:8px 0 4px; border-radius:3px; font-size:12px; color:#444;">
+                    <strong><?php esc_html_e('ℹ️ Liquids section', 'zero-sense'); ?></strong><br>
+                    <?php esc_html_e('Add the cooking liquids (water, stock…) in the Liquids section below. Fats like oil belong in Ingredients. The system uses the total volume to select the right cassola size.', 'zero-sense'); ?>
+                </div>
             </div>
 
             <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
@@ -372,7 +371,8 @@ class Recipes implements FeatureInterface
 
             <!-- Liquids Section (shown only if paella mode is ON) -->
             <div class="zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
-                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Liquids', 'zero-sense'); ?></h3>
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Cooking liquids (water & broth)', 'zero-sense'); ?></h3>
+                <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Only add the main cooking liquid (water, stock…) used to cook the rice. This determines the cassola size. Fats like oil belong in Ingredients.', 'zero-sense'); ?></p>
                 <table class="widefat striped" style="margin-top:8px;">
                     <thead>
                         <tr>
