@@ -3383,33 +3383,50 @@ class BricksDynamicTags implements FeatureInterface
             $this->rabbitAjaxPatchEnqueued = true;
         }
 
-        add_action('wp_footer', function () use ($pid, $needsPatch) {
-            $patchJs = '';
-            if ($needsPatch) {
-                $patchJs = 'if(!window._zsRabbitAjaxPatched&&window.jQuery){'
-                    . 'window._zsRabbitAjaxPatched=true;'
-                    . 'jQuery(document).on("ajaxSend",function(e,xhr,settings){'
-                    . 'if(settings.data&&settings.data.indexOf("action=zs_add_to_cart")>-1){'
-                    . 'var params=new URLSearchParams(settings.data);'
-                    . 'var p=params.get("product_id");'
-                    . 'var c=(window._zsRabbitChoice&&p&&window._zsRabbitChoice[p])||"with";'
-                    . 'params.set("zs_rabbit_choice",c);'
-                    . 'settings.data=params.toString();'
+        // Patch AJAX interception early so it's registered before any Bricks JS fires
+        if ($needsPatch) {
+            add_action('wp_head', function () {
+                echo '<script>'
+                    . 'window._zsRabbitChoice=window._zsRabbitChoice||{};'
+                    . 'function _zsInjectRabbit(data){'
+                    . 'if(!data)return data;'
+                    . 'var str=typeof data==="string"?data:null;'
+                    . 'var fd=data instanceof FormData?data:null;'
+                    . 'var usp=data instanceof URLSearchParams?data:null;'
+                    . 'var action=str?new URLSearchParams(str).get("action"):((fd||usp)?data.get("action"):null);'
+                    . 'if(action!=="zs_add_to_cart")return data;'
+                    . 'var params=str?new URLSearchParams(str):(usp||null);'
+                    . 'if(params){var p=params.get("product_id");var c=(window._zsRabbitChoice[p])||"with";params.set("zs_rabbit_choice",c);console.log("[ZS] injecting rabbit choice",c,"for pid",p);return str?params.toString():params;}'
+                    . 'if(fd){var p2=fd.get("product_id");var c2=(window._zsRabbitChoice[p2])||"with";fd.set("zs_rabbit_choice",c2);console.log("[ZS] injecting rabbit choice (fd)",c2,"for pid",p2);return fd;}'
+                    . 'return data;'
                     . '}'
+                    . 'document.addEventListener("DOMContentLoaded",function(){'
+                    . 'if(window.jQuery){'
+                    . 'jQuery.ajaxPrefilter(function(options){options.data=_zsInjectRabbit(options.data);});'
+                    . 'console.log("[ZS] jQuery.ajaxPrefilter registered");'
+                    . '}'
+                    . 'var _oFetch=window.fetch;'
+                    . 'window.fetch=function(url,opts){'
+                    . 'if(opts&&opts.body)opts=Object.assign({},opts,{body:_zsInjectRabbit(opts.body)});'
+                    . 'return _oFetch.apply(this,arguments);'
+                    . '};'
+                    . 'console.log("[ZS] fetch patched");'
                     . '});'
-                    . '}';
-            }
+                    . '</script>';
+            }, 1);
+        }
 
+        // Toggle state tracking in wp_footer after DOM is ready
+        add_action('wp_footer', function () use ($pid) {
             echo '<script>'
-                . 'window._zsRabbitChoice=window._zsRabbitChoice||{};'
                 . '(function(){'
+                . 'window._zsRabbitChoice=window._zsRabbitChoice||{};'
                 . 'var toggle=document.querySelector(".zs-rabbit-toggle__input");'
                 . 'if(!toggle)return;'
                 . 'function getChoice(){return toggle.checked?"without":"with";}'
                 . 'window._zsRabbitChoice[' . $pid . ']=getChoice();'
                 . 'toggle.addEventListener("change",function(){window._zsRabbitChoice[' . $pid . ']=getChoice();});'
                 . '})();'
-                . $patchJs
                 . '</script>';
         }, 99);
     }
