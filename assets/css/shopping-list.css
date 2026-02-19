@@ -272,16 +272,17 @@
 /* Print */
 
 @media print {
-    body.zs-printing > *:not(#zs-sl),
-    body.zs-printing #zs-sl > *:not(.zs-sl__body),
-    body.zs-printing .zs-sl__body > *:not(#zs-sl-list-wrap),
-    body.zs-printing #zs-sl-list-wrap > *:not(.zs-sl__list),
-    body.zs-printing .zs-sl__orders,
-    body.zs-printing .zs-sl__list-actions,
-    body.zs-printing .zs-sl__filters {
-        display: none !important;
+    body.zs-printing * {
+        visibility: hidden !important;
+    }
+    body.zs-printing .zs-sl__list,
+    body.zs-printing .zs-sl__list * {
+        visibility: visible !important;
     }
     body.zs-printing .zs-sl__list {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
         width: 50% !important;
         box-sizing: border-box !important;
     }

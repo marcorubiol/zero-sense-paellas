@@ -96,6 +96,10 @@
     }
 
     function zsPrint() {
+        var lists = document.querySelectorAll('.zs-sl__list');
+        if (lists.length > 1) {
+            for (var i = 0; i < lists.length - 1; i++) { lists[i].remove(); }
+        }
         document.body.classList.add('zs-printing');
         window.addEventListener('afterprint', function handler() {
             document.body.classList.remove('zs-printing');
