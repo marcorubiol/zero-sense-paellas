@@ -45,7 +45,7 @@ class FeatureManager
                     try {
                         $this->features[] = new $className();
                     } catch (\Exception $e) {
-                        Logger::debug("Failed to instantiate cached feature {$className}", $e->getMessage());
+                        Logger::warning("Failed to instantiate cached feature {$className}", $e->getMessage());
                     }
                 }
             }
@@ -126,7 +126,7 @@ class FeatureManager
                     $feature = new $fullClassName();
                     $this->features[] = $feature;
                 } catch (\Exception $e) {
-                    Logger::debug("Failed to instantiate feature {$fullClassName}", $e->getMessage());
+                    Logger::warning("Failed to instantiate feature {$fullClassName}", $e->getMessage());
                 }
             }
         }

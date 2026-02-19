@@ -76,23 +76,3 @@ $orderId = $order_id ?? 0;
 </div>
 
 <input type="hidden" id="zs_deposits_payment_choice_submit" name="zs_deposits_payment_choice_submit" value="<?php echo esc_attr($initialChoice); ?>">
-
-<script type="text/javascript">
-window.zsDepositsDepositVars = {
-    ajax_url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-    orderId: '<?php echo esc_js($orderId); ?>',
-    orderPayNonce: '<?php echo wp_create_nonce('zs_deposits_order_pay_nonce'); ?>',
-    depositAmountRaw: '<?php echo esc_js($depositAmountRaw); ?>',
-    fullAmountRaw: '<?php echo esc_js($fullAmountRaw); ?>',
-    depositFormatted: '<?php echo wp_kses_post($depositDisplay); ?>',
-    fullFormatted: '<?php echo wp_kses_post($fullDisplay); ?>',
-    initialChoice: '<?php echo esc_js($initialChoice); ?>',
-    currencySettings: <?php echo wp_json_encode($currencySettings); ?>,
-    texts: {
-        totalAmount: '<?php echo esc_js(__('Amount to pay now', 'zero-sense')); ?>',
-        depositLabel: '<?php echo esc_js(__('Amount to pay now:', 'zero-sense')); ?>',
-        fullLabel: '<?php echo esc_js(__('Amount to pay now:', 'zero-sense')); ?>',
-        error_prefix: '<?php echo esc_js(__('Error:', 'zero-sense')); ?>'
-    }
-};
-</script>

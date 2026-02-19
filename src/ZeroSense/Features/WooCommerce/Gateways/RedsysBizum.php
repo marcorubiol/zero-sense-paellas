@@ -122,11 +122,6 @@ class RedsysBizum extends WC_Payment_Gateway
 
         // On order-pay, immediately output form and exit
         if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
-            // Persist intent under v3 key if present
-            if (!empty($params['payment_intent'])) {
-                $order->update_meta_data(\ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys::PAYMENT_FLOW, (string) $params['payment_intent']);
-                $order->save();
-            }
             $this->renderImmediateFormAndExit($params);
         }
 
