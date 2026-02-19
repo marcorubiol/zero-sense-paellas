@@ -158,6 +158,14 @@
         var uncheckAll = document.getElementById('zs-sl-uncheck-all');
         var update     = document.getElementById('zs-sl-update');
         var share      = document.getElementById('zs-sl-share');
+        function syncItemLabels(scope) {
+            (scope || document).querySelectorAll('.zs-sl__item-check').forEach(function (el) {
+                var label = el.closest('.zs-sl__item-check-label');
+                if (label) { label.classList.toggle('is-unchecked', !el.checked); }
+            });
+        }
+        syncItemLabels();
+
         var autoUpdateTimer = null;
         function scheduleAutoUpdate() {
             clearTimeout(autoUpdateTimer);
@@ -171,6 +179,7 @@
             checkAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = true; });
                 document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.remove('is-disabled'); });
+                syncItemLabels();
                 scheduleAutoUpdate();
             });
         }
@@ -178,6 +187,7 @@
             uncheckAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = false; });
                 document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.add('is-disabled'); });
+                syncItemLabels();
                 scheduleAutoUpdate();
             });
         }
@@ -189,6 +199,7 @@
                 document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]').forEach(function (el) {
                     el.checked = toggle.checked;
                 });
+                syncItemLabels();
                 if (orderItem) {
                     orderItem.classList.toggle('is-disabled', !toggle.checked);
                 }
@@ -202,6 +213,8 @@
         });
         document.querySelectorAll('.zs-sl__item-check').forEach(function (item) {
             item.addEventListener('change', function () {
+                var label = this.closest('.zs-sl__item-check-label');
+                if (label) { label.classList.toggle('is-unchecked', !this.checked); }
                 var oid = this.getAttribute('data-order-id');
                 var items = document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]');
                 var anyChecked = Array.from(items).some(function (el) { return el.checked; });
