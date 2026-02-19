@@ -115,7 +115,6 @@ class CheckoutFields
 
         // 2. Unset unnecessary fields
         unset($fields['billing']['billing_company']);
-        unset($fields['billing']['billing_address_1']);
         unset($fields['billing']['billing_address_2']);
 
         return $fields;
