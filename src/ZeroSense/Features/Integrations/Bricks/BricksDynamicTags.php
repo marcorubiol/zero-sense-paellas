@@ -3336,8 +3336,15 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $labelWith    = esc_html__('Con conejo', 'zero-sense');
         $labelWithout = esc_html__('Sin conejo', 'zero-sense');
+        $productName  = esc_html(get_the_title($productId));
+        $infoText     = sprintf(
+            /* translators: %s: product name */
+            esc_html__('En la paella "%s", el conejo es un ingrediente típico, pero sabemos que en algunas culturas no es común; por eso, ofrecemos la opción de hacer la paella con o sin conejo.', 'zero-sense'),
+            $productName
+        );
+
+        $infoIconSvg = '<svg class="fill stroke brxe-bwhjmy brxe-icon info-box__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><title>48 c info</title><g fill="currentColor" class="nc-icon-wrapper"><path d="M24,1C11.297,1,1,11.297,1,24s10.297,23,23,23,23-10.297,23-23S36.703,1,24,1Zm2,36c0,.552-.448,1-1,1h-2c-.552,0-1-.448-1-1V19c0-.552,.448-1,1-1h2c.552,0,1,.448,1,1v18Zm-2-23c-1.381,0-2.5-1.119-2.5-2.5s1.119-2.5,2.5-2.5,2.5,1.119,2.5,2.5-1.119,2.5-2.5,2.5Z" fill="currentColor" class="nc-icon-wrapper"></path></g></svg>';
 
         return '<label class="zs-rabbit-toggle" aria-label="' . esc_attr__('Sin conejo', 'zero-sense') . '">'
             . '<input type="checkbox" name="zs_rabbit_choice" value="without" class="zs-rabbit-toggle__input">'
@@ -3346,6 +3353,10 @@ class BricksDynamicTags implements FeatureInterface
             . '</span>'
             . '<span class="zs-rabbit-toggle__label">' . $labelWithout . '</span>'
             . '</label>'
+            . '<div class="brxe-block info-box" style="margin-top:12px;">'
+            . '<p class="brxe-text-basic info-box__text">' . $infoText . '</p>'
+            . $infoIconSvg
+            . '</div>'
             . '<style>'
             . '.zs-rabbit-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:14px;}'
             . '.zs-rabbit-toggle__input{position:absolute;opacity:0;width:0;height:0;}'
@@ -3353,6 +3364,7 @@ class BricksDynamicTags implements FeatureInterface
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track{background:#2271b1;}'
             . '.zs-rabbit-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}'
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track .zs-rabbit-toggle__thumb{transform:translateX(18px);}'
+            . '.zs-rabbit-toggle__label{font-size:12px;}'
             . '</style>';
     }
 

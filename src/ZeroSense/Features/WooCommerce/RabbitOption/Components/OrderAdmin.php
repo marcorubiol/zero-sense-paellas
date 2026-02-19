@@ -1,6 +1,7 @@
 <?php
 namespace ZeroSense\Features\WooCommerce\RabbitOption\Components;
 
+use WC_Order_Factory;
 use WC_Order_Item_Product;
 use ZeroSense\Features\WooCommerce\RabbitOption\Support\MetaKeys;
 
@@ -12,12 +13,9 @@ class OrderAdmin
         add_filter('woocommerce_order_item_display_meta_key', [$this, 'formatMetaKey'], 10, 3);
         add_filter('woocommerce_order_item_display_meta_value', [$this, 'formatMetaValue'], 10, 3);
 
-        // Editable toggle after each line item in admin
+        // Editable select after each line item in admin
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderEditableChoice'], 10, 3);
-        // Classic mode
-        add_action('woocommerce_process_shop_order_meta', [$this, 'saveEditableChoice'], 20);
-        // HPOS mode
-        add_action('woocommerce_update_order', [$this, 'saveEditableChoice'], 20);
+        add_action('woocommerce_process_shop_order_meta', [$this, 'saveEditableChoice']);
     }
 
     public function formatMetaKey(string $displayKey, $meta, $item): string
@@ -64,84 +62,34 @@ class OrderAdmin
             return;
         }
 
-        $current   = $item->get_meta(MetaKeys::RABBIT_CHOICE, true) ?: 'with';
-        $checked   = $current === 'without' ? ' checked' : '';
+        $current = $item->get_meta(MetaKeys::RABBIT_CHOICE, true) ?: 'with';
         $fieldName = 'zs_rabbit_choice[' . $itemId . ']';
-        $label     = esc_html__('Sin conejo', 'zero-sense');
-        echo '<div style="margin-top:8px;">'
-            . '<label class="zs-rabbit-toggle" aria-label="' . esc_attr__('Sin conejo', 'zero-sense') . '">'
-            . '<input type="checkbox" name="' . esc_attr($fieldName) . '" value="without" class="zs-rabbit-toggle__input"' . $checked . '>'
-            . '<span class="zs-rabbit-toggle__track">'
-            . '<span class="zs-rabbit-toggle__thumb"></span>'
-            . '</span>'
-            . '<span class="zs-rabbit-toggle__label">' . $label . '</span>'
-            . '</label>'
-            . '</div>';
-        static $cssOnce = false;
-        if (!$cssOnce) {
-            $cssOnce = true;
-            echo '<style>'
-                . '.zs-rabbit-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:13px;}'
-                . '.zs-rabbit-toggle__input{position:absolute;opacity:0;width:0;height:0;}'
-                . '.zs-rabbit-toggle__track{position:relative;display:inline-block;width:40px;height:22px;background:#ccc;border-radius:11px;transition:background .2s;flex-shrink:0;}'
-                . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track{background:#2271b1;}'
-                . '.zs-rabbit-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}'
-                . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track .zs-rabbit-toggle__thumb{transform:translateX(18px);}'
-                . '</style>';
-        }
+        ?>
+        <div class="zs-rabbit-choice-edit" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:12px;">
+            <label style="font-weight:600; color:#555;"><?php esc_html_e('Rabbit', 'zero-sense'); ?>:</label>
+            <select name="<?php echo esc_attr($fieldName); ?>" style="font-size:12px; padding:2px 4px;">
+                <option value="with"    <?php selected($current, 'with'); ?>><?php esc_html_e('With rabbit', 'zero-sense'); ?></option>
+                <option value="without" <?php selected($current, 'without'); ?>><?php esc_html_e('Without rabbit', 'zero-sense'); ?></option>
+            </select>
+        </div>
+        <?php
     }
 
     public function saveEditableChoice(int $orderId): void
     {
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        if (empty($_POST['zs_rabbit_choice']) || !is_array($_POST['zs_rabbit_choice'])) {
             return;
         }
 
-        // Only run when saving from the admin order edit screen
-        if (!is_admin() || empty($_POST) || !isset($_POST['order_id'], $_POST['woocommerce_meta_nonce'])) {
-            return;
-        }
+        foreach ($_POST['zs_rabbit_choice'] as $itemId => $choice) {
+            $itemId = (int) $itemId;
+            $choice = in_array($choice, ['with', 'without'], true) ? $choice : 'with';
 
-        static $ran = false;
-        if ($ran) {
-            return;
-        }
-        $ran = true;
-
-        $order = wc_get_order($orderId);
-        if (!$order) {
-            return;
-        }
-
-        // Checkbox only posts when checked — iterate all items to handle unchecked (= 'with')
-        $posted = isset($_POST['zs_rabbit_choice']) && is_array($_POST['zs_rabbit_choice'])
-            ? $_POST['zs_rabbit_choice']
-            : [];
-
-        foreach ($order->get_items() as $itemId => $item) {
+            $item = WC_Order_Factory::get_order_item($itemId);
             if (!$item instanceof WC_Order_Item_Product) {
                 continue;
             }
 
-            $productObj = $item->get_product();
-            if (!$productObj) {
-                continue;
-            }
-
-            $productId = $productObj->get_id();
-            if (defined('ICL_SITEPRESS_VERSION')) {
-                $defaultLang = apply_filters('wpml_default_language', null);
-                $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
-                if ($originalId) {
-                    $productId = (int) $originalId;
-                }
-            }
-
-            if (get_post_meta($productId, MetaKeys::PRODUCT_HAS_RABBIT_OPTION, true) !== 'yes') {
-                continue;
-            }
-
-            $choice = isset($posted[$itemId]) && $posted[$itemId] === 'without' ? 'without' : 'with';
             $item->update_meta_data(MetaKeys::RABBIT_CHOICE, $choice);
             $item->save();
         }
