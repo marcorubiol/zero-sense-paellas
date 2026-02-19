@@ -4,12 +4,13 @@ namespace ZeroSense\Features\WooCommerce\Gateways;
 use WC_Order;
 use WC_Payment_Gateway;
 use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\Config;
+use ZeroSense\Features\WooCommerce\Gateways\RedsysApi;
 
 class RedsysStandard extends WC_Payment_Gateway
 {
     public const GATEWAY_ID = 'redsys_standard';
 
-    private ?\RedsyspurAPI $api = null;
+    private ?RedsysApi $api = null;
 
     public function __construct()
     {
@@ -29,9 +30,7 @@ class RedsysStandard extends WC_Payment_Gateway
         add_action('woocommerce_api_' . $this->getCallbackEndpoint(), [$this, 'handleCallback']);
         add_action('woocommerce_receipt_' . $this->id, [$this, 'renderReceipt']);
 
-        if (class_exists('RedsyspurAPI')) {
-            $this->api = new \RedsyspurAPI();
-        }
+        $this->api = new RedsysApi();
     }
 
     public function init_form_fields(): void
@@ -82,11 +81,7 @@ class RedsysStandard extends WC_Payment_Gateway
         if (!parent::is_available()) {
             return false;
         }
-        // Require Redsys SDK
-        if (!class_exists('RedsyspurAPI')) {
-            return false;
-        }
-        foreach (['merchant_code','secret_key','terminal'] as $opt) {
+        foreach (['merchant_code', 'secret_key', 'terminal'] as $opt) {
             if (empty($this->get_option($opt))) { return false; }
         }
         return true;
@@ -122,7 +117,7 @@ class RedsysStandard extends WC_Payment_Gateway
 
     protected function buildParameters(WC_Order $order): ?array
     {
-        if (!$this->api instanceof \RedsyspurAPI) { return null; }
+        if (!$this->api instanceof RedsysApi) { return null; }
 
         $this->api->setParameter('DS_MERCHANT_AMOUNT', RedsysHelpers::formatAmount((float) $order->get_total()));
         $this->api->setParameter('DS_MERCHANT_ORDER', RedsysHelpers::generateOrderId((int) $order->get_id()));
@@ -138,19 +133,12 @@ class RedsysStandard extends WC_Payment_Gateway
         $emv3ds = Config::getEmv3dsParameters();
         if ($emv3ds) { $this->api->setParameter('DS_MERCHANT_EMV3DS', json_encode($emv3ds)); }
 
-        $merchantParameters = method_exists($this->api, 'createMerchantParameters')
-            ? $this->api->createMerchantParameters()
-            : (method_exists($this->api, 'createMerchantParametersPayment') ? $this->api->createMerchantParametersPayment() : null);
-        if ($merchantParameters === null) { return null; }
-
         $secretKey = (string) $this->get_option('secret_key');
-        $signature = null;
-        if ($secretKey && method_exists($this->api, 'createMerchantSignature')) {
-            $signature = $this->api->createMerchantSignature($secretKey);
-        } elseif ($secretKey && method_exists($this->api, 'createMerchantSignaturePayment')) {
-            $signature = $this->api->createMerchantSignaturePayment($secretKey);
-        }
-        if ($signature === null) { return null; }
+        if (!$secretKey) { return null; }
+
+        $merchantParameters = $this->api->createMerchantParameters();
+        $signature          = $this->api->createMerchantSignature($secretKey);
+        if (!$merchantParameters || !$signature) { return null; }
 
         return [
             'redirect_url' => Config::getEndpoint($this->get_option('test_mode') === 'yes'),
@@ -168,17 +156,8 @@ class RedsysStandard extends WC_Payment_Gateway
             $sig   = isset($post['Ds_Signature']) ? (string) $post['Ds_Signature'] : '';
             if (!$mpB64 || !$sig) { status_header(400); exit; }
 
-            $decodedJson = null;
-            if (class_exists('RedsyspurAPI')) {
-                $api = new \RedsyspurAPI();
-                if (method_exists($api, 'decodeMerchantParameters')) {
-                    $decodedJson = $api->decodeMerchantParameters($mpB64);
-                } else {
-                    $decodedJson = base64_decode($mpB64, true);
-                }
-            } else {
-                $decodedJson = base64_decode($mpB64, true);
-            }
+            $callbackApi = new RedsysApi();
+            $decodedJson = $callbackApi->decodeMerchantParameters($mpB64);
 
             $params = [];
             if ($decodedJson) {
@@ -190,18 +169,10 @@ class RedsysStandard extends WC_Payment_Gateway
             $dsResponse = isset($params['Ds_Response']) ? (int) $params['Ds_Response'] : 999;
 
             $signatureOk = false;
-            if (class_exists('RedsyspurAPI')) {
-                try {
-                    $api2 = new \RedsyspurAPI();
-                    if (method_exists($api2, 'createMerchantSignatureNotif')) {
-                        $calc = $api2->createMerchantSignatureNotif((string) $this->get_option('secret_key'), $mpB64);
-                        $signatureOk = hash_equals((string) $sig, (string) $calc);
-                    } elseif (method_exists($api2, 'createMerchantSignatureNotification')) {
-                        $calc = $api2->createMerchantSignatureNotification((string) $this->get_option('secret_key'), $mpB64);
-                        $signatureOk = hash_equals((string) $sig, (string) $calc);
-                    } else { $signatureOk = true; }
-                } catch (\Throwable $e) { $signatureOk = false; }
-            } else { $signatureOk = true; }
+            try {
+                $calc        = $callbackApi->createMerchantSignatureNotif((string) $this->get_option('secret_key'), $mpB64);
+                $signatureOk = hash_equals((string) $sig, (string) $calc);
+            } catch (\Throwable $e) { $signatureOk = false; }
 
             $orderId = 0; if ($dsOrder && preg_match('/^(\d+)/', $dsOrder, $m)) { $orderId = (int) $m[1]; }
             $order = $orderId ? wc_get_order($orderId) : null;
