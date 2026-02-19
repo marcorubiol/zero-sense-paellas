@@ -10,6 +10,7 @@
     flex-wrap: wrap;
     gap: var(--space-xs);
     align-items: flex-end;
+    justify-content: center;
     margin-bottom: var(--space-m);
 }
 .zs-sl__filter-group {
