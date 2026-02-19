@@ -3368,59 +3368,50 @@ class BricksDynamicTags implements FeatureInterface
             . '.zs-rabbit-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}'
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track .zs-rabbit-toggle__thumb{transform:translateX(18px);}'
             . '.zs-rabbit-toggle__label{font-size:var(--text-m;}'
-            . '</style>'
-            . '<script>'
-            . '(function(){'
-            . 'var toggle=document.querySelector(".zs-rabbit-toggle__input");'
-            . 'if(!toggle)return;'
-            . 'var pid=' . (int) $productId . ';'
-            . 'function getChoice(){return toggle.checked?"without":"with";}'
-            . 'toggle.addEventListener("change",function(){window._zsRabbitChoice=window._zsRabbitChoice||{};window._zsRabbitChoice[pid]=getChoice();});'
-            . 'window._zsRabbitChoice=window._zsRabbitChoice||{};'
-            . 'window._zsRabbitChoice[pid]=getChoice();'
-            . 'if(!window._zsRabbitAjaxPatched){'
-            . 'window._zsRabbitAjaxPatched=true;'
-            . 'function zsInjectRabbit(body,pid2){'
-            . 'if(typeof body==="string"&&body.indexOf("action=zs_add_to_cart")>-1){'
-            . 'var params=new URLSearchParams(body);'
-            . 'var p=pid2||params.get("product_id");'
-            . 'var choice=(window._zsRabbitChoice&&p&&window._zsRabbitChoice[p])||"with";'
-            . 'params.set("zs_rabbit_choice",choice);'
-            . 'return params.toString();'
-            . '}'
-            . 'if(body instanceof URLSearchParams&&body.get("action")==="zs_add_to_cart"){'
-            . 'var p2=pid2||body.get("product_id");'
-            . 'var choice2=(window._zsRabbitChoice&&p2&&window._zsRabbitChoice[p2])||"with";'
-            . 'body.set("zs_rabbit_choice",choice2);'
-            . 'return body;'
-            . '}'
-            . 'if(body instanceof FormData&&body.get("action")==="zs_add_to_cart"){'
-            . 'var p3=pid2||body.get("product_id");'
-            . 'var choice3=(window._zsRabbitChoice&&p3&&window._zsRabbitChoice[p3])||"with";'
-            . 'body.set("zs_rabbit_choice",choice3);'
-            . 'return body;'
-            . '}'
-            . 'return body;'
-            . '}'
-            . 'var origOpen=XMLHttpRequest.prototype.open;'
-            . 'var origSend=XMLHttpRequest.prototype.send;'
-            . 'XMLHttpRequest.prototype.open=function(m,u){this._zsUrl=u;return origOpen.apply(this,arguments);};'
-            . 'XMLHttpRequest.prototype.send=function(body){'
-            . 'if(this._zsUrl&&this._zsUrl.indexOf("admin-ajax.php")>-1){'
-            . 'body=zsInjectRabbit(body,null);'
-            . '}'
-            . 'return origSend.call(this,body);'
-            . '};'
-            . 'var origFetch=window.fetch;'
-            . 'window.fetch=function(url,opts){'
-            . 'if(opts&&opts.body&&typeof url==="string"&&url.indexOf("admin-ajax.php")>-1){'
-            . 'opts=Object.assign({},opts,{body:zsInjectRabbit(opts.body,null)});'
-            . '}'
-            . 'return origFetch.call(this,url,opts);'
-            . '};'
-            . '}'
-            . '})();'
-            . '</script>';
+            . '</style>';
+
+        $this->enqueueRabbitToggleScript((int) $productId);
+    }
+
+    private bool $rabbitAjaxPatchEnqueued = false;
+
+    private function enqueueRabbitToggleScript(int $productId): void
+    {
+        $pid = $productId;
+        $needsPatch = !$this->rabbitAjaxPatchEnqueued;
+        if ($needsPatch) {
+            $this->rabbitAjaxPatchEnqueued = true;
+        }
+
+        add_action('wp_footer', function () use ($pid, $needsPatch) {
+            $patchJs = '';
+            if ($needsPatch) {
+                $patchJs = 'if(!window._zsRabbitAjaxPatched&&window.jQuery){'
+                    . 'window._zsRabbitAjaxPatched=true;'
+                    . 'jQuery(document).on("ajaxSend",function(e,xhr,settings){'
+                    . 'if(settings.data&&settings.data.indexOf("action=zs_add_to_cart")>-1){'
+                    . 'var params=new URLSearchParams(settings.data);'
+                    . 'var p=params.get("product_id");'
+                    . 'var c=(window._zsRabbitChoice&&p&&window._zsRabbitChoice[p])||"with";'
+                    . 'params.set("zs_rabbit_choice",c);'
+                    . 'settings.data=params.toString();'
+                    . '}'
+                    . '});'
+                    . '}';
+            }
+
+            echo '<script>'
+                . 'window._zsRabbitChoice=window._zsRabbitChoice||{};'
+                . '(function(){'
+                . 'var toggle=document.querySelector(".zs-rabbit-toggle__input");'
+                . 'if(!toggle)return;'
+                . 'function getChoice(){return toggle.checked?"without":"with";}'
+                . 'window._zsRabbitChoice[' . $pid . ']=getChoice();'
+                . 'toggle.addEventListener("change",function(){window._zsRabbitChoice[' . $pid . ']=getChoice();});'
+                . '})();'
+                . $patchJs
+                . '</script>';
+        }, 99);
     }
 
     /**
