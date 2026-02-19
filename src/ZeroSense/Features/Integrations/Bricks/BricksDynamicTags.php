@@ -201,11 +201,8 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($shippingFields as $field) {
             $postKey = '_shipping_' . $field;
             if (isset($_POST[$postKey])) {
-                if ($field === 'phone' || $field === 'email') {
-                    $oldValue = $order->get_meta($postKey, true);
-                } else {
-                    $oldValue = $order->{"get_shipping_$field"}();
-                }
+                $getter = 'get_shipping_' . $field;
+                $oldValue = method_exists($order, $getter) ? (string) $order->{$getter}() : '';
                 $newValue = sanitize_text_field((string) $_POST[$postKey]);
                 FieldChangeTracker::compareAndTrack($orderId, $postKey, $oldValue, $newValue);
             }
