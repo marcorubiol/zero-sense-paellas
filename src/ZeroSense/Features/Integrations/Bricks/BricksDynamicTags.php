@@ -270,6 +270,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_liquids_simple}',       'label' => 'Recipe Liquids (Inline — one field per liquid)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_full_simple}',          'label' => 'Recipe Ingredients + Liquids (Inline — combined)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_vehicles_list}',               'label' => 'Vehicles (one field per vehicle)',               'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
 
         // Dynamic schema tags
@@ -429,6 +430,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_inventory_list}') {
             return $this->getInventoryList($post);
         }
+        if ($tag === '{zs_vehicles_list}') {
+            return $this->getVehiclesList($post);
+        }
         if ($tag === '{zs_rabbit_toggle}') {
             return $this->getRabbitToggle($post);
         }
@@ -505,6 +509,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_liquids_simple}',      $this->getRecipeLiquidsSimple($post),     $content);
         $content = str_replace('{zs_recipe_full_simple}',         $this->getRecipeFullSimple($post),        $content);
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
+        $content = str_replace('{zs_vehicles_list}',               $this->getVehiclesList($post),            $content);
         $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
 
         // Dynamic schema tags
@@ -3242,6 +3247,40 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($roleName) . '</span>';
             $html .= '<div class="brxe-text-basic fdr-card__field-value">' . implode('', $members) . '</div>';
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    private function getVehiclesList($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Vehicles');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $vehicleIds = $order->get_meta('zs_event_vehicles', true);
+        if (!is_array($vehicleIds) || empty($vehicleIds)) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($vehicleIds as $vehicleId) {
+            $post2 = get_post((int) $vehicleId);
+            if (!$post2) {
+                continue;
+            }
+            $name  = $post2->post_title;
+            $plate = get_post_meta($post2->ID, 'zs_vehicle_plate', true);
+            $label = $plate ? $name . ' (' . $plate . ')' : $name;
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($label) . '</span>';
             $html .= '</div>';
         }
 
