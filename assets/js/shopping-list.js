@@ -32,7 +32,7 @@
         return d.innerHTML;
     }
 
-    function renderOrders(orders) {
+    function renderOrders(orders, selectedKeys) {
         if (!orders || orders.length === 0) {
             return '<div class="zs-sl__no-orders"><p>No hi ha comandes per a aquest període i localització.</p></div>';
         }
@@ -47,17 +47,21 @@
             var oid = String(o.id);
             html += '<div class="zs-sl__order-item" data-order-id="' + esc(oid) + '">';
             html += '<div class="zs-sl__order-row1">';
-            html += '<label class="zs-sl__switch"><input type="checkbox" class="zs-sl__order-toggle" data-order-id="' + esc(oid) + '" checked><span class="zs-sl__switch-track"></span></label>';
+            var orderItems = o.items || [];
+            var orderKeys = orderItems.map(function (i) { return i.key; });
+            var anySelected = !selectedKeys || orderKeys.some(function (k) { return selectedKeys.indexOf(k) !== -1; });
+            html += '<label class="zs-sl__switch"><input type="checkbox" class="zs-sl__order-toggle" data-order-id="' + esc(oid) + '"' + (anySelected ? ' checked' : '') + '><span class="zs-sl__switch-track"></span></label>';
             html += '<span class="zs-sl__order-num">#' + esc(o.number) + '</span>';
             html += '<span class="zs-sl__order-customer">' + esc(o.customer) + '</span>';
             html += '<span class="zs-sl__order-date">' + esc(o.date) + '</span>';
             html += '<span class="zs-sl__order-guests">' + esc(o.guests) + ' pax</span>';
             html += '</div>';
             html += '<div class="zs-sl__order-row2">';
-            (o.items || []).forEach(function (item) {
+            orderItems.forEach(function (item) {
                 var label = item.name + (item.qty > 1 ? ' ×' + item.qty : '');
+                var isChecked = !selectedKeys || selectedKeys.indexOf(item.key) !== -1;
                 html += '<label class="zs-sl__item-check-label">';
-                html += '<span class="zs-sl__switch"><input type="checkbox" class="zs-sl__item-check" value="' + esc(item.key) + '" data-order-id="' + esc(oid) + '" checked><span class="zs-sl__switch-track"></span></span>';
+                html += '<span class="zs-sl__switch"><input type="checkbox" class="zs-sl__item-check" value="' + esc(item.key) + '" data-order-id="' + esc(oid) + '"' + (isChecked ? ' checked' : '') + '><span class="zs-sl__switch-track"></span></span>';
                 html += '<span>' + esc(label) + '</span>';
                 html += '</label>';
             });
@@ -138,7 +142,8 @@
                 }
 
                 currentSignedUrl = res.data.signed_url || '';
-                var ordersHtml = renderOrders(res.data.orders);
+                console.log('[ZS] server response | orders:', (res.data.orders || []).length, '| list items:', (res.data.list || []).length, '| list:', res.data.list);
+                var ordersHtml = renderOrders(res.data.orders, orderIds);
                 var listHtml   = renderList(res.data.list);
                 body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
                 bindBodyEvents();
