@@ -283,8 +283,13 @@ class Recipes implements FeatureInterface
                     <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
                 </div>
                 <div class="zs-paella-mode-info">
-                    <p><?php esc_html_e('Paella Recipe Mode: paella pans and burners are calculated automatically. Add the liquids so the system can select the right cassola size. Utensils are hidden. Ingredients are always saved regardless of mode.', 'zero-sense'); ?></p>
+                    <p><?php esc_html_e('Enable to automatically calculate paella pans, burners and cassola size for this recipe.', 'zero-sense'); ?></p>
                 </div>
+            </div>
+
+            <div class="zs-paella-mode-notice" style="display:<?php echo $needsPaella === '1' ? 'block' : 'none'; ?>; background:#fff8e1; border-left:4px solid #f0a500; padding:10px 14px; margin:8px 0 4px; border-radius:3px; font-size:13px;">
+                <strong><?php esc_html_e('⚠️ Liquids section', 'zero-sense'); ?></strong><br>
+                <?php esc_html_e('Add all liquids used in this recipe (water, broth…) in the Liquids section below. The system uses these quantities to automatically select the right cassola size. Ingredients are always saved regardless of mode.', 'zero-sense'); ?>
             </div>
 
             <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
@@ -895,9 +900,11 @@ class Recipes implements FeatureInterface
                 if ($(this).is(':checked')) {
                     $('.zs-utensils-section').slideUp(300);
                     $('.zs-liquids-section').slideDown(300);
+                    $('.zs-paella-mode-notice').slideDown(300);
                 } else {
                     $('.zs-utensils-section').slideDown(300);
                     $('.zs-liquids-section').slideUp(300);
+                    $('.zs-paella-mode-notice').slideUp(300);
                 }
             });
             
