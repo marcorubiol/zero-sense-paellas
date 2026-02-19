@@ -2205,8 +2205,9 @@ class BricksDynamicTags implements FeatureInterface
             if ($recipeId <= 0) {
                 continue;
             }
+            $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true) ?: 'with';
             if (!isset($recipeGroups[$recipeId])) {
-                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
+                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0, 'rabbit_choice' => $rabbitChoice];
             }
             $recipeGroups[$recipeId]['total_qty'] += $qty;
             $sumQty += $qty;
@@ -2220,6 +2221,7 @@ class BricksDynamicTags implements FeatureInterface
 
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+            $rabbitIcon = isset($group['rabbit_choice']) && $group['rabbit_choice'] === 'without' ? '❌🐇 ' : '🐇 ';
 
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             $parts = [];
@@ -2251,7 +2253,7 @@ class BricksDynamicTags implements FeatureInterface
             $value = !empty($parts) ? '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $parts) . '</ul>' : '<p>—</p>';
 
             $html .= '<div class="brxe-div fdr-card__field">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($group['title']) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . $rabbitIcon . esc_html($group['title']) . '</span>';
             $html .= $value;
             $html .= '</div>';
         }
@@ -2309,12 +2311,14 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
+            $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true) ?: 'with';
             if (!isset($recipeGroups[$recipeId])) {
                 $recipeGroups[$recipeId] = [
                     'recipe_title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage),
                     'products' => [],
                     'total_qty' => 0.0,
                     'recipe_id' => $recipeId,
+                    'rabbit_choice' => $rabbitChoice,
                 ];
             }
 
@@ -2377,7 +2381,8 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="zs-recipe-item">';
             
             // Recipe title
-            $html .= '<h4 class="zs-recipe-name">' . esc_html($group['recipe_title']) . '</h4>';
+            $rabbitIcon = isset($group['rabbit_choice']) && $group['rabbit_choice'] === 'without' ? '❌🐇 ' : '🐇 ';
+            $html .= '<h4 class="zs-recipe-name">' . $rabbitIcon . esc_html($group['recipe_title']) . '</h4>';
             
             // Products list
             $productsList = [];
