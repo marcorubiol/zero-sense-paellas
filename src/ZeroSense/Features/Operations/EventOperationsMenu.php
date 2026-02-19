@@ -73,7 +73,7 @@ class EventOperationsMenu implements FeatureInterface
             return;
         }
 
-        $desired = ['zs-stock-alerts', 'zs-equipment-stock'];
+        $desired = ['zs-stock-alerts'];
         $first   = [];
         $rest    = [];
 
