@@ -35,7 +35,51 @@ class CheckoutFields
         add_filter('icl_ls_languages', [$this, 'filterLanguageSwitcherUrls']);
         
         // Force shipping fields to always show
-        add_filter('woocommerce_ship_to_different_address_checked', '__return_true');
+        add_filter('woocommerce_ship_to_different_address_checked', function($checked) {
+            error_log('[ZS-CHECKOUT] Force shipping fields filter called');
+            return true;
+        });
+        
+        // Also force shipping fields to be shown via another filter
+        add_filter('woocommerce_shipping_fields', function($fields) {
+            error_log('[ZS-CHECKOUT] Shipping fields filter called');
+            return $fields;
+        }, 999);
+        
+        // Aggressive: Ensure shipping city and address 2 are always present
+        add_filter('woocommerce_checkout_fields', function($fields) {
+            error_log('[ZS-CHECKOUT] Checkout fields filter - ensuring shipping fields exist');
+            
+            // Ensure shipping fields exist
+            if (!isset($fields['shipping'])) {
+                $fields['shipping'] = [];
+            }
+            
+            // Ensure shipping_city exists
+            if (!isset($fields['shipping']['shipping_city'])) {
+                $fields['shipping']['shipping_city'] = [
+                    'label'        => __('City', 'woocommerce'),
+                    'required'     => false,
+                    'class'        => ['form-row-wide'],
+                    'autocomplete' => 'address-level2',
+                    'priority'     => 70,
+                ];
+            }
+            
+            // Ensure shipping_address_2 exists
+            if (!isset($fields['shipping']['shipping_address_2'])) {
+                $fields['shipping']['shipping_address_2'] = [
+                    'label'        => __('Apartment, suite, unit, etc. (optional)', 'woocommerce'),
+                    'required'     => false,
+                    'class'        => ['form-row-wide'],
+                    'autocomplete' => 'address-line2',
+                    'priority'     => 60,
+                ];
+            }
+            
+            error_log('[ZS-CHECKOUT] Shipping fields ensured: ' . print_r(array_keys($fields['shipping']), true));
+            return $fields;
+        }, 999);
     }
 
     public function captureLocationFromUrl(): void
