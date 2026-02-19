@@ -2242,6 +2242,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
 
+            $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
 
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
@@ -2259,6 +2260,8 @@ class BricksDynamicTags implements FeatureInterface
                     $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></div>';
                 }
             }
+
+            $html .= '</div>';
         }
 
         return $html;
@@ -2594,7 +2597,7 @@ class BricksDynamicTags implements FeatureInterface
 
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
-
+            $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
 
             // Ingredients
@@ -2629,6 +2632,8 @@ class BricksDynamicTags implements FeatureInterface
                     $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($amount)) . 'L</span></div>';
                 }
             }
+
+            $html .= '</div>';
         }
 
         return $html;
