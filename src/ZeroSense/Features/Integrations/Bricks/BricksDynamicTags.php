@@ -1325,15 +1325,18 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($categorizedProducts as $category) {
-            $items = [];
+            $html .= '<div class="brxe-div fdr-card__field-wrapper">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($category['name']) . '</span>';
+
             foreach ($category['products'] as $product) {
-                $qty = $product['quantity'] > 1 ? ' <span class="zs-menu-quantity">(' . esc_html($product['quantity']) . 'x)</span>' : '';
-                $items[] = '<li class="zs-menu-product">' . esc_html($product['name']) . $qty . '</li>';
+                $qty = $product['quantity'] > 1 ? esc_html($product['quantity']) . 'x' : '';
+                $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($product['name']) . '</span>';
+                if ($qty !== '') {
+                    $html .= '<span class="brxe-text-basic fdr-card__field-value">' . $qty . '</span>';
+                }
+                $html .= '</div>';
             }
 
-            $html .= '<div class="brxe-div fdr-card__field">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($category['name']) . '</span>';
-            $html .= '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $items) . '</ul>';
             $html .= '</div>';
         }
 
