@@ -58,7 +58,7 @@
         html += '<div class="zs-sl__orders-footer">';
         html += '<button type="button" class="zs-sl__btn zs-sl__btn--primary" id="zs-sl-update">Actualitzar llista</button> ';
         html += '<button type="button" class="zs-sl__btn zs-sl__btn--secondary" id="zs-sl-share">Copiar enllaç</button> ';
-        html += '<button type="button" class="zs-sl__btn zs-sl__btn--secondary" onclick="window.print()">Imprimir</button>';
+        html += '<button type="button" class="zs-sl__btn zs-sl__btn--secondary" id="zs-sl-print">Imprimir</button>';
         html += '</div></div>';
         return html;
     }
