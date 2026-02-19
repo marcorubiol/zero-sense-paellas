@@ -269,6 +269,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_liquids_simple}',       'label' => 'Recipe Liquids (Inline — one field per liquid)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_full_simple}',          'label' => 'Recipe Ingredients + Liquids (Inline — combined)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_shopping_list_link}',          'label' => 'Shopping List URL (signed link for this order)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_vehicles_list}',               'label' => 'Vehicles (one field per vehicle)',               'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
@@ -427,6 +428,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_full_simple}') {
             return $this->getRecipeFullSimple($post);
         }
+        if ($tag === '{zs_shopping_list_link}') {
+            return $this->getShoppingListLink($post);
+        }
         if ($tag === '{zs_inventory_list}') {
             return $this->getInventoryList($post);
         }
@@ -508,6 +512,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
         $content = str_replace('{zs_recipe_liquids_simple}',      $this->getRecipeLiquidsSimple($post),     $content);
         $content = str_replace('{zs_recipe_full_simple}',         $this->getRecipeFullSimple($post),        $content);
+        $content = str_replace('{zs_shopping_list_link}',         $this->getShoppingListLink($post),        $content);
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
         $content = str_replace('{zs_vehicles_list}',               $this->getVehiclesList($post),            $content);
         $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
@@ -3464,5 +3469,31 @@ class BricksDynamicTags implements FeatureInterface
 
         $noRabbitId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
         return $noRabbitId > 0 ? $noRabbitId : $recipeId;
+    }
+
+    /**
+     * Generate a signed shopping list URL pre-filtered for this order's date and location.
+     */
+    private function getShoppingListLink($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Shopping List Link');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $eventDate = (string) $order->get_meta('zs_event_date', true);
+        $loc       = (int) $order->get_meta('zs_event_service_location', true);
+
+        if ($eventDate === '' || $loc <= 0) {
+            return '';
+        }
+
+        $shoppingList = new \ZeroSense\Features\WooCommerce\ShoppingList();
+        return $shoppingList->buildSignedUrl($eventDate, $eventDate, $loc, [$orderId]);
     }
 }
