@@ -159,20 +159,31 @@
         if (checkAll) {
             checkAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = true; });
+                document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.remove('is-disabled'); });
             });
         }
         if (uncheckAll) {
             uncheckAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = false; });
+                document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.add('is-disabled'); });
             });
         }
         document.querySelectorAll('.zs-sl__order-toggle').forEach(function (toggle) {
             toggle.addEventListener('change', function () {
                 var oid = this.getAttribute('data-order-id');
+                var orderItem = document.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
                 document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]').forEach(function (el) {
                     el.checked = toggle.checked;
                 });
+                if (orderItem) {
+                    orderItem.classList.toggle('is-disabled', !toggle.checked);
+                }
             });
+            var oid = toggle.getAttribute('data-order-id');
+            var orderItem = document.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
+            if (orderItem && !toggle.checked) {
+                orderItem.classList.add('is-disabled');
+            }
         });
         document.querySelectorAll('.zs-sl__item-check').forEach(function (item) {
             item.addEventListener('change', function () {
