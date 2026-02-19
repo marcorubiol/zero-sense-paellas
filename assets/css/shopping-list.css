@@ -272,25 +272,11 @@
 
 @media print {
     body.zs-printing * {
-        display: none !important;
+        visibility: hidden !important;
     }
-    body.zs-printing .zs-sl,
-    body.zs-printing #zs-sl-body,
-    body.zs-printing #zs-sl-list-wrap,
     body.zs-printing .zs-sl__list,
     body.zs-printing .zs-sl__list * {
-        display: revert !important;
-    }
-    body.zs-printing .zs-sl,
-    body.zs-printing #zs-sl-body,
-    body.zs-printing #zs-sl-list-wrap {
-        display: block !important;
-        position: static !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-        background: transparent !important;
+        visibility: visible !important;
     }
     body.zs-printing .zs-sl__list {
         position: fixed !important;
@@ -303,6 +289,7 @@
         padding: 12px !important;
         background: #fff !important;
         max-width: 100% !important;
+        box-sizing: border-box !important;
     }
     body.zs-printing .zs-sl__list-header {
         margin-bottom: 8px !important;
@@ -312,7 +299,7 @@
         margin: 0 !important;
     }
     body.zs-printing .zs-sl__list-icon {
-        display: none !important;
+        visibility: hidden !important;
     }
     body.zs-printing .zs-sl__list-items {
         columns: 2;
