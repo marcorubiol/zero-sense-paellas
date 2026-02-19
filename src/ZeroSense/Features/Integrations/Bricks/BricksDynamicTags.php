@@ -1840,7 +1840,7 @@ class BricksDynamicTags implements FeatureInterface
         if ($unit === 'u') {
             return [
                 'qty' => $qty,
-                'unit' => 'u'
+                'unit' => 'uds'
             ];
         }
 
