@@ -791,9 +791,9 @@ class InventoryMetabox
                 $(this).closest('.zs-inventory-accordion').toggleClass('collapsed');
             });
             
-            // Stock Alerts collapse - restore state from localStorage
+            // Stock Alerts collapse - default closed, open only if user explicitly opened it
             var alertsCollapsed = localStorage.getItem('zs_stock_alerts_collapsed');
-            if (alertsCollapsed === 'true') {
+            if (alertsCollapsed !== 'false') {
                 $('.zs-stock-alerts-banner').addClass('collapsed');
             }
             
