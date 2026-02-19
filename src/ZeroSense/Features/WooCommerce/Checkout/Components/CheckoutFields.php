@@ -46,7 +46,6 @@ class CheckoutFields
     {
         $selectPlaceholder = __('-- Selecciona una opción --', 'zero-sense');
 
-        error_log('[ZS-CHECKOUT] display_event_fields v2 loaded');
         echo '<h3>' . esc_html__('Sobre el evento', 'zero-sense') . '</h3>';
         echo '<div class="woocommerce-billing-fields__field-wrapper">';
 
@@ -192,7 +191,7 @@ class CheckoutFields
 
         if ($total > 0 && ($adults + $ch58 + $ch04) !== $total) {
             wc_add_notice(
-                __('La suma de adultos y niños no coincide con el número total de comensales.', 'zero-sense'),
+                __('The sum of adults and children must match the total number of guests.', 'zero-sense'),
                 'error'
             );
         }

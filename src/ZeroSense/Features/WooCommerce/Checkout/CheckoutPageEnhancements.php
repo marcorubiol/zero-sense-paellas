@@ -108,7 +108,7 @@ class CheckoutPageEnhancements implements FeatureInterface
                 true
             );
             wp_localize_script('zero-sense-checkout-guests', 'zsGuests', [
-                'msg' => __('La suma de adultos y niños no coincide con el número total de comensales.', 'zero-sense'),
+                'msg' => __('The sum of adults and children must match the total number of guests.', 'zero-sense'),
             ]);
         }
     }
