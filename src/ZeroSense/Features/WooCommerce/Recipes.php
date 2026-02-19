@@ -1896,6 +1896,7 @@ class Recipes implements FeatureInterface
             $new_columns[$key] = $value;
             if ($key === 'title') {
                 $new_columns['ingredients'] = __('Ingredients', 'zero-sense');
+                $new_columns['liquids'] = __('Liquids', 'zero-sense');
                 $new_columns['utensils'] = __('Utensils', 'zero-sense');
             }
         }
@@ -1930,6 +1931,31 @@ class Recipes implements FeatureInterface
             } else {
                 echo '<span style="font-size:12px;">' . esc_html(implode(', ', $names)) . '</span>';
             }
+        }
+
+        if ($column === 'liquids') {
+            $liquids = get_post_meta($post_id, self::META_LIQUIDS, true);
+            if (!is_array($liquids) || empty($liquids)) {
+                echo '<span style="color:#999;">—</span>';
+                return;
+            }
+
+            $names = [];
+            foreach ($liquids as $item) {
+                if (!is_array($item)) continue;
+                $term_id = isset($item['liquid']) ? (int) $item['liquid'] : 0;
+                if ($term_id > 0) {
+                    $term = get_term($term_id, self::TAX_LIQUID);
+                    if ($term instanceof \WP_Term) {
+                        $names[] = $term->name;
+                    }
+                }
+            }
+
+            echo empty($names)
+                ? '<span style="color:#999;">—</span>'
+                : '<span style="font-size:12px;">' . esc_html(implode(', ', $names)) . '</span>';
+            return;
         }
 
         if ($column === 'utensils') {
