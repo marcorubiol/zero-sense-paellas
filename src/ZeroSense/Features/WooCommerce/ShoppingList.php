@@ -51,7 +51,6 @@ class ShoppingList implements FeatureInterface
         add_shortcode('zs_shopping_list_require_token', [$this, 'shortcodeRequireToken']);
         add_action('wp_ajax_nopriv_zs_shopping_list_data', [$this, 'ajaxGetData']);
         add_action('wp_ajax_zs_shopping_list_data', [$this, 'ajaxGetData']);
-        add_action('wp_ajax_zs_shopping_list_debug', [$this, 'ajaxDebug']);
     }
 
     public function ensureSecret(): void
@@ -144,89 +143,6 @@ class ShoppingList implements FeatureInterface
     // -------------------------------------------------------------------------
     // AJAX
     // -------------------------------------------------------------------------
-
-    public function ajaxDebug(): void
-    {
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => 'Unauthorized']); return;
-        }
-
-        $from = sanitize_text_field(wp_unslash($_POST['from'] ?? ''));
-        $to   = sanitize_text_field(wp_unslash($_POST['to']   ?? ''));
-        $loc  = absint($_POST['loc'] ?? 0);
-
-        $statuses = array_unique(array_map(function (string $s): string {
-            return strpos($s, 'wc-') === 0 ? $s : 'wc-' . $s;
-        }, self::ALLOWED_STATUSES));
-
-        // 1. Query with NO filters — just statuses
-        $allIds = wc_get_orders(['limit' => 20, 'return' => 'ids', 'status' => $statuses]);
-
-        // 2. Sample the first few orders to see their actual meta values
-        $samples = [];
-        foreach (array_slice((array) $allIds, 0, 5) as $id) {
-            $o = wc_get_order((int) $id);
-            if (!$o instanceof WC_Order) { continue; }
-            $samples[] = [
-                'id'       => $o->get_id(),
-                'status'   => $o->get_status(),
-                'date_meta'=> $o->get_meta(self::META_EVENT_DATE, true),
-                'loc_meta' => $o->get_meta(self::META_SERVICE_LOC, true),
-            ];
-        }
-
-        // 3. Query with only date filter
-        $idsDateOnly = $from && $to ? wc_get_orders([
-            'limit'      => -1,
-            'return'     => 'ids',
-            'status'     => $statuses,
-            'meta_query' => [['key' => self::META_EVENT_DATE, 'value' => [$from, $to], 'compare' => 'BETWEEN', 'type' => 'CHAR']],
-        ]) : 'skipped';
-
-        // 4. Query with only loc filter
-        $idsLocOnly = $loc > 0 ? wc_get_orders([
-            'limit'      => -1,
-            'return'     => 'ids',
-            'status'     => $statuses,
-            'meta_query' => [['key' => self::META_SERVICE_LOC, 'value' => $loc, 'compare' => '=', 'type' => 'NUMERIC']],
-        ]) : 'skipped';
-
-        // 5. Full query
-        $idsFull = ($from && $to && $loc > 0) ? wc_get_orders([
-            'limit'      => -1,
-            'return'     => 'ids',
-            'status'     => $statuses,
-            'meta_query' => [
-                'relation' => 'AND',
-                ['key' => self::META_EVENT_DATE,  'value' => [$from, $to], 'compare' => 'BETWEEN', 'type' => 'DATE'],
-                ['key' => self::META_SERVICE_LOC, 'value' => $loc,         'compare' => '=',       'type' => 'NUMERIC'],
-            ],
-        ]) : 'skipped';
-
-        // 6. Available service-area terms
-        $terms = get_terms(['taxonomy' => 'service-area', 'hide_empty' => false]);
-        $termList = is_wp_error($terms) ? 'ERROR: ' . $terms->get_error_message() : array_map(function ($t) {
-            return ['id' => $t->term_id, 'name' => $t->name, 'slug' => $t->slug];
-        }, (array) $terms);
-
-        wp_send_json_success([
-            'params'           => compact('from', 'to', 'loc'),
-            'statuses_used'    => $statuses,
-            'total_with_status'=> count((array) $allIds),
-            'samples'          => $samples,
-            'count_date_only'  => is_array($idsDateOnly)  ? count($idsDateOnly)  : $idsDateOnly,
-            'ids_date_only'    => is_array($idsDateOnly)  ? $idsDateOnly         : [],
-            'count_loc_only'   => is_array($idsLocOnly)   ? count($idsLocOnly)   : $idsLocOnly,
-            'ids_loc_only'     => is_array($idsLocOnly)   ? $idsLocOnly          : [],
-            'count_full'       => is_array($idsFull)      ? count($idsFull)      : $idsFull,
-            'ids_full'         => is_array($idsFull)      ? $idsFull             : [],
-            'service_area_terms' => $termList,
-            'meta_keys_used'   => [
-                'date' => self::META_EVENT_DATE,
-                'loc'  => self::META_SERVICE_LOC,
-            ],
-        ]);
-    }
 
     public function ajaxGetData(): void
     {
@@ -491,36 +407,17 @@ class ShoppingList implements FeatureInterface
             echo '<div class="zs-sl__list-empty"><p>' . esc_html__('No hi ha ingredients per als pedidos seleccionats.', 'zero-sense') . '</p></div>';
             return;
         }
-        $ingredients = array_values(array_filter($list, function (array $i): bool { return $i['type'] === 'ingredient'; }));
-        $liquids     = array_values(array_filter($list, function (array $i): bool { return $i['type'] === 'liquid'; }));
+        usort($list, function (array $a, array $b): int { return strcmp($a['name'], $b['name']); });
         ?>
-        <div class="zs-sl__list" id="zs-sl-list">
-            <?php if (!empty($ingredients)) : ?>
-                <div class="zs-sl__list-section">
-                    <h3 class="zs-sl__section-title"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
-                    <div class="zs-sl__list-items">
-                        <?php foreach ($ingredients as $item) : ?>
-                            <div class="zs-sl__list-item">
-                                <span class="zs-sl__item-name"><?php echo esc_html($item['name']); ?></span>
-                                <span class="zs-sl__item-qty"><?php echo esc_html($this->formatNumber($item['qty'])); ?> <span class="zs-sl__item-unit"><?php echo esc_html($item['unit']); ?></span></span>
-                            </div>
-                        <?php endforeach; ?>
+        <div class="zs-sl__list print-only" id="zs-sl-list">
+            <div class="zs-sl__list-items">
+                <?php foreach ($list as $item) : ?>
+                    <div class="zs-sl__list-item">
+                        <span class="zs-sl__item-name"><?php echo esc_html($item['name']); ?></span>
+                        <span class="zs-sl__item-qty"><?php echo esc_html($this->formatNumber($item['qty'])); ?> <span class="zs-sl__item-unit"><?php echo esc_html($item['unit']); ?></span></span>
                     </div>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($liquids)) : ?>
-                <div class="zs-sl__list-section">
-                    <h3 class="zs-sl__section-title"><?php esc_html_e('Líquids', 'zero-sense'); ?></h3>
-                    <div class="zs-sl__list-items">
-                        <?php foreach ($liquids as $item) : ?>
-                            <div class="zs-sl__list-item">
-                                <span class="zs-sl__item-name"><?php echo esc_html($item['name']); ?></span>
-                                <span class="zs-sl__item-qty"><?php echo esc_html($this->formatNumber($item['qty'])); ?> <span class="zs-sl__item-unit"><?php echo esc_html($item['unit']); ?></span></span>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
         <?php
     }
