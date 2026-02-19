@@ -3366,7 +3366,7 @@ class BricksDynamicTags implements FeatureInterface
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track{background:#2271b1;}'
             . '.zs-rabbit-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}'
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track .zs-rabbit-toggle__thumb{transform:translateX(18px);}'
-            . '.zs-rabbit-toggle__label{font-size:12px;}'
+            . '.zs-rabbit-toggle__label{font-size:var(--text-m;}'
             . '</style>';
     }
 
