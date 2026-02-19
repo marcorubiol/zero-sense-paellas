@@ -8,7 +8,7 @@ class AlertsDashboardPage
 {
     public function register(): void
     {
-        add_action('admin_menu', [$this, 'addMenuPage'], 5);
+        add_action('admin_menu', [$this, 'addMenuPage'], 1);
     }
 
     public function addMenuPage(): void
@@ -95,7 +95,7 @@ class AlertsDashboardPage
 
             <?php if (empty($allAlerts)): ?>
                 <div class="notice notice-success inline" style="margin-top: 15px;">
-                    <p><?php esc_html_e('No active inventory alerts in the next 30 days.', 'zero-sense'); ?></p>
+                    <p><?php esc_html_e('No active stock alerts for upcoming orders.', 'zero-sense'); ?></p>
                 </div>
             <?php else: ?>
 
