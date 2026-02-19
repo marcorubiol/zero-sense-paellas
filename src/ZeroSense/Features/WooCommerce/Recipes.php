@@ -232,6 +232,7 @@ class Recipes implements FeatureInterface
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_FIELD);
 
         $units = $this->getAllowedUnits();
+        $utensilUnits = $this->getUtensilUnits();
         $ajax_url = admin_url('admin-ajax.php');
         $nonce = wp_create_nonce('zs_ingredient_ajax');
 
@@ -397,7 +398,7 @@ class Recipes implements FeatureInterface
                             </td>
                             <td>
                                 <select name="zs_recipe_utensils[unit][]" style="width:100%;">
-                                    <?php foreach ($units as $u => $label): ?>
+                                    <?php foreach ($utensilUnits as $u => $label): ?>
                                         <option value="<?php echo esc_attr($u); ?>" <?php selected($unit, $u); ?>><?php echo esc_html($label); ?></option>
                                     <?php endforeach; ?>
                                 </select>
@@ -663,8 +664,8 @@ class Recipes implements FeatureInterface
             }
             
             function addNewUtensilRow() {
-                var units = <?php echo json_encode(array_keys($this->getAllowedUnits())); ?>;
-                var unitLabels = <?php echo json_encode(array_values($this->getAllowedUnits())); ?>;
+                var units = <?php echo json_encode(array_keys($this->getUtensilUnits())); ?>;
+                var unitLabels = <?php echo json_encode(array_values($this->getUtensilUnits())); ?>;
                 
                 var unitOptions = '';
                 for (var i = 0; i < units.length; i++) {
@@ -740,6 +741,7 @@ class Recipes implements FeatureInterface
         $units = isset($raw['unit']) && is_array($raw['unit']) ? $raw['unit'] : [];
 
         $allowedUnits = array_keys($this->getAllowedUnits());
+        $allowedUtensilUnits = array_keys($this->getUtensilUnits());
 
         // Save paella checkbox
         if (isset($_POST['zs_recipe_needs_paella']) && $_POST['zs_recipe_needs_paella'] === '1') {
@@ -800,7 +802,7 @@ class Recipes implements FeatureInterface
                 continue;
             }
 
-            if (!in_array($unit, $allowedUnits, true)) {
+            if (!in_array($unit, $allowedUtensilUnits, true)) {
                 $unit = 'u';
             }
 
@@ -1362,6 +1364,14 @@ class Recipes implements FeatureInterface
             'g' => __('g', 'zero-sense'),
             'kg' => __('kg', 'zero-sense'),
             'ml' => __('ml', 'zero-sense'),
+            'l' => __('l', 'zero-sense'),
+            'u' => __('u', 'zero-sense'),
+        ];
+    }
+
+    private function getUtensilUnits(): array
+    {
+        return [
             'l' => __('l', 'zero-sense'),
             'u' => __('u', 'zero-sense'),
         ];
