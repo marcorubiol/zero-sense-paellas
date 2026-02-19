@@ -255,6 +255,10 @@ class MaterialCalculator
             $totalLitres = self::calculateTotalLitres($recipeId, $itemGuests);
             $cassolaKey = self::selectCassola($totalLitres);
 
+            if ($cassolaKey === '') {
+                continue;
+            }
+
             if (!isset($result[$cassolaKey])) {
                 $result[$cassolaKey] = 0;
             }
@@ -296,12 +300,12 @@ class MaterialCalculator
 
     /**
      * Select the smallest cassola that fits the required litres.
-     * Falls back to cassola_15l if no liquids are defined (total = 0).
+     * Returns empty string if no litres defined.
      */
     private static function selectCassola(float $totalLitres): string
     {
         if ($totalLitres <= 0) {
-            return 'cassola_15l';
+            return '';
         }
 
         // Sizes are sorted largest to smallest; find the smallest that fits

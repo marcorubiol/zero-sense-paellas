@@ -96,7 +96,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals ≤ 4.9L',
+                'description' => '1 per recepta amb ≤ 4.9L totals',
             ],
             [
                 'key' => 'cassola_6l',
@@ -104,7 +104,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals ≤ 6.6L i > 4.9L',
+                'description' => '1 per recepta amb 4.9–6.6L totals',
             ],
             [
                 'key' => 'cassola_9l',
@@ -112,7 +112,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals ≤ 9.5L i > 6.6L',
+                'description' => '1 per recepta amb 6.6–9.5L totals',
             ],
             [
                 'key' => 'cassola_xata_11l',
@@ -120,7 +120,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals ≤ 11.6L i > 9.5L',
+                'description' => '1 per recepta amb 9.5–11.6L totals',
             ],
             [
                 'key' => 'cassola_xata_13l',
@@ -128,7 +128,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals ≤ 13.0L i > 11.6L',
+                'description' => '1 per recepta amb 11.6–13.0L totals',
             ],
             [
                 'key' => 'cassola_15l',
@@ -136,7 +136,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals ≤ 15.5L i > 13.0L. Fallback per defecte si la recepta no té líquids definits',
+                'description' => '1 per recepta amb 13.0–15.5L totals',
             ],
             [
                 'key' => 'cassola_33l',
@@ -144,7 +144,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => 'Seleccionada automàticament quan els litres totals de la recepta × convidats > 15.5L',
+                'description' => '1 per recepta amb > 15.5L totals',
             ],
 
             // MATÈRIA PESADA — cremadors
