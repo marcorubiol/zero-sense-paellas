@@ -90,6 +90,46 @@ class CheckoutPageEnhancements implements FeatureInterface
             wp_add_inline_script('jquery', $js);
         }
 
+        // Force shipping section to always be visible
+        if (function_exists('is_checkout') && is_checkout()) {
+            $js = '(function(){
+                function showShippingSection() {
+                    // Show shipping fields section
+                    var shippingSection = document.querySelector(".shipping_address");
+                    if (shippingSection) {
+                        shippingSection.style.display = "block";
+                    }
+                    
+                    // Check and uncheck the "ship to different address" checkbox to trigger display
+                    var checkbox = document.querySelector("#ship-to-different-address-checkbox");
+                    if (checkbox && !checkbox.checked) {
+                        checkbox.checked = true;
+                        // Trigger change event
+                        var event = new Event("change", { bubbles: true });
+                        checkbox.dispatchEvent(event);
+                    }
+                    
+                    // Also try to show via jQuery if available
+                    if (window.jQuery) {
+                        jQuery(".shipping_address").show();
+                        jQuery("#ship-to-different-address-checkbox").prop("checked", true).trigger("change");
+                    }
+                }
+                
+                // Run immediately and also after DOM is ready
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", showShippingSection);
+                } else {
+                    showShippingSection();
+                }
+                
+                // Also run after a short delay to handle any dynamic loading
+                setTimeout(showShippingSection, 500);
+            })();';
+            wp_enqueue_script('jquery');
+            wp_add_inline_script('jquery', $js);
+        }
+
         $is_checkout        = function_exists('is_checkout') ? is_checkout() : false;
         $is_order_received  = function_exists('is_wc_endpoint_url') ? is_wc_endpoint_url('order-received') : false;
         $is_checkout_page   = $is_checkout && !$is_order_received;

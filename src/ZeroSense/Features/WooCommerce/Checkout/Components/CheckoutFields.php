@@ -35,21 +35,10 @@ class CheckoutFields
         add_filter('icl_ls_languages', [$this, 'filterLanguageSwitcherUrls']);
         
         // Force shipping fields to always show
-        add_filter('woocommerce_ship_to_different_address_checked', function($checked) {
-            error_log('[ZS-CHECKOUT] Force shipping fields filter called');
-            return true;
-        });
+        add_filter('woocommerce_ship_to_different_address_checked', '__return_true');
         
-        // Also force shipping fields to be shown via another filter
-        add_filter('woocommerce_shipping_fields', function($fields) {
-            error_log('[ZS-CHECKOUT] Shipping fields filter called');
-            return $fields;
-        }, 999);
-        
-        // Aggressive: Ensure shipping city and address 2 are always present
+        // Ensure shipping city and address 2 are always present
         add_filter('woocommerce_checkout_fields', function($fields) {
-            error_log('[ZS-CHECKOUT] Checkout fields filter - ensuring shipping fields exist');
-            
             // Ensure shipping fields exist
             if (!isset($fields['shipping'])) {
                 $fields['shipping'] = [];
@@ -77,7 +66,6 @@ class CheckoutFields
                 ];
             }
             
-            error_log('[ZS-CHECKOUT] Shipping fields ensured: ' . print_r(array_keys($fields['shipping']), true));
             return $fields;
         }, 999);
     }
