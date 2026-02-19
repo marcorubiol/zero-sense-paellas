@@ -48,7 +48,7 @@ class OrderActions implements FeatureInterface
 
     public function getConditions(): array
     {
-        return ['is_admin', 'class_exists:WC_Order'];
+        return ['is_admin'];
     }
 
     public function init(): void
