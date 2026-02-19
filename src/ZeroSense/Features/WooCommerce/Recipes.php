@@ -1139,7 +1139,7 @@ class Recipes implements FeatureInterface
         $hasRabbit = get_post_meta($productId, '_zs_has_rabbit_option', true) === 'yes';
         $currentNoRabbit = (int) get_post_meta($productId, self::META_PRODUCT_RECIPE_NO_RABBIT, true);
 
-        echo '<div class="options_group" id="zs-recipe-no-rabbit-group" style="' . ($hasRabbit ? '' : 'display:none;') . '">';
+        echo '<div class="options_group" id="zs-recipe-no-rabbit-group" style="border-top:0;' . ($hasRabbit ? '' : 'display:none;') . '">';
         echo '<p class="form-field">';
         echo '<label for="zs_recipe_id_no_rabbit">' . esc_html__('Recipe without rabbit', 'zero-sense') . '</label>';
         echo '<select id="zs_recipe_id_no_rabbit" name="zs_recipe_id_no_rabbit" class="wc-enhanced-select" style="width:50%;">';
@@ -1159,7 +1159,7 @@ class Recipes implements FeatureInterface
 
         // Edit action — only shown when a real recipe is selected
         $editUrlNoRabbit = $currentNoRabbit > 0 ? admin_url('post.php?post=' . $currentNoRabbit . '&action=edit') : '#';
-        echo '<p id="zs-recipe-no-rabbit-context-actions" style="margin-top:-8px; padding-left:162px; display:' . ($currentNoRabbit > 0 ? 'block' : 'none') . ';">';
+        echo '<p id="zs-recipe-no-rabbit-context-actions" style="margin-top:-16px; padding-left:162px; display:' . ($currentNoRabbit > 0 ? 'block' : 'none') . ';">';
         echo '<a id="zs-recipe-no-rabbit-edit-btn" href="' . esc_url($editUrlNoRabbit) . '" target="_blank" style="font-size:12px; text-decoration:none; color:#2271b1;">';
         echo '<span class="dashicons dashicons-edit" style="font-size:13px; line-height:1.6; vertical-align:middle; margin-right:2px;"></span>';
         echo esc_html__('Edit Recipe', 'zero-sense');
