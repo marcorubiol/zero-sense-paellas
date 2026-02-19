@@ -2242,39 +2242,26 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
 
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
-            $parts = [];
+            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
 
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (is_array($recipeIngredients)) {
                 foreach ($recipeIngredients as $ingRow) {
-                    if (!is_array($ingRow)) {
-                        continue;
-                    }
+                    if (!is_array($ingRow)) continue;
                     $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
                     $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
                     $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
-
-                    if ($termId <= 0 || $perPax <= 0 || $unit === '') {
-                        continue;
-                    }
-
+                    if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
                     $amount = $eqItem * $perPax;
-                    if ($amount <= 0) {
-                        continue;
-                    }
-
+                    if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $parts[] = '<li class="zs-recipe-ingredient"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></li>';
+                    $html .= '<div class="brxe-div fdr-card__field">';
+                    $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span>';
+                    $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span>';
+                    $html .= '</div>';
                 }
             }
-
-            $value = !empty($parts) ? '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $parts) . '</ul>' : '<p>—</p>';
-
-            $html .= '<div class="brxe-div fdr-card__field">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
-            $html .= $value;
-            $html .= '</div>';
         }
 
         return $html;
