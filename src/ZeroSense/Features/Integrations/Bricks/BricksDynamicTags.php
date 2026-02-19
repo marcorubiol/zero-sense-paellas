@@ -3391,7 +3391,11 @@ class BricksDynamicTags implements FeatureInterface
                 . 'fd.append("choice",choice);'
                 . 'fetch("' . $ajaxUrl . '",{method:"POST",body:fd,credentials:"same-origin"});'
                 . '}'
-                . 'toggle.addEventListener("change",function(){sendChoice(this.checked?"without":"with");});'
+                . 'toggle.addEventListener("change",function(){'
+                . 'var c=this.checked?"without":"with";'
+                . 'console.log("[ZS Rabbit] toggle changed → choice:",c,"pid:' . $pid . '");'
+                . 'sendChoice(c);'
+                . '});'
                 . '})();'
                 . '</script>';
         }, 99);
