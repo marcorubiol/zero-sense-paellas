@@ -2221,7 +2221,9 @@ class BricksDynamicTags implements FeatureInterface
 
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
-            $rabbitIcon = isset($group['rabbit_choice']) && $group['rabbit_choice'] === 'without' ? '❌🐇 ' : '🐇 ';
+            $rabbitIcon = isset($group['rabbit_choice']) && $group['rabbit_choice'] === 'without'
+                ? '<span style="position:relative;display:inline-block;line-height:1;">🐇<span style="position:absolute;top:0;left:0;width:100%;text-align:center;">❌</span></span> '
+                : '🐇 ';
 
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             $parts = [];
@@ -2381,7 +2383,9 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="zs-recipe-item">';
             
             // Recipe title
-            $rabbitIcon = isset($group['rabbit_choice']) && $group['rabbit_choice'] === 'without' ? '❌🐇 ' : '🐇 ';
+            $rabbitIcon = isset($group['rabbit_choice']) && $group['rabbit_choice'] === 'without'
+                ? '<span style="position:relative;display:inline-block;line-height:1;">🐇<span style="position:absolute;top:0;left:0;width:100%;text-align:center;">❌</span></span> '
+                : '🐇 ';
             $html .= '<h4 class="zs-recipe-name">' . $rabbitIcon . esc_html($group['recipe_title']) . '</h4>';
             
             // Products list
