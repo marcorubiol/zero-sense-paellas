@@ -17,12 +17,90 @@ class CheckoutFields
         add_action('woocommerce_checkout_process', [$this, 'validate_event_fields']);
         add_action('woocommerce_checkout_create_order', [$this, 'save_event_fields'], 20, 2);
 
+        // Capture location from URL into WC session
+        add_action('wp', [$this, 'captureLocationFromUrl']);
+
+        // AJAX endpoint for localStorage → WC session sync
+        add_action('wp_ajax_zs_set_location_session', [$this, 'ajaxSetLocationSession']);
+        add_action('wp_ajax_nopriv_zs_set_location_session', [$this, 'ajaxSetLocationSession']);
+
+        // Pre-fill billing_city from session
+        add_filter('woocommerce_checkout_get_value', [$this, 'prefillCityFromSession'], 10, 2);
+
         // WPML compatibility fixes
         add_action('init', [$this, 'register_checkout_strings_for_translation']);
         $this->prevent_wpml_array_processing();
 
         // Preserve and translate service area filter across languages
         add_filter('icl_ls_languages', [$this, 'filterLanguageSwitcherUrls']);
+    }
+
+    public function captureLocationFromUrl(): void
+    {
+        if (!function_exists('WC') || !WC()->session) {
+            return;
+        }
+
+        if (isset($_GET['b_service-area'])) {
+            $termId = absint($_GET['b_service-area']);
+            if ($termId > 0) {
+                WC()->session->set('zs_service_area', $this->normalizeToCanonicalTermId($termId));
+            }
+        }
+
+        if (isset($_GET['city']) && $_GET['city'] !== '') {
+            WC()->session->set('zs_city', sanitize_text_field((string) $_GET['city']));
+        }
+    }
+
+    public function ajaxSetLocationSession(): void
+    {
+        if (!function_exists('WC') || !WC()->session) {
+            wp_send_json_error();
+            return;
+        }
+
+        if (isset($_POST['service_area'])) {
+            $termId = absint($_POST['service_area']);
+            if ($termId > 0) {
+                WC()->session->set('zs_service_area', $this->normalizeToCanonicalTermId($termId));
+            }
+        }
+
+        if (isset($_POST['city']) && $_POST['city'] !== '') {
+            WC()->session->set('zs_city', sanitize_text_field((string) $_POST['city']));
+        }
+
+        wp_send_json_success();
+    }
+
+    public function prefillCityFromSession(mixed $value, string $input): mixed
+    {
+        if ($input !== 'billing_city' || $value !== null) {
+            return $value;
+        }
+
+        if (function_exists('WC') && WC()->session) {
+            $city = WC()->session->get('zs_city');
+            if (is_string($city) && $city !== '') {
+                return $city;
+            }
+        }
+
+        return $value;
+    }
+
+    private function normalizeToCanonicalTermId(int $termId): int
+    {
+        if (!defined('ICL_SITEPRESS_VERSION') || !function_exists('apply_filters')) {
+            return $termId;
+        }
+        $defaultLang = apply_filters('wpml_default_language', null);
+        if (!is_string($defaultLang) || $defaultLang === '') {
+            return $termId;
+        }
+        $canonical = apply_filters('wpml_object_id', $termId, 'service-area', true, $defaultLang);
+        return $canonical ? (int) $canonical : $termId;
     }
 
     public function customize_checkout_fields($fields)
@@ -265,6 +343,27 @@ class CheckoutFields
         $intolerances = $this->getSubmittedFieldValue(MetaKeys::INTOLERANCES);
         if ($intolerances !== null) {
             $order->update_meta_data(MetaKeys::INTOLERANCES, sanitize_textarea_field((string) $intolerances));
+        }
+
+        // Service location (from hidden field, falls back to WC session)
+        $serviceAreaRaw = $this->getSubmittedFieldValue('zs_checkout_service_area');
+        if ($serviceAreaRaw === null && function_exists('WC') && WC()->session) {
+            $serviceAreaRaw = WC()->session->get('zs_service_area');
+        }
+        if ($serviceAreaRaw !== null && absint($serviceAreaRaw) > 0) {
+            $canonical = $this->normalizeToCanonicalTermId(absint($serviceAreaRaw));
+            $order->update_meta_data(MetaKeys::SERVICE_LOCATION, $canonical);
+        }
+
+        // City → native WC shipping city (from billing_city field or WC session)
+        $city = $this->getSubmittedFieldValue('billing_city');
+        if ($city === null || $city === '') {
+            if (function_exists('WC') && WC()->session) {
+                $city = WC()->session->get('zs_city');
+            }
+        }
+        if (is_string($city) && $city !== '') {
+            $order->set_shipping_city(sanitize_text_field($city));
         }
     }
 

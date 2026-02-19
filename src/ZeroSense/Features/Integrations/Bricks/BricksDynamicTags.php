@@ -3382,7 +3382,6 @@ class BricksDynamicTags implements FeatureInterface
                 var pid = toggle.dataset.pid;
                 if (!pid) return;
                 var choice = toggle.checked ? "without" : "with";
-                console.log("[ZS Rabbit] toggle changed \u2192 choice:", choice, "pid:", pid);
                 var fd = new FormData();
                 fd.append("action", "zs_set_rabbit_choice");
                 fd.append("product_id", pid);

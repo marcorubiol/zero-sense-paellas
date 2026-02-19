@@ -74,6 +74,23 @@ class CheckoutPageEnhancements implements FeatureInterface
 
     public function enqueueCheckoutScripts(): void
     {
+        // Sync localStorage location data to WC session on any WC page
+        if (function_exists('is_woocommerce') && (is_woocommerce() || is_cart() || is_checkout())) {
+            $ajaxUrl = esc_js(admin_url('admin-ajax.php'));
+            $js = '(function(){
+                var sa = localStorage.getItem(".location");
+                var city = localStorage.getItem("city");
+                if (!sa && !city) return;
+                var fd = new FormData();
+                fd.append("action", "zs_set_location_session");
+                if (sa) fd.append("service_area", sa);
+                if (city) fd.append("city", city);
+                fetch("' . $ajaxUrl . '", {method:"POST", body:fd, credentials:"same-origin"});
+            })();';
+            wp_enqueue_script('jquery');
+            wp_add_inline_script('jquery', $js);
+        }
+
         $is_checkout        = function_exists('is_checkout') ? is_checkout() : false;
         $is_order_received  = function_exists('is_wc_endpoint_url') ? is_wc_endpoint_url('order-received') : false;
         $is_checkout_page   = $is_checkout && !$is_order_received;
