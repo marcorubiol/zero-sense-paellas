@@ -125,15 +125,15 @@ class CheckoutFields
      */
     public function display_event_fields($checkout): void
     {
-        $selectPlaceholder = __('-- Selecciona una opción --', 'zero-sense');
+        $selectPlaceholder = __('-- Select an option --', 'zero-sense');
 
-        echo '<h3>' . esc_html__('Sobre el evento', 'zero-sense') . '</h3>';
+        echo '<h3>' . esc_html__('About the event', 'zero-sense') . '</h3>';
         echo '<div class="woocommerce-billing-fields__field-wrapper">';
 
         // Total guests + Adults (two columns)
         woocommerce_form_field(MetaKeys::TOTAL_GUESTS, [
             'type'             => 'number',
-            'label'            => __('Número total de comensales', 'zero-sense'),
+            'label'            => __('Total number of guests', 'zero-sense'),
             'required'         => true,
             'class'            => ['form-row-first'],
             'custom_attributes' => ['min' => '1', 'required' => 'required'],
@@ -141,7 +141,7 @@ class CheckoutFields
 
         woocommerce_form_field(MetaKeys::ADULTS, [
             'type'             => 'number',
-            'label'            => __('Adultos', 'zero-sense'),
+            'label'            => __('Adults', 'zero-sense'),
             'required'         => true,
             'class'            => ['form-row-last'],
             'custom_attributes' => ['min' => '0', 'required' => 'required'],
@@ -150,14 +150,14 @@ class CheckoutFields
         // Children 5-8 + Children 0-4
         woocommerce_form_field(MetaKeys::CHILDREN_5_TO_8, [
             'type'  => 'number',
-            'label' => __('Niños de 5 a 8 años (40% de descuento)', 'zero-sense'),
+            'label' => __('Children 5-8 years (40%)', 'zero-sense'),
             'class' => ['form-row-first'],
             'custom_attributes' => ['min' => '0'],
         ], '');
 
         woocommerce_form_field(MetaKeys::CHILDREN_0_TO_4, [
             'type'  => 'number',
-            'label' => __('Niños de 0 a 4 años (GRATIS)', 'zero-sense'),
+            'label' => __('Children 0-4 years (free)', 'zero-sense'),
             'class' => ['form-row-last'],
             'custom_attributes' => ['min' => '0'],
         ], '');
@@ -166,7 +166,7 @@ class CheckoutFields
         $addressDefault = $this->getUrlPrefill('address', '');
         woocommerce_form_field('event_address_checkout', [
             'type'     => 'text',
-            'label'    => __('Dirección del evento', 'zero-sense'),
+            'label'    => __('Event address', 'zero-sense'),
             'required' => true,
             'class'    => ['form-row-first'],
             'custom_attributes' => ['required' => 'required'],
@@ -175,14 +175,14 @@ class CheckoutFields
 
         woocommerce_form_field('event_location_link_checkout', [
             'type'  => 'text',
-            'label' => __('Enlace de la ubicación (si lo tienes disponible)', 'zero-sense'),
+            'label' => __('Location link', 'zero-sense'),
             'class' => ['form-row-last'],
         ], '');
 
         // Event date + Serving time
         woocommerce_form_field(MetaKeys::EVENT_DATE, [
             'type'     => 'text',
-            'label'    => __('Fecha del evento', 'zero-sense'),
+            'label'    => __('Event date', 'zero-sense'),
             'required' => true,
             'class'    => ['form-row-first', 'zs-datepicker'],
             'custom_attributes' => ['required' => 'required', 'autocomplete' => 'off'],
@@ -190,7 +190,7 @@ class CheckoutFields
 
         woocommerce_form_field(MetaKeys::SERVING_TIME, [
             'type'     => 'text',
-            'label'    => __('Hora de servir la paella (aprox)', 'zero-sense'),
+            'label'    => __('Paellas service time', 'zero-sense'),
             'required' => true,
             'class'    => ['form-row-last', 'zs-timepicker'],
             'custom_attributes' => ['required' => 'required', 'autocomplete' => 'off'],
@@ -200,7 +200,7 @@ class CheckoutFields
         // Start time + Event type
         woocommerce_form_field(MetaKeys::START_TIME, [
             'type'    => 'text',
-            'label'   => __('Hora del inicio del evento', 'zero-sense'),
+            'label'   => __('Event start time', 'zero-sense'),
             'class'   => ['form-row-first', 'zs-timepicker'],
             'custom_attributes' => ['autocomplete' => 'off'],
             'default' => '18:00',
@@ -209,7 +209,7 @@ class CheckoutFields
         $eventTypeOptions = array_merge(['' => $selectPlaceholder], FieldOptions::getEventTypeOptions());
         woocommerce_form_field(MetaKeys::EVENT_TYPE, [
             'type'     => 'select',
-            'label'    => __('Tipo de evento', 'zero-sense'),
+            'label'    => __('Event type', 'zero-sense'),
             'required' => true,
             'options'  => $eventTypeOptions,
             'class'    => ['form-row-last'],
@@ -230,9 +230,9 @@ class CheckoutFields
         echo '</div>';
 
         // Intolerances section
-        echo '<h3>' . esc_html__('Intolerancias', 'zero-sense') . '</h3>';
+        echo '<h3>' . esc_html__('Allergies / intolerances', 'zero-sense') . '</h3>';
         $intolerancesId = esc_attr(MetaKeys::INTOLERANCES);
-        $intolerancesLabel = esc_html__('¿Debemos tener en cuenta alguna alergia o intolerancia alimentaria destacable?', 'zero-sense');
+        $intolerancesLabel = esc_html__('Should we consider any notable food allergies or intolerances?', 'zero-sense');
         echo '<p class="form-row form-row-wide" style="width:100%!important;float:none!important;clear:both;">';
         echo '<label for="' . $intolerancesId . '">' . $intolerancesLabel . '</label>';
         echo '<textarea id="' . $intolerancesId . '" name="' . $intolerancesId . '" rows="4" style="width:100%;"></textarea>';
