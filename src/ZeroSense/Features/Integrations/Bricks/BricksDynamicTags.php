@@ -2065,7 +2065,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="unit">' . esc_html($normalized['unit']) . '</span></span></div>';
                 }
             }
 
@@ -2421,7 +2421,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="unit">' . esc_html($normalized['unit']) . '</span></span></div>';
                 }
             }
 
@@ -2437,7 +2437,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
                     if ($liqName === '') continue;
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($amount)) . ' l</span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($amount)) . '</span><span class="unit">l</span></span></div>';
                 }
             }
 
