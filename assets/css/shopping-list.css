@@ -52,9 +52,6 @@
 /* Orders panel */
 .zs-sl__orders {
     margin-bottom: var(--space-m);
-    border: 1px solid var(--border-color-light);
-    border-radius: var(--radius);
-    overflow: hidden;
 }
 .zs-sl__orders-actions {
     padding: calc(var(--space-xs) / 1.5) var(--space-s);
