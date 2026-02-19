@@ -493,12 +493,12 @@ class EventDetailsMetabox
                     } else if (totalGuests < sumOfPeople && sumOfPeople > 0) {
                         totalGuestsInput.classList.add('lower');
                         validationContainer.classList.add('lower');
-                        validationMessage.textContent = 'El número de personas totales es más bajo que la suma de personas';
+                        validationMessage.textContent = 'The total number of people is lower than the sum of people';
                         console.log('Added lower class'); // Debug
                     } else if (totalGuests > sumOfPeople && totalGuests > 0) {
                         totalGuestsInput.classList.add('higher');
                         validationContainer.classList.add('higher');
-                        validationMessage.textContent = 'El número de personas totales es más alto que la suma de personas';
+                        validationMessage.textContent = 'The total number of people is higher than the sum of people';
                         console.log('Added higher class'); // Debug
                     } else {
                         validationMessage.textContent = '';
