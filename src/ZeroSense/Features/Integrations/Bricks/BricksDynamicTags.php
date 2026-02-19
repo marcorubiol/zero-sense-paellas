@@ -211,17 +211,11 @@ class BricksDynamicTags implements FeatureInterface
 
     public function trackOrderModification(int $orderId): void
     {
-        $timestamp = current_time('mysql');
-        
-        // Use WooCommerce method to ensure compatibility with HPOS
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
-            $order->update_meta_data('_zs_last_modified', $timestamp);
+            $order->update_meta_data('_zs_last_modified', current_time('mysql'));
             $order->save_meta_data();
         }
-        
-        // Also save as post meta for fallback
-        update_post_meta($orderId, '_zs_last_modified', $timestamp);
     }
 
     private function wrapIfRecentlyChanged(string $value, string $fieldKey, $post): string

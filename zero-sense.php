@@ -37,14 +37,6 @@ if (file_exists($autoloader)) {
     return;
 }
 
-if (!function_exists('br_tag_accepted')) {
-    function br_tag_accepted($value)
-    {
-        $allowed_tags = ['br' => []];
-        return wp_kses($value, $allowed_tags);
-    }
-}
-
 // Load checkout debug logger only when WordPress debug logging is enabled - REMOVED
 
 

@@ -121,25 +121,16 @@ class OrderPayTermsHandler
             return;
         }
 
-        // Build the same text used in PHP so languages/links are consistent
         $text = apply_filters('woocommerce_get_terms_and_conditions_checkbox_text', __('I have read and agree to the website terms and conditions', 'woocommerce'));
         $text = wp_kses_post($text);
-        ?>
-        <script>
-        (function(){
-          if (document.querySelector('input[name="terms"]')) return;
-          var btn = document.getElementById('place_order');
-          if (!btn) return;
-          var p = document.createElement('p');
-          p.className = 'form-row validate-required';
-          p.innerHTML = '<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">\
-            <input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" name="terms" id="zs-terms" />\
-            <span><?php echo $text; ?></span> <span class="required">*</span>\
-          </label>';
-          btn.parentNode.insertBefore(p, btn);
-        })();
-        </script>
-        <?php
+
+        $jsRel  = 'assets/js/order-pay-terms.js';
+        $jsPath = plugin_dir_path(ZERO_SENSE_FILE) . $jsRel;
+        $jsUrl  = plugin_dir_url(ZERO_SENSE_FILE) . $jsRel;
+        $ver    = file_exists($jsPath) ? (string) filemtime($jsPath) : ZERO_SENSE_VERSION;
+
+        wp_enqueue_script('zs-order-pay-terms', $jsUrl, [], $ver, true);
+        wp_localize_script('zs-order-pay-terms', 'zsOrderPayTerms', ['termsText' => $text]);
     }
 
     /**

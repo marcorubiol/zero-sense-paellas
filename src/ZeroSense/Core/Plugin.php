@@ -82,21 +82,6 @@ class Plugin
         // Clear feature discovery cache on activation
         $cacheKey = 'zs_feature_classes_v' . ZERO_SENSE_VERSION;
         delete_transient($cacheKey);
-        
-        // Set default options for features
-        $defaultOptions = [
-            'zs_hide_admin_bar_non_admins' => true,
-            'zs_tab_detection_enabled' => true,
-            'zs_woo_deposits_enabled' => true,
-            'zs_admin_order_event_date' => true,
-            'zs_admin_order_payment_links_enabled' => true,
-        ];
-
-        foreach ($defaultOptions as $option => $value) {
-            if (get_option($option) === false) {
-                add_option($option, $value);
-            }
-        }
 
         // Flush rewrite rules
         flush_rewrite_rules();

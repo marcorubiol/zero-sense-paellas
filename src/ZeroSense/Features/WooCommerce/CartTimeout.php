@@ -90,7 +90,7 @@ class CartTimeout implements FeatureInterface
         }
 
         // Frontend only, on WooCommerce-related pages
-        add_action('wp_footer', [$this, 'printInlineScript'], 20);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueScript'], 20);
 
         // AJAX handlers (new + legacy)
         add_action('wp_ajax_zs_clear_cart_after_timeout', [$this, 'handleAjaxClearCart']);
@@ -155,7 +155,7 @@ class CartTimeout implements FeatureInterface
         return $shop || $product || $cart || $checkout;
     }
 
-    public function printInlineScript(): void
+    public function enqueueScript(): void
     {
         if (is_admin() || !$this->isWooPage()) {
             return;
@@ -163,50 +163,19 @@ class CartTimeout implements FeatureInterface
 
         $timeoutMinutes = (int) get_option('zs_cart_timeout', 5);
         if ($timeoutMinutes <= 0) { $timeoutMinutes = 5; }
-        $timeoutSeconds = $timeoutMinutes * 60;
 
-        $ajaxUrl = admin_url('admin-ajax.php');
-        $nonce   = wp_create_nonce('zs_clear_cart_nonce');
-        $cookieName = 'zs_cart_last_seen';
+        $jsRel = 'assets/js/cart-timeout.js';
+        $jsPath = plugin_dir_path(ZERO_SENSE_FILE) . $jsRel;
+        $jsUrl  = plugin_dir_url(ZERO_SENSE_FILE) . $jsRel;
+        $ver    = file_exists($jsPath) ? (string) filemtime($jsPath) : ZERO_SENSE_VERSION;
 
-        ?>
-<script>(function(){
-  try {
-    var COOKIE = '<?php echo esc_js($cookieName); ?>';
-    var TIMEOUT = <?php echo (int) $timeoutSeconds; ?>;
-    var AJAX_URL = '<?php echo esc_url($ajaxUrl); ?>';
-    var NONCE = '<?php echo esc_js($nonce); ?>';
-
-    function getCookie(name) {
-      var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
-      return match ? parseInt(match[1], 10) : null;
-    }
-
-    function setCookie(name, value) {
-      document.cookie = name + '=' + value + '; path=/; SameSite=Lax';
-    }
-
-    var last = getCookie(COOKIE);
-    var now = Math.floor(Date.now() / 1000);
-
-    if (last !== null && (now - last) > TIMEOUT) {
-      var fd = new FormData();
-      fd.append('action', 'zs_clear_cart_after_timeout');
-      fd.append('nonce', NONCE);
-      fetch(AJAX_URL, { method: 'POST', credentials: 'same-origin', body: fd })
-        .then(function(r){ return r.json().catch(function(){ return {success: false}; }); })
-        .then(function(data){
-          if (data && data.success) {
-            setCookie(COOKIE, now);
-            window.location.replace(window.location.href);
-          }
-        });
-    } else {
-      setCookie(COOKIE, now);
-    }
-  } catch(e) { /* silent */ }
-})();</script>
-        <?php
+        wp_enqueue_script('zs-cart-timeout', $jsUrl, [], $ver, true);
+        wp_localize_script('zs-cart-timeout', 'zsCartTimeout', [
+            'ajaxUrl'    => admin_url('admin-ajax.php'),
+            'nonce'      => wp_create_nonce('zs_clear_cart_nonce'),
+            'timeout'    => $timeoutMinutes * 60,
+            'cookieName' => 'zs_cart_last_seen',
+        ]);
     }
 
     public function handleAjaxClearCart(): void

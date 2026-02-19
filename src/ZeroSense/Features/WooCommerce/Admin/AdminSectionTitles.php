@@ -62,39 +62,12 @@ class AdminSectionTitles implements FeatureInterface
             return;
         }
 
-        $script = <<<'JAVASCRIPT'
-            jQuery(document).ready(function($) {
-                function addSubtitles() {
-                    $('#order_data h3').each(function() {
-                        var elem = $(this);
-                        
-                        if (elem.next('.zs-subtitle').length) {
-                            return;
-                        }
-                        
-                        var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
-                        var editLink = elem.find('a.edit_address');
-                        var editHtml = editLink.length ? editLink[0].outerHTML : '';
-                        
-                        if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                            if (editLink.length) editLink.remove();
-                            elem.after('<div class="zs-subtitle zs-subtitle-client">Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
-                        } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                            if (editLink.length) editLink.remove();
-                            elem.after('<div class="zs-subtitle zs-subtitle-venue">Wedding Planner - Venue' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
-                        }
-                    });
-                    
-                    // Mostrar títulos después de modificar
-                    $('#order_data h3').css('visibility', 'visible');
-                }
-                
-                addSubtitles();
-                setTimeout(addSubtitles, 100);
-            });
-JAVASCRIPT;
+        $jsRel  = 'assets/js/admin-section-titles.js';
+        $jsPath = plugin_dir_path(ZERO_SENSE_FILE) . $jsRel;
+        $jsUrl  = plugin_dir_url(ZERO_SENSE_FILE) . $jsRel;
+        $ver    = file_exists($jsPath) ? (string) filemtime($jsPath) : ZERO_SENSE_VERSION;
 
-        wp_add_inline_script('jquery', $script);
+        wp_enqueue_script('zs-admin-section-titles', $jsUrl, ['jquery'], $ver, true);
     }
 
     /**

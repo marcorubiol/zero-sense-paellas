@@ -531,8 +531,8 @@ class AdminDashboard
                     foreach ($configFields as $field) {
                         if (isset($_POST[$field['name']])) {
                             $value = $_POST[$field['name']];
-                            if (($field['type'] ?? '') === 'textarea' && function_exists('br_tag_accepted')) {
-                                $value = br_tag_accepted($value);
+                            if (($field['type'] ?? '') === 'textarea') {
+                                $value = wp_kses($value, ['br' => []]);
                             } else {
                                 $value = sanitize_text_field($value);
                             }
@@ -715,8 +715,8 @@ class AdminDashboard
         foreach ($configFields as $field) {
             if (isset($configRaw[$field['name']])) {
                 $value = $configRaw[$field['name']];
-                if (($field['type'] ?? '') === 'textarea' && function_exists('br_tag_accepted')) {
-                    $value = br_tag_accepted($value);
+                if (($field['type'] ?? '') === 'textarea') {
+                    $value = wp_kses($value, ['br' => []]);
                 } else {
                     $value = sanitize_text_field($value);
                 }
