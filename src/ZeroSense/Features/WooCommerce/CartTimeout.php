@@ -167,9 +167,46 @@ class CartTimeout implements FeatureInterface
 
         $ajaxUrl = admin_url('admin-ajax.php');
         $nonce   = wp_create_nonce('zs_clear_cart_nonce');
+        $cookieName = 'zs_cart_last_seen';
 
-        // Vanilla JS, no jQuery dependency
-        echo "\n<script>(function(){\n  try {\n    var tabId = Math.random().toString(36).slice(2);\n    var ACTIVE_KEY = 'wc_active_tabs';\n    var LAST_CLOSE_KEY = 'wc_last_tab_closed_time';\n    function now(){return Date.now();}\n    function getActive(){\n      try { return JSON.parse(localStorage.getItem(ACTIVE_KEY) || '{}'); } catch(e){ return {}; }\n    }\n    function setActive(map){ localStorage.setItem(ACTIVE_KEY, JSON.stringify(map)); }\n    function register(){ var m = getActive(); m[tabId] = now(); setActive(m); }\n    register();\n    var interval = setInterval(register, 5000);\n    window.addEventListener('beforeunload', function(){\n      var m = getActive(); delete m[tabId];\n      if (Object.keys(m).length === 0) { localStorage.setItem(LAST_CLOSE_KEY, String(now())); }\n      setActive(m);\n    });\n    window.addEventListener('load', function(){\n      var m = getActive(); var t = now();\n      // Cleanup stale tabs (>10s without heartbeat)\n      Object.keys(m).forEach(function(k){ if (t - m[k] > 10000) { delete m[k]; } });\n      setActive(m);\n      var last = localStorage.getItem(LAST_CLOSE_KEY);\n      if (last && Object.keys(m).length === 1) {\n        var elapsed = Math.floor((t - parseInt(last,10)) / 1000);\n        if (elapsed > " . (int) $timeoutSeconds . ") {\n          var fd = new FormData();\n          // Use new action; legacy handlers also registered for compatibility\n          fd.append('action', 'zs_clear_cart_after_timeout');\n          fd.append('nonce', '" . esc_js($nonce) . "');\n          fetch('" . esc_url($ajaxUrl) . "', { method: 'POST', credentials: 'same-origin', body: fd })\n            .then(function(r){ return r.json().catch(function(){return {success:false};}); })\n            .then(function(data){ if (data && data.success){ localStorage.removeItem(LAST_CLOSE_KEY); location.reload(); } });\n        }\n      }\n    });\n    // Safety: clear interval on page hide\n    document.addEventListener('visibilitychange', function(){ if (document.hidden) { clearInterval(interval); } });\n  } catch(e) { /* silent */ }\n})();</script>\n";
+        ?>
+<script>(function(){
+  try {
+    var COOKIE = '<?php echo esc_js($cookieName); ?>';
+    var TIMEOUT = <?php echo (int) $timeoutSeconds; ?>;
+    var AJAX_URL = '<?php echo esc_url($ajaxUrl); ?>';
+    var NONCE = '<?php echo esc_js($nonce); ?>';
+
+    function getCookie(name) {
+      var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+      return match ? parseInt(match[1], 10) : null;
+    }
+
+    function setCookie(name, value) {
+      document.cookie = name + '=' + value + '; path=/; SameSite=Lax';
+    }
+
+    var last = getCookie(COOKIE);
+    var now = Math.floor(Date.now() / 1000);
+
+    if (last !== null && (now - last) > TIMEOUT) {
+      var fd = new FormData();
+      fd.append('action', 'zs_clear_cart_after_timeout');
+      fd.append('nonce', NONCE);
+      fetch(AJAX_URL, { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r){ return r.json().catch(function(){ return {success: false}; }); })
+        .then(function(data){
+          if (data && data.success) {
+            setCookie(COOKIE, now);
+            window.location.replace(window.location.href);
+          }
+        });
+    } else {
+      setCookie(COOKIE, now);
+    }
+  } catch(e) { /* silent */ }
+})();</script>
+        <?php
     }
 
     public function handleAjaxClearCart(): void
