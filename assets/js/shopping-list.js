@@ -37,10 +37,9 @@
             return '<div class="zs-sl__no-orders"><p>No hi ha comandes per a aquest període i localització.</p></div>';
         }
         var html = '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
-        html += '<h3 class="zs-sl__section-title">Comandes incloses</h3>';
         html += '<div class="zs-sl__orders-actions">';
-        html += '<button type="button" class="" id="zs-sl-check-all">Tots</button> ';
-        html += '<button type="button" class="" id="zs-sl-uncheck-all">Cap</button>';
+        html += '<button type="button" class="" id="zs-sl-check-all">Seleccionar tot</button> ';
+        html += '<button type="button" class="" id="zs-sl-uncheck-all">Desseleccionar tot</button>';
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
@@ -159,6 +158,15 @@
         var uncheckAll = document.getElementById('zs-sl-uncheck-all');
         var update     = document.getElementById('zs-sl-update');
         var share      = document.getElementById('zs-sl-share');
+        var autoUpdateTimer = null;
+        function scheduleAutoUpdate() {
+            clearTimeout(autoUpdateTimer);
+            autoUpdateTimer = setTimeout(function () {
+                var keys = getCheckedKeys();
+                doRequest(keys.length > 0 ? keys : null);
+            }, 600);
+        }
+
         if (checkAll) {
             checkAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = true; });
@@ -172,14 +180,6 @@
                 document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.add('is-disabled'); });
                 scheduleAutoUpdate();
             });
-        }
-        var autoUpdateTimer = null;
-        function scheduleAutoUpdate() {
-            clearTimeout(autoUpdateTimer);
-            autoUpdateTimer = setTimeout(function () {
-                var keys = getCheckedKeys();
-                doRequest(keys.length > 0 ? keys : null);
-            }, 600);
         }
 
         document.querySelectorAll('.zs-sl__order-toggle').forEach(function (toggle) {

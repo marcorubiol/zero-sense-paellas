@@ -467,10 +467,9 @@ class ShoppingList implements FeatureInterface
     {
         ?>
         <div class="zs-sl__orders no-print" id="zs-sl-orders">
-            <h3 class="zs-sl__section-title"><?php esc_html_e('Comandes incloses', 'zero-sense'); ?></h3>
             <div class="zs-sl__orders-actions">
-                <button type="button" class="" id="zs-sl-check-all"><?php esc_html_e('Tots', 'zero-sense'); ?></button>
-                <button type="button" class="" id="zs-sl-uncheck-all"><?php esc_html_e('Cap', 'zero-sense'); ?></button>
+                <button type="button" class="" id="zs-sl-check-all"><?php esc_html_e('Seleccionar tot', 'zero-sense'); ?></button>
+                <button type="button" class="" id="zs-sl-uncheck-all"><?php esc_html_e('Desseleccionar tot', 'zero-sense'); ?></button>
             </div>
             <div class="zs-sl__orders-list" id="zs-sl-orders-list">
                 <?php foreach ($orders as $o) :

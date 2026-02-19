@@ -56,13 +56,6 @@
     border-radius: var(--radius);
     overflow: hidden;
 }
-.zs-sl__section-title {
-    text-transform: uppercase;
-    margin: 0;
-    padding: var(--space-xs) var(--space-s);
-    background: var(--off-white);
-    border-bottom: 1px solid var(--border-color-light);
-}
 .zs-sl__orders-actions {
     padding: calc(var(--space-xs) / 1.5) var(--space-s);
     display: flex;
