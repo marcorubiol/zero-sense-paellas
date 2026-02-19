@@ -46,6 +46,7 @@ class CheckoutFields
     {
         $selectPlaceholder = __('-- Selecciona una opción --', 'zero-sense');
 
+        error_log('[ZS-CHECKOUT] display_event_fields v2 loaded');
         echo '<h3>' . esc_html__('Sobre el evento', 'zero-sense') . '</h3>';
         echo '<div class="woocommerce-billing-fields__field-wrapper">';
 
@@ -152,7 +153,7 @@ class CheckoutFields
         echo '<h3>' . esc_html__('Intolerancias', 'zero-sense') . '</h3>';
         $intolerancesId = esc_attr(MetaKeys::INTOLERANCES);
         $intolerancesLabel = esc_html__('¿Debemos tener en cuenta alguna alergia o intolerancia alimentaria destacable?', 'zero-sense');
-        echo '<p class="form-row form-row-wide" style="width:100%;clear:both;">';
+        echo '<p class="form-row form-row-wide" style="width:100%!important;float:none!important;clear:both;">';
         echo '<label for="' . $intolerancesId . '">' . $intolerancesLabel . '</label>';
         echo '<textarea id="' . $intolerancesId . '" name="' . $intolerancesId . '" rows="4" style="width:100%;"></textarea>';
         echo '</p>';

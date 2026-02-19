@@ -24,10 +24,14 @@ class CartIntegration
             return $cartItemData;
         }
 
+        error_log('[ZS RabbitOption] addToCartData POST: ' . print_r($_POST, true));
+
         $choice = isset($_POST['zs_rabbit_choice']) ? sanitize_text_field($_POST['zs_rabbit_choice']) : 'with';
         if (!in_array($choice, ['with', 'without'], true)) {
             $choice = 'with';
         }
+
+        error_log('[ZS RabbitOption] addToCartData resolved choice: ' . $choice);
 
         $cartItemData[MetaKeys::CART_KEY] = $choice;
         return $cartItemData;
@@ -51,8 +55,12 @@ class CartIntegration
 
     public function saveToOrderItem(WC_Order_Item_Product $item, string $cartItemKey, array $values, $order): void
     {
+        error_log('[ZS RabbitOption] saveToOrderItem values: ' . print_r($values, true));
         if (!empty($values[MetaKeys::CART_KEY])) {
             $item->add_meta_data(MetaKeys::RABBIT_CHOICE, $values[MetaKeys::CART_KEY], true);
+            error_log('[ZS RabbitOption] saveToOrderItem saved: ' . $values[MetaKeys::CART_KEY]);
+        } else {
+            error_log('[ZS RabbitOption] saveToOrderItem: CART_KEY missing from values');
         }
     }
 }
