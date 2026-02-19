@@ -53,6 +53,16 @@ class CartIntegration
         $choice = 'with';
         if (function_exists('WC') && WC()->session) {
             $stored = WC()->session->get('zs_rabbit_choice_' . $productId);
+
+            // WPML fallback: try canonical (default lang) ID if not found with current ID
+            if (!in_array($stored, ['with', 'without'], true) && defined('ICL_SITEPRESS_VERSION')) {
+                $defaultLang  = apply_filters('wpml_default_language', null);
+                $canonicalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
+                if ($canonicalId && (int) $canonicalId !== $productId) {
+                    $stored = WC()->session->get('zs_rabbit_choice_' . (int) $canonicalId);
+                }
+            }
+
             if (in_array($stored, ['with', 'without'], true)) {
                 $choice = $stored;
             }
