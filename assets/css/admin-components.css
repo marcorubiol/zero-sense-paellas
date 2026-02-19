@@ -1078,19 +1078,7 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     color: #00a32a;
 }
 
-#event_total_guests.lower {
-    color: #d67700 !important;
-}
-
-#event_total_guests.higher {
-    color: #d67700 !important;
-}
-
 .zs-guest-validation.lower {
-    color: #d67700 !important;
-}
-
-.zs-guest-validation.lower input#event_total_guests {
     color: #d67700 !important;
 }
 
