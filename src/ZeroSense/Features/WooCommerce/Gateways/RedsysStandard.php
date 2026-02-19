@@ -192,8 +192,12 @@ class RedsysStandard extends WC_Payment_Gateway
                 // Idempotency: already processed
                 if ($order->has_status(['deposit-paid', 'fully-paid'])) { status_header(200); exit; }
                 $order->add_order_note(sprintf(__('Redsys payment success via callback. Response: %d', 'zero-sense'), $dsResponse));
+                $previousStatus = $order->get_status();
                 $order->update_status('fully-paid');
                 $order->save();
+                if ($previousStatus === 'fully-paid') {
+                    do_action('woocommerce_order_status_changed', $order->get_id(), $previousStatus, 'fully-paid', $order);
+                }
             } else {
                 $order->add_order_note(sprintf(__('Redsys payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
                 $order->save();

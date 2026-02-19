@@ -3168,9 +3168,10 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
+            $normalized = $this->normalizeUnit($qty, 'l');
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:0;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($qty)) . '</span><span style="min-width:2em">lit</span></span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:0;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span style="min-width:2em">' . esc_html($normalized['unit']) . '</span></span>';
             $html .= '</div>';
         }
 
