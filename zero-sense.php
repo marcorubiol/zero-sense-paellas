@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('ZERO_SENSE_VERSION', '3.2.5-dev');
+define('ZERO_SENSE_VERSION', '3.2.6-dev');
 define('ZERO_SENSE_FILE', __FILE__);
 define('ZERO_SENSE_PATH', plugin_dir_path(__FILE__));
 define('ZERO_SENSE_URL', plugin_dir_url(__FILE__));
