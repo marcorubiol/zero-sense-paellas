@@ -1691,19 +1691,19 @@ class Recipes implements FeatureInterface
     private function getAllowedUnits(): array
     {
         return [
-            'g' => __('g', 'zero-sense'),
+            'g' => __('gr', 'zero-sense'),
             'kg' => __('kg', 'zero-sense'),
             'ml' => __('ml', 'zero-sense'),
-            'l' => __('l', 'zero-sense'),
-            'u' => __('u', 'zero-sense'),
+            'l' => __('lit', 'zero-sense'),
+            'u' => __('ud', 'zero-sense'),
         ];
     }
 
     private function getUtensilUnits(): array
     {
         return [
-            'l' => __('l', 'zero-sense'),
-            'u' => __('u', 'zero-sense'),
+            'l' => __('lit', 'zero-sense'),
+            'u' => __('ud', 'zero-sense'),
         ];
     }
 
