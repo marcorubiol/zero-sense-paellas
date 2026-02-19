@@ -295,7 +295,12 @@ class ShoppingList implements FeatureInterface
     {
         $items = []; $idx = 0;
         foreach ($order->get_items('line_item') as $item) {
-            if (!$item instanceof \WC_Order_Item_Product) { continue; }
+            if (!$item instanceof \WC_Order_Item_Product) { $idx++; continue; }
+            $product = $item->get_product();
+            if ($product instanceof \WC_Product) {
+                $recipeId = (int) $product->get_meta(self::META_RECIPE_ID, true);
+                if ($recipeId <= 0) { $idx++; continue; }
+            }
             $qty     = (int) $item->get_quantity();
             $items[] = [
                 'key'  => $order->get_id() . ':' . $idx,
