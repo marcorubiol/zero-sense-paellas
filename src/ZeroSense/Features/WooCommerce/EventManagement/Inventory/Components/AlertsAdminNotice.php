@@ -37,27 +37,26 @@ class AlertsAdminNotice
         $isOrderPage = $screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true);
 
         if ($isOrderPage) {
-            $linkUrl   = '#zs_event_equipment';
-            $linkLabel = __('View Alerts', 'zero-sense');
+            printf(
+                '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
+                __('<strong>This order has critical equipment stock alerts.</strong>', 'zero-sense'),
+                esc_url('#zs_event_equipment'),
+                esc_html(__('View in Event Equipment', 'zero-sense'))
+            );
         } else {
-            $linkUrl   = admin_url('admin.php?page=zs-stock-alerts');
-            $linkLabel = __('View Alerts Dashboard', 'zero-sense');
-        }
-
-        if ($critical > 0) {
             printf(
                 '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
                 sprintf(
                     _n(
-                        'Inventory alert: there is <strong>%d event in the next 30 days with a critical stock shortage</strong> — not enough material available.',
-                        'Inventory alert: there are <strong>%d events in the next 30 days with a critical stock shortage</strong> — not enough material available.',
+                        'Stock alert: <strong>%d upcoming order has a critical equipment shortage</strong> — not enough stock available.',
+                        'Stock alert: <strong>%d upcoming orders have a critical equipment shortage</strong> — not enough stock available.',
                         $critical,
                         'zero-sense'
                     ),
                     $critical
                 ),
-                esc_url($linkUrl),
-                esc_html($linkLabel)
+                esc_url(admin_url('admin.php?page=zs-stock-alerts')),
+                esc_html(__('View Alerts Dashboard', 'zero-sense'))
             );
         }
 
@@ -79,17 +78,23 @@ class AlertsAdminNotice
         });
         $alerts = AlertCalculator::getAlertsForOrders(array_values($orderIds));
 
-        $counts = [
-            'critical'     => 0,
-            'max_capacity' => 0,
-            'low_stock'    => 0,
+        $ordersByType = [
+            'critical'     => [],
+            'max_capacity' => [],
+            'low_stock'    => [],
         ];
 
         foreach ($alerts as $alert) {
-            if (isset($counts[$alert['alert_type']])) {
-                $counts[$alert['alert_type']]++;
+            if (isset($ordersByType[$alert['alert_type']])) {
+                $ordersByType[$alert['alert_type']][$alert['order_id']] = true;
             }
         }
+
+        $counts = [
+            'critical'     => count($ordersByType['critical']),
+            'max_capacity' => count($ordersByType['max_capacity']),
+            'low_stock'    => count($ordersByType['low_stock']),
+        ];
 
         set_transient(self::TRANSIENT_KEY, $counts, self::TRANSIENT_TTL);
 
