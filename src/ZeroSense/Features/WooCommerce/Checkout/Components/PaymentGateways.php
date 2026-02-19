@@ -18,15 +18,18 @@ class PaymentGateways
     {
         $pay_later_gateway_id = 'pay_later';
 
+        $isOrderPay = (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay'))
+            || isset($_GET['pay_for_order']);
+
         // Check if on the order-pay page
-        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
+        if ($isOrderPay) {
             // Hide Pay Later on order-pay
             if (isset($available_gateways[$pay_later_gateway_id])) {
                 unset($available_gateways[$pay_later_gateway_id]);
             }
         }
         // Check if on the main checkout page (and not order-pay)
-        elseif (function_exists('is_checkout') && is_checkout() && function_exists('is_wc_endpoint_url') && !is_wc_endpoint_url('order-pay')) {
+        elseif (function_exists('is_checkout') && is_checkout() && !$isOrderPay) {
             // Keep only Pay Later on checkout
             if (isset($available_gateways[$pay_later_gateway_id])) {
                 $pay_later_gateway = $available_gateways[$pay_later_gateway_id];
