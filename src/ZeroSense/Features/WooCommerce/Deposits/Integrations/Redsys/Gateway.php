@@ -3,6 +3,7 @@ namespace ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys;
 
 use WC_Order;
 use WC_Payment_Gateway;
+use ZeroSense\Features\WooCommerce\Gateways\RedsysApi;
 use ZeroSense\Features\WooCommerce\Gateways\RedsysHelpers;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Logs;
@@ -11,7 +12,7 @@ class Gateway extends WC_Payment_Gateway
 {
     public const GATEWAY_ID = 'redsys_deposits';
 
-    private ?\RedsyspurAPI $api = null;
+    private ?RedsysApi $api = null;
 
     public function __construct()
     {
@@ -31,9 +32,7 @@ class Gateway extends WC_Payment_Gateway
         add_action('woocommerce_api_' . $this->getCallbackEndpoint(), [$this, 'handleCallback']);
         add_action('woocommerce_receipt_' . $this->id, [$this, 'renderReceipt']);
 
-        if (class_exists('RedsyspurAPI')) {
-            $this->api = new \RedsyspurAPI();
-        }
+        $this->api = new RedsysApi();
     }
 
     public function init_form_fields(): void
@@ -86,23 +85,15 @@ class Gateway extends WC_Payment_Gateway
         $isOrderPay = (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay'))
             || isset($_GET['pay_for_order']);
 
-        // First honour WooCommerce's base checks
-        if (!parent::is_available()) {
-            if (!$isOrderPay) {
-                return false;
-            }
+        if (!parent::is_available() && !$isOrderPay) {
+            return false;
         }
 
-        // Gather minimal config
-        $requiredOptions = ['merchant_code', 'secret_key', 'terminal'];
-        foreach ($requiredOptions as $option) {
+        foreach (['merchant_code', 'secret_key', 'terminal'] as $option) {
             if (empty($this->get_option($option))) {
                 return false;
             }
         }
-
-        // Require Redsys SDK in all cases (checkout and order-pay)
-        if (!class_exists('RedsyspurAPI')) { return false; }
 
         return true;
     }
@@ -160,7 +151,7 @@ class Gateway extends WC_Payment_Gateway
 
     protected function build_redsys_parameters(WC_Order $order): ?array
     {
-        if (!$this->api instanceof \RedsyspurAPI) {
+        if (!$this->api instanceof RedsysApi) {
             return null;
         }
 
@@ -265,27 +256,15 @@ class Gateway extends WC_Payment_Gateway
 
         $this->api->setParameter('DS_MERCHANT_MERCHANTNAME', get_bloginfo('name'));
 
-        $merchantParameters = null;
         $secretKey = $this->get_option('secret_key');
-
-        if (method_exists($this->api, 'createMerchantParameters')) {
-            $merchantParameters = $this->api->createMerchantParameters();
-        } elseif (method_exists($this->api, 'createMerchantParametersPayment')) {
-            $merchantParameters = $this->api->createMerchantParametersPayment();
-        }
-
-        if ($merchantParameters === null) {
+        if (!$secretKey) {
             return null;
         }
 
-        $signature = null;
-        if ($secretKey && method_exists($this->api, 'createMerchantSignature')) {
-            $signature = $this->api->createMerchantSignature($secretKey);
-        } elseif ($secretKey && method_exists($this->api, 'createMerchantSignaturePayment')) {
-            $signature = $this->api->createMerchantSignaturePayment($secretKey);
-        }
+        $merchantParameters = $this->api->createMerchantParameters();
+        $signature          = $this->api->createMerchantSignature($secretKey);
 
-        if ($signature === null) {
+        if (!$merchantParameters || !$signature) {
             return null;
         }
 
@@ -365,18 +344,8 @@ class Gateway extends WC_Payment_Gateway
                 status_header(400); exit;
             }
 
-            $decodedJson = null;
-            if (class_exists('RedsyspurAPI')) {
-                $api = new \RedsyspurAPI();
-                if (method_exists($api, 'decodeMerchantParameters')) {
-                    $decodedJson = $api->decodeMerchantParameters($mpB64);
-                } else {
-                    // Fallback manual decode
-                    $decodedJson = base64_decode($mpB64, true);
-                }
-            } else {
-                $decodedJson = base64_decode($mpB64, true);
-            }
+            $callbackApi = new RedsysApi();
+            $decodedJson = $callbackApi->decodeMerchantParameters($mpB64);
 
             $params = []; // decoded associative array
             if ($decodedJson) {
@@ -388,28 +357,13 @@ class Gateway extends WC_Payment_Gateway
             $dsOrder    = isset($params['Ds_Order']) ? (string) $params['Ds_Order'] : '';
             $dsResponse = isset($params['Ds_Response']) ? (int) $params['Ds_Response'] : 999;
 
-            // Attempt signature verification if possible
+            // Verify signature
             $signatureOk = false;
-            if (class_exists('RedsyspurAPI')) {
-                try {
-                    $api2 = new \RedsyspurAPI();
-                    // Prefer createMerchantSignatureNotif if available
-                    if (method_exists($api2, 'createMerchantSignatureNotif')) {
-                        $calc = $api2->createMerchantSignatureNotif((string) $this->get_option('secret_key'), $mpB64);
-                        $signatureOk = hash_equals((string) $sig, (string) $calc);
-                    } elseif (method_exists($api2, 'createMerchantSignatureNotification')) {
-                        $calc = $api2->createMerchantSignatureNotification((string) $this->get_option('secret_key'), $mpB64);
-                        $signatureOk = hash_equals((string) $sig, (string) $calc);
-                    } else {
-                        // Some SDKs set parameter and call getOrder/read to compute; skip strict check
-                        $signatureOk = true; // best effort
-                    }
-                } catch (\Throwable $e) {
-                    $signatureOk = false;
-                }
-            } else {
-                // If SDK missing, proceed best-effort
-                $signatureOk = true;
+            try {
+                $calc        = $callbackApi->createMerchantSignatureNotif((string) $this->get_option('secret_key'), $mpB64);
+                $signatureOk = hash_equals((string) $sig, (string) $calc);
+            } catch (\Throwable $e) {
+                $signatureOk = false;
             }
 
             // Map Ds_Order back to Woo order ID (we generate like 12345Txxxx)
