@@ -87,27 +87,6 @@ class BricksDynamicTags implements FeatureInterface
         return $fields;
     }
 
-    /**
-     * Get field mapping from registry
-     */
-    private function getFieldMapping(): array
-    {
-        $registry = MetaFieldRegistry::getInstance();
-        $mapping = [];
-        
-        foreach ($registry->getAllFields() as $key => $metadata) {
-            $legacyKeys = $metadata['legacy_keys'] ?? [];
-            if (!empty($legacyKeys)) {
-                foreach ($legacyKeys as $legacyKey) {
-                    if (!str_starts_with($legacyKey, '_')) {
-                        $mapping[$legacyKey] = $key;
-                    }
-                }
-            }
-        }
-        
-        return $mapping;
-    }
 
     public function getName(): string
     {
@@ -303,48 +282,6 @@ class BricksDynamicTags implements FeatureInterface
             $tags[] = ['name' => '{zs_' . $schemaKey . '_list}', 'label' => $schemaTitle . ' (Complete List)', 'group' => 'ZeroSense'];
         }
 
-        // --- LEGACY aliases (kept for backward compatibility — remove after migration) ---
-
-        foreach (self::BILLING_FIELDS as $field => $label) {
-            $tags[] = ['name' => '{woo_billing_' . $field . '}', 'label' => '[legacy] ' . $label, 'group' => 'ZeroSense (legacy)'];
-        }
-        foreach (self::SHIPPING_FIELDS as $field => $label) {
-            $tags[] = ['name' => '{woo_shipping_' . $field . '}', 'label' => '[legacy] ' . $label, 'group' => 'ZeroSense (legacy)'];
-        }
-        $tags[] = ['name' => '{woo_zs_order_id}',     'label' => '[legacy] Order ID',     'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_number}', 'label' => '[legacy] Order Number', 'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_order_note}',      'label' => '[legacy] Customer Note','group' => 'ZeroSense (legacy)'];
-        // MetaBox fields now only generate {zs_*} tags to avoid duplication
-        // Legacy {woo_mb_*} tags are maintained only for existing hardcoded mappings
-        $tags[] = ['name' => '{woo_zs_event_service_location_name}', 'label' => '[legacy] Event Service Location (Name)', 'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_ops_notes}',                      'label' => '[legacy] Ops Notes',                    'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_event_media}',                 'label' => '[legacy] Event Media Gallery',           'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_event_media_urls}',            'label' => '[legacy] Event Media URLs',              'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_products}',              'label' => '[legacy] Order Products (Menu)',         'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_products_simple}',       'label' => '[legacy] Order Products (Simple List)',  'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_products_count}',        'label' => '[legacy] Order Products Count',          'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_products_by_category}',  'label' => '[legacy] Order Products (Grouped by Category)', 'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_last_modified}',         'label' => '[legacy] Order Last Modified',           'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_last_modified_date}',    'label' => '[legacy] Order Last Modified (Date)',    'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_last_modified_time}',    'label' => '[legacy] Order Last Modified (Time)',    'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_language}',              'label' => '[legacy] Order Language',                'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_language_name}',         'label' => '[legacy] Order Language (Full Name)',    'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_intolerances}',                'label' => '[legacy] Intolerances & Allergies',      'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_recipes}',               'label' => '[legacy → zs_recipe_card] Order Recipes',                 'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_recipes_simple}',        'label' => '[legacy → zs_recipe_simple] Order Recipes (Simple)',        'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_has_recipes}',           'label' => '[legacy → zs_recipe_exists] Order Has Recipes',             'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_total}',     'label' => '[legacy → zs_recipe_total_ingredients_list] Ingredients Total',  'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_ingredients_simple}',    'label' => '[legacy → zs_recipe_total_ingredients_list] Ingredients Simple', 'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_utensils_total}',        'label' => '[legacy → zs_recipe_utensils_total] Utensils Total',        'group' => 'ZeroSense (legacy)'];
-        $tags[] = ['name' => '{woo_zs_order_utensils_simple}',       'label' => '[legacy → zs_recipe_utensils_simple] Utensils Simple',      'group' => 'ZeroSense (legacy)'];
-        foreach ($schemaRegistry->getAll() as $schemaKey => $schema) {
-            $schemaTitle = $schema->getSchemaTitle();
-            foreach ($this->getSchemaFields($schemaKey) as $field => $label) {
-                $tags[] = ['name' => '{woo_' . $schemaKey . '_' . $field . '}', 'label' => '[legacy] ' . $label . ' (' . $schemaTitle . ')', 'group' => 'ZeroSense (legacy)'];
-            }
-            $tags[] = ['name' => '{woo_' . $schemaKey . '_list}', 'label' => '[legacy] ' . $schemaTitle . ' (Complete List)', 'group' => 'ZeroSense (legacy)'];
-        }
-
         return $tags;
     }
 
@@ -390,9 +327,6 @@ class BricksDynamicTags implements FeatureInterface
         if (!is_string($tag)) {
             return $tag;
         }
-
-        // Normalize legacy tag aliases to canonical {zs_*} before dispatching
-        $tag = $this->normalizeLegacyTag($tag);
 
         // --- Canonical {zs_*} dispatch ---
 
@@ -529,9 +463,6 @@ class BricksDynamicTags implements FeatureInterface
             return $content;
         }
 
-        // Normalize all legacy tags to canonical {zs_*} first
-        $content = $this->normalizeLegacyContent($content);
-
         // --- Canonical {zs_*} replacements ---
 
         $content = $this->replaceTagsInContent($content, $post, 'zs_billing_', function (string $field) use ($post): string {
@@ -616,138 +547,6 @@ class BricksDynamicTags implements FeatureInterface
         return str_replace(['{' . $prefix, '}'], '', $tag);
     }
 
-    /**
-     * Map a single legacy tag to its canonical {zs_*} equivalent.
-     * Called in renderTag() before dispatch.
-     */
-    private function normalizeLegacyTag(string $tag): string
-    {
-        // Static 1-to-1 mappings
-        $map = [
-            '{woo_zs_order_id}'                      => '{zs_order_id}',
-            '{woo_zs_order_number}'                  => '{zs_order_number}',
-            '{woo_order_note}'                       => '{zs_order_note}',
-            '{woo_zs_event_service_location_name}'   => '{zs_event_service_location_name}',
-            '{woo_mb_event_staff_all}'               => '{zs_event_staff_all}',
-            '{woo_ops_notes}'                        => '{zs_event_ops_notes}',
-            '{woo_zs_event_media}'                   => '{zs_event_media}',
-            '{woo_zs_event_media_urls}'              => '{zs_event_media_urls}',
-            '{woo_zs_order_products}'                => '{zs_order_products}',
-            '{woo_zs_order_products_simple}'         => '{zs_order_products_simple}',
-            '{woo_zs_order_products_count}'          => '{zs_order_products_count}',
-            '{woo_zs_order_products_by_category}'    => '{zs_order_products_by_category}',
-            '{woo_zs_order_last_modified}'           => '{zs_order_last_modified}',
-            '{woo_zs_order_last_modified_date}'      => '{zs_order_last_modified_date}',
-            '{woo_zs_order_last_modified_time}'      => '{zs_order_last_modified_time}',
-            '{woo_zs_order_language}'                => '{zs_order_language}',
-            '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
-            '{woo_zs_intolerances}'                  => '{zs_event_intolerances}',
-            '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
-            '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
-            '{woo_zs_order_has_recipes}'             => '{zs_recipe_exists}',
-            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_total_ingredients_list}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_total_ingredients_list}',
-            '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
-            '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
-        ];
-
-        if (isset($map[$tag])) {
-            return $map[$tag];
-        }
-
-        // {woo_billing_*} → {zs_billing_*}
-        if (strpos($tag, '{woo_billing_') === 0) {
-            return '{zs_billing_' . substr($tag, strlen('{woo_billing_'));
-        }
-
-        // {woo_shipping_*} → {zs_shipping_*}
-        if (strpos($tag, '{woo_shipping_') === 0) {
-            return '{zs_shipping_' . substr($tag, strlen('{woo_shipping_'));
-        }
-
-        // {woo_mb_*} → {zs_*}
-        if (strpos($tag, '{woo_mb_') === 0) {
-            return '{zs_' . substr($tag, strlen('{woo_mb_'));
-        }
-
-        // {woo_<schemaKey>_*} → {zs_<schemaKey>_*}
-        $schemaRegistry = SchemaRegistry::getInstance();
-        foreach ($schemaRegistry->getKeys() as $schemaKey) {
-            if (strpos($tag, '{woo_' . $schemaKey . '_') === 0) {
-                return '{zs_' . substr($tag, strlen('{woo_'));
-            }
-        }
-
-        return $tag;
-    }
-
-    /**
-     * Normalize all legacy tags inside a content string to canonical {zs_*}.
-     * Called in renderContent() before processing.
-     */
-    private function normalizeLegacyContent(string $content): string
-    {
-        // Prefix-based bulk replacements (order matters: most specific first)
-        $prefixMap = [
-            'woo_billing_'  => 'zs_billing_',
-            'woo_shipping_' => 'zs_shipping_',
-            'woo_mb_'       => 'zs_',
-        ];
-
-        foreach ($prefixMap as $old => $new) {
-            $content = preg_replace_callback(
-                '/\{' . preg_quote($old, '/') . '([^}]*)\}/',
-                static function (array $m) use ($new): string {
-                    return '{' . $new . $m[1] . '}';
-                },
-                $content
-            ) ?? $content;
-        }
-
-        // Static 1-to-1 replacements
-        $map = [
-            '{woo_zs_order_id}'                      => '{zs_order_id}',
-            '{woo_zs_order_number}'                  => '{zs_order_number}',
-            '{woo_order_note}'                       => '{zs_order_note}',
-            '{woo_zs_event_service_location_name}'   => '{zs_event_service_location_name}',
-            '{woo_ops_notes}'                        => '{zs_event_ops_notes}',
-            '{woo_zs_event_media}'                   => '{zs_event_media}',
-            '{woo_zs_event_media_urls}'              => '{zs_event_media_urls}',
-            '{woo_zs_order_products}'                => '{zs_order_products}',
-            '{woo_zs_order_products_simple}'         => '{zs_order_products_simple}',
-            '{woo_zs_order_products_count}'          => '{zs_order_products_count}',
-            '{woo_zs_order_products_by_category}'    => '{zs_order_products_by_category}',
-            '{woo_zs_order_last_modified}'           => '{zs_order_last_modified}',
-            '{woo_zs_order_last_modified_date}'      => '{zs_order_last_modified_date}',
-            '{woo_zs_order_last_modified_time}'      => '{zs_order_last_modified_time}',
-            '{woo_zs_order_language}'                => '{zs_order_language}',
-            '{woo_zs_order_language_name}'           => '{zs_order_language_name}',
-            '{woo_zs_intolerances}'                  => '{zs_event_intolerances}',
-            '{woo_zs_order_recipes}'                 => '{zs_recipe_card}',
-            '{woo_zs_order_recipes_simple}'          => '{zs_recipe_simple}',
-            '{woo_zs_order_has_recipes}'             => '{zs_recipe_exists}',
-            '{woo_zs_order_ingredients_total}'       => '{zs_recipe_total_ingredients_list}',
-            '{woo_zs_order_ingredients_simple}'      => '{zs_recipe_total_ingredients_list}',
-            '{woo_zs_order_utensils_total}'          => '{zs_recipe_utensils_total}',
-            '{woo_zs_order_utensils_simple}'         => '{zs_recipe_utensils_simple}',
-        ];
-
-        $content = str_replace(array_keys($map), array_values($map), $content);
-
-        // Schema keys: {woo_<schemaKey>_*} → {zs_<schemaKey>_*}
-        $schemaRegistry = SchemaRegistry::getInstance();
-        foreach ($schemaRegistry->getKeys() as $schemaKey) {
-            $content = preg_replace_callback(
-                '/\{woo_' . preg_quote($schemaKey, '/') . '_([^}]*)\}/',
-                static function (array $m) use ($schemaKey): string {
-                    return '{zs_' . $schemaKey . '_' . $m[1] . '}';
-                },
-                $content
-            ) ?? $content;
-        }
-
-        return $content;
-    }
 
     private function getBillingFieldValue(string $field, $post): string
     {
@@ -2012,19 +1811,35 @@ class BricksDynamicTags implements FeatureInterface
             ];
         }
 
-        // Convert ml to l if >= 1000ml
+        // Convert ml to L if >= 1000ml (standardize to uppercase L)
         if ($unit === 'ml' && $qty >= 1000) {
             return [
                 'qty' => $qty / 1000,
-                'unit' => 'l'
+                'unit' => 'L'
             ];
         }
 
-        // Convert l to ml if < 1l (for consistency)
+        // Convert L to ml if < 1L (for consistency)
         if ($unit === 'l' && $qty < 1) {
             return [
                 'qty' => $qty * 1000,
                 'unit' => 'ml'
+            ];
+        }
+        
+        // Standardize lowercase l to uppercase L
+        if ($unit === 'l') {
+            return [
+                'qty' => $qty,
+                'unit' => 'L'
+            ];
+        }
+        
+        // Convert "u" to "uds." for better clarity
+        if ($unit === 'u') {
+            return [
+                'qty' => $qty,
+                'unit' => 'uds.'
             ];
         }
 
@@ -2249,7 +2064,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span></div>';
                 }
             }
 
@@ -2522,7 +2337,7 @@ class BricksDynamicTags implements FeatureInterface
             $normalized = $this->normalizeUnit($qty, $unit);
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span>';
             $html .= '</div>';
         }
 
@@ -2605,7 +2420,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span></div>';
                 }
             }
 
@@ -2755,7 +2570,7 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             $normalized = $this->normalizeUnit($qty, $unit);
-            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></li>';
+            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span></li>';
         }
 
         if (empty($items)) {
@@ -3105,7 +2920,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . esc_html($unit) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</span>';
             $html .= '</div>';
         }
 
@@ -3217,7 +3032,7 @@ class BricksDynamicTags implements FeatureInterface
             if ($termName === '') {
                 continue;
             }
-            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($qty)) . esc_html($unit) . '</span></li>';
+            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</span></li>';
         }
 
         if (empty($items)) {
@@ -3367,7 +3182,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . 'L</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . ' L</span>';
             $html .= '</div>';
         }
 
