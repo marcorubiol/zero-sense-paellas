@@ -2242,7 +2242,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
 
-            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
 
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
@@ -2597,7 +2597,7 @@ class BricksDynamicTags implements FeatureInterface
 
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
-            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
 
             // Ingredients
