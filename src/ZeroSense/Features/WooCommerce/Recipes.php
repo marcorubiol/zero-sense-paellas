@@ -1106,7 +1106,7 @@ class Recipes implements FeatureInterface
             'suppress_filters' => true,
         ]);
 
-        echo '<div class="options_group">';
+        echo '<div class="options_group" style="border-bottom:0;">';
         echo '<p class="form-field">';
         echo '<label for="zs_recipe_id">' . esc_html__('Recipe', 'zero-sense') . '</label>';
         echo '<select id="zs_recipe_id" name="zs_recipe_id" class="wc-enhanced-select" style="width:50%;">';
@@ -1126,7 +1126,7 @@ class Recipes implements FeatureInterface
         
         // Edit action — only shown when a real recipe is selected
         $editUrl = $current > 0 ? admin_url('post.php?post=' . $current . '&action=edit') : '#';
-        echo '<p id="zs-recipe-context-actions" style="margin-top:-8px; padding-left:162px; display:' . ($current > 0 ? 'block' : 'none') . ';">';
+        echo '<p id="zs-recipe-context-actions" style="margin-top:-20px; padding-left:162px; display:' . ($current > 0 ? 'block' : 'none') . ';">';
         echo '<a id="zs-recipe-edit-btn" href="' . esc_url($editUrl) . '" target="_blank" style="font-size:12px; text-decoration:none; color:#2271b1;">';
         echo '<span class="dashicons dashicons-edit" style="font-size:13px; line-height:1.6; vertical-align:middle; margin-right:2px;"></span>';
         echo esc_html__('Edit Recipe', 'zero-sense');
@@ -1159,7 +1159,7 @@ class Recipes implements FeatureInterface
 
         // Edit action — only shown when a real recipe is selected
         $editUrlNoRabbit = $currentNoRabbit > 0 ? admin_url('post.php?post=' . $currentNoRabbit . '&action=edit') : '#';
-        echo '<p id="zs-recipe-no-rabbit-context-actions" style="margin-top:-16px; padding-left:162px; display:' . ($currentNoRabbit > 0 ? 'block' : 'none') . ';">';
+        echo '<p id="zs-recipe-no-rabbit-context-actions" style="margin-top:-20px; padding-left:162px; display:' . ($currentNoRabbit > 0 ? 'block' : 'none') . ';">';
         echo '<a id="zs-recipe-no-rabbit-edit-btn" href="' . esc_url($editUrlNoRabbit) . '" target="_blank" style="font-size:12px; text-decoration:none; color:#2271b1;">';
         echo '<span class="dashicons dashicons-edit" style="font-size:13px; line-height:1.6; vertical-align:middle; margin-right:2px;"></span>';
         echo esc_html__('Edit Recipe', 'zero-sense');
