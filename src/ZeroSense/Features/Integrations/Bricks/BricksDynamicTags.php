@@ -3327,7 +3327,10 @@ class BricksDynamicTags implements FeatureInterface
         // Capture title in current (translated) language before resolving to original
         $productName = esc_html(get_the_title($productId));
 
-        // WPML: resolve to original product for meta reads
+        // Keep the current-language ID for data-pid (JS sends this to the session endpoint)
+        $pidForJs = $productId;
+
+        // WPML: resolve to canonical (default lang) product for meta reads
         if (defined('ICL_SITEPRESS_VERSION')) {
             $defaultLang = apply_filters('wpml_default_language', null);
             $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
@@ -3338,6 +3341,15 @@ class BricksDynamicTags implements FeatureInterface
 
         if (get_post_meta($productId, '_zs_has_rabbit_option', true) !== 'yes') {
             return '';
+        }
+
+        // Read current session choice to restore toggle state
+        $isWithout = false;
+        if (function_exists('WC') && WC()->session) {
+            $stored = WC()->session->get('zs_rabbit_choice_' . $pidForJs);
+            if ($stored === 'without') {
+                $isWithout = true;
+            }
         }
 
         $labelWithout = esc_html__('Sin conejo', 'zero-sense');

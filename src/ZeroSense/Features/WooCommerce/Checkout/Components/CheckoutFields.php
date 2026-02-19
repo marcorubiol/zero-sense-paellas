@@ -261,18 +261,6 @@ class CheckoutFields
             }
         }
 
-        // Validate guest sum: adults + children_5_to_8 + children_0_to_4 = total_guests
-        $total  = absint($this->getSubmittedFieldValue(MetaKeys::TOTAL_GUESTS) ?? 0);
-        $adults = absint($this->getSubmittedFieldValue(MetaKeys::ADULTS) ?? 0);
-        $ch58   = absint($this->getSubmittedFieldValue(MetaKeys::CHILDREN_5_TO_8) ?? 0);
-        $ch04   = absint($this->getSubmittedFieldValue(MetaKeys::CHILDREN_0_TO_4) ?? 0);
-
-        if ($total > 0 && ($adults + $ch58 + $ch04) !== $total) {
-            wc_add_notice(
-                __('The sum of adults and children must match the total number of guests.', 'zero-sense'),
-                'error'
-            );
-        }
     }
 
     /**
