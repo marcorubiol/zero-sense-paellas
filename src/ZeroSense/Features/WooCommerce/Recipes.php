@@ -285,9 +285,11 @@ class Recipes implements FeatureInterface
                 <div class="zs-paella-mode-info">
                     <p><?php esc_html_e('Enable to automatically calculate paella pans, burners and cassola size for this recipe.', 'zero-sense'); ?></p>
                 </div>
-                <div class="zs-paella-mode-notice" style="display:<?php echo $needsPaella === '1' ? 'block' : 'none'; ?>; background:#e8f4fd; border-left:3px solid #72aee6; padding:8px 12px; margin:8px 0 4px; border-radius:3px; font-size:12px; color:#444;">
-                    <strong><?php esc_html_e('ℹ️ Liquids section', 'zero-sense'); ?></strong><br>
-                    <?php esc_html_e('Add the cooking liquids (water, stock…) in the Liquids section below. Fats like oil belong in Ingredients. The system uses the total volume to select the right cassola size.', 'zero-sense'); ?>
+                <div class="zs-paella-mode-notice" style="display:<?php echo $needsPaella === '1' ? 'block' : 'none'; ?>; background:#fff8e1; border-left:3px solid #f0a500; padding:8px 12px; margin:8px 0 4px; border-radius:3px; font-size:12px; color:#444;">
+                    <strong><?php esc_html_e('⚠️ Liquids section', 'zero-sense'); ?></strong><br>
+                    <?php esc_html_e('Add the cooking liquids (water, stock…) in the Liquids section below.', 'zero-sense'); ?><br>
+                    <?php esc_html_e('Fats like oil belong in Ingredients.', 'zero-sense'); ?><br>
+                    <?php esc_html_e('The system uses the total volume to select the right cassola size.', 'zero-sense'); ?>
                 </div>
             </div>
 
