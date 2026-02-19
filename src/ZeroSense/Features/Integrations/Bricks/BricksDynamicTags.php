@@ -1326,7 +1326,7 @@ class BricksDynamicTags implements FeatureInterface
 
         foreach ($categorizedProducts as $category) {
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($category['name']) . '</span>';
+            $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($category['name']) . '</p>';
 
             foreach ($category['products'] as $product) {
                 $qty = $product['quantity'] > 1 ? esc_html($product['quantity']) . 'x' : '';
@@ -2246,7 +2246,7 @@ class BricksDynamicTags implements FeatureInterface
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
+            $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (is_array($recipeIngredients)) {
@@ -2601,7 +2601,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
+            $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
             // Ingredients
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
