@@ -39,8 +39,8 @@
         var html = '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
         html += '<h3 class="zs-sl__section-title">Comandes incloses</h3>';
         html += '<div class="zs-sl__orders-actions">';
-        html += '<button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-check-all">Tots</button> ';
-        html += '<button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-uncheck-all">Cap</button>';
+        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-check-all">Tots</button> ';
+        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-uncheck-all">Cap</button>';
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
@@ -56,9 +56,9 @@
         });
         html += '</div>';
         html += '<div class="zs-sl__orders-footer">';
-        html += '<button type="button" class="zs-sl__btn zs-sl__btn--primary" id="zs-sl-update">Actualitzar llista</button> ';
-        html += '<button type="button" class="zs-sl__btn zs-sl__btn--secondary" id="zs-sl-share">Copiar enllaç</button> ';
-        html += '<button type="button" class="zs-sl__btn zs-sl__btn--secondary" id="zs-sl-print">Imprimir</button>';
+        html += '<button type="button" class="btn--primary" id="zs-sl-update">Actualitzar llista</button> ';
+        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-share">Copiar enllaç</button> ';
+        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-print">Imprimir</button>';
         html += '</div></div>';
         return html;
     }
@@ -191,39 +191,6 @@
         if (searchBtn) {
             searchBtn.addEventListener('click', function () { doRequest(null); });
         }
-
         bindBodyEvents();
-
-        var checkAll   = document.getElementById('zs-sl-check-all');
-        var uncheckAll = document.getElementById('zs-sl-uncheck-all');
-        var update     = document.getElementById('zs-sl-update');
-        var share      = document.getElementById('zs-sl-share');
-
-        if (checkAll) {
-            checkAll.addEventListener('click', function () {
-                document.querySelectorAll('.zs-sl__order-check').forEach(function (el) { el.checked = true; });
-            });
-        }
-        if (uncheckAll) {
-            uncheckAll.addEventListener('click', function () {
-                document.querySelectorAll('.zs-sl__order-check').forEach(function (el) { el.checked = false; });
-            });
-        }
-        if (update) {
-            update.addEventListener('click', function () {
-                var ids = getCheckedIds();
-                doRequest(ids.length > 0 ? ids : null);
-            });
-        }
-        if (share) {
-            share.addEventListener('click', function () {
-                if (currentSignedUrl) {
-                    navigator.clipboard.writeText(currentSignedUrl).then(function () {
-                        share.textContent = 'Copiat!';
-                        setTimeout(function () { share.textContent = 'Copiar enllaç'; }, 2000);
-                    });
-                }
-            });
-        }
     });
 }());

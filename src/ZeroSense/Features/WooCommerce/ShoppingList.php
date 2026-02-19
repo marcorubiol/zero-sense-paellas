@@ -350,7 +350,7 @@ class ShoppingList implements FeatureInterface
                         </select>
                     </div>
                     <div class="zs-sl__filter-group zs-sl__filter-group--action">
-                        <button type="button" class="zs-sl__btn zs-sl__btn--primary" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
+                        <button type="button" class="btn--primary" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
                     </div>
                 </div>
             </div>
@@ -377,8 +377,8 @@ class ShoppingList implements FeatureInterface
         <div class="zs-sl__orders no-print" id="zs-sl-orders">
             <h3 class="zs-sl__section-title"><?php esc_html_e('Comandes incloses', 'zero-sense'); ?></h3>
             <div class="zs-sl__orders-actions">
-                <button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-check-all"><?php esc_html_e('Tots', 'zero-sense'); ?></button>
-                <button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-uncheck-all"><?php esc_html_e('Cap', 'zero-sense'); ?></button>
+                <button type="button" class="btn--base btn--outline" id="zs-sl-check-all"><?php esc_html_e('Tots', 'zero-sense'); ?></button>
+                <button type="button" class="btn--base btn--outline" id="zs-sl-uncheck-all"><?php esc_html_e('Cap', 'zero-sense'); ?></button>
             </div>
             <div class="zs-sl__orders-list" id="zs-sl-orders-list">
                 <?php foreach ($orders as $o) : ?>
@@ -393,9 +393,9 @@ class ShoppingList implements FeatureInterface
                 <?php endforeach; ?>
             </div>
             <div class="zs-sl__orders-footer">
-                <button type="button" class="zs-sl__btn zs-sl__btn--primary" id="zs-sl-update"><?php esc_html_e('Actualitzar llista', 'zero-sense'); ?></button>
-                <button type="button" class="zs-sl__btn zs-sl__btn--secondary" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
-                <button type="button" class="zs-sl__btn zs-sl__btn--secondary" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
+                <button type="button" class="btn--primary" id="zs-sl-update"><?php esc_html_e('Actualitzar llista', 'zero-sense'); ?></button>
+                <button type="button" class="btn--base btn--outline" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
+                <button type="button" class="btn--base btn--outline" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
             </div>
         </div>
         <?php
