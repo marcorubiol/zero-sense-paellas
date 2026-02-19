@@ -468,16 +468,20 @@ class EventDetailsMetabox
                     const children0to4 = parseInt(children0to4Input.value) || 0;
                     const sumOfPeople = adults + children5to8 + children0to4;
                     
-                    // Remove all validation classes
+                    // Remove all validation classes from input
+                    totalGuestsInput.classList.remove('match', 'lower', 'higher');
                     validationContainer.classList.remove('match', 'lower', 'higher');
                     
                     if (totalGuests === sumOfPeople && sumOfPeople > 0) {
+                        totalGuestsInput.classList.add('match');
                         validationContainer.classList.add('match');
                         validationMessage.textContent = '';
                     } else if (totalGuests < sumOfPeople && sumOfPeople > 0) {
+                        totalGuestsInput.classList.add('lower');
                         validationContainer.classList.add('lower');
                         validationMessage.textContent = 'El número de personas totales es más bajo que la suma de personas';
                     } else if (totalGuests > sumOfPeople && totalGuests > 0) {
+                        totalGuestsInput.classList.add('higher');
                         validationContainer.classList.add('higher');
                         validationMessage.textContent = 'El número de personas totales es más alto que la suma de personas';
                     } else {

@@ -19,6 +19,8 @@ class EventShortcodes implements FeatureInterface
     private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
 
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
+    private const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
+    private const META_RABBIT_CHOICE = '_zs_rabbit_choice';
     private const META_RECIPE_INGREDIENTS = 'zs_recipe_ingredients';
     private const TAX_INGREDIENT = 'zs_ingredient';
 
@@ -239,7 +241,7 @@ class EventShortcodes implements FeatureInterface
                 continue;
             }
 
-            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            $recipeId = $this->resolveRecipeIdForItem($item, $product);
             if ($recipeId <= 0) {
                 continue;
             }

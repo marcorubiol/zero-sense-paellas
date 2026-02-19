@@ -1078,9 +1078,17 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     color: #00a32a;
 }
 
-.zs-guest-validation.match input#event_total_guests {
+.zs-guest-validation.match input#event_total_guests.match {
     border: 2px solid #00a32a !important;
     outline: none !important;
+}
+
+#event_total_guests.lower {
+    color: #d67700 !important;
+}
+
+#event_total_guests.higher {
+    color: #d67700 !important;
 }
 
 .zs-guest-validation.lower {
