@@ -2,6 +2,8 @@
 namespace ZeroSense\Features\WooCommerce\Checkout\Components;
 
 use WC_Order;
+use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
+use ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions;
 
 class CheckoutFields
 {
@@ -10,10 +12,10 @@ class CheckoutFields
         // Basic field customizations
         add_filter('woocommerce_checkout_fields', [$this, 'customize_checkout_fields']);
 
-        // Meta Box integration (like legacy plugin)
-        add_action('woocommerce_after_checkout_billing_form', [$this, 'display_meta_box_fields']);
-        add_action('woocommerce_checkout_process', [$this, 'validate_meta_box_fields']);
-        add_action('woocommerce_checkout_create_order', [$this, 'save_meta_box_fields'], 20, 2);
+        // Event fields
+        add_action('woocommerce_after_checkout_billing_form', [$this, 'display_event_fields']);
+        add_action('woocommerce_checkout_process', [$this, 'validate_event_fields']);
+        add_action('woocommerce_checkout_create_order', [$this, 'save_event_fields'], 20, 2);
 
         // WPML compatibility fixes
         add_action('init', [$this, 'register_checkout_strings_for_translation']);
@@ -38,212 +40,222 @@ class CheckoutFields
     }
 
     /**
-     * Display meta box fields on checkout page (from legacy implementation)
+     * Render event fields on checkout page
      */
-    public function display_meta_box_fields($checkout)
+    public function display_event_fields($checkout): void
     {
-        $meta_boxes = apply_filters("rwmb_meta_boxes", []);
+        $selectPlaceholder = __('-- Selecciona una opción --', 'zero-sense');
 
-        // Filter meta boxes for 'shop_order' post type.
-        $order_meta_boxes = array_filter($meta_boxes, function ($meta_box) {
-            return isset($meta_box["post_types"]) && in_array("shop_order", $meta_box["post_types"]);
-        });
+        echo '<h3>' . esc_html__('Sobre el evento', 'zero-sense') . '</h3>';
+        echo '<div class="woocommerce-billing-fields__field-wrapper">';
 
-        if (empty($order_meta_boxes)) {
-            return; // Exit if no relevant meta boxes are found.
-        }
+        // Total guests + Adults (two columns)
+        woocommerce_form_field(MetaKeys::TOTAL_GUESTS, [
+            'type'             => 'number',
+            'label'            => __('Número total de comensales', 'zero-sense'),
+            'required'         => true,
+            'class'            => ['form-row-first'],
+            'custom_attributes' => ['min' => '1', 'required' => 'required'],
+        ], '');
 
-        foreach ($order_meta_boxes as $meta_box) {
-            $metabox_title = isset($meta_box["title"]) ? esc_html($meta_box["title"]) : esc_html__("Information", "woocommerce");
+        woocommerce_form_field(MetaKeys::ADULTS, [
+            'type'             => 'number',
+            'label'            => __('Adultos', 'zero-sense'),
+            'required'         => true,
+            'class'            => ['form-row-last'],
+            'custom_attributes' => ['min' => '0', 'required' => 'required'],
+        ], '');
 
-            // Generate a unique, sanitized HTML class for the meta box container.
-            $container_id = sanitize_html_class(strtolower(str_replace(" ", "-", remove_accents($metabox_title))));
+        // Children 5-8 + Children 0-4
+        woocommerce_form_field(MetaKeys::CHILDREN_5_TO_8, [
+            'type'  => 'number',
+            'label' => __('Niños de 5 a 8 años (40% de descuento)', 'zero-sense'),
+            'class' => ['form-row-first'],
+            'custom_attributes' => ['min' => '0'],
+        ], '');
 
-            echo '<h3 id="' . $container_id . '-title">' . $metabox_title . '</h3>';
-            echo '<div id="' . $container_id . '" class="woocommerce-billing-fields__field-wrapper">';
+        woocommerce_form_field(MetaKeys::CHILDREN_0_TO_4, [
+            'type'  => 'number',
+            'label' => __('Niños de 0 a 4 años (GRATIS)', 'zero-sense'),
+            'class' => ['form-row-last'],
+            'custom_attributes' => ['min' => '0'],
+        ], '');
 
-            if (!empty($meta_box["fields"])) {
-                foreach ($meta_box["fields"] as $field) {
-                    if (!isset($field["id"])) {
-                        continue; // Skip fields without an ID.
-                    }
+        // Address + Location link
+        $addressDefault = $this->getUrlPrefill('address', '');
+        woocommerce_form_field('event_address_checkout', [
+            'type'     => 'text',
+            'label'    => __('Dirección del evento', 'zero-sense'),
+            'required' => true,
+            'class'    => ['form-row-first'],
+            'custom_attributes' => ['required' => 'required'],
+            'default'  => $addressDefault,
+        ], '');
 
-                    $wc_field_type = "text"; // Default field type.
-                    $field_options = [];
+        woocommerce_form_field('event_location_link_checkout', [
+            'type'  => 'text',
+            'label' => __('Enlace de la ubicación (si lo tienes disponible)', 'zero-sense'),
+            'class' => ['form-row-last'],
+        ], '');
 
-                    if (isset($field["type"])) {
-                        switch ($field["type"]) {
-                            case "select":
-                                $wc_field_type = "select";
-                                $field_options = ["" => __("-- Select an option --", "woocommerce")];
-                                if (isset($field["options"])) {
-                                    $field_options = array_merge($field_options, $field["options"]);
-                                }
-                                break;
+        // Event date + Serving time
+        woocommerce_form_field(MetaKeys::EVENT_DATE, [
+            'type'     => 'text',
+            'label'    => __('Fecha del evento', 'zero-sense'),
+            'required' => true,
+            'class'    => ['form-row-first', 'zs-datepicker'],
+            'custom_attributes' => ['required' => 'required', 'autocomplete' => 'off'],
+        ], '');
 
-                            case "taxonomy":
-                            case "taxonomy_advanced":
-                                $wc_field_type = "select";
-                                $taxonomy = isset($field["taxonomy"]) ? $field["taxonomy"] : "";
+        woocommerce_form_field(MetaKeys::SERVING_TIME, [
+            'type'     => 'text',
+            'label'    => __('Hora de servir la paella (aprox)', 'zero-sense'),
+            'required' => true,
+            'class'    => ['form-row-last', 'zs-timepicker'],
+            'custom_attributes' => ['required' => 'required', 'autocomplete' => 'off'],
+            'default'  => '18:00',
+        ], '');
 
-                                if (!empty($taxonomy)) {
-                                    $terms = get_terms(["taxonomy" => $taxonomy, "hide_empty" => false]);
+        // Start time + Event type
+        woocommerce_form_field(MetaKeys::START_TIME, [
+            'type'    => 'text',
+            'label'   => __('Hora del inicio del evento', 'zero-sense'),
+            'class'   => ['form-row-first', 'zs-timepicker'],
+            'custom_attributes' => ['autocomplete' => 'off'],
+            'default' => '18:00',
+        ], '');
 
-                                    if (!is_wp_error($terms) && !empty($terms)) {
-                                        $field_options = ["" => __("-- Select an option --", "woocommerce")];
-                                        foreach ($terms as $term) {
-                                            $field_options[$term->term_id] = $term->name;
-                                        }
-                                    }
-                                }
+        $eventTypeOptions = array_merge(['' => $selectPlaceholder], FieldOptions::getEventTypeOptions());
+        woocommerce_form_field(MetaKeys::EVENT_TYPE, [
+            'type'     => 'select',
+            'label'    => __('Tipo de evento', 'zero-sense'),
+            'required' => true,
+            'options'  => $eventTypeOptions,
+            'class'    => ['form-row-last'],
+            'custom_attributes' => ['required' => 'required'],
+        ], '');
 
-                                if (!empty($field["multiple"])) {
-                                    $wc_field_type = "multiselect";
-                                }
-                                break;
+        // How found us
+        $howFoundUsOptions = array_merge(['' => $selectPlaceholder], FieldOptions::getHowFoundUsOptions());
+        woocommerce_form_field(MetaKeys::HOW_FOUND_US, [
+            'type'     => 'select',
+            'label'    => __('Y por último, ¿Cómo nos conociste?', 'zero-sense'),
+            'required' => true,
+            'options'  => $howFoundUsOptions,
+            'class'    => ['form-row-wide'],
+            'custom_attributes' => ['required' => 'required'],
+        ], '');
 
-                            default:
-                                $wc_field_type = $field["type"];
-                                if (isset($field["options"]) && is_array($field["options"])) {
-                                    $field_options = $field["options"];
-                                }
-                                break;
-                        }
-                    }
+        echo '</div>';
 
-                    // Prefill defaults from URL when available
-                    $prefillDefault = $this->getPrefillDefault($field, $wc_field_type);
+        // Intolerances section
+        echo '<h3>' . esc_html__('Intolerancias', 'zero-sense') . '</h3>';
+        echo '<div class="woocommerce-billing-fields__field-wrapper">';
 
-                    // Generate the field using WooCommerce's form field function.
-                    woocommerce_form_field(
-                        $field["id"],
-                        [
-                            "type" => $wc_field_type,
-                            "label" => isset($field["name"]) ? $field["name"] : "",
-                            "required" => !empty($field["required"]),
-                            "default" => $prefillDefault !== null ? $prefillDefault : "",
-                            "placeholder" => isset($field["placeholder"]) ? $field["placeholder"] :
-                                (in_array($wc_field_type, ["select", "taxonomy"]) ? __("-- Select an option --", "woocommerce") : ""),
-                            "options" => $field_options,
-                            "class" => ["form-row-wide"],
-                            "custom_attributes" => !empty($field["required"]) ? ["required" => "required"] : [],
-                            "input_class" => ["form-row-wide"],
-                        ],
-                        ""
-                    );
-                }
+        woocommerce_form_field(MetaKeys::INTOLERANCES, [
+            'type'        => 'textarea',
+            'label'       => __('¿Debemos tener en cuenta alguna alergia o intolerancia alimentaria destacable?', 'zero-sense'),
+            'class'       => ['form-row-wide'],
+            'input_class' => ['form-row-wide'],
+        ], '');
+
+        echo '</div>';
+    }
+
+    /**
+     * Validate required event fields
+     */
+    public function validate_event_fields(): void
+    {
+        $required = [
+            MetaKeys::TOTAL_GUESTS  => __('Número total de comensales', 'zero-sense'),
+            MetaKeys::ADULTS        => __('Adultos', 'zero-sense'),
+            'event_address_checkout' => __('Dirección del evento', 'zero-sense'),
+            MetaKeys::EVENT_DATE    => __('Fecha del evento', 'zero-sense'),
+            MetaKeys::SERVING_TIME  => __('Hora de servir la paella (aprox)', 'zero-sense'),
+            MetaKeys::EVENT_TYPE    => __('Tipo de evento', 'zero-sense'),
+            MetaKeys::HOW_FOUND_US  => __('¿Cómo nos conociste?', 'zero-sense'),
+        ];
+
+        foreach ($required as $fieldId => $label) {
+            $value = sanitize_text_field((string) ($this->getSubmittedFieldValue($fieldId) ?? ''));
+            if ($value === '' || $value === '0') {
+                wc_add_notice(
+                    sprintf(__('%s is a required field.', 'woocommerce'), '<strong>' . esc_html($label) . '</strong>'),
+                    'error'
+                );
             }
-
-            echo "</div>"; // Close the meta box container.
         }
     }
 
     /**
-     * Validate meta box fields (from legacy implementation)
+     * Save event fields to order meta
      */
-    public function validate_meta_box_fields()
+    public function save_event_fields(WC_Order $order, $data): void
     {
-        $meta_boxes = apply_filters("rwmb_meta_boxes", []);
-
-        foreach ($meta_boxes as $meta_box) {
-            if (!isset($meta_box["post_types"]) || !in_array("shop_order", $meta_box["post_types"])) {
-                continue;
-            }
-
-            if (!empty($meta_box["fields"])) {
-                foreach ($meta_box["fields"] as $field) {
-                    if (!empty($field["required"])) {
-                        $field_value = isset($_POST[$field["id"]]) ? sanitize_text_field($_POST[$field["id"]]) : "";
-
-                        if (empty($field_value) || $field_value === "0") {
-                            $field_name = isset($field["name"]) ? $field["name"] : $field["id"];
-                            wc_add_notice(
-                                sprintf(__("%s is a required field.", "woocommerce"), "<strong>" . esc_html($field_name) . "</strong>"),
-                                "error"
-                            );
-                        }
-                    }
-                }
+        // Number fields
+        foreach ([
+            MetaKeys::TOTAL_GUESTS,
+            MetaKeys::ADULTS,
+            MetaKeys::CHILDREN_5_TO_8,
+            MetaKeys::CHILDREN_0_TO_4,
+        ] as $key) {
+            $value = $this->getSubmittedFieldValue($key);
+            if ($value !== null) {
+                $order->update_meta_data($key, absint($value));
             }
         }
-    }
 
-    /**
-     * Save meta box fields (from legacy implementation)
-     */
-    public function save_meta_box_fields(WC_Order $order, $data): void
-    {
-        $order_id = (int) $order->get_id();
-        if ($order_id <= 0) {
-            return;
+        // Address → native WC shipping field
+        $address = $this->getSubmittedFieldValue('event_address_checkout');
+        if ($address !== null) {
+            $order->set_shipping_address_1(sanitize_text_field((string) $address));
         }
 
-        $meta_boxes = apply_filters("rwmb_meta_boxes", []);
+        // Location link
+        $locationLink = $this->getSubmittedFieldValue('event_location_link_checkout');
+        if ($locationLink !== null) {
+            $order->update_meta_data('_shipping_location_link', sanitize_text_field((string) $locationLink));
+        }
 
-        foreach ($meta_boxes as $meta_box) {
-            if (!isset($meta_box["post_types"]) || !in_array("shop_order", $meta_box["post_types"])) {
-                continue;
+        // Event date → normalize to ISO 8601
+        $dateRaw = $this->getSubmittedFieldValue(MetaKeys::EVENT_DATE);
+        if ($dateRaw !== null && $dateRaw !== '') {
+            $date = \DateTime::createFromFormat('d/m/Y', (string) $dateRaw);
+            if ($date) {
+                $order->update_meta_data(MetaKeys::EVENT_DATE, $date->format('Y-m-d'));
+            } else {
+                $ts = strtotime((string) $dateRaw);
+                $order->update_meta_data(MetaKeys::EVENT_DATE, $ts ? date('Y-m-d', $ts) : sanitize_text_field((string) $dateRaw));
             }
+        }
 
-            if (empty($meta_box["fields"])) {
-                continue;
+        // Text/time fields
+        foreach ([
+            MetaKeys::SERVING_TIME,
+            MetaKeys::START_TIME,
+        ] as $key) {
+            $value = $this->getSubmittedFieldValue($key);
+            if ($value !== null) {
+                $order->update_meta_data($key, sanitize_text_field((string) $value));
             }
+        }
 
-            foreach ($meta_box["fields"] as $field) {
-                if (!isset($field["id"])) {
-                    continue;
-                }
-
-                $field_value = $this->getSubmittedFieldValue($field['id']);
-
-                // Fix: Normalize Service Area ID to default language (Spanish)
-                // This creates compatibility with MetaBox backend which expects default-language IDs
-                if ($field['id'] === 'event_service_location' && !empty($field_value)) {
-                    $default_lang = apply_filters('wpml_default_language', null);
-                    if ($default_lang) {
-                        // Use field taxonomy if defined, otherwise fallback to 'service-area' (hyphen) as confirmed by user
-                        $taxonomy = isset($field['taxonomy']) && !empty($field['taxonomy']) ? $field['taxonomy'] : 'service-area';
-
-                        // Robustness: Ensure taxonomy is a string (MetaBox sometimes returns an array)
-                        if (is_array($taxonomy)) {
-                            $taxonomy = reset($taxonomy);
-                        }
-
-                        $translated_id = apply_filters('wpml_object_id', $field_value, $taxonomy, true, $default_lang);
-                        if ($translated_id) {
-                            $field_value = $translated_id;
-                        }
-                    }
-                }
-
-                if ($field_value === null) {
-                    continue;
-                }
-
-                if (isset($field["type"]) && $field["type"] === 'date') {
-                    // Normalize to YYYY-MM-DD (ISO 8601)
-                    $date = \DateTime::createFromFormat('d/m/Y', $field_value);
-                    if ($date) {
-                        $order->update_meta_data($field['id'], $date->format('Y-m-d'));
-                    } else {
-                        $fallback_ts = strtotime(is_string($field_value) ? $field_value : '');
-                        $order->update_meta_data($field['id'], $fallback_ts ? date('Y-m-d', $fallback_ts) : '');
-                    }
-                } else {
-                    if (is_array($field_value)) {
-                        $field_value = implode(',', array_map('sanitize_text_field', $field_value));
-                    } else {
-                        $field_value = sanitize_text_field((string) $field_value);
-                    }
-
-                    $order->update_meta_data($field['id'], $field_value);
-
-                    if ($field['id'] === 'event_service_location') {
-                        $canonicalId = is_numeric($field_value) ? (int) $field_value : 0;
-                        $order->update_meta_data('zs_event_service_location', $canonicalId > 0 ? $canonicalId : '');
-                    }
-                }
+        // Select fields
+        foreach ([
+            MetaKeys::EVENT_TYPE,
+            MetaKeys::HOW_FOUND_US,
+        ] as $key) {
+            $value = $this->getSubmittedFieldValue($key);
+            if ($value !== null && $value !== '') {
+                $order->update_meta_data($key, sanitize_text_field((string) $value));
             }
+        }
+
+        // Intolerances
+        $intolerances = $this->getSubmittedFieldValue(MetaKeys::INTOLERANCES);
+        if ($intolerances !== null) {
+            $order->update_meta_data(MetaKeys::INTOLERANCES, sanitize_textarea_field((string) $intolerances));
         }
     }
 
@@ -310,34 +322,17 @@ class CheckoutFields
         return $languages;
     }
 
-    private function getPrefillDefault(array $field, string $wcFieldType)
+    private function getUrlPrefill(string $type, $default)
     {
         if (!empty($_POST)) {
-            return null;
+            return $default;
         }
 
-        $fieldId = isset($field['id']) ? $field['id'] : '';
-
-        if ($fieldId === 'event_service_location' && isset($_GET['b_service-area'])) {
-            $raw = (int) $_GET['b_service-area'];
-            if ($wcFieldType === 'select' || $wcFieldType === 'multiselect') {
-                $taxonomy = isset($field['taxonomy']) ? $field['taxonomy'] : null;
-                if (!$taxonomy) {
-                    $term = get_term($raw);
-                    $taxonomy = (!is_wp_error($term) && $term && isset($term->taxonomy)) ? $term->taxonomy : 'service_area';
-                }
-                $currentLang = apply_filters('wpml_current_language', null);
-                $translated = apply_filters('wpml_object_id', $raw, $taxonomy, true, is_string($currentLang) ? $currentLang : null);
-                return $translated ?: $raw;
-            }
-            return $raw;
-        }
-
-        if ($fieldId === 'event_city' && isset($_GET['city'])) {
+        if ($type === 'city' && isset($_GET['city'])) {
             return sanitize_text_field((string) $_GET['city']);
         }
 
-        return null;
+        return $default;
     }
 
     private function getSubmittedFieldValue(string $fieldId)
