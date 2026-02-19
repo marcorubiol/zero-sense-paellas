@@ -274,9 +274,23 @@
     body.zs-printing * {
         display: none !important;
     }
+    body.zs-printing .zs-sl,
+    body.zs-printing #zs-sl-body,
+    body.zs-printing #zs-sl-list-wrap,
     body.zs-printing .zs-sl__list,
     body.zs-printing .zs-sl__list * {
         display: revert !important;
+    }
+    body.zs-printing .zs-sl,
+    body.zs-printing #zs-sl-body,
+    body.zs-printing #zs-sl-list-wrap {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
     }
     body.zs-printing .zs-sl__list {
         position: fixed !important;
