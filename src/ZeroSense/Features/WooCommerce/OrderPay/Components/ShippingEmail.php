@@ -18,9 +18,6 @@ class ShippingEmail
             return;
         }
 
-        add_action('woocommerce_review_order_before_submit', [$this, 'renderField'], 8);
-        add_action('woocommerce_pay_order_before_submit', [$this, 'renderField'], 8);
-
         add_action('woocommerce_checkout_update_order_meta', [$this, 'save'], 20, 1);
     }
 
