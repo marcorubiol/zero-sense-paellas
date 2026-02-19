@@ -2950,7 +2950,8 @@ class BricksDynamicTags implements FeatureInterface
             if ($termName === '') {
                 continue;
             }
-            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($qty)) . ' ' . esc_html($unit) . '</span></li>';
+            $normalized = $this->normalizeUnit($qty, $unit);
+            $items[] = '<li class="zs-recipe-ingredient">' . esc_html($termName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . ' ' . esc_html($normalized['unit']) . '</span></li>';
         }
 
         if (empty($items)) {
@@ -3276,7 +3277,7 @@ class BricksDynamicTags implements FeatureInterface
             $label = $definitions[$key] ?? ucwords(str_replace('_', ' ', $key));
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($label) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html((string) $qty) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html((string) $qty) . '</span><span class="fdr-card__unit">pcs</span></span>';
             $html .= '</div>';
         }
 
