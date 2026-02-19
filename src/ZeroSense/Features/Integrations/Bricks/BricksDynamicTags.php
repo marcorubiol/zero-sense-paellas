@@ -945,14 +945,12 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         if ($field === 'phone') {
-            $value = $order->get_meta('_shipping_phone', true);
-            $value = is_string($value) ? $value : '';
+            $value = method_exists($order, 'get_shipping_phone') ? (string) $order->get_shipping_phone() : '';
             return $this->wrapIfRecentlyChanged($value, '_shipping_phone', $post);
         }
 
         if ($field === 'email') {
-            $raw = $order->get_meta('_shipping_email', true);
-            $value = is_string($raw) ? $raw : '';
+            $value = method_exists($order, 'get_shipping_email') ? (string) $order->get_shipping_email() : '';
             return $this->wrapIfRecentlyChanged($value, '_shipping_email', $post);
         }
 

@@ -9,13 +9,13 @@ class MaterialCalculator
      * Cassola sizes sorted largest to smallest (litres => material_key)
      */
     private const CASSOLA_SIZES = [
-        33.8 => 'cassola_33l',
-        15.5 => 'cassola_15l',
-        13.0 => 'cassola_xata_13l',
-        11.6 => 'cassola_xata_11l',
-        9.5  => 'cassola_9l',
-        6.6  => 'cassola_6l',
-        4.9  => 'cassola_5l',
+        '33.8' => 'cassola_33l',
+        '15.5' => 'cassola_15l',
+        '13.0' => 'cassola_xata_13l',
+        '11.6' => 'cassola_xata_11l',
+        '9.5'  => 'cassola_9l',
+        '6.6'  => 'cassola_6l',
+        '4.9'  => 'cassola_5l',
     ];
 
     /**
@@ -311,7 +311,7 @@ class MaterialCalculator
         // Sizes are sorted largest to smallest; find the smallest that fits
         $best = 'cassola_33l';
         foreach (self::CASSOLA_SIZES as $capacity => $key) {
-            if ($capacity >= $totalLitres) {
+            if ((float) $capacity >= $totalLitres) {
                 $best = $key;
             }
         }

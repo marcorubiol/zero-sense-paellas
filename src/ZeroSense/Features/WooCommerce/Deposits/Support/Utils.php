@@ -215,9 +215,9 @@ class Utils
                 $hasDeposit = true;
                 $depositAmount = $existingDeposit;
                 
-                // If manual override is active, use exact saved values without recalculation
+                // If manual override is active, deposit is fixed but remaining always reflects current total
                 if ($isManualOverride) {
-                    $remainingAmount = $existingRemaining > 0 ? $existingRemaining : ($orderTotal - $depositAmount);
+                    $remainingAmount = $orderTotal - $depositAmount;
                 } else {
                     $remainingAmount = ($existingRemaining > 0 && !$isDepositStatus)
                         ? $existingRemaining
