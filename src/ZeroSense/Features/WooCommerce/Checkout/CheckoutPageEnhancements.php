@@ -90,6 +90,26 @@ class CheckoutPageEnhancements implements FeatureInterface
             wp_add_inline_script('jquery', $js);
         }
 
+        // Prefill city field from localStorage on checkout page
+        if (function_exists('is_checkout') && is_checkout()) {
+            $js = '(function(){
+                var city = localStorage.getItem("city") || "";
+                if (!city) return;
+                function fillCity() {
+                    var field = document.getElementById("event_city_checkout");
+                    if (field && field.value === "") {
+                        field.value = city;
+                    }
+                }
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", fillCity);
+                } else {
+                    fillCity();
+                }
+            })();';
+            wp_add_inline_script('jquery', $js);
+        }
+
         $is_checkout        = function_exists('is_checkout') ? is_checkout() : false;
         $is_order_received  = function_exists('is_wc_endpoint_url') ? is_wc_endpoint_url('order-received') : false;
         $is_checkout_page   = $is_checkout && !$is_order_received;

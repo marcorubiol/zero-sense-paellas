@@ -273,6 +273,20 @@ class Recipes implements FeatureInterface
         $needsPaella = get_post_meta($post->ID, self::META_NEEDS_PAELLA, true);
         ?>
         <div class="zs-mb-wrapper">
+            <!-- Paella Mode Toggle -->
+            <div class="zs-paella-mode-toggle">
+                <div class="zs-paella-mode-header">
+                    <label class="zs-switch">
+                        <input type="checkbox" name="zs_recipe_needs_paella" value="1" <?php checked($needsPaella, '1'); ?>>
+                        <span class="zs-slider"></span>
+                    </label>
+                    <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
+                </div>
+                <div class="zs-paella-mode-info">
+                    <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed. Add the liquids used in the recipe so the system can calculate which cassola (pot) is required.', 'zero-sense'); ?></p>
+                </div>
+            </div>
+
             <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
@@ -350,20 +364,6 @@ class Recipes implements FeatureInterface
                     <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
                 </a>
             </p>
-
-            <!-- Paella Mode Toggle -->
-            <div class="zs-paella-mode-toggle">
-                <div class="zs-paella-mode-header">
-                    <label class="zs-switch">
-                        <input type="checkbox" name="zs_recipe_needs_paella" value="1" <?php checked($needsPaella, '1'); ?>>
-                        <span class="zs-slider"></span>
-                    </label>
-                    <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
-                </div>
-                <div class="zs-paella-mode-info">
-                    <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed. Add the liquids used in the recipe so the system can calculate which cassola (pot) is required.', 'zero-sense'); ?></p>
-                </div>
-            </div>
 
             <!-- Liquids Section (shown only if paella mode is ON) -->
             <div class="zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
