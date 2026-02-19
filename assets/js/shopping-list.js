@@ -161,23 +161,11 @@
         }
         if (share) {
             share.addEventListener('click', function () {
-                var ids = getCheckedIds();
-                if (ids.length > 0) {
-                    doRequest(ids);
-                    setTimeout(function () {
-                        if (currentSignedUrl) {
-                            navigator.clipboard.writeText(currentSignedUrl).then(function () {
-                                share.textContent = 'Copiat!';
-                                setTimeout(function () { share.textContent = 'Copiar enllaç'; }, 2000);
-                            });
-                        }
-                    }, 600);
-                } else if (currentSignedUrl) {
-                    navigator.clipboard.writeText(currentSignedUrl).then(function () {
-                        share.textContent = 'Copiat!';
-                        setTimeout(function () { share.textContent = 'Copiar enllaç'; }, 2000);
-                    });
-                }
+                if (!currentSignedUrl) { return; }
+                navigator.clipboard.writeText(currentSignedUrl).then(function () {
+                    share.textContent = 'Copiat!';
+                    setTimeout(function () { share.textContent = 'Copiar enllaç'; }, 2000);
+                });
             });
         }
         var printBtn = document.getElementById('zs-sl-print');
