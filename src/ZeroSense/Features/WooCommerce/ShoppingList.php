@@ -65,10 +65,44 @@ class ShoppingList implements FeatureInterface
         if (!$this->isShoppingListPage()) { return; }
         wp_enqueue_style('zs-shopping-list', ZERO_SENSE_URL . 'assets/css/shopping-list.css', [], ZERO_SENSE_VERSION);
         wp_enqueue_script('zs-shopping-list', ZERO_SENSE_URL . 'assets/js/shopping-list.js', [], ZERO_SENSE_VERSION, true);
+        $preItemKeysForJs = [];
+        if ($this->verifySignature()) {
+            $from  = sanitize_text_field((string) get_query_var(self::QUERY_FROM));
+            $to    = sanitize_text_field((string) get_query_var(self::QUERY_TO));
+            $loc   = absint(get_query_var(self::QUERY_LOC));
+            $raw   = sanitize_text_field((string) get_query_var(self::QUERY_ORDERS));
+            if ($from !== '' && $to !== '' && $loc > 0) {
+                $orders = $this->queryOrders($from, $to, $loc);
+                $validKeys = [];
+                $keysByOrder = [];
+                foreach ($orders as $o) {
+                    $oid = (string) $o['id'];
+                    $keysByOrder[$oid] = [];
+                    foreach ($o['items'] as $item) {
+                        $validKeys[] = $item['key'];
+                        $keysByOrder[$oid][] = $item['key'];
+                    }
+                }
+                if ($raw !== '') {
+                    $requested = array_filter(array_map('trim', explode(',', $raw)));
+                    foreach ($requested as $r) {
+                        if (strpos($r, ':') !== false) {
+                            if (in_array($r, $validKeys, true)) { $preItemKeysForJs[] = $r; }
+                        } elseif (isset($keysByOrder[$r])) {
+                            foreach ($keysByOrder[$r] as $k) { $preItemKeysForJs[] = $k; }
+                        }
+                    }
+                    $preItemKeysForJs = array_values(array_unique($preItemKeysForJs));
+                } else {
+                    $preItemKeysForJs = $validKeys;
+                }
+            }
+        }
         wp_localize_script('zs-shopping-list', 'zsShoppingList', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce'   => wp_create_nonce('zs_shopping_list_nonce'),
-            'pageUrl' => (string) get_permalink(get_page_by_path(self::PAGE_SLUG)),
+            'ajaxUrl'      => admin_url('admin-ajax.php'),
+            'nonce'        => wp_create_nonce('zs_shopping_list_nonce'),
+            'pageUrl'      => (string) get_permalink(get_page_by_path(self::PAGE_SLUG)),
+            'preItemKeys'  => $preItemKeysForJs,
         ]);
     }
 
@@ -128,12 +162,25 @@ class ShoppingList implements FeatureInterface
         if ($preFiltered) {
             $preOrders = $this->queryOrders($from, $to, $loc);
             $validKeys = [];
+            $keysByOrder = [];
             foreach ($preOrders as $o) {
-                foreach ($o['items'] as $item) { $validKeys[] = $item['key']; }
+                $oid = (string) $o['id'];
+                $keysByOrder[$oid] = [];
+                foreach ($o['items'] as $item) {
+                    $validKeys[] = $item['key'];
+                    $keysByOrder[$oid][] = $item['key'];
+                }
             }
             if ($ordersRaw !== '') {
-                $requested   = array_filter(explode(',', $ordersRaw));
-                $preItemKeys = array_values(array_intersect($requested, $validKeys));
+                $requested = array_filter(array_map('trim', explode(',', $ordersRaw)));
+                foreach ($requested as $r) {
+                    if (strpos($r, ':') !== false) {
+                        if (in_array($r, $validKeys, true)) { $preItemKeys[] = $r; }
+                    } elseif (isset($keysByOrder[$r])) {
+                        foreach ($keysByOrder[$r] as $k) { $preItemKeys[] = $k; }
+                    }
+                }
+                $preItemKeys = array_values(array_unique($preItemKeys));
             } else {
                 $preItemKeys = $validKeys;
             }

@@ -231,6 +231,26 @@
         if (searchBtn) {
             searchBtn.addEventListener('click', function () { doRequest(null); });
         }
+        var preKeys = cfg.preItemKeys && cfg.preItemKeys.length > 0 ? cfg.preItemKeys : null;
+        if (preKeys) {
+            var ordersEl = document.getElementById('zs-sl-orders');
+            if (ordersEl) {
+                var ordersData = window.zsShoppingListOrders || null;
+                if (!ordersData) {
+                    ordersEl.querySelectorAll('.zs-sl__item-check').forEach(function (el) {
+                        el.checked = preKeys.indexOf(el.value) !== -1;
+                    });
+                    ordersEl.querySelectorAll('.zs-sl__order-toggle').forEach(function (toggle) {
+                        var oid = toggle.getAttribute('data-order-id');
+                        var items = ordersEl.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]');
+                        var anyChecked = Array.from(items).some(function (el) { return el.checked; });
+                        toggle.checked = anyChecked;
+                        var orderItem = ordersEl.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
+                        if (orderItem) { orderItem.classList.toggle('is-disabled', !anyChecked); }
+                    });
+                }
+            }
+        }
         bindBodyEvents();
     });
 }());

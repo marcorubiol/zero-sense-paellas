@@ -207,8 +207,10 @@
     border: 1px solid var(--base-semi-dark);
     padding: var(--space-s);
     margin-top: var(--space-m);
+    width: 100%;
     max-width: 480px;
     margin-inline: auto;
+    box-sizing: border-box;
 }
 .zs-sl__list-header {
     display: flex;
