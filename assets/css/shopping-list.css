@@ -144,7 +144,10 @@
     transition: background 0.2s;
 }
 .zs-sl__item-check-label .zs-sl__switch-track {
-    background: var(--base-trans-70) !important;
+    background: var(--base-trans-70);
+}
+.zs-sl__item-check-label .zs-sl__switch input:checked + .zs-sl__switch-track {
+    background: var(--base);
 }
 .zs-sl__switch-track::after {
     content: '';
