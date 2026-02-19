@@ -79,7 +79,7 @@ class CheckoutFields
 
     public function prefillCityFromSession(mixed $value, string $input): mixed
     {
-        if ($input !== 'billing_city' || $value !== null) {
+        if (!in_array($input, ['billing_city', 'shipping_city'], true) || $value !== null) {
             return $value;
         }
 
@@ -115,7 +115,7 @@ class CheckoutFields
 
         // 2. Unset unnecessary fields
         unset($fields['billing']['billing_company']);
-        unset($fields['billing']['billing_address_2']);
+        unset($fields['shipping']['shipping_company']);
 
         return $fields;
     }
@@ -361,6 +361,14 @@ class CheckoutFields
         if (function_exists('WC') && WC()->session) {
             WC()->session->set('zs_city', null);
             WC()->session->set('zs_service_area', null);
+            
+            // Clear all rabbit choice session keys to reset toggle state for next order
+            $sessionData = WC()->session->get_session_data();
+            foreach ($sessionData as $key => $value) {
+                if (strpos($key, 'zs_rabbit_choice_') === 0) {
+                    WC()->session->set($key, null);
+                }
+            }
         }
     }
 
