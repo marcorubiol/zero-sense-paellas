@@ -57,8 +57,8 @@
         html += '</div>';
         html += '<div class="zs-sl__orders-footer">';
         html += '<button type="button" class="btn--primary btn--outline" id="zs-sl-update">Actualitzar llista</button> ';
-        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-share">Copiar enllaç</button> ';
-        html += '<button type="button" class="btn--base" id="zs-sl-print">Imprimir</button>';
+        html += '<button type="button" class="btn--neutral btn--outline" id="zs-sl-share">Copiar enllaç</button> ';
+        html += '<button type="button" class="btn--neutral" id="zs-sl-print">Imprimir</button>';
         html += '</div></div>';
         return html;
     }

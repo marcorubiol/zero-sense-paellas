@@ -394,8 +394,8 @@ class ShoppingList implements FeatureInterface
             </div>
             <div class="zs-sl__orders-footer">
                 <button type="button" class="btn--primary btn--outline" id="zs-sl-update"><?php esc_html_e('Actualitzar llista', 'zero-sense'); ?></button>
-                <button type="button" class="btn--base btn--outline" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
-                <button type="button" class="btn--base" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
+                <button type="button" class="btn--neutral btn--outline" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
+                <button type="button" class="btn--neutral" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
             </div>
         </div>
         <?php
