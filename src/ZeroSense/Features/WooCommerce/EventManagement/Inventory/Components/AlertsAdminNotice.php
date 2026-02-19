@@ -73,8 +73,8 @@ class AlertsAdminNotice
                 '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
                 sprintf(
                     _n(
-                        'Stock alert: <strong>%d upcoming order has a critical equipment shortage</strong> — not enough stock available.',
-                        'Stock alert: <strong>%d upcoming orders have a critical equipment shortage</strong> — not enough stock available.',
+                        'Stock alert: <strong>%d upcoming event has a critical equipment shortage</strong> — not enough stock available.',
+                        'Stock alert: <strong>%d upcoming events have a critical equipment shortage</strong> — not enough stock available.',
                         $critical,
                         'zero-sense'
                     ),
