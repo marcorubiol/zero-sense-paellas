@@ -2102,7 +2102,7 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            $recipeId = $this->resolveRecipeIdForItem($item, $product);
             if ($recipeId > 0) {
                 return '1';
             }
@@ -2145,7 +2145,7 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
-            $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            $recipeId = $this->resolveRecipeIdForItem($item, $product);
             if ($recipeId <= 0 || isset($seenRecipes[$recipeId])) {
                 continue;
             }
