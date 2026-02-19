@@ -79,6 +79,15 @@
         return html;
     }
 
+    function zsPrint() {
+        document.body.classList.add('zs-printing');
+        window.addEventListener('afterprint', function handler() {
+            document.body.classList.remove('zs-printing');
+            window.removeEventListener('afterprint', handler);
+        });
+        window.print();
+    }
+
     var currentSignedUrl = '';
 
     function doRequest(orderIds) {
@@ -170,6 +179,10 @@
                     });
                 }
             });
+        }
+        var printBtn = document.getElementById('zs-sl-print');
+        if (printBtn) {
+            printBtn.addEventListener('click', zsPrint);
         }
     }
 
