@@ -153,6 +153,7 @@ class BricksDynamicTags implements FeatureInterface
         add_filter('bricks/dynamic_data/render_content', [$this, 'renderContent'], 10, 3);
         add_filter('bricks/frontend/render_data', [$this, 'renderContent'], 10, 2);
         add_action('wp', [$this, 'maybeResetMetaBoxTranslations']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueRabbitToggleAssets']);
         
         // Track order modifications (multiple hooks to cover all cases)
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
@@ -3350,7 +3351,7 @@ class BricksDynamicTags implements FeatureInterface
 
         return '<input type="hidden" name="zs_rabbit_choice" value="with">'
             . '<label class="zs-rabbit-toggle" aria-label="' . esc_attr__('Sin conejo', 'zero-sense') . '">'
-            . '<input type="checkbox" name="zs_rabbit_choice" value="without" class="zs-rabbit-toggle__input">'
+            . '<input type="checkbox" name="zs_rabbit_choice" value="without" class="zs-rabbit-toggle__input" data-pid="' . (int) $productId . '">'
             . '<span class="zs-rabbit-toggle__track">'
             . '<span class="zs-rabbit-toggle__thumb"></span>'
             . '</span>'
@@ -3370,35 +3371,28 @@ class BricksDynamicTags implements FeatureInterface
             . '.zs-rabbit-toggle__label{font-size:var(--text-m;}'
             . '</style>';
 
-        $this->enqueueRabbitToggleScript((int) $productId);
     }
 
-    private function enqueueRabbitToggleScript(int $productId): void
+    public function enqueueRabbitToggleAssets(): void
     {
-        $pid = $productId;
-
-        // On toggle change: store choice in WC session via AJAX so handleAddToCart can read it
-        add_action('wp_footer', function () use ($pid) {
-            $ajaxUrl = esc_js(admin_url('admin-ajax.php'));
-            echo '<script>'
-                . '(function(){'
-                . 'var toggle=document.querySelector(".zs-rabbit-toggle__input");'
-                . 'if(!toggle)return;'
-                . 'function sendChoice(choice){'
-                . 'var fd=new FormData();'
-                . 'fd.append("action","zs_set_rabbit_choice");'
-                . 'fd.append("product_id",' . $pid . ');'
-                . 'fd.append("choice",choice);'
-                . 'fetch("' . $ajaxUrl . '",{method:"POST",body:fd,credentials:"same-origin"});'
-                . '}'
-                . 'toggle.addEventListener("change",function(){'
-                . 'var c=this.checked?"without":"with";'
-                . 'console.log("[ZS Rabbit] toggle changed → choice:",c,"pid:' . $pid . '");'
-                . 'sendChoice(c);'
-                . '});'
-                . '})();'
-                . '</script>';
-        }, 99);
+        $ajaxUrl = esc_js(admin_url('admin-ajax.php'));
+        $js = '(function(){
+            document.addEventListener("change", function(e) {
+                var toggle = e.target;
+                if (!toggle.classList || !toggle.classList.contains("zs-rabbit-toggle__input")) return;
+                var pid = toggle.dataset.pid;
+                if (!pid) return;
+                var choice = toggle.checked ? "without" : "with";
+                console.log("[ZS Rabbit] toggle changed \u2192 choice:", choice, "pid:", pid);
+                var fd = new FormData();
+                fd.append("action", "zs_set_rabbit_choice");
+                fd.append("product_id", pid);
+                fd.append("choice", choice);
+                fetch("' . $ajaxUrl . '", {method:"POST", body:fd, credentials:"same-origin"});
+            });
+        })();';
+        wp_enqueue_script('jquery');
+        wp_add_inline_script('jquery', $js);
     }
 
     /**
