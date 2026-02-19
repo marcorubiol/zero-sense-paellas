@@ -1984,7 +1984,7 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function formatNumber(float $n): string
     {
-        $s = number_format($n, 3, '.', '');
+        $s = number_format($n, 1, '.', '');
         $s = rtrim($s, '0');
         $s = rtrim($s, '.');
         return $s === '' ? '0' : $s;

@@ -239,8 +239,6 @@ class RedsysBizum extends WC_Payment_Gateway
             $order = $orderId ? wc_get_order($orderId) : null;
             if (!$order instanceof \WC_Order) { status_header(200); exit; }
 
-            // suppress info-level callback log
-
             if (!$signatureOk) {
                 $order->add_order_note(__('Redsys Bizum callback: signature verification failed. No status change.', 'zero-sense'));
                 $order->save(); status_header(200); exit;
@@ -248,12 +246,13 @@ class RedsysBizum extends WC_Payment_Gateway
 
             $isSuccess = ($dsResponse >= 0 && $dsResponse <= 99);
             if ($isSuccess) {
-                $order->add_order_note(sprintf(__('Redsys Bizum payment success. Response: %d', 'zero-sense'), $dsResponse));
+                // Idempotency: already processed
+                if ($order->has_status(['deposit-paid', 'fully-paid'])) { status_header(200); exit; }
+                $order->add_order_note(sprintf(__('Redsys Bizum payment success via callback. Response: %d', 'zero-sense'), $dsResponse));
                 $order->update_status('fully-paid');
                 $order->save();
-                // suppress info-level success log
             } else {
-                $order->add_order_note(sprintf(__('Redsys Bizum payment failed. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
+                $order->add_order_note(sprintf(__('Redsys Bizum payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
                 $order->save();
                 if ($logger) { $logger->warning('Redsys Bizum failure; no status change', ['source'=>'zero-sense-redsys-bizum','order_id'=>$orderId,'resp'=>$dsResponse]); }
             }

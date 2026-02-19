@@ -182,8 +182,6 @@ class RedsysStandard extends WC_Payment_Gateway
             $order = $orderId ? wc_get_order($orderId) : null;
             if (!$order instanceof \WC_Order) { status_header(200); exit; }
 
-            if ($logger) { $logger->info('Redsys standard callback', ['source'=>'zero-sense-redsys-standard','order_id'=>$orderId,'resp'=>$dsResponse,'sig_ok'=>$signatureOk?'1':'0']); }
-
             if (!$signatureOk) {
                 $order->add_order_note(__('Redsys callback: signature verification failed. No status change.', 'zero-sense'));
                 $order->save(); status_header(200); exit;
@@ -191,12 +189,13 @@ class RedsysStandard extends WC_Payment_Gateway
 
             $isSuccess = ($dsResponse >= 0 && $dsResponse <= 99);
             if ($isSuccess) {
-                $order->add_order_note(sprintf(__('Redsys payment success. Response: %d', 'zero-sense'), $dsResponse));
+                // Idempotency: already processed
+                if ($order->has_status(['deposit-paid', 'fully-paid'])) { status_header(200); exit; }
+                $order->add_order_note(sprintf(__('Redsys payment success via callback. Response: %d', 'zero-sense'), $dsResponse));
                 $order->update_status('fully-paid');
                 $order->save();
-                if ($logger) { $logger->info('Redsys standard success; status fully-paid', ['source'=>'zero-sense-redsys-standard','order_id'=>$orderId]); }
             } else {
-                $order->add_order_note(sprintf(__('Redsys payment failed. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
+                $order->add_order_note(sprintf(__('Redsys payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
                 $order->save();
                 if ($logger) { $logger->warning('Redsys standard failure; no status change', ['source'=>'zero-sense-redsys-standard','order_id'=>$orderId,'resp'=>$dsResponse]); }
             }

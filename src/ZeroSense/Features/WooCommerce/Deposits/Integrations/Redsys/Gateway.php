@@ -395,25 +395,50 @@ class Gateway extends WC_Payment_Gateway
 
             $isSuccess = ($dsResponse >= 0 && $dsResponse <= 99);
             if ($isSuccess) {
-                // Decide target status based on saved payment intent
-                $intent = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
-                $target = ($intent === 'deposit') ? 'deposit-paid' : (($intent === 'remaining' || $intent === 'full_initial') ? 'fully-paid' : 'fully-paid');
+                // Idempotency: if already in a paid status, just acknowledge
+                if ($order->has_status(['deposit-paid', 'fully-paid'])) {
+                    try { Logs::add($order, 'gateway', ['event' => 'callback_already_processed', 'status' => $order->get_status()]); } catch (\Throwable $e) {}
+                    status_header(200); exit;
+                }
 
-                // Update status and add notes
-                $order->add_order_note(sprintf(__('Redsys payment success (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
+                // Decide target status and update metas — mirrors ReturnHandler::handleSuccess()
+                $intent = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                $amountRaw = isset($params['Ds_Amount']) ? ((float) $params['Ds_Amount'] / 100) : 0.0;
+                $orderTotal = (float) $order->get_total();
+                $depositAmountMeta = (float) ($order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true) ?: 0);
+
+                if ($intent === 'deposit') {
+                    $target = 'deposit-paid';
+                    MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
+                    MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
+                    MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'deposit');
+                    MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
+                    MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);
+                    $remaining = max(0.0, $orderTotal - $depositAmountMeta);
+                    MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, $remaining);
+                    MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $remaining);
+                } else {
+                    $target = 'fully-paid';
+                    MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, $intent ?: 'full');
+                    MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, 0);
+                    MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, max(0.0, $orderTotal - $depositAmountMeta));
+                }
+
+                $order->add_order_note(sprintf(__('Redsys payment success via callback (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
                 $previousStatus = $order->get_status();
                 $order->update_status($target);
                 $order->save();
+                $order->save_meta_data();
 
-                // Ensure Flowmattic triggers even if status was already set (e.g., by ReturnHandler)
+                // Ensure FlowMattic triggers even if status was already set (e.g., by ReturnHandler)
                 if ($previousStatus === $target) {
                     do_action('woocommerce_order_status_changed', $order->get_id(), $previousStatus, $target, $order);
                 }
 
-                try { Logs::add($order, 'gateway', ['event' => 'payment_success', 'intent' => $intent, 'target_status' => $target]); } catch (\Throwable $e) {}
+                try { Logs::add($order, 'gateway', ['event' => 'payment_success', 'intent' => $intent, 'target_status' => $target, 'amount' => $amountRaw]); } catch (\Throwable $e) {}
             } else {
                 // Failed: leave status as-is, add note only
-                $order->add_order_note(sprintf(__('Redsys payment failed. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
+                $order->add_order_note(sprintf(__('Redsys payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
                 $order->save();
                 try { Logs::add($order, 'gateway', ['event' => 'payment_failed', 'response' => $dsResponse]); } catch (\Throwable $e) {}
                 if ($logger) { $logger->warning('Redsys failure; no status change', ['source' => 'zero-sense-redsys-deposits', 'order_id' => $orderId, 'resp' => $dsResponse]); }

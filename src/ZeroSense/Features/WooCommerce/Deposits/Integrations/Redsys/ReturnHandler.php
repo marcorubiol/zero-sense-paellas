@@ -105,27 +105,15 @@ class ReturnHandler
 
         $isAlreadyPaid = $order->has_status('deposit-paid') || $order->has_status('fully-paid');
 
-        if ($responseCode !== '' && Config::isSuccessResponse($responseCode)) {
-            if ($isAlreadyPaid) {
-                // Do not change status, only choose redirect based on current state
-                $redirectType = $order->has_status('deposit-paid') ? 'deposit' : 'full';
-            } else {
-                $redirectType = $this->handleSuccess($order, $hasDeposit, $depositAmount, $amountPaid);
-            }
+        if ($isAlreadyPaid) {
+            // Already processed (e.g. by server-to-server callback) — just redirect
+            $redirectType = $order->has_status('deposit-paid') ? 'deposit' : 'full';
+        } elseif ($responseCode !== '' && Config::isSuccessResponse($responseCode)) {
+            $redirectType = $this->handleSuccess($order, $hasDeposit, $depositAmount, $amountPaid);
         } elseif ($responseCode !== '' && Config::isCancelledByUser($responseCode)) {
-            if ($isAlreadyPaid) {
-                // Do not downgrade a paid order
-                $redirectType = $order->has_status('deposit-paid') ? 'deposit' : 'full';
-            } else {
-                $redirectType = $this->handleCancellation($order);
-            }
+            $redirectType = $this->handleCancellation($order);
         } else {
-            if ($isAlreadyPaid) {
-                // Do not mark as failed if already paid
-                $redirectType = $order->has_status('deposit-paid') ? 'deposit' : 'full';
-            } else {
-                $redirectType = $this->handleFailure($order, $responseCode);
-            }
+            $redirectType = $this->handleFailure($order, $responseCode);
         }
 
         $this->emptyCart();
