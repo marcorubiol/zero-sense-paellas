@@ -288,6 +288,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_order_language_name}',         'label' => 'Order Language (Full Name)',    'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_event_intolerances}',          'label' => 'Intolerances & Allergies',      'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_card}',                 'label' => 'Recipe Card (label/value per recipe)',           'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_full_card}',            'label' => 'Recipe Card + Liquids (label/value per recipe)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_simple}',               'label' => 'Recipe Names (Simple List)',                     'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_exists}',               'label' => 'Has Recipes (1/0)',                              'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_total_ingredients_list}',   'label' => 'Recipe Ingredients Total (List)',                'group' => 'ZeroSense'];
@@ -470,6 +471,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_card}') {
             return $this->getRecipeCard($post);
         }
+        if ($tag === '{zs_recipe_full_card}') {
+            return $this->getRecipeFullCard($post);
+        }
         if ($tag === '{zs_recipe_simple}') {
             return $this->getRecipeSimple($post);
         }
@@ -567,6 +571,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
         $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('intolerances', $post), $content);
         $content = str_replace('{zs_recipe_card}',                $this->getRecipeCard($post),       $content);
+        $content = str_replace('{zs_recipe_full_card}',           $this->getRecipeFullCard($post),    $content);
         $content = str_replace('{zs_recipe_simple}',              $this->getRecipeSimple($post),     $content);
         $content = str_replace('{zs_recipe_exists}',              $this->getRecipeExists($post),        $content);
         $content = str_replace('{zs_recipe_total_ingredients_list}',   $this->getRecipeTotalIngredientsList($post),   $content);
