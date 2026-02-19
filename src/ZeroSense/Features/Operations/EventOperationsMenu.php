@@ -34,6 +34,7 @@ class EventOperationsMenu implements FeatureInterface
     {
         add_action('admin_menu', [$this, 'registerMenu'], 5);
         add_action('admin_menu', [$this, 'removeDefaultSubmenu'], 999);
+        add_action('admin_menu', [$this, 'reorderSubmenu'], 1000);
     }
 
     public function getPriority(): int
@@ -62,5 +63,36 @@ class EventOperationsMenu implements FeatureInterface
     public function removeDefaultSubmenu(): void
     {
         remove_submenu_page('event-operations', 'event-operations');
+    }
+
+    public function reorderSubmenu(): void
+    {
+        global $submenu;
+
+        if (empty($submenu['event-operations'])) {
+            return;
+        }
+
+        $desired = ['zs-stock-alerts', 'zs-equipment-stock'];
+        $first   = [];
+        $rest    = [];
+
+        foreach ($submenu['event-operations'] as $item) {
+            $slug = $item[2] ?? '';
+            if (in_array($slug, $desired, true)) {
+                $first[$slug] = $item;
+            } else {
+                $rest[] = $item;
+            }
+        }
+
+        $ordered = [];
+        foreach ($desired as $slug) {
+            if (isset($first[$slug])) {
+                $ordered[] = $first[$slug];
+            }
+        }
+
+        $submenu['event-operations'] = array_merge($ordered, $rest);
     }
 }
