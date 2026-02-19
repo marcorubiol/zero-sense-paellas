@@ -42,7 +42,7 @@ class EventManagement implements FeatureInterface
      */
     public function isEnabled(): bool
     {
-        return (bool) get_option('zs_event_management_enabled', true);
+        return true;
     }
 
     /**
@@ -50,7 +50,7 @@ class EventManagement implements FeatureInterface
      */
     public function isToggleable(): bool
     {
-        return true;
+        return false;
     }
 
     /**

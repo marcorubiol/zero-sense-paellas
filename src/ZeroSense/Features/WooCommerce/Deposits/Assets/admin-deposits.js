@@ -4,7 +4,7 @@
 
     function getOrderId() {
         const params = new URLSearchParams(window.location.search);
-        return params.get('post');
+        return params.get('id') || params.get('post');
     }
 
     function ajaxUpdateDeposit(amount, options = {}) {
@@ -315,15 +315,12 @@
         watchWooRecalculate();
         setupResetToAuto();
         
-        // Ensure hidden fields have correct values before form submission
-        $('form#post').on('submit', function() {
-            // Get current deposit amount from display
+        // Ensure hidden deposit field has correct value before form submission
+        $('form#post, form.wc-order-data-row').on('submit', function() {
             var currentDeposit = $('.deposit-amount-input').val() || $('.deposit-amount-value').text();
-            
-            // Update hidden fields
-            $('#zs_deposits_deposit_amount').val(currentDeposit);
-            $('#zs_deposits_deposit_manual_override').val('yes');
-            
+            if (currentDeposit) {
+                $('#zs_deposits_deposit_amount').val(currentDeposit);
+            }
         });
     });
 })(jQuery);

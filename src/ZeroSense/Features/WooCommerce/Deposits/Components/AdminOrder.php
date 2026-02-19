@@ -318,7 +318,10 @@ class AdminOrder
             : '';
 
         $isValidDepositsNonce = ($nonce !== '') && wp_verify_nonce($nonce, 'zs_deposits_save_deposit_meta');
-        $isValidWpNonce = ($wpNonce !== '') && wp_verify_nonce($wpNonce, 'update-post_' . $orderId);
+        $isValidWpNonce = ($wpNonce !== '') && (
+            wp_verify_nonce($wpNonce, 'update-post_' . $orderId) ||
+            wp_verify_nonce($wpNonce, 'woocommerce-order')
+        );
 
         if (!$isValidDepositsNonce && !$isValidWpNonce) {
             return;
