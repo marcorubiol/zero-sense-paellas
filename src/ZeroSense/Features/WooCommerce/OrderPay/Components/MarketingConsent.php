@@ -5,9 +5,8 @@ use WC_Order;
 
 class MarketingConsent
 {
-    const METABOX_CONSENT_KEY = 'marketing_consent_checkbox';
+    const CANONICAL_CONSENT_KEY = 'zs_marketing_consent';
     const FORM_CONSENT_KEY = 'marketing_consent';
-    const ORDER_POST_TYPE = 'shop_order';
 
     public function __construct()
     {
@@ -30,7 +29,7 @@ class MarketingConsent
         // Bricks form-pay template hook
         add_action('woocommerce_pay_order_before_submit', [$this, 'add_consent_checkbox'], 9);
         
-        // Save checkbox value to MetaBox field and add order notes
+        // Save checkbox value and add order notes
         add_action('woocommerce_checkout_update_order_meta', [$this, 'save_consent_to_order'], 10, 1);
     }
 
@@ -63,7 +62,7 @@ class MarketingConsent
     }
 
     /**
-     * Save checkbox value to MetaBox field and add to order notes
+     * Save checkbox value to order meta and add order notes
      */
     public function save_consent_to_order($order_id)
     {
@@ -72,21 +71,13 @@ class MarketingConsent
             return;
         }
 
-        // Check if the marketing consent checkbox was checked
         $marketing_consent = isset($_POST[self::FORM_CONSENT_KEY]) ? 1 : 0;
 
-        $order->update_meta_data(self::METABOX_CONSENT_KEY, $marketing_consent);
+        $order->update_meta_data(self::CANONICAL_CONSENT_KEY, $marketing_consent);
         $order->save();
-        
-        // Add the consent status to the order notes
-        if ($order) {
-            $consent_text = $marketing_consent ? __('yes', 'zero-sense') : __('no', 'zero-sense');
-            $note = sprintf(
-                __('Marketing Consent: %s', 'zero-sense'),
-                $consent_text
-            );
-            $order->add_order_note($note);
-        }
+
+        $consent_text = $marketing_consent ? __('yes', 'zero-sense') : __('no', 'zero-sense');
+        $order->add_order_note(sprintf(__('Marketing Consent: %s', 'zero-sense'), $consent_text));
     }
 
     private function isOrderPayPage(): bool
