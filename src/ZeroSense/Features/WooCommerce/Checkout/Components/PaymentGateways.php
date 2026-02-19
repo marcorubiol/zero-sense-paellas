@@ -29,10 +29,7 @@ class PaymentGateways
         $allGatewaysDebug = [];
         if (function_exists('WC') && WC()->payment_gateways) {
             foreach (WC()->payment_gateways->payment_gateways() as $gid => $gw) {
-                $allGatewaysDebug[$gid] = [
-                    'enabled' => $gw->enabled,
-                    'available' => $gw->is_available(),
-                ];
+                $allGatewaysDebug[$gid] = 'enabled=' . $gw->enabled . ' available=' . ($gw->is_available() ? 'yes' : 'no');
             }
         }
 
