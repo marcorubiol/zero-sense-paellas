@@ -563,7 +563,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
-        $content = str_replace('{zs_rabbit_toggle}',              '', $content);
+        $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
