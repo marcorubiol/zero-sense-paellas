@@ -18,7 +18,7 @@ class BricksCompatibility
             return $needsPayment;
         }
 
-        if ($order->has_status(['budget-requested', 'deposit-paid', 'fully-paid'])) {
+        if ($order->has_status(['deposit-paid', 'fully-paid'])) {
             return true;
         }
 
@@ -31,7 +31,6 @@ class BricksCompatibility
             $statuses = ['pending', 'failed'];
         }
 
-        $statuses[] = 'budget-requested';
         $statuses[] = 'deposit-paid';
         $statuses[] = 'fully-paid';
 
