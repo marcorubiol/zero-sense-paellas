@@ -2,6 +2,8 @@
 namespace ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components;
 
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\AlertCalculator;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\ReservationManager;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\AlertResolutionManager;
 
 class AlertsAdminNotice
 {
@@ -37,6 +39,29 @@ class AlertsAdminNotice
         $isOrderPage = $screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true);
 
         if ($isOrderPage) {
+            $orderId = isset($_GET['id']) ? absint($_GET['id']) : (isset($_GET['post']) ? absint($_GET['post']) : 0);
+            if (!$orderId) {
+                return;
+            }
+            $order = wc_get_order($orderId);
+            if (!$order) {
+                return;
+            }
+            $materials = ReservationManager::get($orderId);
+            if (empty($materials)) {
+                return;
+            }
+            $alerts = AlertCalculator::calculateAlerts($order, $materials);
+            $hasCritical = false;
+            foreach ($alerts as $materialKey => $alert) {
+                if ($alert['alert_type'] === AlertCalculator::ALERT_CRITICAL && !AlertResolutionManager::isResolved($orderId, $materialKey)) {
+                    $hasCritical = true;
+                    break;
+                }
+            }
+            if (!$hasCritical) {
+                return;
+            }
             printf(
                 '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
                 __('<strong>This order has critical equipment stock alerts.</strong>', 'zero-sense'),
