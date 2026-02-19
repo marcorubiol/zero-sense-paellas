@@ -140,8 +140,11 @@
     position: absolute;
     inset: 0;
     border-radius: 16px;
-    background: var(--base-semi-light);
+    background: var(--base-semi-dark);
     transition: background 0.2s;
+}
+.zs-sl__item-check-label .zs-sl__switch-track {
+    background: var(--base-semi-light);
 }
 .zs-sl__switch-track::after {
     content: '';
