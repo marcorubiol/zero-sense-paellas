@@ -426,14 +426,14 @@ class ShoppingList implements FeatureInterface
         <div class="zs-sl" id="zs-sl">
             <div class="zs-sl__filters no-print">
                 <div class="zs-sl__filter-row">
-                    <div class="zs-sl__filter-group">
-                        <label class="zs-sl__label" for="zs-sl-from"><?php esc_html_e('Des de', 'zero-sense'); ?></label>
+                    <label class="zs-sl__filter-group" for="zs-sl-from">
+                        <span class="zs-sl__label"><?php esc_html_e('Des de', 'zero-sense'); ?></span>
                         <input class="zs-sl__input" type="date" id="zs-sl-from" value="<?php echo esc_attr($from); ?>">
-                    </div>
-                    <div class="zs-sl__filter-group">
-                        <label class="zs-sl__label" for="zs-sl-to"><?php esc_html_e('Fins a', 'zero-sense'); ?></label>
+                    </label>
+                    <label class="zs-sl__filter-group" for="zs-sl-to">
+                        <span class="zs-sl__label"><?php esc_html_e('Fins a', 'zero-sense'); ?></span>
                         <input class="zs-sl__input" type="date" id="zs-sl-to" value="<?php echo esc_attr($to); ?>">
-                    </div>
+                    </label>
                     <div class="zs-sl__filter-group">
                         <label class="zs-sl__label" for="zs-sl-loc"><?php esc_html_e('Localització', 'zero-sense'); ?></label>
                         <select class="zs-sl__select" id="zs-sl-loc">
