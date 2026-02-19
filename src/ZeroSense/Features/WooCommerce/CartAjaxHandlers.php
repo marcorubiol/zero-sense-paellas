@@ -182,6 +182,8 @@ class CartAjaxHandlers implements FeatureInterface
         $productId = absint($_POST['product_id']);
         $quantity = isset($_POST['quantity']) ? absint($_POST['quantity']) : 1;
 
+        error_log('[ZS RabbitOption] handleAddToCart POST: ' . print_r($_POST, true));
+
         $cartItemData = [];
         if (isset($_POST['zs_rabbit_choice'])) {
             $rabbitChoice = sanitize_text_field($_POST['zs_rabbit_choice']);
@@ -189,6 +191,7 @@ class CartAjaxHandlers implements FeatureInterface
                 $cartItemData['zs_rabbit_choice'] = $rabbitChoice;
             }
         }
+        error_log('[ZS RabbitOption] handleAddToCart cartItemData: ' . print_r($cartItemData, true));
         
         if (!function_exists('WC') || !isset(WC()->cart)) {
             wp_send_json_error(['message' => 'WooCommerce not available']);
