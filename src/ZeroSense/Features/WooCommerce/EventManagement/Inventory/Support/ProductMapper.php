@@ -10,6 +10,8 @@ class ProductMapper
      * Meta key para recetas (del sistema Recipes.php existente)
      */
     const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
+    const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
+    const META_RABBIT_CHOICE = '_zs_rabbit_choice';
     
     /**
      * Cache de term IDs
@@ -57,6 +59,17 @@ class ProductMapper
             // Always read from original product (WPML support)
             $originalProductId = self::resolveOriginalProductId($product->get_id());
             $recipeId = get_post_meta($originalProductId, self::META_PRODUCT_RECIPE_ID, true);
+
+            // Rabbit choice bifurcation: use no-rabbit recipe if customer chose without
+            if ($recipeId && method_exists($item, 'get_meta')) {
+                $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true);
+                if ($rabbitChoice === 'without') {
+                    $noRabbitId = get_post_meta($originalProductId, self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+                    if ($noRabbitId) {
+                        $recipeId = $noRabbitId;
+                    }
+                }
+            }
             
             if ($recipeId) {
                 $recipe = get_post($recipeId);

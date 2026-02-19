@@ -413,6 +413,22 @@ class EventShortcodes implements FeatureInterface
         return $out;
     }
 
+    private function resolveRecipeIdForItem(WC_Order_Item_Product $item, WC_Product $product): int
+    {
+        $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+        if ($recipeId <= 0) {
+            return 0;
+        }
+
+        $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true);
+        if ($rabbitChoice !== 'without') {
+            return $recipeId;
+        }
+
+        $noRabbitId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+        return $noRabbitId > 0 ? $noRabbitId : $recipeId;
+    }
+
     private function formatNumber(float $n): string
     {
         $s = number_format($n, 3, '.', '');
