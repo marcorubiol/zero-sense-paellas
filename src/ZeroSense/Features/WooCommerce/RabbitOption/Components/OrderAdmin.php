@@ -12,9 +12,11 @@ class OrderAdmin
         add_filter('woocommerce_order_item_display_meta_key', [$this, 'formatMetaKey'], 10, 3);
         add_filter('woocommerce_order_item_display_meta_value', [$this, 'formatMetaValue'], 10, 3);
 
-        // Editable select after each line item in admin
+        // Editable toggle after each line item in admin
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderEditableChoice'], 10, 3);
-        add_action('woocommerce_process_shop_order_meta', [$this, 'saveEditableChoice']);
+        // Classic editor + HPOS: both fire on "Update Order"
+        add_action('woocommerce_process_shop_order_meta', [$this, 'saveEditableChoice'], 20);
+        add_action('save_post_shop_order', [$this, 'saveEditableChoice'], 20);
     }
 
     public function formatMetaKey(string $displayKey, $meta, $item): string
@@ -90,6 +92,16 @@ class OrderAdmin
 
     public function saveEditableChoice(int $orderId): void
     {
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        static $ran = false;
+        if ($ran) {
+            return;
+        }
+        $ran = true;
+
         $order = wc_get_order($orderId);
         if (!$order) {
             return;
