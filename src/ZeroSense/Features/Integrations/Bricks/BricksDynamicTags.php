@@ -2065,7 +2065,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="unit">' . esc_html($normalized['unit']) . '</span></span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:4px;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span style="min-width:2.5em">' . esc_html($normalized['unit']) . '</span></span></div>';
                 }
             }
 
@@ -2338,7 +2338,7 @@ class BricksDynamicTags implements FeatureInterface
             $normalized = $this->normalizeUnit($qty, $unit);
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="unit">' . esc_html($normalized['unit']) . '</span></span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:4px;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span style="min-width:2.5em">' . esc_html($normalized['unit']) . '</span></span>';
             $html .= '</div>';
         }
 
@@ -2421,7 +2421,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="unit">' . esc_html($normalized['unit']) . '</span></span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:4px;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span style="min-width:2.5em">' . esc_html($normalized['unit']) . '</span></span></div>';
                 }
             }
 
@@ -2437,7 +2437,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
                     if ($liqName === '') continue;
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($amount)) . '</span><span class="unit">l</span></span></div>';
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:4px;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($amount)) . '</span><span style="min-width:2.5em">l</span></span></div>';
                 }
             }
 
@@ -2921,7 +2921,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($qty)) . '</span><span class="unit">' . esc_html($unit) . '</span></span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:4px;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($qty)) . '</span><span style="min-width:2.5em">' . esc_html($unit) . '</span></span>';
             $html .= '</div>';
         }
 
@@ -3183,7 +3183,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="brxe-div fdr-card__field">';
             $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="quantity">' . esc_html($this->formatNumber($qty)) . '</span><span class="unit">l</span></span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value" style="display:flex;gap:4px;align-items:baseline"><span style="font-variant-numeric:tabular-nums">' . esc_html($this->formatNumber($qty)) . '</span><span style="min-width:2.5em">l</span></span>';
             $html .= '</div>';
         }
 
