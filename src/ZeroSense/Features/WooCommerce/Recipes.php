@@ -283,7 +283,7 @@ class Recipes implements FeatureInterface
                     <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
                 </div>
                 <div class="zs-paella-mode-info">
-                    <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed. Add the liquids used in the recipe so the system can calculate which cassola (pot) is required.', 'zero-sense'); ?></p>
+                    <p><?php esc_html_e('Paella Recipe Mode: paella pans and burners are calculated automatically. Add the liquids so the system can select the right cassola size. Utensils are hidden. Ingredients are always saved regardless of mode.', 'zero-sense'); ?></p>
                 </div>
             </div>
 
