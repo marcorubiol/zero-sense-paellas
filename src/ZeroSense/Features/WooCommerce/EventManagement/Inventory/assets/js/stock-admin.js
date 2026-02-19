@@ -162,7 +162,7 @@
             
             // Prepare FormData for WordPress AJAX
             const formData = new FormData();
-            formData.append('action', 'zs_update_stock');
+            formData.append('action', 'zs_update_equipment_stock');
             formData.append('nonce', zsStockAdmin.nonce);
             formData.append('changes', JSON.stringify(changedData));
             

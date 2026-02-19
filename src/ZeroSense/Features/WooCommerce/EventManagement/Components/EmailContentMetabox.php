@@ -21,8 +21,8 @@ class EmailContentMetabox
         $screen = wc_get_page_screen_id('shop-order');
         
         add_meta_box(
-            'zs_emails_content',
-            __('Emails Content', 'zero-sense'),
+            'zs_email_templates',
+            __('Email Templates', 'zero-sense'),
             [$this, 'render'],
             $screen,
             'normal',
@@ -43,23 +43,23 @@ class EmailContentMetabox
         $budgetEmailContent = $order->get_meta(MetaKeys::BUDGET_EMAIL_CONTENT, true);
         $finalDetailsEmailContent = $order->get_meta(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, true);
         
-        wp_nonce_field('zs_emails_content_save', 'zs_emails_content_nonce');
+        wp_nonce_field('zs_email_templates_save', 'zs_email_templates_nonce');
         ?>
         
         <div class="zs-mb-wrapper">
             <div class="zs-mb-field">
-                <label for="budget_emails_content">
-                    <?php esc_html_e('Budget Emails Content', 'zero-sense'); ?>
+                <label for="budget_email_content">
+                    <?php esc_html_e('Budget Email Content', 'zero-sense'); ?>
                 </label>
-                <textarea id="budget_emails_content" name="budget_emails_content" rows="6" class="widefat"><?php echo esc_textarea(is_string($budgetEmailContent) ? $budgetEmailContent : ''); ?></textarea>
+                <textarea id="budget_email_content" name="budget_email_content" rows="6" class="widefat"><?php echo esc_textarea(is_string($budgetEmailContent) ? $budgetEmailContent : ''); ?></textarea>
                 <p class="description"><?php esc_html_e('Custom content for budget emails sent via FlowMattic.', 'zero-sense'); ?></p>
             </div>
             
             <div class="zs-mb-field" style="margin-top: 16px;">
-                <label for="final_details_emails_content">
-                    <?php esc_html_e('Final Details Emails Content', 'zero-sense'); ?>
+                <label for="final_details_email_content">
+                    <?php esc_html_e('Final Details Email Content', 'zero-sense'); ?>
                 </label>
-                <textarea id="final_details_emails_content" name="final_details_emails_content" rows="6" class="widefat"><?php echo esc_textarea(is_string($finalDetailsEmailContent) ? $finalDetailsEmailContent : ''); ?></textarea>
+                <textarea id="final_details_email_content" name="final_details_email_content" rows="6" class="widefat"><?php echo esc_textarea(is_string($finalDetailsEmailContent) ? $finalDetailsEmailContent : ''); ?></textarea>
                 <p class="description"><?php esc_html_e('Custom content for final details emails sent via FlowMattic.', 'zero-sense'); ?></p>
             </div>
         </div>
@@ -69,8 +69,8 @@ class EmailContentMetabox
 
     public function save($orderId): void
     {
-        if (!isset($_POST['zs_emails_content_nonce']) || 
-            !wp_verify_nonce($_POST['zs_emails_content_nonce'], 'zs_emails_content_save')) {
+        if (!isset($_POST['zs_email_templates_nonce']) || 
+            !wp_verify_nonce($_POST['zs_email_templates_nonce'], 'zs_email_templates_save')) {
             return;
         }
 
@@ -79,11 +79,11 @@ class EmailContentMetabox
             return;
         }
 
-        if (isset($_POST['budget_emails_content'])) {
-            $order->update_meta_data(MetaKeys::BUDGET_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['budget_emails_content']));
+        if (isset($_POST['budget_email_content'])) {
+            $order->update_meta_data(MetaKeys::BUDGET_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['budget_email_content']));
         }
-        if (isset($_POST['final_details_emails_content'])) {
-            $order->update_meta_data(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['final_details_emails_content']));
+        if (isset($_POST['final_details_email_content'])) {
+            $order->update_meta_data(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['final_details_email_content']));
         }
 
         $order->save();

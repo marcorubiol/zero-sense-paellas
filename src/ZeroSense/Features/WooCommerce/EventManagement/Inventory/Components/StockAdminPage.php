@@ -13,7 +13,7 @@ class StockAdminPage
     {
         add_action('admin_menu', [$this, 'addMenuPage'], 15);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
-        add_action('wp_ajax_zs_update_stock', [$this, 'ajaxUpdateStock']);
+        add_action('wp_ajax_zs_update_equipment_stock', [$this, 'ajaxUpdateStock']);
     }
     
     /**
@@ -60,7 +60,7 @@ class StockAdminPage
         );
         
         wp_localize_script('zs-stock-admin', 'zsStockAdmin', [
-            'nonce' => wp_create_nonce('zs_stock_admin'),
+            'nonce' => wp_create_nonce('zs_equipment_stock_admin'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
         ]);
     }
@@ -220,7 +220,7 @@ class StockAdminPage
      */
     public function ajaxUpdateStock(): void
     {
-        check_ajax_referer('zs_stock_admin', 'nonce');
+        check_ajax_referer('zs_equipment_stock_admin', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error(['message' => 'Insufficient permissions']);
