@@ -1153,8 +1153,19 @@ class Recipes implements FeatureInterface
             echo '<option value="' . esc_attr((string) $id) . '"' . selected($currentNoRabbit, $id, false) . '>' . esc_html($recipe->post_title) . '</option>';
         }
 
+        echo '<option value="__new__" class="zs-recipe-new-option">&#43; ' . esc_html__('Add New Recipe', 'zero-sense') . '</option>';
         echo '</select>';
         echo '</p>';
+
+        // Edit action — only shown when a real recipe is selected
+        $editUrlNoRabbit = $currentNoRabbit > 0 ? admin_url('post.php?post=' . $currentNoRabbit . '&action=edit') : '#';
+        echo '<p id="zs-recipe-no-rabbit-context-actions" style="margin-top:-8px; padding-left:162px; display:' . ($currentNoRabbit > 0 ? 'block' : 'none') . ';">';
+        echo '<a id="zs-recipe-no-rabbit-edit-btn" href="' . esc_url($editUrlNoRabbit) . '" target="_blank" style="font-size:12px; text-decoration:none; color:#2271b1;">';
+        echo '<span class="dashicons dashicons-edit" style="font-size:13px; line-height:1.6; vertical-align:middle; margin-right:2px;"></span>';
+        echo esc_html__('Edit Recipe', 'zero-sense');
+        echo '</a>';
+        echo '</p>';
+
         echo '</div>';
 
         $baseEditUrl = esc_js(admin_url('post.php'));
@@ -1189,6 +1200,33 @@ class Recipes implements FeatureInterface
                 toggleActions(val);
             });
             toggleActions();
+
+            // No-rabbit select: Edit link + Add New
+            var $selectNR  = $('#zs_recipe_id_no_rabbit');
+            var $actionsNR = $('#zs-recipe-no-rabbit-context-actions');
+            var $editBtnNR = $('#zs-recipe-no-rabbit-edit-btn');
+
+            function toggleActionsNR(recipeId) {
+                recipeId = parseInt(recipeId || $selectNR.val() || 0);
+                if (recipeId > 0) {
+                    $editBtnNR.attr('href', baseEditUrl + recipeId + '&action=edit').show();
+                    $actionsNR.slideDown(200);
+                } else {
+                    $editBtnNR.hide();
+                    $actionsNR.slideUp(200);
+                }
+            }
+
+            $selectNR.on('change select2:select select2:unselect', function() {
+                var val = $(this).val();
+                if (val === '__new__') {
+                    window.open(newUrl, '_blank');
+                    $selectNR.val('').trigger('change.select2');
+                    return;
+                }
+                toggleActionsNR(val);
+            });
+            toggleActionsNR();
 
             // Show/hide "Recipe without rabbit" based on rabbit option checkbox
             var $rabbitCheck = $('#_zs_has_rabbit_option');
