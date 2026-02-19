@@ -95,6 +95,21 @@ class CheckoutPageEnhancements implements FeatureInterface
                 $terms_js_ver,
                 true
             );
+
+            $guests_js_rel = 'src/ZeroSense/Features/WooCommerce/assets/checkout-guests.js';
+            $guests_js_ver = file_exists($plugin_root_path . $guests_js_rel)
+                ? (string) filemtime($plugin_root_path . $guests_js_rel)
+                : ZERO_SENSE_VERSION;
+            wp_enqueue_script(
+                'zero-sense-checkout-guests',
+                $plugin_root_url . $guests_js_rel,
+                [],
+                $guests_js_ver,
+                true
+            );
+            wp_localize_script('zero-sense-checkout-guests', 'zsGuests', [
+                'msg' => __('La suma de adultos y niños no coincide con el número total de comensales.', 'zero-sense'),
+            ]);
         }
     }
 

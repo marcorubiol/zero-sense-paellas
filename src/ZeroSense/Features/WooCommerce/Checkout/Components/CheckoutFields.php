@@ -150,16 +150,12 @@ class CheckoutFields
 
         // Intolerances section
         echo '<h3>' . esc_html__('Intolerancias', 'zero-sense') . '</h3>';
-        echo '<div class="woocommerce-billing-fields__field-wrapper">';
-
-        woocommerce_form_field(MetaKeys::INTOLERANCES, [
-            'type'        => 'textarea',
-            'label'       => __('¿Debemos tener en cuenta alguna alergia o intolerancia alimentaria destacable?', 'zero-sense'),
-            'class'       => ['form-row-wide'],
-            'clear'       => true,
-        ], '');
-
-        echo '</div>';
+        $intolerancesId = esc_attr(MetaKeys::INTOLERANCES);
+        $intolerancesLabel = esc_html__('¿Debemos tener en cuenta alguna alergia o intolerancia alimentaria destacable?', 'zero-sense');
+        echo '<p class="form-row form-row-wide" style="width:100%;clear:both;">';
+        echo '<label for="' . $intolerancesId . '">' . $intolerancesLabel . '</label>';
+        echo '<textarea id="' . $intolerancesId . '" name="' . $intolerancesId . '" rows="4" style="width:100%;"></textarea>';
+        echo '</p>';
     }
 
     /**
@@ -168,13 +164,13 @@ class CheckoutFields
     public function validate_event_fields(): void
     {
         $required = [
-            MetaKeys::TOTAL_GUESTS  => __('Número total de comensales', 'zero-sense'),
-            MetaKeys::ADULTS        => __('Adultos', 'zero-sense'),
+            MetaKeys::TOTAL_GUESTS   => __('Número total de comensales', 'zero-sense'),
+            MetaKeys::ADULTS         => __('Adultos', 'zero-sense'),
             'event_address_checkout' => __('Dirección del evento', 'zero-sense'),
-            MetaKeys::EVENT_DATE    => __('Fecha del evento', 'zero-sense'),
-            MetaKeys::SERVING_TIME  => __('Hora de servir la paella (aprox)', 'zero-sense'),
-            MetaKeys::EVENT_TYPE    => __('Tipo de evento', 'zero-sense'),
-            MetaKeys::HOW_FOUND_US  => __('¿Cómo nos conociste?', 'zero-sense'),
+            MetaKeys::EVENT_DATE     => __('Fecha del evento', 'zero-sense'),
+            MetaKeys::SERVING_TIME   => __('Hora de servir la paella (aprox)', 'zero-sense'),
+            MetaKeys::EVENT_TYPE     => __('Tipo de evento', 'zero-sense'),
+            MetaKeys::HOW_FOUND_US   => __('¿Cómo nos conociste?', 'zero-sense'),
         ];
 
         foreach ($required as $fieldId => $label) {
@@ -185,6 +181,19 @@ class CheckoutFields
                     'error'
                 );
             }
+        }
+
+        // Validate guest sum: adults + children_5_to_8 + children_0_to_4 = total_guests
+        $total  = absint($this->getSubmittedFieldValue(MetaKeys::TOTAL_GUESTS) ?? 0);
+        $adults = absint($this->getSubmittedFieldValue(MetaKeys::ADULTS) ?? 0);
+        $ch58   = absint($this->getSubmittedFieldValue(MetaKeys::CHILDREN_5_TO_8) ?? 0);
+        $ch04   = absint($this->getSubmittedFieldValue(MetaKeys::CHILDREN_0_TO_4) ?? 0);
+
+        if ($total > 0 && ($adults + $ch58 + $ch04) !== $total) {
+            wc_add_notice(
+                __('La suma de adultos y niños no coincide con el número total de comensales.', 'zero-sense'),
+                'error'
+            );
         }
     }
 
