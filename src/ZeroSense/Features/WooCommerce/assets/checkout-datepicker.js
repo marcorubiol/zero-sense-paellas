@@ -12,47 +12,38 @@
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Use modern selector and avoid jQuery dependency where possible
-        const dateTimeFields = document.querySelectorAll('input[type="date"], input[type="time"]');
-        
-        dateTimeFields.forEach(function(field) {
-            const originalType = field.getAttribute('type');
-            
-            // Skip if already activated
+        if (typeof flatpickr === 'undefined') {
+            return;
+        }
+
+        // Date fields
+        document.querySelectorAll('.zs-datepicker input, input.zs-datepicker').forEach(function(field) {
             if (field.classList.contains('zs-flatpickr-activated')) {
                 return;
             }
-
-            // Mark as activated and change type to text
-            field.setAttribute('type', 'text');
             field.classList.add('zs-flatpickr-activated');
+            flatpickr(field, {
+                dateFormat: 'd/m/Y',
+                minDate: today,
+                allowInput: true,
+                locale: { firstDayOfWeek: 1 }
+            });
+        });
 
-            // Check if Flatpickr is available
-            if (typeof flatpickr === 'undefined') {
+        // Time fields
+        document.querySelectorAll('.zs-timepicker input, input.zs-timepicker').forEach(function(field) {
+            if (field.classList.contains('zs-flatpickr-activated')) {
                 return;
             }
-
-            // Initialize based on original field type
-            if (originalType === 'date') {
-                flatpickr(field, {
-                    dateFormat: 'd/m/Y',
-                    minDate: today,
-                    allowInput: true,
-                    locale: {
-                        firstDayOfWeek: 1 // Monday
-                    }
-                });
-            } else if (originalType === 'time') {
-                flatpickr(field, {
-                    enableTime: true,
-                    noCalendar: true,
-                    dateFormat: 'H:i',
-                    time_24hr: true,
-                    minuteIncrement: 15,
-                    defaultDate: '18:00',
-                    allowInput: true
-                });
-            }
+            field.classList.add('zs-flatpickr-activated');
+            flatpickr(field, {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: 'H:i',
+                time_24hr: true,
+                minuteIncrement: 15,
+                allowInput: true
+            });
         });
     }
 
@@ -74,8 +65,9 @@
                         // Check if any added nodes contain date/time inputs
                         mutation.addedNodes.forEach(function(node) {
                             if (node.nodeType === Node.ELEMENT_NODE) {
-                                const hasDateTimeFields = node.querySelector && 
-                                    node.querySelector('input[type="date"], input[type="time"]');
+                                const hasDateTimeFields = node.querySelector && (
+                                    node.querySelector('.zs-datepicker input, input.zs-datepicker, .zs-timepicker input, input.zs-timepicker')
+                                );
                                 if (hasDateTimeFields) {
                                     shouldReinit = true;
                                 }

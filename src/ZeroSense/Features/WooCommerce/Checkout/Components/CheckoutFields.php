@@ -156,7 +156,7 @@ class CheckoutFields
             'type'        => 'textarea',
             'label'       => __('¿Debemos tener en cuenta alguna alergia o intolerancia alimentaria destacable?', 'zero-sense'),
             'class'       => ['form-row-wide'],
-            'input_class' => ['form-row-wide'],
+            'clear'       => true,
         ], '');
 
         echo '</div>';
