@@ -355,6 +355,7 @@ class Recipes implements FeatureInterface
                             $termId = isset($row['utensil']) ? (int) $row['utensil'] : 0;
                             $qty = isset($row['qty']) ? (string) $row['qty'] : '';
                             $paxRatio = isset($row['pax_ratio']) ? (int) $row['pax_ratio'] : 1;
+                            $unit = isset($row['unit']) ? (string) $row['unit'] : 'u';
 
                             $termName = '';
                             if ($termId > 0) {
@@ -369,38 +370,42 @@ class Recipes implements FeatureInterface
                                 <td>
                                     <select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
                                         <?php if ($termId > 0 && $termName !== ''): ?>
-                                            <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
-                                        <?php endif; ?>
-                                        <?php 
-                                        $existing_utensils = get_terms([
-                                            'taxonomy' => self::TAX_UTENSIL,
-                                            'hide_empty' => false,
-                                            'number' => 50,
-                                            'suppress_filters' => true,
-                                        ]);
-                                        if (is_array($existing_utensils)) {
-                                            foreach ($existing_utensils as $utensil) {
-                                                if ($utensil instanceof WP_Term && $utensil->term_id != $termId) {
-                                                    echo '<option value="' . esc_attr((string) $utensil->term_id) . '">' . esc_html($utensil->name) . '</option>';
-                                                }
+                                        <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
+                                    <?php endif; ?>
+                                    <?php 
+                                    $existing_utensils = get_terms([
+                                        'taxonomy' => self::TAX_UTENSIL,
+                                        'hide_empty' => false,
+                                        'number' => 50,
+                                        'suppress_filters' => true,
+                                    ]);
+                                    if (is_array($existing_utensils)) {
+                                        foreach ($existing_utensils as $utensil) {
+                                            if ($utensil instanceof WP_Term && $utensil->term_id != $termId) {
+                                                echo '<option value="' . esc_attr((string) $utensil->term_id) . '">' . esc_html($utensil->name) . '</option>';
                                             }
                                         }
-                                        ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="number" step="0.001" min="0" name="zs_recipe_utensils[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
-                                </td>
-                                <td>
-                                    <input type="number" step="1" min="1" name="zs_recipe_utensils[pax_ratio][]" value="<?php echo esc_attr($paxRatio); ?>" style="width:100%;" placeholder="1">
-                                </td>
-                                <td>
-                                    <input type="text" value="u" readonly style="width:100%; background:#f0f0f1;">
-                                </td>
-                                <td>
-                                    <button type="button" class="button zs-utensil-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
-                                </td>
-                            </tr>
+                                    }
+                                    ?>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" step="0.001" min="0" name="zs_recipe_utensils[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
+                            </td>
+                            <td>
+                                <input type="number" step="1" min="1" name="zs_recipe_utensils[pax_ratio][]" value="<?php echo esc_attr($paxRatio); ?>" style="width:100%;" placeholder="1">
+                            </td>
+                            <td>
+                                <select name="zs_recipe_utensils[unit][]" style="width:100%;">
+                                    <?php foreach ($units as $u => $label): ?>
+                                        <option value="<?php echo esc_attr($u); ?>" <?php selected($unit, $u); ?>><?php echo esc_html($label); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td>
+                                <button type="button" class="button zs-utensil-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                            </td>
+                        </tr>
                             <?php 
                             $utensil_row_index++;
                         endforeach; 
@@ -658,13 +663,23 @@ class Recipes implements FeatureInterface
             }
             
             function addNewUtensilRow() {
+                var units = <?php echo json_encode(array_keys($this->getAllowedUnits())); ?>;
+                var unitLabels = <?php echo json_encode(array_values($this->getAllowedUnits())); ?>;
+                
+                var unitOptions = '';
+                for (var i = 0; i < units.length; i++) {
+                    unitOptions += '<option value="' + units[i] + '">' + unitLabels[i] + '</option>';
+                }
+                
                 var newRow = '<tr data-row="' + utensilRowCount + '">' +
                     '<td>' +
                         '<select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="<?php echo esc_js(__('Search or create…', 'zero-sense')); ?>"></select>' +
                     '</td>' +
                     '<td><input type="number" step="0.001" min="0" name="zs_recipe_utensils[qty][]" value="" style="width:100%;"></td>' +
                     '<td><input type="number" step="1" min="1" name="zs_recipe_utensils[pax_ratio][]" value="1" style="width:100%;" placeholder="1"></td>' +
-                    '<td><input type="text" value="u" readonly style="width:100%; background:#f0f0f1;"></td>' +
+                    '<td>' +
+                        '<select name="zs_recipe_utensils[unit][]" style="width:100%;">' + unitOptions + '</select>' +
+                    '</td>' +
                     '<td><button type="button" class="button zs-utensil-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button></td>' +
                 '</tr>';
                 
@@ -771,22 +786,29 @@ class Recipes implements FeatureInterface
         $utensilIds = isset($rawUtensils['utensil']) && is_array($rawUtensils['utensil']) ? $rawUtensils['utensil'] : [];
         $utensilQtys = isset($rawUtensils['qty']) && is_array($rawUtensils['qty']) ? $rawUtensils['qty'] : [];
         $utensilPaxRatios = isset($rawUtensils['pax_ratio']) && is_array($rawUtensils['pax_ratio']) ? $rawUtensils['pax_ratio'] : [];
+        $utensilUnits = isset($rawUtensils['unit']) && is_array($rawUtensils['unit']) ? $rawUtensils['unit'] : [];
 
         $outUtensils = [];
-        $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios));
+        $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios), count($utensilUnits));
         for ($i = 0; $i < $countUtensils; $i++) {
             $id = isset($utensilIds[$i]) ? (int) $utensilIds[$i] : 0;
             $qty = isset($utensilQtys[$i]) ? (float) $utensilQtys[$i] : 0.0;
             $paxRatio = isset($utensilPaxRatios[$i]) ? (int) $utensilPaxRatios[$i] : 1;
+            $unit = isset($utensilUnits[$i]) ? (string) $utensilUnits[$i] : 'u';
 
             if ($id <= 0 || $qty <= 0 || $paxRatio < 1) {
                 continue;
+            }
+
+            if (!in_array($unit, $allowedUnits, true)) {
+                $unit = 'u';
             }
 
             $outUtensils[] = [
                 'utensil' => $id,
                 'qty' => $qty,
                 'pax_ratio' => $paxRatio,
+                'unit' => $unit,
             ];
         }
 
