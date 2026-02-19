@@ -1,8 +1,4 @@
 (function () {
-    var style = document.createElement('style');
-    style.textContent = '#event_city_checkout:-webkit-autofill,#event_city_checkout:-webkit-autofill:hover,#event_city_checkout:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #fff inset;box-shadow:0 0 0 1000px #fff inset;-webkit-text-fill-color:inherit;transition:background-color 9999s ease-in-out 0s;}';
-    document.head.appendChild(style);
-
     var ajaxUrl = (typeof zsLocationSync !== 'undefined') ? zsLocationSync.ajaxUrl : '';
     if (!ajaxUrl) { return; }
 

@@ -2,6 +2,7 @@
 namespace ZeroSense\Features\WooCommerce\Deposits\Components;
 
 use WC_Order;
+use ZeroSense\Core\Logger;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Utils;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Logs;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys;
@@ -17,6 +18,8 @@ class Persistence
         add_action('woocommerce_saved_order_items', [$this, 'onOrderItemsSaved'], 20, 1);
         // Note: this hook passes (bool $and_taxes, WC_Order $order)
         add_action('woocommerce_order_after_calculate_totals', [$this, 'onAfterCalculateTotals'], 20, 2);
+        // HPOS: fires after the order object is fully saved (items + totals already updated)
+        add_action('woocommerce_after_order_object_save', [$this, 'onAfterOrderObjectSave'], 20, 1);
 
         // Generic payment completion for gateways other than Redsys
         add_action('woocommerce_payment_complete', [$this, 'onPaymentComplete'], 20, 1);
@@ -29,17 +32,28 @@ class Persistence
 
     public function onOrderItemsSaved(int $orderId): void
     {
+        Logger::debug('[ZS Deposits] onOrderItemsSaved fired for order ' . $orderId);
         $order = wc_get_order($orderId);
         if ($order instanceof WC_Order) {
             $this->recomputeAndPersist($order);
+        } else {
+            Logger::debug('[ZS Deposits] onOrderItemsSaved: could not load order ' . $orderId);
         }
     }
 
     public function onAfterCalculateTotals($andTaxes, $order): void
     {
+        $orderId = ($order instanceof WC_Order) ? $order->get_id() : 'unknown';
+        Logger::debug('[ZS Deposits] onAfterCalculateTotals fired for order ' . $orderId);
         if ($order instanceof WC_Order) {
             $this->recomputeAndPersist($order);
         }
+    }
+
+    public function onAfterOrderObjectSave(WC_Order $order): void
+    {
+        Logger::debug('[ZS Deposits] onAfterOrderObjectSave fired for order ' . $order->get_id());
+        $this->recomputeAndPersist($order);
     }
 
     public function onPaymentComplete(int $orderId): void
@@ -52,11 +66,13 @@ class Persistence
 
     private function recomputeAndPersist(WC_Order $order): void
     {
+        $orderId = $order->get_id();
+
         // Avoid duplicate auto logs in the same request when triggered by Admin AJAX or reset
-        $skipKey = 'zs_skip_deposits_auto_log_' . $order->get_id();
+        $skipKey = 'zs_skip_deposits_auto_log_' . $orderId;
         $shouldSkip = (bool) wp_cache_get($skipKey, 'zero-sense');
         if ($shouldSkip) {
-            // Clear the flag for safety and exit early
+            Logger::debug('[ZS Deposits] recomputeAndPersist SKIPPED (cache flag) for order ' . $orderId);
             wp_cache_delete($skipKey, 'zero-sense');
             return;
         }
@@ -67,6 +83,11 @@ class Persistence
         // Estados donde se permite recalcular automáticamente
         $recalculableStatuses = ['pending', 'budget-requested'];
         $shouldRecalculate = in_array($orderStatus, $recalculableStatuses, true) && !$isManualOverride;
+
+        Logger::debug(sprintf(
+            '[ZS Deposits] recomputeAndPersist order %d | status=%s | manual=%s | shouldRecalculate=%s',
+            $orderId, $orderStatus, $isManualOverride ? 'yes' : 'no', $shouldRecalculate ? 'yes' : 'no'
+        ));
 
         // Previous persisted values
         $oldDeposit   = (float) ($order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true) ?: 0);
@@ -81,6 +102,7 @@ class Persistence
         }
 
         if (empty($info) || ($info['has_deposit'] ?? false) === false) {
+            Logger::debug('[ZS Deposits] recomputeAndPersist EXIT: no deposit info for order ' . $orderId);
             return;
         }
 
@@ -117,8 +139,15 @@ class Persistence
         $wasEmpty = ($oldDeposit <= 0 && $oldRemaining <= 0);
         $isFirstTime = $wasEmpty && ($newDeposit > 0 || $newRemaining > 0);
         
+        Logger::debug(sprintf(
+            '[ZS Deposits] order %d | old=%.2f/%.2f | new=%.2f/%.2f | firstTime=%s | changed=%s',
+            $orderId, $oldDeposit, $oldRemaining, $newDeposit, $newRemaining,
+            $isFirstTime ? 'yes' : 'no', $hasSignificantChange ? 'yes' : 'no'
+        ));
+
         // Only save and log if it's first time OR there's a significant change
         if (!$isFirstTime && !$hasSignificantChange) {
+            Logger::debug('[ZS Deposits] recomputeAndPersist EXIT: no significant change for order ' . $orderId);
             return;
         }
 
