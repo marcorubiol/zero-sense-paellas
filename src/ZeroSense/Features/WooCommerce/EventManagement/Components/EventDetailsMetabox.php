@@ -475,7 +475,7 @@ class EventDetailsMetabox
                     
                     if (totalGuests === sumOfPeople && sumOfPeople > 0) {
                         validationContainer.classList.add('match');
-                        validationMessage.textContent = 'El número de personas coincide';
+                        validationMessage.textContent = '';
                     } else if (totalGuests < sumOfPeople && sumOfPeople > 0) {
                         validationContainer.classList.add('lower');
                         validationMessage.textContent = 'El número de personas totales es más bajo que la suma de personas';

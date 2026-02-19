@@ -1069,7 +1069,7 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     display: flex;
     align-items: center;
     margin-left: 8px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     color: #646970;
     transition: all 0.2s ease;
@@ -1093,15 +1093,15 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
 }
 
 .zs-guest-validation.higher {
-    color: #d63638;
+    color: #dba617;
 }
 
 .zs-guest-validation.higher input#event_total_guests {
-    color: #d63638;
+    color: #dba617;
 }
 
 .zs-guest-validation-message {
     white-space: nowrap;
-    font-size: 10px;
-    opacity: 0.8;
+    font-size: 12px;
+    opacity: 0.9;
 }
