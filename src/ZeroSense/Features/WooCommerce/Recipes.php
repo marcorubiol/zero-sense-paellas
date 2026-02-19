@@ -964,77 +964,78 @@ class Recipes implements FeatureInterface
             update_post_meta($postId, self::META_INGREDIENTS, $out);
         }
 
-        // Save utensils
-        $rawUtensils = $_POST['zs_recipe_utensils'] ?? null;
-        if (is_array($rawUtensils)) {
-            $utensilIds = isset($rawUtensils['utensil']) && is_array($rawUtensils['utensil']) ? $rawUtensils['utensil'] : [];
-            $utensilQtys = isset($rawUtensils['qty']) && is_array($rawUtensils['qty']) ? $rawUtensils['qty'] : [];
-            $utensilPaxRatios = isset($rawUtensils['pax_ratio']) && is_array($rawUtensils['pax_ratio']) ? $rawUtensils['pax_ratio'] : [];
-            $utensilUnits = isset($rawUtensils['unit']) && is_array($rawUtensils['unit']) ? $rawUtensils['unit'] : [];
+        $isPaellaMode = isset($_POST['zs_recipe_needs_paella']) && $_POST['zs_recipe_needs_paella'] === '1';
 
-            $outUtensils = [];
-            $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios), count($utensilUnits));
-            for ($i = 0; $i < $countUtensils; $i++) {
-                $id = isset($utensilIds[$i]) ? (int) $utensilIds[$i] : 0;
-                $qty = isset($utensilQtys[$i]) ? (float) $utensilQtys[$i] : 0.0;
-                $paxRatio = isset($utensilPaxRatios[$i]) ? (int) $utensilPaxRatios[$i] : 1;
-                $unit = isset($utensilUnits[$i]) ? (string) $utensilUnits[$i] : 'u';
+        // Save utensils — only when section is visible (paella mode OFF)
+        if (!$isPaellaMode) {
+            $rawUtensils = $_POST['zs_recipe_utensils'] ?? null;
+            if (is_array($rawUtensils)) {
+                $utensilIds = isset($rawUtensils['utensil']) && is_array($rawUtensils['utensil']) ? $rawUtensils['utensil'] : [];
+                $utensilQtys = isset($rawUtensils['qty']) && is_array($rawUtensils['qty']) ? $rawUtensils['qty'] : [];
+                $utensilPaxRatios = isset($rawUtensils['pax_ratio']) && is_array($rawUtensils['pax_ratio']) ? $rawUtensils['pax_ratio'] : [];
+                $utensilUnits = isset($rawUtensils['unit']) && is_array($rawUtensils['unit']) ? $rawUtensils['unit'] : [];
 
-                if ($id <= 0 || $qty <= 0 || $paxRatio < 1) {
+                $outUtensils = [];
+                $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios), count($utensilUnits));
+                for ($i = 0; $i < $countUtensils; $i++) {
+                    $id = isset($utensilIds[$i]) ? (int) $utensilIds[$i] : 0;
+                    $qty = isset($utensilQtys[$i]) ? (float) $utensilQtys[$i] : 0.0;
+                    $paxRatio = isset($utensilPaxRatios[$i]) ? (int) $utensilPaxRatios[$i] : 1;
+                    $unit = isset($utensilUnits[$i]) ? (string) $utensilUnits[$i] : 'u';
+
+                    if ($id <= 0 || $qty <= 0 || $paxRatio < 1) {
+                        continue;
+                    }
+
+                    if (!in_array($unit, $allowedUtensilUnits, true)) {
+                        $unit = 'u';
+                    }
+
+                    $outUtensils[] = [
+                        'utensil' => $id,
+                        'qty' => $qty,
+                        'pax_ratio' => $paxRatio,
+                        'unit' => $unit,
+                    ];
+                }
+
+                if ($outUtensils === []) {
+                    delete_post_meta($postId, self::META_UTENSILS);
+                } else {
+                    update_post_meta($postId, self::META_UTENSILS, $outUtensils);
+                }
+            } else {
+                delete_post_meta($postId, self::META_UTENSILS);
+            }
+        }
+
+        // Save liquids — only when section is visible (paella mode ON)
+        if ($isPaellaMode) {
+            $rawLiquids = $_POST['zs_recipe_liquids'] ?? null;
+            $liquidIds = isset($rawLiquids['liquid']) && is_array($rawLiquids['liquid']) ? $rawLiquids['liquid'] : [];
+            $liquidQtys = isset($rawLiquids['qty']) && is_array($rawLiquids['qty']) ? $rawLiquids['qty'] : [];
+
+            $outLiquids = [];
+            $countLiquids = max(count($liquidIds), count($liquidQtys));
+            for ($i = 0; $i < $countLiquids; $i++) {
+                $id = isset($liquidIds[$i]) ? (int) $liquidIds[$i] : 0;
+                $qty = isset($liquidQtys[$i]) ? (float) $liquidQtys[$i] : 0.0;
+
+                if ($id <= 0 || $qty <= 0) {
                     continue;
                 }
 
-                if (!in_array($unit, $allowedUtensilUnits, true)) {
-                    $unit = 'u';
-                }
-
-                $outUtensils[] = [
-                    'utensil' => $id,
+                $outLiquids[] = [
+                    'liquid' => $id,
                     'qty' => $qty,
-                    'pax_ratio' => $paxRatio,
-                    'unit' => $unit,
                 ];
             }
 
-            if ($outUtensils === []) {
-                delete_post_meta($postId, self::META_UTENSILS);
+            if ($outLiquids === []) {
+                delete_post_meta($postId, self::META_LIQUIDS);
             } else {
-                update_post_meta($postId, self::META_UTENSILS, $outUtensils);
+                update_post_meta($postId, self::META_LIQUIDS, $outLiquids);
             }
-        } else {
-            delete_post_meta($postId, self::META_UTENSILS);
-        }
-
-        // Save liquids
-        $rawLiquids = $_POST['zs_recipe_liquids'] ?? null;
-        if (!is_array($rawLiquids)) {
-            delete_post_meta($postId, self::META_LIQUIDS);
-            return;
-        }
-
-        $liquidIds = isset($rawLiquids['liquid']) && is_array($rawLiquids['liquid']) ? $rawLiquids['liquid'] : [];
-        $liquidQtys = isset($rawLiquids['qty']) && is_array($rawLiquids['qty']) ? $rawLiquids['qty'] : [];
-
-        $outLiquids = [];
-        $countLiquids = max(count($liquidIds), count($liquidQtys));
-        for ($i = 0; $i < $countLiquids; $i++) {
-            $id = isset($liquidIds[$i]) ? (int) $liquidIds[$i] : 0;
-            $qty = isset($liquidQtys[$i]) ? (float) $liquidQtys[$i] : 0.0;
-
-            if ($id <= 0 || $qty <= 0) {
-                continue;
-            }
-
-            $outLiquids[] = [
-                'liquid' => $id,
-                'qty' => $qty,
-            ];
-        }
-
-        if ($outLiquids === []) {
-            delete_post_meta($postId, self::META_LIQUIDS);
-        } else {
-            update_post_meta($postId, self::META_LIQUIDS, $outLiquids);
         }
     }
 

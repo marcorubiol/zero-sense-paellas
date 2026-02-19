@@ -2625,7 +2625,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $parts[] = '<li class="zs-recipe-ingredient">' . esc_html($ingName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></li>';
+                    $parts[] = '<li class="zs-recipe-ingredient"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></li>';
                 }
             }
 
@@ -2641,14 +2641,14 @@ class BricksDynamicTags implements FeatureInterface
                     if ($amount <= 0) continue;
                     $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
                     if ($liqName === '') continue;
-                    $parts[] = '<li class="zs-recipe-ingredient">' . esc_html($liqName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($amount)) . 'L</span></li>';
+                    $parts[] = '<li class="zs-recipe-ingredient"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($amount)) . 'L</span></li>';
                 }
             }
 
             $value = !empty($parts) ? '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $parts) . '</ul>' : '<p>—</p>';
 
             $html .= '<div class="brxe-div fdr-card__field">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($group['title']) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</span>';
             $html .= $value;
             $html .= '</div>';
         }
