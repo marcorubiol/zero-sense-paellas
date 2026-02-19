@@ -124,19 +124,26 @@ class ShoppingList implements FeatureInterface
         $locations = get_terms(['taxonomy' => 'service-area', 'hide_empty' => false]);
         if (is_wp_error($locations) || !is_array($locations)) { $locations = []; }
 
-        $preOrders = $preList = $preOrderIds = [];
+        $preOrders = $preList = $preItemKeys = [];
         if ($preFiltered) {
-            $preOrders   = $this->queryOrders($from, $to, $loc);
-            $preOrderIds = $ordersRaw !== ''
-                ? array_values(array_filter(array_map('absint', explode(',', $ordersRaw))))
-                : array_column($preOrders, 'id');
-            if (!empty($preOrderIds)) {
-                $preList = $this->aggregateIngredients($preOrderIds);
+            $preOrders = $this->queryOrders($from, $to, $loc);
+            $validKeys = [];
+            foreach ($preOrders as $o) {
+                foreach ($o['items'] as $item) { $validKeys[] = $item['key']; }
+            }
+            if ($ordersRaw !== '') {
+                $requested   = array_filter(explode(',', $ordersRaw));
+                $preItemKeys = array_values(array_intersect($requested, $validKeys));
+            } else {
+                $preItemKeys = $validKeys;
+            }
+            if (!empty($preItemKeys)) {
+                $preList = $this->aggregateIngredients($preItemKeys);
             }
         }
 
         ob_start();
-        $this->renderPage($from, $to, $loc, $locations, $preOrders, $preOrderIds, $preList);
+        $this->renderPage($from, $to, $loc, $locations, $preOrders, $preItemKeys, $preList);
         return (string) ob_get_clean();
     }
 
@@ -364,7 +371,7 @@ class ShoppingList implements FeatureInterface
     // HTML
     // -------------------------------------------------------------------------
 
-    private function renderPage(string $from, string $to, int $loc, array $locations, array $preOrders, array $preOrderIds, array $preList): void
+    private function renderPage(string $from, string $to, int $loc, array $locations, array $preOrders, array $preItemKeys, array $preList): void
     {
         ?>
         <div class="zs-sl" id="zs-sl">
@@ -394,7 +401,7 @@ class ShoppingList implements FeatureInterface
             </div>
             <div class="zs-sl__body" id="zs-sl-body">
                 <?php if (!empty($preOrders)) : ?>
-                    <?php $this->renderOrdersPanel($preOrders, $preOrderIds); ?>
+                    <?php $this->renderOrdersPanel($preOrders, $preItemKeys); ?>
                     <div id="zs-sl-list-wrap"><?php $this->renderList($preList); ?></div>
                 <?php else : ?>
                     <div class="zs-sl__empty" id="zs-sl-empty">
@@ -409,7 +416,7 @@ class ShoppingList implements FeatureInterface
         <?php
     }
 
-    private function renderOrdersPanel(array $orders, array $selectedIds): void
+    private function renderOrdersPanel(array $orders, array $selectedItemKeys): void
     {
         ?>
         <div class="zs-sl__orders no-print" id="zs-sl-orders">
@@ -430,7 +437,7 @@ class ShoppingList implements FeatureInterface
                         <div class="zs-sl__order-row2">
                             <?php foreach ($o['items'] as $item) : ?>
                                 <label class="zs-sl__item-check-label">
-                                    <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" checked>
+                                    <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" <?php checked(empty($selectedItemKeys) || in_array($item['key'], $selectedItemKeys, true)); ?>>
                                     <span><?php echo esc_html($item['name']); ?><?php if ($item['qty'] > 1) : ?> ×<?php echo esc_html((string) $item['qty']); ?><?php endif; ?></span>
                                 </label>
                             <?php endforeach; ?>
@@ -456,11 +463,15 @@ class ShoppingList implements FeatureInterface
         usort($list, function (array $a, array $b): int { return strcmp($a['name'], $b['name']); });
         ?>
         <div class="zs-sl__list print-only" id="zs-sl-list">
+            <div class="zs-sl__list-header">
+                <h3 class="zs-sl__list-title"><?php esc_html_e('Llista de la compra', 'zero-sense'); ?></h3>
+                <svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            </div>
             <div class="zs-sl__list-items">
                 <?php foreach ($list as $item) : ?>
                     <div class="zs-sl__list-item">
                         <span class="zs-sl__item-name"><?php echo esc_html($item['name']); ?></span>
-                        <span class="zs-sl__item-qty"><?php echo esc_html($this->formatNumber($item['qty'])); ?> <span class="zs-sl__item-unit"><?php echo esc_html($item['unit']); ?></span></span>
+                        <span class="zs-sl__item-qty-wrap"><span class="zs-sl__item-qty"><?php echo esc_html($this->formatNumber($item['qty'])); ?></span><span class="zs-sl__item-unit"><?php echo esc_html($item['unit']); ?></span></span>
                     </div>
                 <?php endforeach; ?>
             </div>

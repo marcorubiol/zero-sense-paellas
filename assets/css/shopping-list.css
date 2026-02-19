@@ -138,41 +138,49 @@
 
 /* Shopping list */
 .zs-sl__list {
-    border: 1px solid var(--border-color-light);
-    border-radius: var(--radius);
-    overflow: hidden;
+    border-left: 3px solid var(--color-primary);
+    padding-left: var(--space-s);
     margin-top: var(--space-m);
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 480px;
 }
-.zs-sl__list::before {
-    content: 'Llista de la compra';
-    display: block;
-    text-transform: uppercase;
-    padding: var(--space-xs) var(--space-s);
-    background: var(--off-white);
-    border-bottom: 1px solid var(--border-color-light);
+.zs-sl__list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-s);
+}
+.zs-sl__list-title {
+    margin: 0;
+}
+.zs-sl__list-icon {
+    opacity: 0.3;
+    flex-shrink: 0;
 }
 .zs-sl__list-items {
-    padding: calc(var(--space-xs) / 2) 0;
+    padding: 0;
 }
 .zs-sl__list-item {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding: calc(var(--space-xs) / 1.5) var(--space-s);
+    padding: calc(var(--space-xs) / 1.2) 0;
     border-bottom: 1px solid var(--border-color-light);
 }
 .zs-sl__list-item:last-child {
     border-bottom: none;
 }
-.zs-sl__item-qty {
+.zs-sl__item-name {
+    font-weight: 700;
+}
+.zs-sl__item-qty-wrap {
     white-space: nowrap;
-    margin-left: var(--space-xs);
+    margin-left: var(--space-s);
+    display: flex;
+    gap: calc(var(--space-xs) / 2);
+    align-items: baseline;
 }
 .zs-sl__item-unit {
-    margin-left: calc(var(--space-xs) / 4);
+    color: var(--text-dark-muted);
 }
 
 /* Print */

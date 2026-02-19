@@ -76,11 +76,14 @@
             return '<div class="zs-sl__list-empty"><p>No hi ha ingredients per a les comandes seleccionades.</p></div>';
         }
         list = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
-        var html = '<div class="zs-sl__list print-only" id="zs-sl-list"><div class="zs-sl__list-items">';
+        var icon = '<svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+        var html = '<div class="zs-sl__list print-only" id="zs-sl-list">';
+        html += '<div class="zs-sl__list-header"><h3 class="zs-sl__list-title">Llista de la compra</h3>' + icon + '</div>';
+        html += '<div class="zs-sl__list-items">';
         list.forEach(function (item) {
             html += '<div class="zs-sl__list-item">';
             html += '<span class="zs-sl__item-name">' + esc(item.name) + '</span>';
-            html += '<span class="zs-sl__item-qty">' + formatQty(item.qty) + ' <span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
+            html += '<span class="zs-sl__item-qty-wrap"><span class="zs-sl__item-qty">' + formatQty(item.qty) + '</span><span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
             html += '</div>';
         });
         html += '</div></div>';
