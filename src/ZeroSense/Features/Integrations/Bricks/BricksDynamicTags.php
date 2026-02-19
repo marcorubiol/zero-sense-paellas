@@ -292,10 +292,12 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_exists}',               'label' => 'Has Recipes (1/0)',                              'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_total_ingredients_list}',   'label' => 'Recipe Ingredients Total (List)',                'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_total_ingredients_simple}', 'label' => 'Recipe Ingredients Total (Inline — one field per ingredient)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_ingredients_simple}',      'label' => 'Recipe Ingredients (Inline — one field per ingredient)',       'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_liquids_simple}',       'label' => 'Recipe Liquids (Inline — one field per liquid)',  'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_full_simple}',          'label' => 'Recipe Ingredients + Liquids (Inline — combined)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
 
@@ -477,7 +479,7 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_total_ingredients_list}') {
             return $this->getRecipeTotalIngredientsList($post);
         }
-        if ($tag === '{zs_recipe_total_ingredients_simple}') {
+        if ($tag === '{zs_recipe_total_ingredients_simple}' || $tag === '{zs_recipe_ingredients_simple}') {
             return $this->getRecipeTotalIngredientsSimple($post);
         }
         if ($tag === '{zs_recipe_utensils_total}') {
@@ -491,6 +493,9 @@ class BricksDynamicTags implements FeatureInterface
         }
         if ($tag === '{zs_recipe_liquids_simple}') {
             return $this->getRecipeLiquidsSimple($post);
+        }
+        if ($tag === '{zs_recipe_full_simple}') {
+            return $this->getRecipeFullSimple($post);
         }
         if ($tag === '{zs_inventory_list}') {
             return $this->getInventoryList($post);
@@ -566,10 +571,12 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_exists}',              $this->getRecipeExists($post),        $content);
         $content = str_replace('{zs_recipe_total_ingredients_list}',   $this->getRecipeTotalIngredientsList($post),   $content);
         $content = str_replace('{zs_recipe_total_ingredients_simple}', $this->getRecipeTotalIngredientsSimple($post), $content);
+        $content = str_replace('{zs_recipe_ingredients_simple}',      $this->getRecipeTotalIngredientsSimple($post), $content);
         $content = str_replace('{zs_recipe_utensils_total}',      $this->getRecipeUtensilsTotal($post),     $content);
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
         $content = str_replace('{zs_recipe_liquids_simple}',      $this->getRecipeLiquidsSimple($post),     $content);
+        $content = str_replace('{zs_recipe_full_simple}',         $this->getRecipeFullSimple($post),        $content);
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
         $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
 
@@ -3279,6 +3286,14 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return $html;
+    }
+
+    /**
+     * Get combined ingredients + liquids (one fdr-card__field per item)
+     */
+    private function getRecipeFullSimple($post): string
+    {
+        return $this->getRecipeTotalIngredientsSimple($post) . $this->getRecipeLiquidsSimple($post);
     }
 
     /**
