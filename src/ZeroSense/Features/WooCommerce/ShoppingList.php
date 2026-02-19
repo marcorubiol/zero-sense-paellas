@@ -275,8 +275,8 @@ class ShoppingList implements FeatureInterface
             'status'     => $statuses,
             'meta_query' => [
                 'relation' => 'AND',
-                ['key' => self::META_EVENT_DATE,  'value' => [$from, $to], 'compare' => 'BETWEEN', 'type' => 'DATE'],
-                ['key' => self::META_SERVICE_LOC, 'value' => $loc,         'compare' => '=',       'type' => 'NUMERIC'],
+                ['key' => self::META_EVENT_DATE,  'value' => [$from, $to], 'compare' => 'BETWEEN', 'type' => 'CHAR'],
+                ['key' => self::META_SERVICE_LOC, 'value' => (string) $loc, 'compare' => '='],
             ],
         ]);
         if (!is_array($ids)) { return []; }
