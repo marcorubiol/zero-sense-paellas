@@ -124,7 +124,6 @@
         data.append('from', vals.from);
         data.append('to', vals.to);
         data.append('loc', vals.loc);
-        console.log('[ZS] doRequest | item_keys sent:', orderIds ? orderIds.join(',') : '(none — all)');
         if (orderIds && orderIds.length > 0) {
             data.append('item_keys', orderIds.join(','));
         }
@@ -142,7 +141,6 @@
                 }
 
                 currentSignedUrl = res.data.signed_url || '';
-                console.log('[ZS] server response | orders:', (res.data.orders || []).length, '| list items:', (res.data.list || []).length, '| list:', res.data.list);
                 var ordersHtml = renderOrders(res.data.orders, orderIds);
                 var listHtml   = renderList(res.data.list);
                 body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
@@ -161,8 +159,6 @@
         var uncheckAll = document.getElementById('zs-sl-uncheck-all');
         var update     = document.getElementById('zs-sl-update');
         var share      = document.getElementById('zs-sl-share');
-        console.log('[ZS] bindBodyEvents | order-toggles:', document.querySelectorAll('.zs-sl__order-toggle').length, '| item-checks:', document.querySelectorAll('.zs-sl__item-check').length, '| update btn:', !!update);
-
         if (checkAll) {
             checkAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = true; });
@@ -179,10 +175,8 @@
             toggle.addEventListener('change', function () {
                 var oid = this.getAttribute('data-order-id');
                 var orderItem = document.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
-                console.log('[ZS] order-toggle change | order:', oid, '| checked:', toggle.checked);
                 document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]').forEach(function (el) {
                     el.checked = toggle.checked;
-                    console.log('[ZS]   item-check', el.value, '→', el.checked);
                 });
                 if (orderItem) {
                     orderItem.classList.toggle('is-disabled', !toggle.checked);
@@ -197,20 +191,15 @@
         document.querySelectorAll('.zs-sl__item-check').forEach(function (item) {
             item.addEventListener('change', function () {
                 var oid = this.getAttribute('data-order-id');
-                console.log('[ZS] item-check change | key:', this.value, '| order:', oid, '| checked:', this.checked);
                 var items = document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]');
                 var anyChecked = Array.from(items).some(function (el) { return el.checked; });
                 var toggle = document.querySelector('.zs-sl__order-toggle[data-order-id="' + oid + '"]');
-                if (toggle) {
-                    toggle.checked = anyChecked;
-                    console.log('[ZS]   order-toggle', oid, '→', anyChecked);
-                }
+                if (toggle) { toggle.checked = anyChecked; }
             });
         });
         if (update) {
             update.addEventListener('click', function () {
                 var keys = getCheckedKeys();
-                console.log('[ZS] Actualitzar llista | checked item keys:', keys);
                 doRequest(keys.length > 0 ? keys : null);
             });
         }
