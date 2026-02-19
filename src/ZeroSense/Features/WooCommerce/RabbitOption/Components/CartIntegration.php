@@ -21,11 +21,9 @@ class CartIntegration
         add_action('wp_ajax_zs_set_rabbit_choice', [$this, 'ajaxSetRabbitChoice']);
         add_action('wp_ajax_nopriv_zs_set_rabbit_choice', [$this, 'ajaxSetRabbitChoice']);
 
-        // Reset rabbit choices when cart is emptied (new order starts)
-        add_action('woocommerce_cart_emptied', [$this, 'resetRabbitChoices']);
-
-        // Reset rabbit choices when order is completed
-        add_action('woocommerce_thankyou', [$this, 'resetRabbitChoices']);
+        // Clear rabbit session keys when cart is emptied or order completes
+        add_action('woocommerce_cart_emptied', [$this, 'clearRabbitSession']);
+        add_action('woocommerce_thankyou', [$this, 'clearRabbitSession']);
     }
 
     public function ajaxSetRabbitChoice(): void
@@ -75,6 +73,12 @@ class CartIntegration
         }
 
         $cartItemData[MetaKeys::CART_KEY] = $choice;
+
+        // Consume session key so it doesn't bleed into future add-to-cart calls
+        if (function_exists('WC') && WC()->session) {
+            WC()->session->set('zs_rabbit_choice_' . $productId, null);
+        }
+
         return $cartItemData;
     }
 
@@ -94,29 +98,23 @@ class CartIntegration
         return $itemData;
     }
 
-    public function saveToOrderItem(WC_Order_Item_Product $item, string $cartItemKey, array $values, $order): void
-    {
-        if (!empty($values[MetaKeys::CART_KEY])) {
-            $item->add_meta_data(MetaKeys::RABBIT_CHOICE, $values[MetaKeys::CART_KEY], true);
-        }
-    }
-
-    /**
-     * Reset all rabbit choices when cart is emptied (new order starts)
-     */
-    public function resetRabbitChoices(): void
+    public function clearRabbitSession(): void
     {
         if (!function_exists('WC') || !WC()->session) {
             return;
         }
-
-        // Get all session data and remove rabbit choice keys
         $sessionData = WC()->session->get_session_data();
-        
-        foreach ($sessionData as $key => $value) {
+        foreach (array_keys($sessionData) as $key) {
             if (strpos($key, 'zs_rabbit_choice_') === 0) {
-                WC()->session->set($key, null); // Remove from session
+                WC()->session->set($key, null);
             }
+        }
+    }
+
+    public function saveToOrderItem(WC_Order_Item_Product $item, string $cartItemKey, array $values, $order): void
+    {
+        if (!empty($values[MetaKeys::CART_KEY])) {
+            $item->add_meta_data(MetaKeys::RABBIT_CHOICE, $values[MetaKeys::CART_KEY], true);
         }
     }
 }
