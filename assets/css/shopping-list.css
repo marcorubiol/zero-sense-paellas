@@ -94,6 +94,11 @@
     min-width: 60px;
     color: var(--color-primary);
 }
+.zs-sl__order-date,
+.zs-sl__order-guests,
+.zs-sl__order-products {
+    color: var(--text-dark-muted);
+}
 .zs-sl__order-customer {
     min-width: 140px;
 }
@@ -105,6 +110,18 @@
 }
 .zs-sl__order-products {
     flex: 1;
+}
+#zs-sl-check-all,
+#zs-sl-uncheck-all {
+    all: unset;
+    cursor: pointer;
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+#zs-sl-check-all:hover,
+#zs-sl-uncheck-all:hover {
+    color: var(--color-primary-dark);
 }
 .zs-sl__orders-footer {
     padding: var(--space-xs) var(--space-s);

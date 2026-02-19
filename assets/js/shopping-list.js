@@ -39,8 +39,8 @@
         var html = '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
         html += '<h3 class="zs-sl__section-title">Comandes incloses</h3>';
         html += '<div class="zs-sl__orders-actions">';
-        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-check-all">Tots</button> ';
-        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-uncheck-all">Cap</button>';
+        html += '<button type="button" class="" id="zs-sl-check-all">Tots</button> ';
+        html += '<button type="button" class="" id="zs-sl-uncheck-all">Cap</button>';
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
@@ -56,9 +56,9 @@
         });
         html += '</div>';
         html += '<div class="zs-sl__orders-footer">';
-        html += '<button type="button" class="btn--primary" id="zs-sl-update">Actualitzar llista</button> ';
+        html += '<button type="button" class="btn--primary btn--outline" id="zs-sl-update">Actualitzar llista</button> ';
         html += '<button type="button" class="btn--base btn--outline" id="zs-sl-share">Copiar enllaç</button> ';
-        html += '<button type="button" class="btn--base btn--outline" id="zs-sl-print">Imprimir</button>';
+        html += '<button type="button" class="btn--base" id="zs-sl-print">Imprimir</button>';
         html += '</div></div>';
         return html;
     }
@@ -88,7 +88,7 @@
         window.print();
     }
 
-    var currentSignedUrl = '';
+    var currentSignedUrl = window.location.href.indexOf('zs_sl_sig') !== -1 ? window.location.href : '';
 
     function doRequest(orderIds) {
         var vals = getFormValues();
@@ -162,10 +162,18 @@
         if (share) {
             share.addEventListener('click', function () {
                 if (!currentSignedUrl) { return; }
-                navigator.clipboard.writeText(currentSignedUrl).then(function () {
-                    share.textContent = 'Copiat!';
-                    setTimeout(function () { share.textContent = 'Copiar enllaç'; }, 2000);
-                });
+                var btn = share;
+                function onCopied() {
+                    btn.textContent = 'Copiat!';
+                    setTimeout(function () { btn.textContent = 'Copiar enllaç'; }, 2000);
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentSignedUrl).then(onCopied).catch(function () {
+                        prompt('Copia aquest enllaç:', currentSignedUrl);
+                    });
+                } else {
+                    prompt('Copia aquest enllaç:', currentSignedUrl);
+                }
             });
         }
         var printBtn = document.getElementById('zs-sl-print');
