@@ -1086,10 +1086,6 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     color: #d67700 !important;
 }
 
-.zs-guest-validation.higher input#event_total_guests {
-    color: #d67700 !important;
-}
-
 .zs-guest-validation-message {
     white-space: nowrap;
     font-size: 12px;
