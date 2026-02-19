@@ -426,9 +426,16 @@ class ShoppingList implements FeatureInterface
                 <button type="button" class="" id="zs-sl-uncheck-all"><?php esc_html_e('Cap', 'zero-sense'); ?></button>
             </div>
             <div class="zs-sl__orders-list" id="zs-sl-orders-list">
-                <?php foreach ($orders as $o) : ?>
-                    <div class="zs-sl__order-item">
+                <?php foreach ($orders as $o) :
+                    $orderId     = (string) $o['id'];
+                    $allChecked  = empty($selectedItemKeys) || !empty(array_filter($o['items'], function ($i) use ($selectedItemKeys) { return in_array($i['key'], $selectedItemKeys, true); }));
+                ?>
+                    <div class="zs-sl__order-item" data-order-id="<?php echo esc_attr($orderId); ?>">
                         <div class="zs-sl__order-row1">
+                            <label class="zs-sl__switch" title="<?php esc_attr_e('Incloure comanda', 'zero-sense'); ?>">
+                                <input type="checkbox" class="zs-sl__order-toggle" data-order-id="<?php echo esc_attr($orderId); ?>" <?php checked($allChecked); ?>>
+                                <span class="zs-sl__switch-track"></span>
+                            </label>
                             <span class="zs-sl__order-num">#<?php echo esc_html((string) $o['number']); ?></span>
                             <span class="zs-sl__order-customer"><?php echo esc_html($o['customer']); ?></span>
                             <span class="zs-sl__order-date"><?php echo esc_html($o['date']); ?></span>
@@ -437,7 +444,10 @@ class ShoppingList implements FeatureInterface
                         <div class="zs-sl__order-row2">
                             <?php foreach ($o['items'] as $item) : ?>
                                 <label class="zs-sl__item-check-label">
-                                    <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" <?php checked(empty($selectedItemKeys) || in_array($item['key'], $selectedItemKeys, true)); ?>>
+                                    <span class="zs-sl__switch">
+                                        <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" data-order-id="<?php echo esc_attr($orderId); ?>" <?php checked(empty($selectedItemKeys) || in_array($item['key'], $selectedItemKeys, true)); ?>>
+                                        <span class="zs-sl__switch-track"></span>
+                                    </span>
                                     <span><?php echo esc_html($item['name']); ?><?php if ($item['qty'] > 1) : ?> ×<?php echo esc_html((string) $item['qty']); ?><?php endif; ?></span>
                                 </label>
                             <?php endforeach; ?>

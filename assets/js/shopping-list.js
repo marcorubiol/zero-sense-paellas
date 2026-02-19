@@ -44,8 +44,10 @@
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
-            html += '<div class="zs-sl__order-item">';
+            var oid = String(o.id);
+            html += '<div class="zs-sl__order-item" data-order-id="' + esc(oid) + '">';
             html += '<div class="zs-sl__order-row1">';
+            html += '<label class="zs-sl__switch"><input type="checkbox" class="zs-sl__order-toggle" data-order-id="' + esc(oid) + '" checked><span class="zs-sl__switch-track"></span></label>';
             html += '<span class="zs-sl__order-num">#' + esc(o.number) + '</span>';
             html += '<span class="zs-sl__order-customer">' + esc(o.customer) + '</span>';
             html += '<span class="zs-sl__order-date">' + esc(o.date) + '</span>';
@@ -55,7 +57,7 @@
             (o.items || []).forEach(function (item) {
                 var label = item.name + (item.qty > 1 ? ' ×' + item.qty : '');
                 html += '<label class="zs-sl__item-check-label">';
-                html += '<input type="checkbox" class="zs-sl__item-check" value="' + esc(item.key) + '" checked>';
+                html += '<span class="zs-sl__switch"><input type="checkbox" class="zs-sl__item-check" value="' + esc(item.key) + '" data-order-id="' + esc(oid) + '" checked><span class="zs-sl__switch-track"></span></span>';
                 html += '<span>' + esc(label) + '</span>';
                 html += '</label>';
             });
@@ -156,14 +158,31 @@
 
         if (checkAll) {
             checkAll.addEventListener('click', function () {
-                document.querySelectorAll('.zs-sl__item-check').forEach(function (el) { el.checked = true; });
+                document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = true; });
             });
         }
         if (uncheckAll) {
             uncheckAll.addEventListener('click', function () {
-                document.querySelectorAll('.zs-sl__item-check').forEach(function (el) { el.checked = false; });
+                document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = false; });
             });
         }
+        document.querySelectorAll('.zs-sl__order-toggle').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                var oid = this.getAttribute('data-order-id');
+                document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]').forEach(function (el) {
+                    el.checked = toggle.checked;
+                });
+            });
+        });
+        document.querySelectorAll('.zs-sl__item-check').forEach(function (item) {
+            item.addEventListener('change', function () {
+                var oid = this.getAttribute('data-order-id');
+                var items = document.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]');
+                var anyChecked = Array.from(items).some(function (el) { return el.checked; });
+                var toggle = document.querySelector('.zs-sl__order-toggle[data-order-id="' + oid + '"]');
+                if (toggle) { toggle.checked = anyChecked; }
+            });
+        });
         if (update) {
             update.addEventListener('click', function () {
                 var keys = getCheckedKeys();
