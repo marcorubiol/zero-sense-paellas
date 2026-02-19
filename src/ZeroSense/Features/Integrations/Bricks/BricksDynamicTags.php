@@ -154,6 +154,7 @@ class BricksDynamicTags implements FeatureInterface
         add_filter('bricks/frontend/render_data', [$this, 'renderContent'], 10, 2);
         add_action('wp', [$this, 'maybeResetMetaBoxTranslations']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueRabbitToggleAssets']);
+        add_action('init', [$this, 'registerRabbitStrings']);
         
         // Track order modifications (multiple hooks to cover all cases)
         add_action('woocommerce_process_shop_order_meta', [$this, 'trackOrderModification'], 999);
@@ -3352,12 +3353,14 @@ class BricksDynamicTags implements FeatureInterface
             }
         }
 
-        $labelWithout = esc_html__('Sin conejo', 'zero-sense');
-        $infoText     = sprintf(
-            /* translators: %s: product name */
-            esc_html__('En la paella "%s", el conejo es un ingrediente típico, pero sabemos que en algunas culturas no es común; por eso, ofrecemos la opción de hacer la paella con o sin conejo.', 'zero-sense'),
-            $productName
-        );
+        $labelWithout = function_exists('icl_t')
+            ? esc_html(icl_t('zero-sense', 'rabbit_toggle_label', 'Sin conejo'))
+            : esc_html__('Sin conejo', 'zero-sense');
+
+        $infoTemplate = function_exists('icl_t')
+            ? icl_t('zero-sense', 'rabbit_toggle_info', 'En la paella "%s", el conejo es un ingrediente típico, pero sabemos que en algunas culturas no es común; por eso, ofrecemos la opción de hacer la paella con o sin conejo.')
+            : /* translators: %s: product name */ __('En la paella "%s", el conejo es un ingrediente típico, pero sabemos que en algunas culturas no es común; por eso, ofrecemos la opción de hacer la paella con o sin conejo.', 'zero-sense');
+        $infoText = esc_html(sprintf($infoTemplate, $productName));
 
         $infoIconSvg = '<svg class="fill stroke brxe-bwhjmy brxe-icon info-box__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><title>48 c info</title><g fill="currentColor" class="nc-icon-wrapper"><path d="M24,1C11.297,1,1,11.297,1,24s10.297,23,23,23,23-10.297,23-23S36.703,1,24,1Zm2,36c0,.552-.448,1-1,1h-2c-.552,0-1-.448-1-1V19c0-.552,.448-1,1-1h2c.552,0,1,.448,1,1v18Zm-2-23c-1.381,0-2.5-1.119-2.5-2.5s1.119-2.5,2.5-2.5,2.5,1.119,2.5,2.5-1.119,2.5-2.5,2.5Z" fill="currentColor" class="nc-icon-wrapper"></path></g></svg>';
 
@@ -3382,6 +3385,15 @@ class BricksDynamicTags implements FeatureInterface
             . '.zs-rabbit-toggle__label{font-size:var(--text-m;}'
             . '</style>';
 
+    }
+
+    public function registerRabbitStrings(): void
+    {
+        if (!function_exists('icl_register_string')) {
+            return;
+        }
+        icl_register_string('zero-sense', 'rabbit_toggle_label', 'Sin conejo');
+        icl_register_string('zero-sense', 'rabbit_toggle_info', 'En la paella "%s", el conejo es un ingrediente típico, pero sabemos que en algunas culturas no es común; por eso, ofrecemos la opción de hacer la paella con o sin conejo.');
     }
 
     public function enqueueRabbitToggleAssets(): void
