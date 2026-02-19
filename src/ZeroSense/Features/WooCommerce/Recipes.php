@@ -264,9 +264,12 @@ class Recipes implements FeatureInterface
 
         $manage_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_INGREDIENT . '&post_type=' . self::CPT);
         $manage_utensils_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_UTENSIL . '&post_type=' . self::CPT);
+        $manage_liquids_url = admin_url('edit-tags.php?taxonomy=' . self::TAX_LIQUID . '&post_type=' . self::CPT);
         
         $utensils = get_post_meta($post->ID, self::META_UTENSILS, true);
         $utensils = is_array($utensils) ? $utensils : [];
+        $liquids = get_post_meta($post->ID, self::META_LIQUIDS, true);
+        $liquids = is_array($liquids) ? $liquids : [];
         $needsPaella = get_post_meta($post->ID, self::META_NEEDS_PAELLA, true);
         ?>
         <div class="zs-mb-wrapper">
@@ -358,8 +361,79 @@ class Recipes implements FeatureInterface
                     <strong>🥘 <?php esc_html_e('Paella Recipe Mode', 'zero-sense'); ?></strong>
                 </div>
                 <div class="zs-paella-mode-info">
-                    <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed.', 'zero-sense'); ?></p>
+                    <p><?php esc_html_e('When enabled, paella pans and burners are automatically calculated by the inventory system based on the number of guests. The utensils section will be hidden as it\'s not needed. Add the liquids used in the recipe so the system can calculate which cassola (pot) is required.', 'zero-sense'); ?></p>
                 </div>
+            </div>
+
+            <!-- Liquids Section (shown only if paella mode is ON) -->
+            <div class="zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Liquids', 'zero-sense'); ?></h3>
+                <table class="widefat striped" style="margin-top:8px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 70%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
+                            <th style="width: 20%;"><?php esc_html_e('Litres per pax', 'zero-sense'); ?></th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="zs-liquid-rows">
+                        <?php
+                        $liquid_row_index = 0;
+                        foreach ($liquids as $row):
+                            $termId = isset($row['liquid']) ? (int) $row['liquid'] : 0;
+                            $qty = isset($row['qty']) ? (string) $row['qty'] : '';
+
+                            $termName = '';
+                            if ($termId > 0) {
+                                $resolvedId = $this->resolveOriginalTermId($termId, self::TAX_LIQUID);
+                                $term = get_term($resolvedId, self::TAX_LIQUID);
+                                if ($term instanceof WP_Term) {
+                                    $termName = $term->name;
+                                }
+                            }
+                            ?>
+                            <tr data-row="<?php echo $liquid_row_index; ?>">
+                                <td>
+                                    <select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
+                                        <?php if ($termId > 0 && $termName !== ''): ?>
+                                            <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
+                                        <?php endif; ?>
+                                        <?php
+                                        $existing_liquids = get_terms([
+                                            'taxonomy' => self::TAX_LIQUID,
+                                            'hide_empty' => false,
+                                            'number' => 50,
+                                            'suppress_filters' => true,
+                                        ]);
+                                        if (is_array($existing_liquids)) {
+                                            foreach ($existing_liquids as $liquid) {
+                                                if ($liquid instanceof WP_Term && $liquid->term_id != $termId) {
+                                                    echo '<option value="' . esc_attr((string) $liquid->term_id) . '">' . esc_html($liquid->name) . '</option>';
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
+                                </td>
+                                <td>
+                                    <button type="button" class="button zs-liquid-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                                </td>
+                            </tr>
+                            <?php
+                            $liquid_row_index++;
+                        endforeach;
+                        ?>
+                    </tbody>
+                </table>
+                <p class="zs-mb-row-actions">
+                    <button type="button" class="button" id="zs-liquid-add-row"><?php esc_html_e('Add liquid', 'zero-sense'); ?></button>
+                    <a href="<?php echo esc_url($manage_liquids_url); ?>" target="_blank" class="zs-mb-link">
+                        <?php esc_html_e('Manage all liquids', 'zero-sense'); ?> →
+                    </a>
+                </p>
             </div>
 
             <!-- Utensils Section (hidden if paella mode is ON) -->
@@ -732,12 +806,98 @@ class Recipes implements FeatureInterface
                 $(this).closest('tr').remove();
             });
             
+            // LIQUIDS SECTION
+            var liquidRowCount = <?php echo max(0, count($liquids)); ?>;
+
+            function initLiquidSelect(element) {
+                if (typeof jQuery.fn.selectWoo === 'undefined') {
+                    return;
+                }
+                if (!$(element).data('select2')) {
+                    $(element).selectWoo({
+                        width: '100%',
+                        tags: true,
+                        tokenSeparators: [','],
+                        createTag: function(params) {
+                            var term = $.trim(params.term);
+                            if (term === '') return null;
+                            return { id: term, text: term + ' (crear nuevo)', newTag: true };
+                        },
+                        insertTag: function(data, tag) { data.push(tag); },
+                        ajax: {
+                            url: ajaxUrl,
+                            dataType: 'json',
+                            delay: 250,
+                            data: function(params) {
+                                var selectedIds = [];
+                                $('.zs-liquid-select').each(function() {
+                                    var val = $(this).val();
+                                    if (val && !isNaN(val)) selectedIds.push(val);
+                                });
+                                return { action: 'zs_liquid_search', nonce: nonce, q: params.term || '', exclude: selectedIds.join(',') };
+                            },
+                            processResults: function(data) { return data; },
+                            transport: function(params, success, failure) {
+                                var $request = $.ajax(params);
+                                $request.then(success);
+                                $request.fail(function(jqXHR, textStatus) { if (textStatus !== 'abort') failure(); });
+                                return $request;
+                            }
+                        }
+                    });
+                    $(element).on('select2:closing', function() {
+                        setTimeout(function() {
+                            var val = $(element).val();
+                            if (val && typeof val === 'string' && isNaN(val)) {
+                                $(element).val(null).trigger('change.select2');
+                                createLiquid(val, element);
+                            }
+                        }, 100);
+                    });
+                }
+            }
+
+            function createLiquid(name, selectElement) {
+                $.ajax({
+                    url: ajaxUrl, method: 'POST',
+                    data: { action: 'zs_liquid_create', nonce: nonce, name: name },
+                    success: function(resp) {
+                        if (resp && resp.success && resp.data) {
+                            $(selectElement).empty();
+                            var option = new Option(resp.data.text, resp.data.id, true, true);
+                            $(selectElement).append(option).trigger('change');
+                        } else { alert('Error creating liquid.'); }
+                    },
+                    error: function() { alert('Connection error creating liquid.'); }
+                });
+            }
+
+            function addNewLiquidRow() {
+                var newRow = '<tr data-row="' + liquidRowCount + '">' +
+                    '<td><select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" style="width:100%;" data-placeholder="<?php echo esc_js(__('Search or create…', 'zero-sense')); ?>"></select></td>' +
+                    '<td><input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="" style="width:100%;"></td>' +
+                    '<td><button type="button" class="button zs-liquid-remove"><?php echo esc_js(__('Remove', 'zero-sense')); ?></button></td>' +
+                    '</tr>';
+                $('#zs-liquid-rows').append(newRow);
+                initLiquidSelect($('#zs-liquid-rows tr:last .zs-liquid-select'));
+                liquidRowCount++;
+            }
+
+            $(document).ready(function() {
+                $('.zs-liquid-select').each(function() { initLiquidSelect(this); });
+            });
+
+            $('#zs-liquid-add-row').on('click', function() { addNewLiquidRow(); });
+            $(document).on('click', '.zs-liquid-remove', function() { $(this).closest('tr').remove(); });
+
             // Paella mode toggle
             $('input[name="zs_recipe_needs_paella"]').on('change', function() {
                 if ($(this).is(':checked')) {
                     $('.zs-utensils-section').slideUp(300);
+                    $('.zs-liquids-section').slideDown(300);
                 } else {
                     $('.zs-utensils-section').slideDown(300);
+                    $('.zs-liquids-section').slideUp(300);
                 }
             });
             
@@ -806,44 +966,75 @@ class Recipes implements FeatureInterface
 
         // Save utensils
         $rawUtensils = $_POST['zs_recipe_utensils'] ?? null;
-        if (!is_array($rawUtensils)) {
+        if (is_array($rawUtensils)) {
+            $utensilIds = isset($rawUtensils['utensil']) && is_array($rawUtensils['utensil']) ? $rawUtensils['utensil'] : [];
+            $utensilQtys = isset($rawUtensils['qty']) && is_array($rawUtensils['qty']) ? $rawUtensils['qty'] : [];
+            $utensilPaxRatios = isset($rawUtensils['pax_ratio']) && is_array($rawUtensils['pax_ratio']) ? $rawUtensils['pax_ratio'] : [];
+            $utensilUnits = isset($rawUtensils['unit']) && is_array($rawUtensils['unit']) ? $rawUtensils['unit'] : [];
+
+            $outUtensils = [];
+            $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios), count($utensilUnits));
+            for ($i = 0; $i < $countUtensils; $i++) {
+                $id = isset($utensilIds[$i]) ? (int) $utensilIds[$i] : 0;
+                $qty = isset($utensilQtys[$i]) ? (float) $utensilQtys[$i] : 0.0;
+                $paxRatio = isset($utensilPaxRatios[$i]) ? (int) $utensilPaxRatios[$i] : 1;
+                $unit = isset($utensilUnits[$i]) ? (string) $utensilUnits[$i] : 'u';
+
+                if ($id <= 0 || $qty <= 0 || $paxRatio < 1) {
+                    continue;
+                }
+
+                if (!in_array($unit, $allowedUtensilUnits, true)) {
+                    $unit = 'u';
+                }
+
+                $outUtensils[] = [
+                    'utensil' => $id,
+                    'qty' => $qty,
+                    'pax_ratio' => $paxRatio,
+                    'unit' => $unit,
+                ];
+            }
+
+            if ($outUtensils === []) {
+                delete_post_meta($postId, self::META_UTENSILS);
+            } else {
+                update_post_meta($postId, self::META_UTENSILS, $outUtensils);
+            }
+        } else {
             delete_post_meta($postId, self::META_UTENSILS);
+        }
+
+        // Save liquids
+        $rawLiquids = $_POST['zs_recipe_liquids'] ?? null;
+        if (!is_array($rawLiquids)) {
+            delete_post_meta($postId, self::META_LIQUIDS);
             return;
         }
 
-        $utensilIds = isset($rawUtensils['utensil']) && is_array($rawUtensils['utensil']) ? $rawUtensils['utensil'] : [];
-        $utensilQtys = isset($rawUtensils['qty']) && is_array($rawUtensils['qty']) ? $rawUtensils['qty'] : [];
-        $utensilPaxRatios = isset($rawUtensils['pax_ratio']) && is_array($rawUtensils['pax_ratio']) ? $rawUtensils['pax_ratio'] : [];
-        $utensilUnits = isset($rawUtensils['unit']) && is_array($rawUtensils['unit']) ? $rawUtensils['unit'] : [];
+        $liquidIds = isset($rawLiquids['liquid']) && is_array($rawLiquids['liquid']) ? $rawLiquids['liquid'] : [];
+        $liquidQtys = isset($rawLiquids['qty']) && is_array($rawLiquids['qty']) ? $rawLiquids['qty'] : [];
 
-        $outUtensils = [];
-        $countUtensils = max(count($utensilIds), count($utensilQtys), count($utensilPaxRatios), count($utensilUnits));
-        for ($i = 0; $i < $countUtensils; $i++) {
-            $id = isset($utensilIds[$i]) ? (int) $utensilIds[$i] : 0;
-            $qty = isset($utensilQtys[$i]) ? (float) $utensilQtys[$i] : 0.0;
-            $paxRatio = isset($utensilPaxRatios[$i]) ? (int) $utensilPaxRatios[$i] : 1;
-            $unit = isset($utensilUnits[$i]) ? (string) $utensilUnits[$i] : 'u';
+        $outLiquids = [];
+        $countLiquids = max(count($liquidIds), count($liquidQtys));
+        for ($i = 0; $i < $countLiquids; $i++) {
+            $id = isset($liquidIds[$i]) ? (int) $liquidIds[$i] : 0;
+            $qty = isset($liquidQtys[$i]) ? (float) $liquidQtys[$i] : 0.0;
 
-            if ($id <= 0 || $qty <= 0 || $paxRatio < 1) {
+            if ($id <= 0 || $qty <= 0) {
                 continue;
             }
 
-            if (!in_array($unit, $allowedUtensilUnits, true)) {
-                $unit = 'u';
-            }
-
-            $outUtensils[] = [
-                'utensil' => $id,
+            $outLiquids[] = [
+                'liquid' => $id,
                 'qty' => $qty,
-                'pax_ratio' => $paxRatio,
-                'unit' => $unit,
             ];
         }
 
-        if ($outUtensils === []) {
-            delete_post_meta($postId, self::META_UTENSILS);
+        if ($outLiquids === []) {
+            delete_post_meta($postId, self::META_LIQUIDS);
         } else {
-            update_post_meta($postId, self::META_UTENSILS, $outUtensils);
+            update_post_meta($postId, self::META_LIQUIDS, $outLiquids);
         }
     }
 
@@ -1137,6 +1328,109 @@ class Recipes implements FeatureInterface
         wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $displayName]);
     }
 
+    public function ajaxLiquidSearch(): void
+    {
+        if (!current_user_can('edit_posts')) {
+            wp_send_json(['results' => []]);
+        }
+
+        $nonce = isset($_GET['nonce']) ? sanitize_text_field(wp_unslash((string) $_GET['nonce'])) : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
+            wp_send_json(['results' => []]);
+        }
+
+        $q = isset($_GET['q']) ? sanitize_text_field(wp_unslash((string) $_GET['q'])) : '';
+        $exclude = isset($_GET['exclude']) ? sanitize_text_field(wp_unslash((string) $_GET['exclude'])) : '';
+        $excludeIds = array_filter(array_map('intval', explode(',', $exclude)));
+
+        $terms = get_terms([
+            'taxonomy' => self::TAX_LIQUID,
+            'hide_empty' => false,
+            'number' => 100,
+            'suppress_filters' => true,
+        ]);
+
+        $results = [];
+        if (is_array($terms) && $q !== '') {
+            $normalizedQuery = $this->normalizeIngredientName($q);
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    if (in_array($term->term_id, $excludeIds, true)) continue;
+                    if (mb_strpos($this->normalizeIngredientName($term->name), $normalizedQuery, 0, 'UTF-8') !== false) {
+                        $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
+                    }
+                }
+            }
+        } elseif (is_array($terms)) {
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    if (in_array($term->term_id, $excludeIds, true)) continue;
+                    $results[] = ['id' => (string) $term->term_id, 'text' => $term->name];
+                }
+            }
+        }
+
+        wp_send_json(['results' => array_slice($results, 0, 25)]);
+    }
+
+    public function ajaxLiquidCreate(): void
+    {
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(['message' => 'forbidden']);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash((string) $_POST['nonce'])) : '';
+        if ($nonce === '' || !wp_verify_nonce($nonce, 'zs_ingredient_ajax')) {
+            wp_send_json_error(['message' => 'invalid_nonce']);
+        }
+
+        $rawName = isset($_POST['name']) ? sanitize_text_field(wp_unslash((string) $_POST['name'])) : '';
+        if ($rawName === '') {
+            wp_send_json_error(['message' => 'empty']);
+        }
+
+        $normalizedName = $this->normalizeIngredientName($rawName);
+        $displayName = $this->capitalizeIngredientName($rawName);
+
+        $terms = get_terms([
+            'taxonomy' => self::TAX_LIQUID,
+            'hide_empty' => false,
+            'number' => 100,
+            'suppress_filters' => true,
+        ]);
+
+        if (is_array($terms)) {
+            foreach ($terms as $term) {
+                if ($term instanceof WP_Term) {
+                    if ($this->normalizeIngredientName($term->name) === $normalizedName) {
+                        wp_send_json_success(['id' => (int) $term->term_id, 'text' => $term->name]);
+                    }
+                }
+            }
+        }
+
+        $created = wp_insert_term($displayName, self::TAX_LIQUID);
+
+        if (is_wp_error($created)) {
+            if ($created->get_error_code() === 'term_exists') {
+                $termId = $created->get_error_data('term_exists');
+                if ($termId) {
+                    $term = get_term($termId, self::TAX_LIQUID);
+                    if ($term instanceof WP_Term) {
+                        wp_send_json_success(['id' => (int) $term->term_id, 'text' => $term->name]);
+                    }
+                }
+            }
+            wp_send_json_error(['message' => 'create_failed']);
+        }
+
+        if (!is_array($created) || !isset($created['term_id'])) {
+            wp_send_json_error(['message' => 'create_failed']);
+        }
+
+        wp_send_json_success(['id' => (int) $created['term_id'], 'text' => $displayName]);
+    }
+
     public function renderProductRecipeField(): void
     {
         global $post;
@@ -1422,8 +1716,16 @@ class Recipes implements FeatureInterface
         }
 
         $taxonomy = get_term($term_id)->taxonomy ?? '';
-        $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
-        $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
+        if ($taxonomy === self::TAX_INGREDIENT) {
+            $meta_key = self::META_INGREDIENTS;
+            $field_name = 'ingredient';
+        } elseif ($taxonomy === self::TAX_LIQUID) {
+            $meta_key = self::META_LIQUIDS;
+            $field_name = 'liquid';
+        } else {
+            $meta_key = self::META_UTENSILS;
+            $field_name = 'utensil';
+        }
 
         // Get all recipes
         $recipes = get_posts([
@@ -1468,7 +1770,7 @@ class Recipes implements FeatureInterface
     public function removeDeleteActionIfInUse(array $actions, \WP_Term $term): array
     {
         $taxonomy = $term->taxonomy;
-        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
+        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL && $taxonomy !== self::TAX_LIQUID) {
             return $actions;
         }
 
@@ -1495,7 +1797,7 @@ class Recipes implements FeatureInterface
             return $allcaps;
         }
 
-        if ($term->taxonomy !== self::TAX_INGREDIENT && $term->taxonomy !== self::TAX_UTENSIL) {
+        if ($term->taxonomy !== self::TAX_INGREDIENT && $term->taxonomy !== self::TAX_UTENSIL && $term->taxonomy !== self::TAX_LIQUID) {
             return $allcaps;
         }
 
@@ -1508,7 +1810,7 @@ class Recipes implements FeatureInterface
 
     public function protectTermsInUse(int $term_id, string $taxonomy): void
     {
-        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL) {
+        if ($taxonomy !== self::TAX_INGREDIENT && $taxonomy !== self::TAX_UTENSIL && $taxonomy !== self::TAX_LIQUID) {
             return;
         }
 
@@ -1518,7 +1820,13 @@ class Recipes implements FeatureInterface
 
         $term = get_term($term_id);
         $term_name = $term instanceof \WP_Term ? $term->name : '';
-        $type_label = ($taxonomy === self::TAX_INGREDIENT) ? __('ingredient', 'zero-sense') : __('utensil', 'zero-sense');
+        if ($taxonomy === self::TAX_INGREDIENT) {
+            $type_label = __('ingredient', 'zero-sense');
+        } elseif ($taxonomy === self::TAX_LIQUID) {
+            $type_label = __('liquid', 'zero-sense');
+        } else {
+            $type_label = __('utensil', 'zero-sense');
+        }
         $count = $this->getTermUsageCount($term_id, $taxonomy);
 
         wp_die(
@@ -1540,8 +1848,16 @@ class Recipes implements FeatureInterface
 
     private function getTermUsageCount(int $term_id, string $taxonomy): int
     {
-        $meta_key = ($taxonomy === self::TAX_INGREDIENT) ? self::META_INGREDIENTS : self::META_UTENSILS;
-        $field_name = ($taxonomy === self::TAX_INGREDIENT) ? 'ingredient' : 'utensil';
+        if ($taxonomy === self::TAX_INGREDIENT) {
+            $meta_key = self::META_INGREDIENTS;
+            $field_name = 'ingredient';
+        } elseif ($taxonomy === self::TAX_LIQUID) {
+            $meta_key = self::META_LIQUIDS;
+            $field_name = 'liquid';
+        } else {
+            $meta_key = self::META_UTENSILS;
+            $field_name = 'utensil';
+        }
 
         $recipes = get_posts([
             'post_type' => self::CPT,

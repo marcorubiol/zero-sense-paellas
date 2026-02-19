@@ -6,6 +6,19 @@ use WC_Order;
 class MaterialCalculator
 {
     /**
+     * Cassola sizes sorted largest to smallest (litres => material_key)
+     */
+    private const CASSOLA_SIZES = [
+        33.8 => 'cassola_33l',
+        15.5 => 'cassola_15l',
+        13.0 => 'cassola_xata_13l',
+        11.6 => 'cassola_xata_11l',
+        9.5  => 'cassola_9l',
+        6.6  => 'cassola_6l',
+        4.9  => 'cassola_5l',
+    ];
+
+    /**
      * Calcula materiales necesarios para un pedido
      * 
      * @param WC_Order $order
@@ -229,18 +242,77 @@ class MaterialCalculator
     private static function calculateLogisticaCuina(int $guests, array $analysis, array $currentResult): array
     {
         $result = [];
-        
-        // Cassoles: 1 por receta de paella
-        $result['cassoles'] = count($analysis['paella_items']);
-        
+
+        // Cassoles: pick the right size based on total litres from recipe liquids
+        foreach ($analysis['paella_items'] as $paellaItem) {
+            $recipeId = (int) ($paellaItem['recipe_id'] ?? 0);
+            $itemGuests = (int) ($paellaItem['guests'] ?? 0);
+
+            if ($recipeId <= 0 || $itemGuests <= 0) {
+                continue;
+            }
+
+            $totalLitres = self::calculateTotalLitres($recipeId, $itemGuests);
+            $cassolaKey = self::selectCassola($totalLitres);
+
+            if (!isset($result[$cassolaKey])) {
+                $result[$cassolaKey] = 0;
+            }
+            $result[$cassolaKey]++;
+        }
+
         // Poals fems: 1 cada 20pax
         $result['poals_fems'] = (int) ceil($guests / 20);
-        
+
         // Vitro: 1 per varietat de paella
         $varieties = array_unique($analysis['paella_varieties']);
         $result['vitro'] = count($varieties);
-        
+
         return $result;
+    }
+
+    /**
+     * Calculate total litres needed for a recipe item
+     */
+    private static function calculateTotalLitres(int $recipeId, int $guests): float
+    {
+        $liquids = get_post_meta($recipeId, 'zs_recipe_liquids', true);
+
+        if (!is_array($liquids) || empty($liquids)) {
+            return 0.0;
+        }
+
+        $total = 0.0;
+        foreach ($liquids as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $litresPerPax = isset($row['qty']) ? (float) $row['qty'] : 0.0;
+            $total += $litresPerPax * $guests;
+        }
+
+        return $total;
+    }
+
+    /**
+     * Select the smallest cassola that fits the required litres.
+     * Falls back to cassola_15l if no liquids are defined (total = 0).
+     */
+    private static function selectCassola(float $totalLitres): string
+    {
+        if ($totalLitres <= 0) {
+            return 'cassola_15l';
+        }
+
+        // Sizes are sorted largest to smallest; find the smallest that fits
+        $best = 'cassola_33l';
+        foreach (self::CASSOLA_SIZES as $capacity => $key) {
+            if ($capacity >= $totalLitres) {
+                $best = $key;
+            }
+        }
+
+        return $best;
     }
     
     /**

@@ -34,40 +34,6 @@ class CheckoutFields
         // Preserve and translate service area filter across languages
         add_filter('icl_ls_languages', [$this, 'filterLanguageSwitcherUrls']);
         
-        // Force shipping fields to always show
-        add_filter('woocommerce_ship_to_different_address_checked', '__return_true');
-        
-        // Ensure shipping city and address 2 are always present
-        add_filter('woocommerce_checkout_fields', function($fields) {
-            // Ensure shipping fields exist
-            if (!isset($fields['shipping'])) {
-                $fields['shipping'] = [];
-            }
-            
-            // Ensure shipping_city exists
-            if (!isset($fields['shipping']['shipping_city'])) {
-                $fields['shipping']['shipping_city'] = [
-                    'label'        => __('City', 'woocommerce'),
-                    'required'     => false,
-                    'class'        => ['form-row-wide'],
-                    'autocomplete' => 'address-level2',
-                    'priority'     => 70,
-                ];
-            }
-            
-            // Ensure shipping_address_2 exists
-            if (!isset($fields['shipping']['shipping_address_2'])) {
-                $fields['shipping']['shipping_address_2'] = [
-                    'label'        => __('Apartment, suite, unit, etc. (optional)', 'woocommerce'),
-                    'required'     => false,
-                    'class'        => ['form-row-wide'],
-                    'autocomplete' => 'address-line2',
-                    'priority'     => 60,
-                ];
-            }
-            
-            return $fields;
-        }, 999);
     }
 
     public function captureLocationFromUrl(): void
@@ -150,7 +116,6 @@ class CheckoutFields
 
         // 2. Unset unnecessary fields
         unset($fields['billing']['billing_company']);
-        unset($fields['shipping']['shipping_company']);
 
         return $fields;
     }
@@ -197,7 +162,7 @@ class CheckoutFields
             'custom_attributes' => ['min' => '0'],
         ], '');
 
-        // Address + Location link
+        // Event address + City
         $addressDefault = $this->getUrlPrefill('address', '');
         woocommerce_form_field('event_address_checkout', [
             'type'     => 'text',
@@ -208,11 +173,16 @@ class CheckoutFields
             'default'  => $addressDefault,
         ], '');
 
-        woocommerce_form_field('event_location_link_checkout', [
-            'type'  => 'text',
-            'label' => __('Location link', 'zero-sense'),
-            'class' => ['form-row-last'],
-        ], '');
+        $cityDefault = $this->getUrlPrefill('city', '');
+        if ($cityDefault === '' && function_exists('WC') && WC()->session) {
+            $cityDefault = (string) (WC()->session->get('zs_city') ?? '');
+        }
+        woocommerce_form_field('event_city_checkout', [
+            'type'    => 'text',
+            'label'   => __('City', 'zero-sense'),
+            'class'   => ['form-row-last'],
+            'default' => $cityDefault,
+        ], $cityDefault);
 
         // Event date + Serving time
         woocommerce_form_field(MetaKeys::EVENT_DATE, [
@@ -272,30 +242,6 @@ class CheckoutFields
         echo '<label for="' . $intolerancesId . '">' . $intolerancesLabel . '</label>';
         echo '<textarea id="' . $intolerancesId . '" name="' . $intolerancesId . '" rows="4" style="width:100%;"></textarea>';
         echo '</p>';
-        
-        // Force shipping fields to be visible
-        echo '<h3>' . esc_html__('Shipping address', 'zero-sense') . '</h3>';
-        echo '<div class="woocommerce-shipping-fields__field-wrapper">';
-        
-        // Shipping city
-        $cityValue = $this->getUrlPrefill('city', '');
-        woocommerce_form_field('shipping_city', [
-            'type'     => 'text',
-            'label'    => __('City', 'woocommerce'),
-            'required' => false,
-            'class'    => ['form-row-wide'],
-            'default'  => $cityValue,
-        ], $cityValue);
-        
-        // Shipping address 2
-        woocommerce_form_field('shipping_address_2', [
-            'type'     => 'text',
-            'label'    => __('Apartment, suite, unit, etc. (optional)', 'woocommerce'),
-            'required' => false,
-            'class'    => ['form-row-wide'],
-        ], '');
-        
-        echo '</div>';
     }
 
     /**
@@ -349,12 +295,6 @@ class CheckoutFields
             $order->set_shipping_address_1(sanitize_text_field((string) $address));
         }
 
-        // Location link
-        $locationLink = $this->getSubmittedFieldValue('event_location_link_checkout');
-        if ($locationLink !== null) {
-            $order->update_meta_data('_shipping_location_link', sanitize_text_field((string) $locationLink));
-        }
-
         // Event date → normalize to ISO 8601
         $dateRaw = $this->getSubmittedFieldValue(MetaKeys::EVENT_DATE);
         if ($dateRaw !== null && $dateRaw !== '') {
@@ -405,12 +345,10 @@ class CheckoutFields
             $order->update_meta_data(MetaKeys::SERVICE_LOCATION, $canonical);
         }
 
-        // City → native WC shipping city (from billing_city field or WC session)
-        $city = $this->getSubmittedFieldValue('billing_city');
-        if ($city === null || $city === '') {
-            if (function_exists('WC') && WC()->session) {
-                $city = WC()->session->get('zs_city');
-            }
+        // City → native WC shipping city
+        $city = $this->getSubmittedFieldValue('event_city_checkout');
+        if (($city === null || $city === '') && function_exists('WC') && WC()->session) {
+            $city = WC()->session->get('zs_city');
         }
         if (is_string($city) && $city !== '') {
             $order->set_shipping_city(sanitize_text_field($city));

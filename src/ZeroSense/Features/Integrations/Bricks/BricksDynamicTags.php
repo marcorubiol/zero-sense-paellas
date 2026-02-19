@@ -53,8 +53,10 @@ class BricksDynamicTags implements FeatureInterface
     private const META_RABBIT_CHOICE = '_zs_rabbit_choice';
     private const META_RECIPE_INGREDIENTS = 'zs_recipe_ingredients';
     private const META_RECIPE_UTENSILS = 'zs_recipe_utensils';
+    private const META_RECIPE_LIQUIDS = 'zs_recipe_liquids';
     private const TAX_INGREDIENT = 'zs_ingredient';
     private const TAX_UTENSIL = 'zs_utensil';
+    private const TAX_LIQUID = 'zs_liquid';
     private const CPT_RECIPE = 'zs_recipe';
     private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
     
@@ -293,6 +295,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_liquids_simple}',       'label' => 'Recipe Liquids (Inline — one field per liquid)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
 
@@ -486,6 +489,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_utensils_list}') {
             return $this->getRecipeUtensilsList($post);
         }
+        if ($tag === '{zs_recipe_liquids_simple}') {
+            return $this->getRecipeLiquidsSimple($post);
+        }
         if ($tag === '{zs_inventory_list}') {
             return $this->getInventoryList($post);
         }
@@ -563,6 +569,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_recipe_utensils_total}',      $this->getRecipeUtensilsTotal($post),     $content);
         $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
         $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
+        $content = str_replace('{zs_recipe_liquids_simple}',      $this->getRecipeLiquidsSimple($post),     $content);
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
         $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
 
@@ -3148,6 +3155,148 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $term = get_term($translatedId, self::TAX_UTENSIL);
+        return $term instanceof \WP_Term ? $term->name : '';
+    }
+
+    /**
+     * Get simplified liquids total (one fdr-card__field per liquid)
+     */
+    private function getRecipeLiquidsSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Liquids Simple');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof \WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $eligible = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $recipeId = $this->resolveRecipeIdForItem($item, $product);
+            if ($recipeId <= 0) {
+                continue;
+            }
+            // Only include paella recipes
+            $needsPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true);
+            if ($needsPaella !== '1') {
+                continue;
+            }
+            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+            $sumQty += $qty;
+        }
+
+        if (empty($eligible) || $sumQty <= 0) {
+            return '';
+        }
+
+        $totals = [];
+        foreach ($eligible as $row) {
+            $recipeId = (int) $row['recipe_id'];
+            $qty = (float) $row['qty'];
+            $eqItem = $eqTotal * ($qty / $sumQty);
+            if ($eqItem <= 0) {
+                continue;
+            }
+
+            $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
+            if (!is_array($recipeLiquids)) {
+                continue;
+            }
+
+            foreach ($recipeLiquids as $liquidRow) {
+                if (!is_array($liquidRow)) {
+                    continue;
+                }
+                $termId = isset($liquidRow['liquid']) ? (int) $liquidRow['liquid'] : 0;
+                $litresPerPax = isset($liquidRow['qty']) ? (float) $liquidRow['qty'] : 0.0;
+
+                if ($termId <= 0 || $litresPerPax <= 0) {
+                    continue;
+                }
+
+                $amount = $litresPerPax * $eqItem;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $k = (string) $termId;
+                if (!isset($totals[$k])) {
+                    $totals[$k] = ['term_id' => $termId, 'qty' => 0.0];
+                }
+                $totals[$k]['qty'] += $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($totals as $t) {
+            $termId = (int) ($t['term_id'] ?? 0);
+            $qty    = (float) ($t['qty'] ?? 0);
+
+            if ($termId <= 0 || $qty <= 0) {
+                continue;
+            }
+
+            $termName = $this->getTranslatedLiquidName($termId, $orderLanguage);
+            if ($termName === '') {
+                continue;
+            }
+
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($termName) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($this->formatNumber($qty)) . 'L</span>';
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Get translated liquid name
+     */
+    private function getTranslatedLiquidName(int $termId, string $orderLanguage): string
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            $term = get_term($termId, self::TAX_LIQUID);
+            return $term instanceof \WP_Term ? $term->name : '';
+        }
+
+        $translatedId = apply_filters('wpml_object_id', $termId, self::TAX_LIQUID, false, $orderLanguage);
+        if (!$translatedId) {
+            $translatedId = $termId;
+        }
+
+        $term = get_term($translatedId, self::TAX_LIQUID);
         return $term instanceof \WP_Term ? $term->name : '';
     }
 
