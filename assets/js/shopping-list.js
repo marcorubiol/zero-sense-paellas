@@ -16,8 +16,8 @@
         };
     }
 
-    function getCheckedIds() {
-        var boxes = document.querySelectorAll('.zs-sl__order-check:checked');
+    function getCheckedKeys() {
+        var boxes = document.querySelectorAll('.zs-sl__item-check:checked');
         return Array.from(boxes).map(function (el) { return el.value; });
     }
 
@@ -32,7 +32,7 @@
         return d.innerHTML;
     }
 
-    function renderOrders(orders, selectedIds) {
+    function renderOrders(orders) {
         if (!orders || orders.length === 0) {
             return '<div class="zs-sl__no-orders"><p>No hi ha comandes per a aquest període i localització.</p></div>';
         }
@@ -44,15 +44,23 @@
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
-            var chk = (!selectedIds || selectedIds.indexOf(String(o.id)) !== -1) ? ' checked' : '';
-            html += '<label class="zs-sl__order-item">';
-            html += '<input type="checkbox" class="zs-sl__order-check" value="' + esc(o.id) + '"' + chk + '>';
+            html += '<div class="zs-sl__order-item">';
+            html += '<div class="zs-sl__order-row1">';
             html += '<span class="zs-sl__order-num">#' + esc(o.number) + '</span>';
             html += '<span class="zs-sl__order-customer">' + esc(o.customer) + '</span>';
             html += '<span class="zs-sl__order-date">' + esc(o.date) + '</span>';
             html += '<span class="zs-sl__order-guests">' + esc(o.guests) + ' pax</span>';
-            html += '<span class="zs-sl__order-products">' + esc(o.products) + '</span>';
-            html += '</label>';
+            html += '</div>';
+            html += '<div class="zs-sl__order-row2">';
+            (o.items || []).forEach(function (item) {
+                var label = item.name + (item.qty > 1 ? ' ×' + item.qty : '');
+                html += '<label class="zs-sl__item-check-label">';
+                html += '<input type="checkbox" class="zs-sl__item-check" value="' + esc(item.key) + '" checked>';
+                html += '<span>' + esc(label) + '</span>';
+                html += '</label>';
+            });
+            html += '</div>';
+            html += '</div>';
         });
         html += '</div>';
         html += '<div class="zs-sl__orders-footer">';
@@ -108,7 +116,7 @@
         data.append('to', vals.to);
         data.append('loc', vals.loc);
         if (orderIds && orderIds.length > 0) {
-            data.append('order_ids', orderIds.join(','));
+            data.append('item_keys', orderIds.join(','));
         }
 
         fetch(ajaxUrl, { method: 'POST', body: data })
@@ -124,7 +132,7 @@
                 }
 
                 currentSignedUrl = res.data.signed_url || '';
-                var ordersHtml = renderOrders(res.data.orders, null);
+                var ordersHtml = renderOrders(res.data.orders);
                 var listHtml   = renderList(res.data.list);
                 body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
                 bindBodyEvents();
@@ -145,18 +153,18 @@
 
         if (checkAll) {
             checkAll.addEventListener('click', function () {
-                document.querySelectorAll('.zs-sl__order-check').forEach(function (el) { el.checked = true; });
+                document.querySelectorAll('.zs-sl__item-check').forEach(function (el) { el.checked = true; });
             });
         }
         if (uncheckAll) {
             uncheckAll.addEventListener('click', function () {
-                document.querySelectorAll('.zs-sl__order-check').forEach(function (el) { el.checked = false; });
+                document.querySelectorAll('.zs-sl__item-check').forEach(function (el) { el.checked = false; });
             });
         }
         if (update) {
             update.addEventListener('click', function () {
-                var ids = getCheckedIds();
-                doRequest(ids.length > 0 ? ids : null);
+                var keys = getCheckedKeys();
+                doRequest(keys.length > 0 ? keys : null);
             });
         }
         if (share) {

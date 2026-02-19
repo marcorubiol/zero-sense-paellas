@@ -150,28 +150,37 @@ class ShoppingList implements FeatureInterface
         $from        = sanitize_text_field(wp_unslash($_POST['from'] ?? ''));
         $to          = sanitize_text_field(wp_unslash($_POST['to'] ?? ''));
         $loc         = absint($_POST['loc'] ?? 0);
-        $orderIdsRaw = sanitize_text_field(wp_unslash($_POST['order_ids'] ?? ''));
+        $itemKeysRaw = sanitize_text_field(wp_unslash($_POST['item_keys'] ?? ''));
 
         if ($from === '' || $to === '' || $loc <= 0) {
             wp_send_json_error(['message' => 'Missing required parameters.']); return;
         }
 
-        $orders   = $this->queryOrders($from, $to, $loc);
-        $validIds = array_column($orders, 'id');
-
-        if ($orderIdsRaw !== '') {
-            $requested = array_values(array_filter(array_map('absint', explode(',', $orderIdsRaw))));
-            $orderIds  = array_values(array_intersect($requested, $validIds));
-        } else {
-            $orderIds = $validIds;
+        $orders    = $this->queryOrders($from, $to, $loc);
+        $validKeys = [];
+        foreach ($orders as $o) {
+            foreach ($o['items'] as $item) {
+                $validKeys[] = $item['key'];
+            }
         }
 
-        $list = !empty($orderIds) ? $this->aggregateIngredients($orderIds) : [];
+        if ($itemKeysRaw !== '') {
+            $requested = array_filter(explode(',', $itemKeysRaw));
+            $itemKeys  = array_values(array_intersect($requested, $validKeys));
+        } else {
+            $itemKeys = $validKeys;
+        }
+
+        $orderIds = array_unique(array_map(function (string $k): int {
+            return (int) explode(':', $k)[0];
+        }, $itemKeys));
+
+        $list = !empty($itemKeys) ? $this->aggregateIngredients($itemKeys) : [];
 
         wp_send_json_success([
             'orders'     => $orders,
             'list'       => $list,
-            'signed_url' => $this->buildSignedUrl($from, $to, $loc, $orderIds),
+            'signed_url' => $this->buildSignedUrl($from, $to, $loc, array_values($orderIds)),
         ]);
     }
 
@@ -201,49 +210,78 @@ class ShoppingList implements FeatureInterface
         foreach ($ids as $id) {
             $order = wc_get_order((int) $id);
             if (!$order instanceof WC_Order) { continue; }
+            $rawDate = (string) $order->get_meta(self::META_EVENT_DATE, true);
             $result[] = [
                 'id'       => $order->get_id(),
                 'number'   => $order->get_order_number(),
                 'customer' => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
-                'date'     => (string) $order->get_meta(self::META_EVENT_DATE, true),
+                'date'     => $this->formatDateEs($rawDate),
+                'date_raw' => $rawDate,
                 'guests'   => (int) $order->get_meta('zs_event_total_guests', true),
-                'status'   => wc_get_order_status_name($order->get_status()),
-                'products' => $this->getOrderProductNames($order),
+                'items'    => $this->getOrderItems($order),
             ];
         }
         usort($result, function (array $a, array $b): int {
-            return strcmp((string) $a['date'], (string) $b['date']);
+            return strcmp((string) $a['date_raw'], (string) $b['date_raw']);
         });
         return $result;
     }
 
-    private function getOrderProductNames(WC_Order $order): string
+    private function formatDateEs(string $date): string
     {
-        $names = [];
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m)) {
+            return $m[3] . '/' . $m[2] . '/' . $m[1];
+        }
+        return $date;
+    }
+
+    private function getOrderItems(WC_Order $order): array
+    {
+        $items = []; $idx = 0;
         foreach ($order->get_items('line_item') as $item) {
             if (!$item instanceof \WC_Order_Item_Product) { continue; }
             $qty     = (int) $item->get_quantity();
-            $names[] = $item->get_name() . ($qty > 1 ? ' ×' . $qty : '');
+            $items[] = [
+                'key'  => $order->get_id() . ':' . $idx,
+                'name' => $item->get_name(),
+                'qty'  => $qty,
+            ];
+            $idx++;
         }
-        return implode(', ', $names);
+        return $items;
     }
 
-    private function aggregateIngredients(array $orderIds): array
+    private function aggregateIngredients(array $itemKeys): array
     {
         $ingTotals = $liquidTotals = [];
 
-        foreach ($orderIds as $orderId) {
-            $order = wc_get_order((int) $orderId);
+        $byOrder = [];
+        foreach ($itemKeys as $key) {
+            $parts = explode(':', (string) $key);
+            if (count($parts) !== 2) { continue; }
+            $byOrder[(int) $parts[0]][] = (int) $parts[1];
+        }
+
+        foreach ($byOrder as $orderId => $allowedIdxs) {
+            $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
             $eqTotal = $this->getEquivalentPax($order);
             if ($eqTotal <= 0) { continue; }
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
-            $eligible = []; $sumQty = 0.0;
+            $allItems = []; $idx = 0;
             foreach ($lineItems as $item) {
                 if (!$item instanceof \WC_Order_Item_Product) { continue; }
-                $qty = (float) $item->get_quantity();
+                $allItems[$idx] = $item;
+                $idx++;
+            }
+
+            $eligible = []; $sumQty = 0.0;
+            foreach ($allowedIdxs as $i) {
+                if (!isset($allItems[$i])) { continue; }
+                $item = $allItems[$i];
+                $qty  = (float) $item->get_quantity();
                 if ($qty <= 0) { continue; }
                 $product = $item->get_product();
                 if (!$product instanceof \WC_Product) { continue; }
@@ -382,14 +420,22 @@ class ShoppingList implements FeatureInterface
             </div>
             <div class="zs-sl__orders-list" id="zs-sl-orders-list">
                 <?php foreach ($orders as $o) : ?>
-                    <label class="zs-sl__order-item">
-                        <input type="checkbox" class="zs-sl__order-check" value="<?php echo esc_attr((string) $o['id']); ?>" <?php checked(in_array($o['id'], $selectedIds, true)); ?>>
-                        <span class="zs-sl__order-num">#<?php echo esc_html((string) $o['number']); ?></span>
-                        <span class="zs-sl__order-customer"><?php echo esc_html($o['customer']); ?></span>
-                        <span class="zs-sl__order-date"><?php echo esc_html($o['date']); ?></span>
-                        <span class="zs-sl__order-guests"><?php echo esc_html((string) $o['guests']); ?> pax</span>
-                        <span class="zs-sl__order-products"><?php echo esc_html($o['products']); ?></span>
-                    </label>
+                    <div class="zs-sl__order-item">
+                        <div class="zs-sl__order-row1">
+                            <span class="zs-sl__order-num">#<?php echo esc_html((string) $o['number']); ?></span>
+                            <span class="zs-sl__order-customer"><?php echo esc_html($o['customer']); ?></span>
+                            <span class="zs-sl__order-date"><?php echo esc_html($o['date']); ?></span>
+                            <span class="zs-sl__order-guests"><?php echo esc_html((string) $o['guests']); ?> pax</span>
+                        </div>
+                        <div class="zs-sl__order-row2">
+                            <?php foreach ($o['items'] as $item) : ?>
+                                <label class="zs-sl__item-check-label">
+                                    <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" checked>
+                                    <span><?php echo esc_html($item['name']); ?><?php if ($item['qty'] > 1) : ?> ×<?php echo esc_html((string) $item['qty']); ?><?php endif; ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
             </div>
             <div class="zs-sl__orders-footer">
