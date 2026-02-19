@@ -182,14 +182,6 @@ class CartAjaxHandlers implements FeatureInterface
         $productId = absint($_POST['product_id']);
         $quantity = isset($_POST['quantity']) ? absint($_POST['quantity']) : 1;
 
-        $cartItemData = [];
-        if (isset($_POST['zs_rabbit_choice'])) {
-            $rabbitChoice = sanitize_text_field($_POST['zs_rabbit_choice']);
-            if (in_array($rabbitChoice, ['with', 'without'], true)) {
-                $cartItemData['zs_rabbit_choice'] = $rabbitChoice;
-            }
-        }
-        
         if (!function_exists('WC') || !isset(WC()->cart)) {
             wp_send_json_error(['message' => 'WooCommerce not available']);
             return;
@@ -209,7 +201,7 @@ class CartAjaxHandlers implements FeatureInterface
             $cartItemKey = $existingCartItemKey;
         } else {
             // Product doesn't exist, add new
-            $cartItemKey = WC()->cart->add_to_cart($productId, $quantity, 0, [], $cartItemData);
+            $cartItemKey = WC()->cart->add_to_cart($productId, $quantity);
         }
         
         if ($cartItemKey) {

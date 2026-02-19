@@ -50,23 +50,15 @@ class CartIntegration
             return $cartItemData;
         }
 
-        // 1. Try POST directly (standard form submit)
-        if (isset($_POST['zs_rabbit_choice']) && in_array($_POST['zs_rabbit_choice'], ['with', 'without'], true)) {
-            $cartItemData[MetaKeys::CART_KEY] = sanitize_text_field($_POST['zs_rabbit_choice']);
-            return $cartItemData;
-        }
-
-        // 2. Fallback: read from WC session (set by toggle JS via zs_set_rabbit_choice)
+        $choice = 'with';
         if (function_exists('WC') && WC()->session) {
-            $key    = 'zs_rabbit_choice_' . $productId;
-            $stored = WC()->session->get($key);
+            $stored = WC()->session->get('zs_rabbit_choice_' . $productId);
             if (in_array($stored, ['with', 'without'], true)) {
-                $cartItemData[MetaKeys::CART_KEY] = $stored;
-                return $cartItemData;
+                $choice = $stored;
             }
         }
 
-        $cartItemData[MetaKeys::CART_KEY] = 'with';
+        $cartItemData[MetaKeys::CART_KEY] = $choice;
         return $cartItemData;
     }
 
