@@ -33,6 +33,9 @@ class CheckoutFields
 
         // Preserve and translate service area filter across languages
         add_filter('icl_ls_languages', [$this, 'filterLanguageSwitcherUrls']);
+        
+        // Force shipping fields to always show
+        add_filter('woocommerce_ship_to_different_address_checked', '__return_true');
     }
 
     public function captureLocationFromUrl(): void
