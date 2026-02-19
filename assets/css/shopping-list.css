@@ -270,7 +270,6 @@
 }
 
 /* Print */
-.print-only { display: none; }
 
 @media print {
     body.zs-printing * {
