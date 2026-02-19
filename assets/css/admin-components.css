@@ -1060,3 +1060,48 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     margin: 0 !important;
     padding: 0 !important;
 }
+
+/* =================================================================
+   GUEST VALIDATION INDICATOR (Event Details metabox)
+   ================================================================= */
+
+.zs-guest-validation {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #646970;
+    transition: all 0.2s ease;
+}
+
+.zs-guest-validation.match {
+    color: #00a32a;
+}
+
+.zs-guest-validation.match input#event_total_guests {
+    border-color: color-mix(in srgb, #00a32a 30%, transparent 70%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, #00a32a 20%, transparent 80%);
+}
+
+.zs-guest-validation.lower {
+    color: #dba617;
+}
+
+.zs-guest-validation.lower input#event_total_guests {
+    color: #dba617;
+}
+
+.zs-guest-validation.higher {
+    color: #d63638;
+}
+
+.zs-guest-validation.higher input#event_total_guests {
+    color: #d63638;
+}
+
+.zs-guest-validation-message {
+    white-space: nowrap;
+    font-size: 10px;
+    opacity: 0.8;
+}

@@ -134,12 +134,17 @@ class EventDetailsMetabox
                         <label for="event_total_guests">
                             <?php esc_html_e('Total guests', 'zero-sense'); ?>
                         </label>
-                        <input type="number" 
-                               id="event_total_guests" 
-                               name="event_total_guests" 
-                               value="<?php echo esc_attr($totalGuests); ?>" 
-                               min="0"
-                               class="short">
+                        <div class="zs-mb-field-inline">
+                            <input type="number" 
+                                   id="event_total_guests" 
+                                   name="event_total_guests" 
+                                   value="<?php echo esc_attr($totalGuests); ?>" 
+                                   min="0"
+                                   class="short">
+                            <div id="zs-guests-validation" class="zs-guest-validation">
+                                <span class="zs-guest-validation-message"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -445,6 +450,55 @@ class EventDetailsMetabox
 
                 setupRecalcBtn('zs-recalculate-starters-time', 'event_starters_service_time', 30);
                 setupRecalcBtn('zs-recalculate-team-arrival-time', 'event_team_arrival_time', 180);
+
+                // Guest count validation
+                function updateGuestsValidation() {
+                    const totalGuestsInput = document.getElementById('event_total_guests');
+                    const adultsInput = document.getElementById('event_adults');
+                    const children5to8Input = document.getElementById('event_children_5_to_8');
+                    const children0to4Input = document.getElementById('event_children_0_to_4');
+                    const validationContainer = document.getElementById('zs-guests-validation');
+                    const validationMessage = validationContainer.querySelector('.zs-guest-validation-message');
+                    
+                    if (!totalGuestsInput || !adultsInput || !children5to8Input || !children0to4Input || !validationContainer) {
+                        return;
+                    }
+                    
+                    const totalGuests = parseInt(totalGuestsInput.value) || 0;
+                    const adults = parseInt(adultsInput.value) || 0;
+                    const children5to8 = parseInt(children5to8Input.value) || 0;
+                    const children0to4 = parseInt(children0to4Input.value) || 0;
+                    const sumOfPeople = adults + children5to8 + children0to4;
+                    
+                    // Remove all validation classes
+                    validationContainer.classList.remove('match', 'lower', 'higher');
+                    
+                    if (totalGuests === sumOfPeople && sumOfPeople > 0) {
+                        validationContainer.classList.add('match');
+                        validationMessage.textContent = 'El número de personas coincide';
+                    } else if (totalGuests < sumOfPeople && sumOfPeople > 0) {
+                        validationContainer.classList.add('lower');
+                        validationMessage.textContent = 'El número de personas totales es más bajo que la suma de personas';
+                    } else if (totalGuests > sumOfPeople && totalGuests > 0) {
+                        validationContainer.classList.add('higher');
+                        validationMessage.textContent = 'El número de personas totales es más alto que la suma de personas';
+                    } else {
+                        validationMessage.textContent = '';
+                    }
+                }
+                
+                // Add event listeners to all guest count fields
+                const guestFields = ['event_total_guests', 'event_adults', 'event_children_5_to_8', 'event_children_0_to_4'];
+                guestFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.addEventListener('input', updateGuestsValidation);
+                        field.addEventListener('change', updateGuestsValidation);
+                    }
+                });
+                
+                // Initial validation on page load
+                updateGuestsValidation();
 
             });
         })();
