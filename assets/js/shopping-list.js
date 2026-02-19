@@ -163,14 +163,25 @@
             checkAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = true; });
                 document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.remove('is-disabled'); });
+                scheduleAutoUpdate();
             });
         }
         if (uncheckAll) {
             uncheckAll.addEventListener('click', function () {
                 document.querySelectorAll('.zs-sl__item-check, .zs-sl__order-toggle').forEach(function (el) { el.checked = false; });
                 document.querySelectorAll('.zs-sl__order-item').forEach(function (el) { el.classList.add('is-disabled'); });
+                scheduleAutoUpdate();
             });
         }
+        var autoUpdateTimer = null;
+        function scheduleAutoUpdate() {
+            clearTimeout(autoUpdateTimer);
+            autoUpdateTimer = setTimeout(function () {
+                var keys = getCheckedKeys();
+                doRequest(keys.length > 0 ? keys : null);
+            }, 600);
+        }
+
         document.querySelectorAll('.zs-sl__order-toggle').forEach(function (toggle) {
             toggle.addEventListener('change', function () {
                 var oid = this.getAttribute('data-order-id');
@@ -181,6 +192,7 @@
                 if (orderItem) {
                     orderItem.classList.toggle('is-disabled', !toggle.checked);
                 }
+                scheduleAutoUpdate();
             });
             var oid = toggle.getAttribute('data-order-id');
             var orderItem = document.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
@@ -195,6 +207,7 @@
                 var anyChecked = Array.from(items).some(function (el) { return el.checked; });
                 var toggle = document.querySelector('.zs-sl__order-toggle[data-order-id="' + oid + '"]');
                 if (toggle) { toggle.checked = anyChecked; }
+                scheduleAutoUpdate();
             });
         });
         if (update) {
