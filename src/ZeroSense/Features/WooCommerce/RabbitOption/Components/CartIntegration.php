@@ -20,6 +20,12 @@ class CartIntegration
         // AJAX endpoint to store rabbit choice in WC session (called by toggle JS)
         add_action('wp_ajax_zs_set_rabbit_choice', [$this, 'ajaxSetRabbitChoice']);
         add_action('wp_ajax_nopriv_zs_set_rabbit_choice', [$this, 'ajaxSetRabbitChoice']);
+
+        // Reset rabbit choices when cart is emptied (new order starts)
+        add_action('woocommerce_cart_emptied', [$this, 'resetRabbitChoices']);
+
+        // Reset rabbit choices when order is completed
+        add_action('woocommerce_thankyou', [$this, 'resetRabbitChoices']);
     }
 
     public function ajaxSetRabbitChoice(): void
@@ -92,6 +98,25 @@ class CartIntegration
     {
         if (!empty($values[MetaKeys::CART_KEY])) {
             $item->add_meta_data(MetaKeys::RABBIT_CHOICE, $values[MetaKeys::CART_KEY], true);
+        }
+    }
+
+    /**
+     * Reset all rabbit choices when cart is emptied (new order starts)
+     */
+    public function resetRabbitChoices(): void
+    {
+        if (!function_exists('WC') || !WC()->session) {
+            return;
+        }
+
+        // Get all session data and remove rabbit choice keys
+        $sessionData = WC()->session->get_session_data();
+        
+        foreach ($sessionData as $key => $value) {
+            if (strpos($key, 'zs_rabbit_choice_') === 0) {
+                WC()->session->set($key, null); // Remove from session
+            }
         }
     }
 }
