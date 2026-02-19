@@ -96,13 +96,17 @@
     }
 
     function zsPrint() {
-        var lists = document.querySelectorAll('.zs-sl__list');
-        if (lists.length > 1) {
-            for (var i = 0; i < lists.length - 1; i++) { lists[i].remove(); }
-        }
+        var list = document.querySelector('.zs-sl__list');
+        if (!list) { return; }
+        var placeholder = document.createElement('div');
+        placeholder.id = 'zs-sl-print-placeholder';
+        list.parentNode.insertBefore(placeholder, list);
+        document.body.appendChild(list);
         document.body.classList.add('zs-printing');
         window.addEventListener('afterprint', function handler() {
             document.body.classList.remove('zs-printing');
+            placeholder.parentNode.insertBefore(list, placeholder);
+            placeholder.remove();
             window.removeEventListener('afterprint', handler);
         });
         window.print();
