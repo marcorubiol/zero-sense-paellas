@@ -202,8 +202,15 @@
     display: flex;
     gap: var(--space-xs);
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
     margin-top: var(--space-s);
     margin-bottom: var(--space-m);
+    width: 100%;
+}
+.zs-sl__list-actions > * {
+    flex: 0 0 auto;
+    width: auto !important;
 }
 
 /* Shopping list */
