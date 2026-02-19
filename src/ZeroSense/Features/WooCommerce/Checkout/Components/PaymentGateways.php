@@ -25,6 +25,17 @@ class PaymentGateways
         $debugIn  = array_keys($available_gateways);
         $debugBranch = $isOrderPay ? 'order-pay' : ($isCheckout ? 'checkout' : 'other');
 
+        // Log ALL registered gateways and their enabled status
+        $allGatewaysDebug = [];
+        if (function_exists('WC') && WC()->payment_gateways) {
+            foreach (WC()->payment_gateways->payment_gateways() as $gid => $gw) {
+                $allGatewaysDebug[$gid] = [
+                    'enabled' => $gw->enabled,
+                    'available' => $gw->is_available(),
+                ];
+            }
+        }
+
         // Check if on the order-pay page
         if ($isOrderPay) {
             // Hide Pay Later on order-pay
@@ -51,13 +62,14 @@ class PaymentGateways
         }
 
         $debugOut = array_keys($available_gateways);
-        add_action('wp_footer', function() use ($debugIn, $debugOut, $debugBranch, $isOrderPay, $isCheckout) {
+        add_action('wp_footer', function() use ($debugIn, $debugOut, $debugBranch, $isOrderPay, $isCheckout, $allGatewaysDebug) {
             echo '<script>console.group("[ZS PaymentGateways]");'
                 . 'console.log("branch:", ' . wp_json_encode($debugBranch) . ');'
                 . 'console.log("isOrderPay:", ' . wp_json_encode($isOrderPay) . ');'
                 . 'console.log("isCheckout:", ' . wp_json_encode($isCheckout) . ');'
                 . 'console.log("gateways IN:", ' . wp_json_encode($debugIn) . ');'
                 . 'console.log("gateways OUT:", ' . wp_json_encode($debugOut) . ');'
+                . 'console.log("ALL gateways (enabled/available):", ' . wp_json_encode($allGatewaysDebug) . ');'
                 . 'console.groupEnd();</script>';
         }, 999);
 
