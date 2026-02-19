@@ -16,6 +16,28 @@ class CartIntegration
 
         // Persist to order item meta
         add_action('woocommerce_checkout_create_order_line_item', [$this, 'saveToOrderItem'], 10, 4);
+
+        // AJAX endpoint to store rabbit choice in WC session (called by toggle JS)
+        add_action('wp_ajax_zs_set_rabbit_choice', [$this, 'ajaxSetRabbitChoice']);
+        add_action('wp_ajax_nopriv_zs_set_rabbit_choice', [$this, 'ajaxSetRabbitChoice']);
+    }
+
+    public function ajaxSetRabbitChoice(): void
+    {
+        $productId = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+        $choice    = isset($_POST['choice']) ? sanitize_text_field($_POST['choice']) : 'with';
+
+        if (!in_array($choice, ['with', 'without'], true) || $productId <= 0) {
+            wp_send_json_error();
+            return;
+        }
+
+        if (function_exists('WC') && WC()->session) {
+            $key = 'zs_rabbit_choice_' . $productId;
+            WC()->session->set($key, $choice);
+        }
+
+        wp_send_json_success();
     }
 
     public function addToCartData(array $cartItemData, int $productId): array
@@ -28,12 +50,23 @@ class CartIntegration
             return $cartItemData;
         }
 
-        $choice = isset($_POST['zs_rabbit_choice']) ? sanitize_text_field($_POST['zs_rabbit_choice']) : 'with';
-        if (!in_array($choice, ['with', 'without'], true)) {
-            $choice = 'with';
+        // 1. Try POST directly (standard form submit)
+        if (isset($_POST['zs_rabbit_choice']) && in_array($_POST['zs_rabbit_choice'], ['with', 'without'], true)) {
+            $cartItemData[MetaKeys::CART_KEY] = sanitize_text_field($_POST['zs_rabbit_choice']);
+            return $cartItemData;
         }
 
-        $cartItemData[MetaKeys::CART_KEY] = $choice;
+        // 2. Fallback: read from WC session (set by toggle JS via zs_set_rabbit_choice)
+        if (function_exists('WC') && WC()->session) {
+            $key    = 'zs_rabbit_choice_' . $productId;
+            $stored = WC()->session->get($key);
+            if (in_array($stored, ['with', 'without'], true)) {
+                $cartItemData[MetaKeys::CART_KEY] = $stored;
+                return $cartItemData;
+            }
+        }
+
+        $cartItemData[MetaKeys::CART_KEY] = 'with';
         return $cartItemData;
     }
 
