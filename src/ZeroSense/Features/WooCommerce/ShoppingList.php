@@ -350,7 +350,7 @@ class ShoppingList implements FeatureInterface
                         </select>
                     </div>
                     <div class="zs-sl__filter-group zs-sl__filter-group--action">
-                        <button type="button" class="zs-sl__btn zs-sl__btn--primary" id="zs-sl-search"><?php esc_html_e('Cercar pedidos', 'zero-sense'); ?></button>
+                        <button type="button" class="zs-sl__btn zs-sl__btn--primary" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
                     </div>
                 </div>
             </div>
@@ -375,7 +375,7 @@ class ShoppingList implements FeatureInterface
     {
         ?>
         <div class="zs-sl__orders no-print" id="zs-sl-orders">
-            <h3 class="zs-sl__section-title"><?php esc_html_e('Pedidos inclosos', 'zero-sense'); ?></h3>
+            <h3 class="zs-sl__section-title"><?php esc_html_e('Comandes incloses', 'zero-sense'); ?></h3>
             <div class="zs-sl__orders-actions">
                 <button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-check-all"><?php esc_html_e('Tots', 'zero-sense'); ?></button>
                 <button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-uncheck-all"><?php esc_html_e('Cap', 'zero-sense'); ?></button>
@@ -404,7 +404,7 @@ class ShoppingList implements FeatureInterface
     private function renderList(array $list): void
     {
         if (empty($list)) {
-            echo '<div class="zs-sl__list-empty"><p>' . esc_html__('No hi ha ingredients per als pedidos seleccionats.', 'zero-sense') . '</p></div>';
+            echo '<div class="zs-sl__list-empty"><p>' . esc_html__('No hi ha ingredients per a les comandes seleccionades.', 'zero-sense') . '</p></div>';
             return;
         }
         usort($list, function (array $a, array $b): int { return strcmp($a['name'], $b['name']); });

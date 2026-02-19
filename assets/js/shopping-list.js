@@ -34,10 +34,10 @@
 
     function renderOrders(orders, selectedIds) {
         if (!orders || orders.length === 0) {
-            return '<div class="zs-sl__no-orders"><p>No hi ha pedidos per a aquest període i localització.</p></div>';
+            return '<div class="zs-sl__no-orders"><p>No hi ha comandes per a aquest període i localització.</p></div>';
         }
         var html = '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
-        html += '<h3 class="zs-sl__section-title">Pedidos inclosos</h3>';
+        html += '<h3 class="zs-sl__section-title">Comandes incloses</h3>';
         html += '<div class="zs-sl__orders-actions">';
         html += '<button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-check-all">Tots</button> ';
         html += '<button type="button" class="zs-sl__btn zs-sl__btn--sm" id="zs-sl-uncheck-all">Cap</button>';
@@ -65,7 +65,7 @@
 
     function renderList(list) {
         if (!list || list.length === 0) {
-            return '<div class="zs-sl__list-empty"><p>No hi ha ingredients per als pedidos seleccionats.</p></div>';
+            return '<div class="zs-sl__list-empty"><p>No hi ha ingredients per a les comandes seleccionades.</p></div>';
         }
         list = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
         var html = '<div class="zs-sl__list print-only" id="zs-sl-list"><div class="zs-sl__list-items">';
