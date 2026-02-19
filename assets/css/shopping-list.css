@@ -100,6 +100,10 @@
     gap: calc(var(--space-xs) / 2);
     cursor: pointer;
     color: var(--text-dark-muted);
+    transition: opacity 0.2s;
+}
+.zs-sl__item-check-label:has(.zs-sl__item-check:not(:checked)) {
+    opacity: 0.35;
 }
 .zs-sl__item-check-label .zs-sl__switch {
     width: 24px;
