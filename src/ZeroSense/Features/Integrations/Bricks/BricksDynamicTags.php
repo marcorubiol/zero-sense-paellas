@@ -1234,12 +1234,8 @@ class BricksDynamicTags implements FeatureInterface
         // Primary: resolve directly as zs_ + field (e.g. zs_event_team_arrival_time)
         $directMetaKey = 'zs_' . $field;
         
-        // Fallback: legacy mapping for fields that have legacy keys
-        $mapping = $this->getFieldMapping();
-        $legacyMetaKey = $mapping[$field] ?? null;
-        
-        // Use legacy key only if it exists, otherwise use direct key
-        $metaKey = $legacyMetaKey ?? $directMetaKey;
+        // Use direct zs_ key (legacy mapping no longer needed)
+        $metaKey = $directMetaKey;
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
