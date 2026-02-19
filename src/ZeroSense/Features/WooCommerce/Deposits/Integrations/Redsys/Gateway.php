@@ -10,6 +10,7 @@ use ZeroSense\Features\WooCommerce\Deposits\Support\Logs;
 
 class Gateway extends WC_Payment_Gateway
 {
+    use PaymentApplicator;
     public const GATEWAY_ID = 'redsys_deposits';
 
     private ?RedsysApi $api = null;
@@ -396,41 +397,11 @@ class Gateway extends WC_Payment_Gateway
                     status_header(200); exit;
                 }
 
-                // Decide target status and update metas — mirrors ReturnHandler::handleSuccess()
-                $intent = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                $intent    = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
                 $amountRaw = (float) ($callbackApi->getParameter('Ds_Amount') ?? 0) / 100;
-                $orderTotal = (float) $order->get_total();
-                $depositAmountMeta = (float) ($order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true) ?: 0);
-
-                if ($intent === 'deposit') {
-                    $target = 'deposit-paid';
-                    MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
-                    MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
-                    MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'deposit');
-                    MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
-                    MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);
-                    $remaining = max(0.0, $orderTotal - $depositAmountMeta);
-                    MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, $remaining);
-                    MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $remaining);
-                } else {
-                    $target = 'fully-paid';
-                    MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, $intent ?: 'full');
-                    MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, 0);
-                    MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, max(0.0, $orderTotal - $depositAmountMeta));
-                }
 
                 $order->add_order_note(sprintf(__('Redsys payment success via callback (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
-                $previousStatus = $order->get_status();
-                $order->update_status($target);
-                $order->save();
-                $order->save_meta_data();
-
-                // Ensure FlowMattic triggers even if status was already set (e.g., by ReturnHandler)
-                if ($previousStatus === $target) {
-                    do_action('woocommerce_order_status_changed', $order->get_id(), $previousStatus, $target, $order);
-                }
-
-                try { Logs::add($order, 'gateway', ['event' => 'payment_success', 'intent' => $intent, 'target_status' => $target, 'amount' => $amountRaw]); } catch (\Throwable $e) {}
+                $target = $this->applyPaymentSuccess($order, $intent, $amountRaw);
             } else {
                 // Failed: leave status as-is, add note only
                 $order->add_order_note(sprintf(__('Redsys payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));

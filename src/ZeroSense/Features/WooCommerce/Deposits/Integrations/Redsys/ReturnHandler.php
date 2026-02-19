@@ -8,6 +8,7 @@ use ZeroSense\Features\WooCommerce\Deposits\Support\Logs;
 
 class ReturnHandler
 {
+    use PaymentApplicator;
     public function register(): void
     {
         add_action('template_redirect', [$this, 'handleReturn'], 1);
@@ -125,81 +126,15 @@ class ReturnHandler
 
     private function handleSuccess(WC_Order $order, bool $hasDeposit, float $depositAmount, float $amountPaid): string
     {
-        $orderId = $order->get_id();
-
         if ($hasDeposit && $depositAmount > 0) {
-            $isDepositPayment = abs($amountPaid - $depositAmount) < 1;
-
-            if ($isDepositPayment) {
-                $order->update_status('deposit-paid', __('Deposit payment received via Redsys.', 'zero-sense'));
-                MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
-                MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
-                MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'deposit');
-                MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
-                MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);
-                // Update remaining/balance after deposit success
-                $orderTotal = (float) $order->get_total();
-                $remaining = max(0, $orderTotal - (float) $depositAmount);
-                $balanceAmount = max(0, $orderTotal - (float) $depositAmount);
-                MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, $remaining);
-                MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $balanceAmount);
-                $order->save();
-                $order->save_meta_data();
-
-                // Log deposit success
-                Logs::add($order, 'gateway', [
-                    'event' => 'deposit_paid',
-                    'amount_paid' => wc_format_decimal($amountPaid),
-                    'expected_deposit' => wc_format_decimal($depositAmount),
-                    'payment_type' => 'deposit',
-                    'gateway' => 'redsys',
-                ]);
-
-                return 'deposit';
-            }
-
-            $order->update_status('fully-paid', __('Full payment received via Redsys.', 'zero-sense'));
-            // Direct full payment (not after deposit): do NOT mark balance flags
-            MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'full_initial');
-            MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, 0);
-            // Balance always = total - deposit (mathematical difference)
-            $orderTotal = (float) $order->get_total();
-            $depositAmountMeta = (float) ($order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true) ?: 0);
-            $balanceAmount = max(0, $orderTotal - $depositAmountMeta);
-            MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $balanceAmount);
-            $order->save();
-            $order->save_meta_data();
-
-            Logs::add($order, 'gateway', [
-                'event' => 'remaining_paid',
-                'amount_paid' => wc_format_decimal($amountPaid),
-                'expected_remaining' => wc_format_decimal(max(0, ($depositAmount > 0 ? ($order->get_total() - $depositAmount) : 0))),
-                'payment_type' => 'full_initial',
-                'gateway' => 'redsys',
-            ]);
-
-            return 'full';
+            $intent = abs($amountPaid - $depositAmount) < 1 ? 'deposit' : 'full_initial';
+        } else {
+            $intent = 'full_standard';
         }
 
-        $order->update_status('fully-paid', __('Payment received via Redsys.', 'zero-sense'));
-        MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'full_standard');
-        MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, 0);
-        // Balance always = total - deposit (mathematical difference)
-        $orderTotal = (float) $order->get_total();
-        $depositAmountMeta = (float) ($order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true) ?: 0);
-        $balanceAmount = max(0, $orderTotal - $depositAmountMeta);
-        MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $balanceAmount);
-        $order->save();
-        $order->save_meta_data();
+        $target = $this->applyPaymentSuccess($order, $intent, $amountPaid);
 
-        Logs::add($order, 'gateway', [
-            'event' => 'full_paid',
-            'amount_paid' => wc_format_decimal($amountPaid),
-            'payment_type' => 'full_standard',
-            'gateway' => 'redsys',
-        ]);
-
-        return 'full';
+        return $target === 'deposit-paid' ? 'deposit' : 'full';
     }
 
     private function handleCancellation(WC_Order $order): string
