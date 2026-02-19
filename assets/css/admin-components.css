@@ -929,15 +929,15 @@ input:checked + .zs-slider:before {
 }
 
 .zs-subtitle-client {
-    background: #DCFCE7;
-    border-left: 3px solid #16A34A;
-    color: #14532D;
+    background: #f6f7f7;
+    border-left: 3px solid #c3c4c7;
+    color: #50575e;
 }
 
 .zs-subtitle-venue {
-    background: #E0E7FF;
-    border-left: 3px solid #4F46E5;
-    color: #1E1B4B;
+    background: #f6f7f7;
+    border-left: 3px solid #c3c4c7;
+    color: #50575e;
 }
 
 .zs-subtitle-edit a {
