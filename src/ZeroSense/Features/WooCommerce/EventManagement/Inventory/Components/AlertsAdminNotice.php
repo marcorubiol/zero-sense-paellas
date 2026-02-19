@@ -81,7 +81,7 @@ class AlertsAdminNotice
                     $critical
                 ),
                 esc_url(admin_url('admin.php?page=zs-stock-alerts')),
-                esc_html(__('View Alerts Dashboard', 'zero-sense'))
+                esc_html(__('Stock Alerts', 'zero-sense'))
             );
         }
 
