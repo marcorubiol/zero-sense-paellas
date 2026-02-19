@@ -2551,6 +2551,112 @@ class BricksDynamicTags implements FeatureInterface
     }
 
     /**
+     * Get recipes as fdr-card__field blocks with ingredients + liquids combined
+     */
+    private function getRecipeFullCard($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Order Recipes Full Card');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $orderLanguage = $this->getOrderLanguageCode($order);
+        $eqTotal = $this->getEquivalentPax($order);
+        if ($eqTotal <= 0) {
+            return '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return '';
+        }
+
+        $recipeGroups = [];
+        $sumQty = 0.0;
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $recipeId = $this->resolveRecipeIdForItem($item, $product);
+            if ($recipeId <= 0) {
+                continue;
+            }
+            if (!isset($recipeGroups[$recipeId])) {
+                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
+            }
+            $recipeGroups[$recipeId]['total_qty'] += $qty;
+            $sumQty += $qty;
+        }
+
+        if (empty($recipeGroups) || $sumQty <= 0) {
+            return '';
+        }
+
+        $html = '';
+
+        foreach ($recipeGroups as $recipeId => $group) {
+            $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+            $parts = [];
+
+            // Ingredients
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            if (is_array($recipeIngredients)) {
+                foreach ($recipeIngredients as $ingRow) {
+                    if (!is_array($ingRow)) continue;
+                    $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                    $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                    $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+                    if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
+                    $amount = $eqItem * $perPax;
+                    if ($amount <= 0) continue;
+                    $normalized = $this->normalizeUnit($amount, $unit);
+                    $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
+                    $parts[] = '<li class="zs-recipe-ingredient">' . esc_html($ingName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($normalized['qty'])) . esc_html($normalized['unit']) . '</span></li>';
+                }
+            }
+
+            // Liquids
+            $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
+            if (is_array($recipeLiquids)) {
+                foreach ($recipeLiquids as $liqRow) {
+                    if (!is_array($liqRow)) continue;
+                    $termId = isset($liqRow['liquid']) ? (int) $liqRow['liquid'] : 0;
+                    $perPax = isset($liqRow['qty']) ? (float) $liqRow['qty'] : 0.0;
+                    if ($termId <= 0 || $perPax <= 0) continue;
+                    $amount = $eqItem * $perPax;
+                    if ($amount <= 0) continue;
+                    $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
+                    if ($liqName === '') continue;
+                    $parts[] = '<li class="zs-recipe-ingredient">' . esc_html($liqName) . ' <span class="zs-recipe-ingredient-qty">' . esc_html($this->formatNumber($amount)) . 'L</span></li>';
+                }
+            }
+
+            $value = !empty($parts) ? '<ul class="brxe-text-basic fdr-card__field-value">' . implode('', $parts) . '</ul>' : '<p>—</p>';
+
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($group['title']) . '</span>';
+            $html .= $value;
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    /**
      * Get simplified ingredients total (only Ingredient and TOTAL columns)
      */
     private function getRecipeIngredientsSimple($post): string
