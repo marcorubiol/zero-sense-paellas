@@ -2606,7 +2606,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $html = 'w';
+        $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
