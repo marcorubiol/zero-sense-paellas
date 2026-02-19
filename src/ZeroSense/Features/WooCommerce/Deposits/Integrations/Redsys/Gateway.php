@@ -85,7 +85,9 @@ class Gateway extends WC_Payment_Gateway
     {
         // First honour WooCommerce's base checks
         if (!parent::is_available()) {
-            if (!function_exists('is_wc_endpoint_url') || !is_wc_endpoint_url('order-pay')) {
+            $isOrderPay = (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay'))
+                || isset($_GET['pay_for_order']);
+            if (!$isOrderPay) {
                 return false;
             }
         }
