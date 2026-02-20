@@ -9,6 +9,44 @@
 }
 
 /* ----------------------------------------------------------------
+   Page header
+   ---------------------------------------------------------------- */
+
+.zs-sl__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    margin-bottom: var(--space-m);
+    padding-bottom: var(--space-m);
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.zs-sl__header-icon {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--off-white);
+    border-radius: var(--radius);
+    color: var(--color-primary);
+}
+
+.zs-sl__header-title {
+    margin: 0 0 2px 0;
+    font-size: var(--text-l, 22px);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.zs-sl__header-sub {
+    margin: 0;
+    font-size: var(--text-xs, 12px);
+    color: var(--text-dark-muted);
+}
+
+/* ----------------------------------------------------------------
    ZONE 1 — Filters
    ---------------------------------------------------------------- */
 
