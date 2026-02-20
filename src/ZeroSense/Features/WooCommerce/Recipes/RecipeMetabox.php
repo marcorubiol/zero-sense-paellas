@@ -651,7 +651,7 @@ class RecipeMetabox
                 'zs-recipes-admin',
                 plugin_dir_url(dirname(dirname(dirname(dirname(dirname(__FILE__)))))) . 'assets/js/recipes-admin.js',
                 ['jquery', 'selectWoo', 'jquery-ui-sortable'],
-                time(),
+                (string) time(),
                 true
             );
             wp_enqueue_script('zs-recipes-admin');
