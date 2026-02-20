@@ -9,9 +9,9 @@ class MaterialDefinitions
     public static function getParentCategories(): array
     {
         return [
-            'materia_pesada' => 'Matèria Pesada',
-            'logistica'      => 'Logística',
-            'textil'         => 'Textil',
+            'materia_pesada'    => 'Matèria Pesada',
+            'transport_muntatge' => 'Transport i Muntatge',
+            'textil_imatge'     => 'Textil i Imatge',
         ];
     }
     
@@ -89,11 +89,11 @@ class MaterialDefinitions
                 'description' => '1 per cada recepta de paella amb 60-80 persones',
             ],
 
-            // MATÈRIA PESADA — equipament paella
+            // MATÈRIA PESADA — equipament de foc
             [
                 'key' => 'cremador_50cm',
                 'label' => 'Cremador 50cm',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 55cm o 65cm',
@@ -101,7 +101,7 @@ class MaterialDefinitions
             [
                 'key' => 'cremador_60cm',
                 'label' => 'Cremador 60cm',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 70cm',
@@ -109,7 +109,7 @@ class MaterialDefinitions
             [
                 'key' => 'cremador_70cm',
                 'label' => 'Cremador 70cm',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 80cm o 90cm',
@@ -117,7 +117,7 @@ class MaterialDefinitions
             [
                 'key' => 'cremador_90cm',
                 'label' => 'Cremador 90cm',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 100cm, 115cm o 135cm',
@@ -125,7 +125,7 @@ class MaterialDefinitions
             [
                 'key' => 'potes_tripodes',
                 'label' => 'Potes / Trípodes',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador',
@@ -133,7 +133,7 @@ class MaterialDefinitions
             [
                 'key' => 'buta',
                 'label' => 'Butà',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador + 1 extra si >60pax',
@@ -141,7 +141,7 @@ class MaterialDefinitions
             [
                 'key' => 'catifes',
                 'label' => 'Catifes',
-                'category' => 'equipament_paella',
+                'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per paella',
@@ -210,49 +210,15 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per cassola',
+                'description' => '1 per cada varietat de paella',
             ],
 
-            // LOGÍSTICA
-            [
-                'key' => 'carreto',
-                'label' => 'Carretó',
-                'category' => 'logistica',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => '1 per event',
-            ],
-            [
-                'key' => 'taules_treball',
-                'label' => 'Taules Treball',
-                'category' => 'logistica',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => '≤20pax:1, ≤35:2, ≤50:3, ≤70:4, >70:ceil/20',
-            ],
-            [
-                'key' => 'poals_fems',
-                'label' => 'Poals Fems',
-                'category' => 'logistica',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => '1 cada 20pax',
-            ],
-            [
-                'key' => 'neveres_portatils',
-                'label' => 'Nevera portàtil',
-                'category' => 'logistica',
-                'parent_category' => 'logistica',
-                'unit' => 'u',
-                'description' => '1 cada 30 persones',
-            ],
-
-            // LOGÍSTICA — caixes
+            // TRANSPORT I MUNTATGE — caixes
             [
                 'key' => 'caixa_gris_gran_utensilis',
                 'label' => 'KIT utensilis cuina (caixa gris gran)',
                 'category' => 'caixes',
-                'parent_category' => 'logistica',
+                'parent_category' => 'transport_muntatge',
                 'unit' => 'u',
                 'description' => '1 per event',
             ],
@@ -260,7 +226,7 @@ class MaterialDefinitions
                 'key' => 'caixa_gris_mitjana_paravents',
                 'label' => 'KIT paravents (caixa gris mitjana)',
                 'category' => 'caixes',
-                'parent_category' => 'logistica',
+                'parent_category' => 'transport_muntatge',
                 'unit' => 'u',
                 'description' => '1 per event',
             ],
@@ -268,7 +234,7 @@ class MaterialDefinitions
                 'key' => 'caixa_gris_petita_neteja',
                 'label' => 'KIT neteja (caixa gris petita)',
                 'category' => 'caixes',
-                'parent_category' => 'logistica',
+                'parent_category' => 'transport_muntatge',
                 'unit' => 'u',
                 'description' => '1 per event',
             ],
@@ -276,7 +242,7 @@ class MaterialDefinitions
                 'key' => 'caixa_marro_especies',
                 'label' => 'Caixa Marró Espècies',
                 'category' => 'caixes',
-                'parent_category' => 'logistica',
+                'parent_category' => 'transport_muntatge',
                 'unit' => 'u',
                 'description' => '1 per event',
             ],
@@ -284,16 +250,51 @@ class MaterialDefinitions
                 'key' => 'caixa_gris_gran_extra',
                 'label' => 'KIT Utensilis Extra',
                 'category' => 'caixes',
-                'parent_category' => 'logistica',
+                'parent_category' => 'transport_muntatge',
                 'unit' => 'u',
                 'description' => '1 si >60 persones',
             ],
-            // TEXTIL — roba personal
+
+            // TRANSPORT I MUNTATGE — suport muntatge
+            [
+                'key' => 'carreto',
+                'label' => 'Carretó',
+                'category' => 'suport_muntatge',
+                'parent_category' => 'transport_muntatge',
+                'unit' => 'u',
+                'description' => '1 per event',
+            ],
+            [
+                'key' => 'taules_treball',
+                'label' => 'Taules Treball',
+                'category' => 'suport_muntatge',
+                'parent_category' => 'transport_muntatge',
+                'unit' => 'u',
+                'description' => '≤20pax:1, ≤35:2, ≤50:3, ≤70:4, >70:ceil/20',
+            ],
+            [
+                'key' => 'poals_fems',
+                'label' => 'Poals Fems',
+                'category' => 'suport_muntatge',
+                'parent_category' => 'transport_muntatge',
+                'unit' => 'u',
+                'description' => '1 cada 20pax',
+            ],
+            [
+                'key' => 'neveres_portatils',
+                'label' => 'Nevera portàtil',
+                'category' => 'suport_muntatge',
+                'parent_category' => 'transport_muntatge',
+                'unit' => 'u',
+                'description' => '1 cada 30 persones',
+            ],
+
+            // TEXTIL I IMATGE — vestimenta staff
             [
                 'key' => 'xaquetes',
                 'label' => 'Xaquetes',
                 'category' => 'roba_personal',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => '1 per cuiner assignat',
             ],
@@ -301,7 +302,7 @@ class MaterialDefinitions
                 'key' => 'bandanes',
                 'label' => 'Bandanes',
                 'category' => 'roba_personal',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => '1 per cuiner assignat',
             ],
@@ -309,7 +310,7 @@ class MaterialDefinitions
                 'key' => 'davantals_cuiners',
                 'label' => 'Davantals Cuiners',
                 'category' => 'roba_personal',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => '1 per cuiner assignat',
             ],
@@ -317,17 +318,17 @@ class MaterialDefinitions
                 'key' => 'davantals_cambrers',
                 'label' => 'Davantals Cambrers',
                 'category' => 'roba_personal',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => '1 per cambrer assignat',
             ],
 
-            // TEXTIL — teixits i neteja
+            // TEXTIL I IMATGE — vestimenta taules
             [
                 'key' => 'draps',
                 'label' => 'Draps',
                 'category' => 'textils_neteja',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => '1 cada 15pax + 1 extra',
             ],
@@ -335,7 +336,7 @@ class MaterialDefinitions
                 'key' => 'teles_negres',
                 'label' => 'Teles Negres',
                 'category' => 'textils_neteja',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => 'mateix nombre que taules treball',
             ],
@@ -343,7 +344,7 @@ class MaterialDefinitions
                 'key' => 'estovalles',
                 'label' => 'Estovalles',
                 'category' => 'textils_neteja',
-                'parent_category' => 'textil',
+                'parent_category' => 'textil_imatge',
                 'unit' => 'u',
                 'description' => 'mateix nombre que taules treball',
             ],

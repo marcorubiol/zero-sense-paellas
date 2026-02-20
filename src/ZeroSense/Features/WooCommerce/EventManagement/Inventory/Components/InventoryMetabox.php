@@ -131,14 +131,14 @@ class InventoryMetabox
         
         // Nombres de categorías
         $categoryLabels = [
-            'paelles'           => 'Paelles',
-            'equipament_paella' => 'Equipament Paella',
-            'cassoles'          => 'Cassoles',
-            'logistica'         => 'Logística',
-            'caixes'            => 'Caixes',
-            'roba_personal'     => 'Vestimenta Staff',
-            'textils_neteja'    => 'Vestimenta Taules',
-            'altres'            => 'Altres',
+            'paelles'          => 'Paelles',
+            'equipament_foc'   => 'Equipament de Foc',
+            'cassoles'         => 'Cassoles',
+            'caixes'           => 'Caixes',
+            'suport_muntatge'  => 'Suport Muntatge',
+            'roba_personal'    => 'Vestimenta Staff',
+            'textils_neteja'   => 'Vestimenta Taules',
+            'altres'           => 'Altres',
         ];
         
         ?>
@@ -914,6 +914,11 @@ class InventoryMetabox
                     var value = $input.val();
                     var autoValue = $input.data('auto');
                     
+                    // For dependent fields, only save if the user explicitly overrode them
+                    if ($input.data('dependent') == '1' && $input.data('user-override') != '1') {
+                        return;
+                    }
+                    
                     // Only send if different from auto or explicitly set
                     if (value !== '' && value != autoValue) {
                         data[materialKey] = value;
@@ -941,6 +946,7 @@ class InventoryMetabox
                             
                             $inputs.prop('disabled', true);
                             $resetIcons.addClass('hidden');
+                            $('.zs-inventory-dep-lock').hide();
                             $lockBtn.attr('data-locked', 'true');
                             $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
                             $lockBtn.find('.lock-text').text('<?php echo esc_js(__('Unlock', 'zero-sense')); ?>');
