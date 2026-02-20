@@ -269,8 +269,8 @@ class RecipeMetabox
                         }
                         ?>
                         <tr data-row="<?php echo $row_index; ?>">
-                            <td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
-                                <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
+                            <td class="zs-drag-handle">
+                                <span class="dashicons dashicons-menu"></span>
                             </td>
                             <td>
                                 <select name="zs_recipe_ingredients[ingredient][]" class="zs-ingredient-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
@@ -341,15 +341,15 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $liquid_row_index; ?>">
-                                <td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
-                                    <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
+                                <td class="zs-drag-handle">
+                                    <span class="dashicons dashicons-menu"></span>
                                 </td>
                                 <td>
-                                    <select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
+                                    <select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
                                         <?php if ($termId > 0 && $termName !== ''): ?>
                                             <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
                                         <?php endif; ?>
-                                        <?php
+                                        <?php 
                                         if (is_array($existing_liquids)) {
                                             foreach ($existing_liquids as $liquid) {
                                                 if ($liquid instanceof WP_Term && $liquid->term_id != $termId) {
@@ -361,7 +361,7 @@ class RecipeMetabox
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
+                                    <input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="<?php echo esc_attr($qty); ?>">
                                 </td>
                                 <td>
                                     <button type="button" class="button zs-liquid-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
@@ -383,8 +383,8 @@ class RecipeMetabox
 
             <!-- Utensils Section -->
             <div class="zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
-                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
-                <table class="widefat striped" style="margin-top:8px;">
+                <h3 class="zs-mb-subheader"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
+                <table class="widefat striped">
                     <thead>
                         <tr>
                             <th style="width: 5%; text-align: center;"></th>
@@ -410,11 +410,11 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $utensil_row_index; ?>">
-                                <td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
-                                    <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
+                                <td class="zs-drag-handle">
+                                    <span class="dashicons dashicons-menu"></span>
                                 </td>
                                 <td>
-                                    <select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
+                                    <select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
                                         <?php if ($termId > 0 && $termName !== ''): ?>
                                         <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
                                     <?php endif; ?>

@@ -1115,3 +1115,23 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     font-weight: 400;
     opacity: 0.8;
 }
+
+/* =================================================================
+   RECIPES DRAG AND DROP
+   ================================================================= */
+
+.zs-drag-handle {
+    cursor: grab;
+    text-align: center;
+    color: #a7aaad;
+    vertical-align: middle;
+}
+
+.zs-drag-handle:active {
+    cursor: grabbing;
+}
+
+.zs-drag-handle .dashicons {
+    font-size: 16px;
+    line-height: 1.5;
+}
