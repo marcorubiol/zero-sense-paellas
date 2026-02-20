@@ -217,7 +217,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per cada varietat de paella',
+                'description' => '1 per cassola',
                 'dependency_label' => '↳ Calculat a partir de les cassoles',
             ],
 
