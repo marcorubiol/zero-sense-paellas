@@ -3453,4 +3453,24 @@ class BricksDynamicTags implements FeatureInterface
         $shoppingList = new \ZeroSense\Features\WooCommerce\ShoppingList();
         return $shoppingList->buildSignedUrl($eventDate, $eventDate, $loc, [$orderId]);
     }
+
+    private function getOrderDepositPercentage($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('order_deposit_percentage');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $info = DepositsUtils::getDepositInfo($order);
+        if (empty($info) || !($info['has_deposit'] ?? false)) {
+            return '';
+        }
+
+        return (string) ($info['deposit_percentage_display'] ?? '');
+    }
 }
