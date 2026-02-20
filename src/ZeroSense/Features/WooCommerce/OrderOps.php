@@ -9,7 +9,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker
 class OrderOps implements FeatureInterface
 {
     private const META_OPS_NOTES = 'zs_ops_notes';
-    private const META_OPS_MATERIAL = 'zs_ops_material';
+    private const META_OPS_INFRASTRUCTURE = 'zs_ops_infrastructure';
     private const META_SHIPPING_EMAIL = '_shipping_email';
 
     public function getName(): string
@@ -218,8 +218,8 @@ class OrderOps implements FeatureInterface
             'feature' => 'OrderOps',
         ]);
 
-        $registry->register(self::META_OPS_MATERIAL, [
-            'label' => 'Material & logistics',
+        $registry->register(self::META_OPS_INFRASTRUCTURE, [
+            'label' => 'Complementary infrastructure',
             'type' => 'json',
             'translatable' => false,
             'legacy_keys' => [],

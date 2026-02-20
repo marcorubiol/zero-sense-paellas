@@ -10,13 +10,13 @@ use ZeroSense\Core\FeatureInterface;
 
 class EventShortcodes implements FeatureInterface
 {
-    private const META_OPS_MATERIAL = 'zs_ops_material';
+    private const META_OPS_INFRASTRUCTURE = 'zs_ops_infrastructure';
 
     private const META_EVENT_ADULTS = 'zs_event_adults';
     private const META_EVENT_CHILDREN = 'zs_event_children_5_to_8';
     private const META_EVENT_BABIES = 'zs_event_children_0_to_4';
 
-    private const OPTION_MATERIAL_SCHEMA = 'zs_ops_material_schema';
+    private const OPTION_INFRASTRUCTURE_SCHEMA = 'zs_ops_infrastructure_schema';
 
     private const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
     private const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
@@ -56,7 +56,7 @@ class EventShortcodes implements FeatureInterface
     public function init(): void
     {
         add_shortcode('zs_event_menu', [$this, 'shortcodeMenu']);
-        add_shortcode('zs_event_material', [$this, 'shortcodeMaterial']);
+        add_shortcode('zs_event_infrastructure', [$this, 'shortcodeInfrastructure']);
         add_shortcode('zs_event_ingredients', [$this, 'shortcodeIngredients']);
     }
 
@@ -122,9 +122,9 @@ class EventShortcodes implements FeatureInterface
     }
 
     /**
-     * [zs_event_material order="123"]
+     * [zs_event_infrastructure order="123"]
      */
-    public function shortcodeMaterial($atts): string
+    public function shortcodeInfrastructure($atts): string
     {
         $orderId = $this->resolveOrderId($atts);
         if (!$orderId) {
@@ -136,10 +136,10 @@ class EventShortcodes implements FeatureInterface
             return '';
         }
 
-        $raw = $order->get_meta(self::META_OPS_MATERIAL, true);
-        $material = is_array($raw) ? $raw : [];
+        $raw = $order->get_meta(self::META_OPS_INFRASTRUCTURE, true);
+        $infrastructure = is_array($raw) ? $raw : [];
 
-        $schema = $this->getMaterialSchema();
+        $schema = $this->getInfrastructureSchema();
         if ($schema === []) {
             return '';
         }
@@ -149,7 +149,7 @@ class EventShortcodes implements FeatureInterface
             $label = $def['label'] ?? $key;
             $type = $def['type'] ?? 'text';
 
-            $entry = $material[$key] ?? null;
+            $entry = $infrastructure[$key] ?? null;
             if (is_array($entry) && array_key_exists('value', $entry)) {
                 $entry = $entry['value'];
             }
@@ -184,9 +184,9 @@ class EventShortcodes implements FeatureInterface
             return '';
         }
 
-        return '<table class="zs-event-material">'
+        return '<table class="zs-event-infrastructure">'
             . '<thead><tr>'
-            . '<th>' . esc_html__('Material & logistics', 'zero-sense') . '</th>'
+            . '<th>' . esc_html__('Complementary infrastructure', 'zero-sense') . '</th>'
             . '<th style="text-align:right;">' . esc_html__('Value', 'zero-sense') . '</th>'
             . '</tr></thead>'
             . '<tbody>' . $rows . '</tbody>'
@@ -374,9 +374,9 @@ class EventShortcodes implements FeatureInterface
         return $eq / $totalGuests;
     }
 
-    private function getMaterialSchema(): array
+    private function getInfrastructureSchema(): array
     {
-        $schema = get_option(self::OPTION_MATERIAL_SCHEMA, null);
+        $schema = get_option(self::OPTION_INFRASTRUCTURE_SCHEMA, null);
         if (!is_array($schema) || $schema === []) {
             return [];
         }
@@ -401,7 +401,7 @@ class EventShortcodes implements FeatureInterface
                 $type = 'text';
             }
 
-            $name = 'ops_material_label_' . $key;
+            $name = 'ops_infrastructure_label_' . $key;
             do_action('wpml_register_single_string', 'zero-sense', $name, $label);
             $translated = apply_filters('wpml_translate_single_string', $label, 'zero-sense', $name);
             $finalLabel = is_string($translated) && $translated !== '' ? $translated : $label;

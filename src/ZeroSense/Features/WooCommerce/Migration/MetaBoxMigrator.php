@@ -72,7 +72,7 @@ class MetaBoxMigrator
     private const EVENT_DATE_ZEROSENSE_KEY = 'zs_event_date';
 
     private const META_SHIPPING_EMAIL = '_shipping_email';
-    private const META_OPS_MATERIAL = 'zs_ops_material';
+    private const META_OPS_INFRASTRUCTURE = 'zs_ops_infrastructure';
 
     private const NATIVE_SHIPPING_SETTERS = [
         '_shipping_address_1' => 'set_shipping_address_1',
@@ -311,9 +311,9 @@ class MetaBoxMigrator
                 $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL] = $shipping_email;
             }
 
-            $ops_material = $order->get_meta(self::META_OPS_MATERIAL, true);
-            if ($ops_material !== '' && $ops_material !== null) {
-                $sample_data['zerosense_fields'][self::META_OPS_MATERIAL] = $ops_material;
+            $ops_infra = $order->get_meta(self::META_OPS_INFRASTRUCTURE, true);
+            if ($ops_infra !== '' && $ops_infra !== null) {
+                $sample_data['zerosense_fields'][self::META_OPS_INFRASTRUCTURE] = $ops_infra;
             }
 
             $output[] = $sample_data;
@@ -781,7 +781,7 @@ class MetaBoxMigrator
 
     private function migrateOpsMaterial(WC_Order $order): ?array
     {
-        $raw = $order->get_meta(self::META_OPS_MATERIAL, true);
+        $raw = $order->get_meta(self::META_OPS_INFRASTRUCTURE, true);
         if (!is_array($raw)) {
             return null;
         }
@@ -804,11 +804,11 @@ class MetaBoxMigrator
             return null;
         }
 
-        $order->update_meta_data(self::META_OPS_MATERIAL, $normalized);
+        $order->update_meta_data(self::META_OPS_INFRASTRUCTURE, $normalized);
 
         return [
-            'field' => self::META_OPS_MATERIAL,
-            'from' => self::META_OPS_MATERIAL,
+            'field' => self::META_OPS_INFRASTRUCTURE,
+            'from' => self::META_OPS_INFRASTRUCTURE,
             'value' => $normalized,
             'old_value' => $raw,
         ];
@@ -845,10 +845,10 @@ class MetaBoxMigrator
             }
         }
 
-        $material = $order->get_meta(self::META_OPS_MATERIAL, true);
-        if (is_array($material)) {
+        $infra = $order->get_meta(self::META_OPS_INFRASTRUCTURE, true);
+        if (is_array($infra)) {
 
-            foreach ($material as $v) {
+            foreach ($infra as $v) {
                 if (!is_array($v) && is_scalar($v)) {
                     return true;
                 }
@@ -889,7 +889,7 @@ class MetaBoxMigrator
             array_keys(self::FIELD_MAPPING),
             array_values(self::FIELD_MAPPING),
             array_values(self::LEGACY_EVENT_MAPPING),
-            [self::META_SHIPPING_EMAIL, self::META_OPS_MATERIAL]
+            [self::META_SHIPPING_EMAIL, self::META_OPS_INFRASTRUCTURE]
         )));
     }
 
@@ -988,9 +988,9 @@ class MetaBoxMigrator
                     $sample_data['zerosense_fields'][self::META_SHIPPING_EMAIL] = $shipping_email;
                 }
 
-                $ops_material = $order->get_meta(self::META_OPS_MATERIAL, true);
-                if ($ops_material !== '' && $ops_material !== null) {
-                    $sample_data['zerosense_fields'][self::META_OPS_MATERIAL] = $ops_material;
+                $ops_infra = $order->get_meta(self::META_OPS_INFRASTRUCTURE, true);
+                if ($ops_infra !== '' && $ops_infra !== null) {
+                    $sample_data['zerosense_fields'][self::META_OPS_INFRASTRUCTURE] = $ops_infra;
                 }
 
                 $orders[] = $sample_data;

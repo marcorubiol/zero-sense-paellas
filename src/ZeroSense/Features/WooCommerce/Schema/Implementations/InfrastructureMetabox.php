@@ -6,22 +6,22 @@ use ZeroSense\Features\WooCommerce\Schema\AbstractSchemaAdminPage;
 use ZeroSense\Features\WooCommerce\Schema\SchemaRegistry;
 
 /**
- * Material & Logistics Metabox
+ * Complementary Infrastructure Metabox
  * 
- * Displays Material & Logistics fields on order edit screen.
+ * Displays Complementary Infrastructure fields on order edit screen.
  */
-class MaterialMetabox extends AbstractSchemaMetabox
+class InfrastructureMetabox extends AbstractSchemaMetabox
 {
     private ?AbstractSchemaAdminPage $schema = null;
     
     protected function getSchemaAdminPage(): AbstractSchemaAdminPage
     {
         if ($this->schema === null) {
-            $this->schema = SchemaRegistry::getInstance()->get('material');
+            $this->schema = SchemaRegistry::getInstance()->get('infrastructure');
             
             if ($this->schema === null) {
                 // If still not registered, create it directly
-                $this->schema = new MaterialSchema();
+                $this->schema = new InfrastructureSchema();
                 $this->schema->init();
             }
         }

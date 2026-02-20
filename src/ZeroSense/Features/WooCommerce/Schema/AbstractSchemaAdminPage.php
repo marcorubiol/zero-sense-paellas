@@ -17,12 +17,12 @@ use ZeroSense\Core\FeatureInterface;
 abstract class AbstractSchemaAdminPage implements FeatureInterface
 {
     /**
-     * Get the schema key (e.g., 'material', 'workspace')
+     * Get the schema key (e.g., 'infrastructure', 'workspace')
      */
     abstract public function getSchemaKey(): string;
     
     /**
-     * Get the schema title (e.g., 'Material & Logistics')
+     * Get the schema title (e.g., 'Complementary Infrastructure')
      */
     abstract public function getSchemaTitle(): string;
     
