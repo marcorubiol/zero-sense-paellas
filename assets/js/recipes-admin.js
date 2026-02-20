@@ -175,6 +175,20 @@
                     $(this).width($(this).width());
                 });
                 return ui;
+            },
+            start: function(event, ui) {
+                // Destroy select2 instances before moving the DOM element to prevent them from breaking
+                ui.item.find('select.zs-ingredient-select, select.zs-utensil-select, select.zs-liquid-select').each(function() {
+                    if ($(this).data('select2')) {
+                        $(this).selectWoo('destroy');
+                    }
+                });
+            },
+            stop: function(event, ui) {
+                // Re-initialize select2 after the DOM element is dropped in its new position
+                ui.item.find('select.zs-ingredient-select').each(function() { initSelect(this, 'ingredient'); });
+                ui.item.find('select.zs-utensil-select').each(function() { initSelect(this, 'utensil'); });
+                ui.item.find('select.zs-liquid-select').each(function() { initSelect(this, 'liquid'); });
             }
         });
     });
