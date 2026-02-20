@@ -19,13 +19,18 @@ usort($preList, function (array $a, array $b): int {
 <div class="zs-sl__list print-only" id="zs-sl-list">
     <div class="zs-sl__list-header">
         <h3 class="zs-sl__list-title"><?php esc_html_e('Llista de la compra', 'zero-sense'); ?></h3>
-        <svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="21" r="1"/>
-            <circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
+        <div class="zs-sl__list-meta">
+            <?php if (!empty($preTotals['eq']) && $preTotals['eq'] > 0) : ?>
+                <span class="zs-sl__eq-badge"><?php echo esc_html((string) $preTotals['eq']); ?> rac. eq.</span>
+            <?php endif; ?>
+            <svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+        </div>
     </div>
-    
+
     <div class="zs-sl__list-items">
         <?php foreach ($preList as $item) : ?>
             <div class="zs-sl__list-item">

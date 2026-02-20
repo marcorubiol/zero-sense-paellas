@@ -24,7 +24,7 @@ declare(strict_types=1);
                 <span class="zs-sl__label"><?php esc_html_e('Fins a', 'zero-sense'); ?></span>
                 <input class="zs-sl__input" type="date" id="zs-sl-to" value="<?php echo esc_attr($to); ?>">
             </label>
-            <div class="zs-sl__filter-group">
+            <div class="zs-sl__filter-group zs-sl__filter-group--full">
                 <label class="zs-sl__label" for="zs-sl-loc"><?php esc_html_e('Localització', 'zero-sense'); ?></label>
                 <select class="zs-sl__select" id="zs-sl-loc">
                     <option value=""><?php esc_html_e('Selecciona...', 'zero-sense'); ?></option>
@@ -33,8 +33,8 @@ declare(strict_types=1);
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="zs-sl__filter-group zs-sl__filter-group--action">
-                <button type="button" class="btn--primary" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
+            <div class="zs-sl__filter-group zs-sl__filter-group--full">
+                <button type="button" class="zs-sl__search-btn" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
             </div>
         </div>
     </div>

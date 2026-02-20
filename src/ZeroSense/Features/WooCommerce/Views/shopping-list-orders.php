@@ -40,7 +40,7 @@ declare(strict_types=1);
                                 <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" data-order-id="<?php echo esc_attr($orderId); ?>" <?php checked(empty($preItemKeys) || in_array($item['key'], $preItemKeys, true)); ?>>
                                 <span class="zs-sl__switch-track"></span>
                             </span>
-                            <span><?php echo esc_html($item['name']); ?><?php if ($item['qty'] > 1) : ?> ×<?php echo esc_html((string) $item['qty']); ?><?php endif; ?></span>
+                            <span><?php echo esc_html($item['name']); ?><?php if ($item['qty'] > 1) : ?> ×<?php echo esc_html((string) $item['qty']); ?><?php endif; ?><?php if ($item['eq'] > 0) : ?> <span class="zs-sl__item-eq">· <?php echo esc_html((string) $item['eq']); ?> rac. eq.</span><?php endif; ?></span>
                         </label>
                     <?php endforeach; ?>
                 </div>

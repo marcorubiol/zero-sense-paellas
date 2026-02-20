@@ -38,8 +38,8 @@
         }
         var html = '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
         html += '<div class="zs-sl__orders-actions">';
-        html += '<button type="button" class="" id="zs-sl-check-all">Seleccionar tot</button> ';
-        html += '<button type="button" class="" id="zs-sl-uncheck-all">Desseleccionar tot</button>';
+        html += '<button type="button" id="zs-sl-check-all">Seleccionar tot</button>';
+        html += '<button type="button" id="zs-sl-uncheck-all">Desseleccionar tot</button>';
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
@@ -57,7 +57,7 @@
             html += '</div>';
             html += '<div class="zs-sl__order-row2">';
             orderItems.forEach(function (item) {
-                var eqStr = item.eq > 0 ? ' <span class="zs-sl__item-eq">· ' + esc(item.eq) + ' racions eq.</span>' : '';
+                var eqStr = item.eq > 0 ? ' <span class="zs-sl__item-eq">· ' + esc(item.eq) + ' rac. eq.</span>' : '';
                 var labelText = esc(item.name) + (item.qty > 1 ? ' ×' + esc(item.qty) : '') + eqStr;
                 var isChecked = !selectedKeys || selectedKeys.indexOf(item.key) !== -1;
                 html += '<label class="zs-sl__item-check-label">';
@@ -71,7 +71,7 @@
         html += '</div>';
         html += '</div>';
         html += '<div class="zs-sl__list-actions">';
-        html += '<button type="button" class="btn--neutral btn--outline" id="zs-sl-share">Copiar enllaç</button> ';
+        html += '<button type="button" class="btn--neutral btn--outline" id="zs-sl-share">Copiar enllaç</button>';
         html += '<button type="button" class="btn--neutral" id="zs-sl-print">Imprimir</button>';
         html += '</div>';
         return html;
@@ -82,12 +82,10 @@
             return '<div class="zs-sl__list-empty"><p>No hi ha ingredients per a les comandes seleccionades.</p></div>';
         }
         list = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
-        var icon = '<svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+        var icon = '<svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+        var eqBadge = (totals && totals.eq > 0) ? '<span class="zs-sl__eq-badge">' + esc(totals.eq) + ' rac. eq.</span>' : '';
         var html = '<div class="zs-sl__list print-only" id="zs-sl-list">';
-        html += '<div class="zs-sl__list-header"><h3 class="zs-sl__list-title">Llista de la compra</h3>' + icon + '</div>';
-        if (totals && totals.eq > 0) {
-            html += '<p class="zs-sl__list-subtitle"><span class="zs-sl__totals-eq">' + esc(totals.eq) + ' racions eq.</span></p>';
-        }
+        html += '<div class="zs-sl__list-header"><h3 class="zs-sl__list-title">Llista de la compra</h3><div class="zs-sl__list-meta">' + eqBadge + icon + '</div></div>';
         html += '<div class="zs-sl__list-items">';
         list.forEach(function (item) {
             html += '<div class="zs-sl__list-item">';
