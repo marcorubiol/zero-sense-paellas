@@ -424,118 +424,17 @@ class ShoppingList implements FeatureInterface
 
     private function renderPage(string $from, string $to, int $loc, array $locations, array $preOrders, array $preItemKeys, array $preList): void
     {
-        ?>
-        <div class="zs-sl" id="zs-sl">
-            <div class="zs-sl__filters no-print">
-                <div class="zs-sl__filter-row">
-                    <label class="zs-sl__filter-group" for="zs-sl-from">
-                        <span class="zs-sl__label"><?php esc_html_e('Des de', 'zero-sense'); ?></span>
-                        <input class="zs-sl__input" type="date" id="zs-sl-from" value="<?php echo esc_attr($from); ?>">
-                    </label>
-                    <label class="zs-sl__filter-group" for="zs-sl-to">
-                        <span class="zs-sl__label"><?php esc_html_e('Fins a', 'zero-sense'); ?></span>
-                        <input class="zs-sl__input" type="date" id="zs-sl-to" value="<?php echo esc_attr($to); ?>">
-                    </label>
-                    <div class="zs-sl__filter-group">
-                        <label class="zs-sl__label" for="zs-sl-loc"><?php esc_html_e('Localització', 'zero-sense'); ?></label>
-                        <select class="zs-sl__select" id="zs-sl-loc">
-                            <option value=""><?php esc_html_e('Selecciona...', 'zero-sense'); ?></option>
-                            <?php foreach ($locations as $term) : if (!$term instanceof \WP_Term) { continue; } ?>
-                                <option value="<?php echo esc_attr((string) $term->term_id); ?>" <?php selected($loc, $term->term_id); ?>><?php echo esc_html($term->name); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="zs-sl__filter-group zs-sl__filter-group--action">
-                        <button type="button" class="btn--primary" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
-                    </div>
-                </div>
-            </div>
-            <div class="zs-sl__body" id="zs-sl-body">
-                <?php if (!empty($preOrders)) : ?>
-                    <?php $this->renderOrdersPanel($preOrders, $preItemKeys); ?>
-                    <div id="zs-sl-list-wrap"><?php $this->renderList($preList); ?></div>
-                <?php else : ?>
-                    <div class="zs-sl__empty" id="zs-sl-empty">
-                        <p><?php esc_html_e('Selecciona un rang de dates i una localització per veure la llista de la compra.', 'zero-sense'); ?></p>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <div class="zs-sl__loading" id="zs-sl-loading" style="display:none;">
-                <span><?php esc_html_e('Carregant...', 'zero-sense'); ?></span>
-            </div>
-        </div>
-        <?php
+        require __DIR__ . '/Views/shopping-list.php';
     }
 
-    private function renderOrdersPanel(array $orders, array $selectedItemKeys): void
+    private function renderOrdersPanel(array $preOrders, array $preItemKeys): void
     {
-        ?>
-        <div class="zs-sl__orders no-print" id="zs-sl-orders">
-            <div class="zs-sl__orders-actions">
-                <button type="button" class="" id="zs-sl-check-all"><?php esc_html_e('Seleccionar tot', 'zero-sense'); ?></button>
-                <button type="button" class="" id="zs-sl-uncheck-all"><?php esc_html_e('Desseleccionar tot', 'zero-sense'); ?></button>
-            </div>
-            <div class="zs-sl__orders-list" id="zs-sl-orders-list">
-                <?php foreach ($orders as $o) :
-                    $orderId     = (string) $o['id'];
-                    $allChecked  = empty($selectedItemKeys) || !empty(array_filter($o['items'], function ($i) use ($selectedItemKeys) { return in_array($i['key'], $selectedItemKeys, true); }));
-                ?>
-                    <div class="zs-sl__order-item" data-order-id="<?php echo esc_attr($orderId); ?>">
-                        <div class="zs-sl__order-row1">
-                            <label class="zs-sl__switch" title="<?php esc_attr_e('Incloure comanda', 'zero-sense'); ?>">
-                                <input type="checkbox" class="zs-sl__order-toggle" data-order-id="<?php echo esc_attr($orderId); ?>" <?php checked($allChecked); ?>>
-                                <span class="zs-sl__switch-track"></span>
-                            </label>
-                            <span class="zs-sl__order-num">#<?php echo esc_html((string) $o['number']); ?></span>
-                            <span class="zs-sl__order-customer"><?php echo esc_html($o['customer']); ?></span>
-                            <span class="zs-sl__order-date"><?php echo esc_html($o['date']); ?></span>
-                            <span class="zs-sl__order-guests"><?php echo esc_html((string) $o['guests']); ?> pax</span>
-                        </div>
-                        <div class="zs-sl__order-row2">
-                            <?php foreach ($o['items'] as $item) : ?>
-                                <label class="zs-sl__item-check-label">
-                                    <span class="zs-sl__switch">
-                                        <input type="checkbox" class="zs-sl__item-check" value="<?php echo esc_attr($item['key']); ?>" data-order-id="<?php echo esc_attr($orderId); ?>" <?php checked(empty($selectedItemKeys) || in_array($item['key'], $selectedItemKeys, true)); ?>>
-                                        <span class="zs-sl__switch-track"></span>
-                                    </span>
-                                    <span><?php echo esc_html($item['name']); ?><?php if ($item['qty'] > 1) : ?> ×<?php echo esc_html((string) $item['qty']); ?><?php endif; ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <div class="zs-sl__list-actions">
-            <button type="button" class="btn--neutral btn--outline" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
-            <button type="button" class="btn--neutral" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
-        </div>
-        <?php
+        require __DIR__ . '/Views/shopping-list-orders.php';
     }
 
-    private function renderList(array $list): void
+    private function renderList(array $preList): void
     {
-        if (empty($list)) {
-            echo '<div class="zs-sl__list-empty"><p>' . esc_html__('No hi ha ingredients per a les comandes seleccionades.', 'zero-sense') . '</p></div>';
-            return;
-        }
-        usort($list, function (array $a, array $b): int { return strcmp($a['name'], $b['name']); });
-        ?>
-        <div class="zs-sl__list print-only" id="zs-sl-list">
-            <div class="zs-sl__list-header">
-                <h3 class="zs-sl__list-title"><?php esc_html_e('Llista de la compra', 'zero-sense'); ?></h3>
-                <svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            </div>
-            <div class="zs-sl__list-items">
-                <?php foreach ($list as $item) : ?>
-                    <div class="zs-sl__list-item">
-                        <span class="zs-sl__item-name"><?php echo esc_html($item['name']); ?></span>
-                        <span class="zs-sl__item-qty-wrap"><span class="zs-sl__item-qty"><?php echo esc_html($this->formatNumber($item['qty'])); ?></span><span class="zs-sl__item-unit"><?php echo esc_html($item['unit']); ?></span></span>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php
+        require __DIR__ . '/Views/shopping-list-ingredients.php';
     }
 
     // -------------------------------------------------------------------------
