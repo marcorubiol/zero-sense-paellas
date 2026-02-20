@@ -621,15 +621,24 @@ class InventoryMetabox
 
                 // Skip if user has explicitly overridden this field
                 if ($input.data('user-override') == '1') return;
-                
+
                 var currentValue = parseInt($input.val()) || 0;
+                if (currentValue === newValue) return;
+
+                // Update value directly (no trigger to avoid marking as manual)
+                var valToSet = newValue === 0 ? '' : newValue;
+                $input.val(valToSet);
+
+                // Update badge: show AUTO if value matches auto, otherwise keep as-is
                 var autoValue = parseInt($input.data('auto')) || 0;
-                
-                // Only update if it changes from current value
-                if (currentValue !== newValue) {
-                    var valToSet = newValue === 0 && autoValue === 0 ? '' : newValue;
-                    $input.val(valToSet);
-                    $input.trigger('input');
+                var $td = $input.parent();
+                var $container = $td.find('.zs-inventory-badge-container');
+                if (newValue === autoValue) {
+                    $container.html(autoValue > 0 ? '<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>' : '');
+                    $input.removeClass('zs-inventory-override');
+                } else {
+                    $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
+                    $input.removeClass('zs-inventory-override');
                 }
             }
 
