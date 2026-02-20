@@ -54,6 +54,14 @@
             html += '<span class="zs-sl__order-customer">' + esc(o.customer) + '</span>';
             html += '<span class="zs-sl__order-date">' + esc(o.date) + '</span>';
             html += '<span class="zs-sl__order-guests">' + esc(o.guests) + ' pax</span>';
+            if (o.eq > 0) {
+                var breakdown = [];
+                if (o.adults   > 0) { breakdown.push('<span class="zs-sl__order-adults">'   + esc(o.adults)   + ' ad</span>'); }
+                if (o.children > 0) { breakdown.push('<span class="zs-sl__order-children">' + esc(o.children) + ' nens</span>'); }
+                if (o.babies   > 0) { breakdown.push('<span class="zs-sl__order-babies">'   + esc(o.babies)   + ' bebès</span>'); }
+                var breakdownStr = breakdown.length > 0 ? ' (' + breakdown.join(' · ') + ')' : '';
+                html += '<span class="zs-sl__order-pax-detail"><span class="zs-sl__order-eq">' + esc(o.eq) + ' racions eq.</span>' + breakdownStr + '</span>';
+            }
             html += '</div>';
             html += '<div class="zs-sl__order-row2">';
             orderItems.forEach(function (item) {

@@ -2406,19 +2406,12 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
-            $subtitleParts = [];
-            $subtitleParts[] = '<span class="fdr-recipe__pax-racions">' . esc_html((string) (int) $group['total_qty']) . ' racions</span>';
-            if ($adults > 0) {
-                $subtitleParts[] = '<span class="fdr-recipe__pax-adults">' . esc_html((string) $adults) . ' adults</span>';
-            }
-            if ($children > 0) {
-                $subtitleParts[] = '<span class="fdr-recipe__pax-nens">' . esc_html((string) $children) . ' nens</span>';
-            }
-            if ($babies > 0) {
-                $subtitleParts[] = '<span class="fdr-recipe__pax-bebes">' . esc_html((string) $babies) . ' bebès</span>';
-            }
-            $subtitleParts[] = '<span class="fdr-recipe__pax-eq">' . esc_html($this->formatNumber($eqItem)) . ' eq.</span>';
-            $html .= '<p class="brxe-text-basic fdr-recipe__pax-subtitle">' . implode(' · ', $subtitleParts) . '</p>';
+            $breakdown = [];
+            if ($adults   > 0) { $breakdown[] = '<span class="fdr-recipe__pax-adults">'  . esc_html((string) $adults)   . ' ad</span>'; }
+            if ($children > 0) { $breakdown[] = '<span class="fdr-recipe__pax-nens">'    . esc_html((string) $children) . ' nens</span>'; }
+            if ($babies   > 0) { $breakdown[] = '<span class="fdr-recipe__pax-bebes">'   . esc_html((string) $babies)   . ' bebès</span>'; }
+            $breakdownStr = !empty($breakdown) ? ' (' . implode(' · ', $breakdown) . ')' : '';
+            $html .= '<p class="brxe-text-basic fdr-recipe__pax-subtitle"><span class="fdr-recipe__pax-eq">' . esc_html($this->formatNumber($eqItem)) . ' racions eq.</span>' . $breakdownStr . '</p>';
 
             // Liquids
             $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);

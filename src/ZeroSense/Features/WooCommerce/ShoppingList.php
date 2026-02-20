@@ -278,6 +278,9 @@ class ShoppingList implements FeatureInterface
             $order = wc_get_order((int) $id);
             if (!$order instanceof WC_Order) { continue; }
             $rawDate = (string) $order->get_meta(self::META_EVENT_DATE, true);
+            $adults   = (int) $order->get_meta(self::META_ADULTS, true);
+            $children = (int) $order->get_meta(self::META_CHILDREN, true);
+            $babies   = (int) $order->get_meta(self::META_BABIES, true);
             $result[] = [
                 'id'       => $order->get_id(),
                 'number'   => $order->get_order_number(),
@@ -285,6 +288,10 @@ class ShoppingList implements FeatureInterface
                 'date'     => $this->formatDateEs($rawDate),
                 'date_raw' => $rawDate,
                 'guests'   => (int) $order->get_meta('zs_event_total_guests', true),
+                'adults'   => $adults,
+                'children' => $children,
+                'babies'   => $babies,
+                'eq'       => round($this->getEffectiveRecipes($order), 1),
                 'items'    => $this->getOrderItems($order),
             ];
         }
@@ -539,6 +546,20 @@ class ShoppingList implements FeatureInterface
         if ($unit === 'l'  && $qty < 1)     { return ['qty' => $qty * 1000, 'unit' => 'ml']; }
         $map = ['g' => 'gr', 'kg' => 'kg', 'ml' => 'ml', 'l' => 'lit', 'u' => 'pcs'];
         return ['qty' => $qty, 'unit' => $map[$unit] ?? $unit];
+    }
+
+    private function getEffectiveRecipes(WC_Order $order): float
+    {
+        $paxRatio  = $this->getPaxRatio($order);
+        $totalEq   = 0.0;
+        foreach ($order->get_items('line_item') as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) { continue; }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) { continue; }
+            if ($this->resolveRecipeId($item, $product) <= 0) { continue; }
+            $totalEq += (float) $item->get_quantity() * $paxRatio;
+        }
+        return $totalEq;
     }
 
     private function formatNumber(float $n): string
