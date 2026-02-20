@@ -225,6 +225,8 @@
                 var anyChecked = Array.from(items).some(function (el) { return el.checked; });
                 var toggle = document.querySelector('.zs-sl__order-toggle[data-order-id="' + oid + '"]');
                 if (toggle) { toggle.checked = anyChecked; }
+                var orderItem = document.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
+                if (orderItem) { orderItem.classList.toggle('is-disabled', !anyChecked); }
                 scheduleAutoUpdate();
             });
         });
