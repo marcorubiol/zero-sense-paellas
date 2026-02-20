@@ -248,7 +248,8 @@ class RecipeMetabox
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
                     <tr>
-                        <th style="width: 45%;"><?php esc_html_e('Ingredient', 'zero-sense'); ?></th>
+                        <th style="width: 5%; text-align: center;"></th>
+                        <th style="width: 40%;"><?php esc_html_e('Ingredient', 'zero-sense'); ?></th>
                         <th style="width: 20%;"><?php esc_html_e('Qty per pax', 'zero-sense'); ?></th>
                         <th style="width: 20%;"><?php esc_html_e('Unit', 'zero-sense'); ?></th>
                         <th style="width: 15%;"></th>
@@ -268,6 +269,9 @@ class RecipeMetabox
                         }
                         ?>
                         <tr data-row="<?php echo $row_index; ?>">
+                            <td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
+                                <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
+                            </td>
                             <td>
                                 <select name="zs_recipe_ingredients[ingredient][]" class="zs-ingredient-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
                                     <?php if ($termId > 0 && $termName !== ''): ?>
@@ -318,7 +322,8 @@ class RecipeMetabox
                 <table class="widefat striped" style="margin-top:8px;">
                     <thead>
                         <tr>
-                            <th style="width: 70%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
+                            <th style="width: 5%; text-align: center;"></th>
+                            <th style="width: 65%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
                             <th style="width: 20%;"><?php esc_html_e('Litres per pax', 'zero-sense'); ?></th>
                             <th style="width: 10%;"></th>
                         </tr>
@@ -336,6 +341,9 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $liquid_row_index; ?>">
+                                <td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
+                                    <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
+                                </td>
                                 <td>
                                     <select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
                                         <?php if ($termId > 0 && $termName !== ''): ?>
@@ -379,7 +387,8 @@ class RecipeMetabox
                 <table class="widefat striped" style="margin-top:8px;">
                     <thead>
                         <tr>
-                            <th style="width: 35%;"><?php esc_html_e('Utensil', 'zero-sense'); ?></th>
+                            <th style="width: 5%; text-align: center;"></th>
+                            <th style="width: 30%;"><?php esc_html_e('Utensil', 'zero-sense'); ?></th>
                             <th style="width: 15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
                             <th style="width: 20%;"><?php esc_html_e('Every X people', 'zero-sense'); ?></th>
                             <th style="width: 15%;"><?php esc_html_e('Unit', 'zero-sense'); ?></th>
@@ -401,6 +410,9 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $utensil_row_index; ?>">
+                                <td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
+                                    <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
+                                </td>
                                 <td>
                                     <select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
                                         <?php if ($termId > 0 && $termName !== ''): ?>
@@ -632,6 +644,7 @@ class RecipeMetabox
             wp_enqueue_script('jquery-ui-core');
             wp_enqueue_script('jquery-ui-widget');
             wp_enqueue_script('jquery-ui-autocomplete');
+            wp_enqueue_script('jquery-ui-sortable');
             
             // Register and enqueue our custom scripts
             wp_register_script(

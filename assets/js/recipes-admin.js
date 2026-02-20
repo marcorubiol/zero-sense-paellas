@@ -113,6 +113,7 @@
         }
         
         var newRow = '<tr data-row="' + rowCount + '">' +
+            '<td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;"><span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span></td>' +
             '<td><select name="zs_recipe_ingredients[ingredient][]" class="zs-ingredient-select" style="width:100%;" data-placeholder="' + zsRecipesData.i18n.search_or_create + '"></select></td>' +
             '<td><input type="number" step="0.001" min="0" name="zs_recipe_ingredients[qty][]" value="" style="width:100%;"></td>' +
             '<td><select name="zs_recipe_ingredients[unit][]" style="width:100%;">' + unitOptions + '</select></td>' +
@@ -132,6 +133,7 @@
         }
         
         var newRow = '<tr data-row="' + utensilRowCount + '">' +
+            '<td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;"><span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span></td>' +
             '<td><select name="zs_recipe_utensils[utensil][]" class="zs-utensil-select" style="width:100%;" data-placeholder="' + zsRecipesData.i18n.search_or_create + '"></select></td>' +
             '<td><input type="number" step="0.001" min="0" name="zs_recipe_utensils[qty][]" value="" style="width:100%;"></td>' +
             '<td><input type="number" step="1" min="1" name="zs_recipe_utensils[pax_ratio][]" value="1" style="width:100%;" placeholder="1"></td>' +
@@ -147,6 +149,7 @@
     // Liquids
     function addNewLiquidRow() {
         var newRow = '<tr data-row="' + liquidRowCount + '">' +
+            '<td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;"><span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span></td>' +
             '<td><select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" style="width:100%;" data-placeholder="' + zsRecipesData.i18n.search_or_create + '"></select></td>' +
             '<td><input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="" style="width:100%;"></td>' +
             '<td><button type="button" class="button zs-liquid-remove">' + zsRecipesData.i18n.remove + '</button></td>' +
@@ -160,6 +163,23 @@
         $('.zs-ingredient-select').each(function() { initSelect(this, 'ingredient'); });
         $('.zs-utensil-select').each(function() { initSelect(this, 'utensil'); });
         $('.zs-liquid-select').each(function() { initSelect(this, 'liquid'); });
+
+        // Initialize sortable for drag-and-drop reordering
+        $('#zs-recipe-rows, #zs-utensil-rows, #zs-liquid-rows').sortable({
+            handle: 'td:first-child',
+            items: 'tr',
+            cursor: 'grabbing',
+            opacity: 0.8,
+            helper: function(e, ui) {
+                ui.children().each(function() {
+                    $(this).width($(this).width());
+                });
+                return ui;
+            },
+            update: function(event, ui) {
+                // The order in the DOM is updated automatically, which dictates the order in $_POST
+            }
+        });
     });
     
     $('#zs-recipe-add-row').on('click', addNewRow);
