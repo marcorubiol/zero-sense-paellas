@@ -121,6 +121,10 @@
 }
 .zs-sl__order-item.is-disabled .zs-sl__order-row2 {
     opacity: 0.3;
+    pointer-events: auto;
+}
+.zs-sl__order-item.is-disabled .zs-sl__order-row2 .zs-sl__item-check-label {
+    cursor: pointer;
 }
 
 /* Toggle switch */
