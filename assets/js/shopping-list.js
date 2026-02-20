@@ -262,35 +262,11 @@
         if (searchBtn) {
             searchBtn.addEventListener('click', function () { doRequest(null); });
         }
-        if (cfg.preTotals && cfg.preTotals.eq > 0) {
-            var listHeader = document.querySelector('#zs-sl-list .zs-sl__list-header');
-            if (listHeader && !document.querySelector('.zs-sl__list-subtitle')) {
-                var sub = document.createElement('p');
-                sub.className = 'zs-sl__list-subtitle';
-                sub.innerHTML = '<span class="zs-sl__totals-eq">' + esc(cfg.preTotals.eq) + ' racions eq.</span>';
-                listHeader.insertAdjacentElement('afterend', sub);
-            }
-        }
         var preKeys = cfg.preItemKeys && cfg.preItemKeys.length > 0 ? cfg.preItemKeys : null;
         if (preKeys) {
-            var ordersEl = document.getElementById('zs-sl-orders');
-            if (ordersEl) {
-                var ordersData = window.zsShoppingListOrders || null;
-                if (!ordersData) {
-                    ordersEl.querySelectorAll('.zs-sl__item-check').forEach(function (el) {
-                        el.checked = preKeys.indexOf(el.value) !== -1;
-                    });
-                    ordersEl.querySelectorAll('.zs-sl__order-toggle').forEach(function (toggle) {
-                        var oid = toggle.getAttribute('data-order-id');
-                        var items = ordersEl.querySelectorAll('.zs-sl__item-check[data-order-id="' + oid + '"]');
-                        var anyChecked = Array.from(items).some(function (el) { return el.checked; });
-                        toggle.checked = anyChecked;
-                        var orderItem = ordersEl.querySelector('.zs-sl__order-item[data-order-id="' + oid + '"]');
-                        if (orderItem) { orderItem.classList.toggle('is-disabled', !anyChecked); }
-                    });
-                }
-            }
+            doRequest(preKeys);
+        } else {
+            bindBodyEvents();
         }
-        bindBodyEvents();
     });
 }());
