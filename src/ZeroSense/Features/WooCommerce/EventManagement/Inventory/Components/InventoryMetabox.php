@@ -566,6 +566,13 @@ class InventoryMetabox
             var nonce = '<?php echo wp_create_nonce('zs_inventory_ajax'); ?>';
             var totalGuests = <?php echo (int) $totalGuests; ?>;
 
+            // Initialize data-expected for cascade fields on page load
+            $('.zs-inventory-input[data-cascade="1"]').each(function() {
+                var $inp = $(this);
+                var val = parseInt($inp.val()) || 0;
+                $inp.data('expected', val);
+            });
+
             // Paella dependencies mapping
             var paellaCremadorMap = {
                 'paella_135cm': 'cremador_90cm',
@@ -922,7 +929,8 @@ class InventoryMetabox
                 var $btn = $(this);
                 $btn.addClass('is-saving');
                 
-                // Collect all field values, split into user overrides and cascade overrides
+                // Collect ALL non-auto fields so PHP can fully replace stored overrides
+                // (not just dirty fields — omitting a key means "reset to auto")
                 var data = {};
                 var cascadeData = {};
                 $('.zs-inventory-input').each(function() {
@@ -1225,22 +1233,15 @@ class InventoryMetabox
             wp_send_json_error(['message' => 'Order not found']);
         }
         
-        // Obtener overrides existentes
-        $existingOverrides = ManualOverride::get($orderId);
-        
-        // Merge con nuevos overrides de usuario (preservar los existentes)
-        $mergedOverrides = array_merge($existingOverrides, $inventory);
-        
-        // Guardar overrides de usuario
-        ManualOverride::save($orderId, $mergedOverrides);
-        
-        // Guardar overrides de cascada (campos dependientes actualizados automáticamente)
+        // Reemplazar overrides completamente (JS envía todos los campos no-auto)
+        // Un campo ausente significa "reset a auto"
+        ManualOverride::save($orderId, $inventory);
         ManualOverride::saveCascade($orderId, $inventoryCascade);
         
         // Calcular materiales finales
         $calculated = MaterialCalculator::calculate($order);
         $cascadeOverrides = ManualOverride::getCascade($orderId);
-        $final = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $mergedOverrides));
+        $final = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $inventory));
         
         // Crear/actualizar reservas solo si el pedido está confirmado
         $allowedStatuses = ['deposit-paid', 'fully-paid'];

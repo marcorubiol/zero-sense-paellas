@@ -118,5 +118,6 @@ class ManualOverride
     public static function removeAll(int $orderId): void
     {
         delete_post_meta($orderId, self::META_KEY);
+        delete_post_meta($orderId, self::CASCADE_META_KEY);
     }
 }
