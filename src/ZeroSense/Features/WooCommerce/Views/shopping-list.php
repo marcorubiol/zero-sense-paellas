@@ -15,13 +15,11 @@ declare(strict_types=1);
 ?>
 <div class="zs-sl" id="zs-sl">
     <header class="zs-sl__header no-print">
-        <div class="zs-sl__header-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        </div>
-        <div>
-            <h1 class="zs-sl__header-title"><?php esc_html_e('Llista de la compra', 'zero-sense'); ?></h1>
-            <p class="zs-sl__header-sub"><?php esc_html_e('Ingredients agregats per rang de dates i localització', 'zero-sense'); ?></p>
-        </div>
+        <h3 class="zs-sl__header-title">
+            <svg class="zs-sl__header-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <?php esc_html_e('Llista de la compra', 'zero-sense'); ?>
+        </h3>
+        <p class="zs-sl__header-sub"><?php esc_html_e('Ingredients agregats per rang de dates i localització', 'zero-sense'); ?></p>
     </header>
     <div class="zs-sl__filters no-print">
         <div class="zs-sl__filter-row">
