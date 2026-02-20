@@ -834,6 +834,19 @@ class InventoryMetabox
                 });
             });
             
+            // Ensure explicit '0' is shown when user leaves a field with empty/0 value that differs from auto
+            $('.zs-inventory-metabox').on('change', '.zs-inventory-input', function() {
+                if (isLocked) return;
+                var $input = $(this);
+                var currentValue = $input.val();
+                var autoValue = $input.data('auto');
+                var normalizedValue = (currentValue === '' || currentValue === null) ? 0 : parseInt(currentValue);
+                var normalizedAuto = (autoValue === '' || autoValue === null) ? 0 : parseInt(autoValue);
+                if (normalizedValue !== normalizedAuto && normalizedValue === 0) {
+                    $input.val('0');
+                }
+            });
+
             // Track manual changes
             $('.zs-inventory-metabox').on('input', '.zs-inventory-input', function() {
                 if (isLocked) return;
@@ -858,11 +871,6 @@ class InventoryMetabox
                     // If this is a dependent field being edited by the user, mark it as user override
                     if ($input.data('dependent') == '1') {
                         $input.attr('data-user-override', '1');
-                    }
-                    
-                    // Show '0' explicitly if manual override is 0
-                    if (normalizedValue === 0) {
-                        $input.val('0');
                     }
                     
                     // Update badge to manual
