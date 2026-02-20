@@ -275,6 +275,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_vehicles_list}',               'label' => 'Vehicles (one field per vehicle)',               'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_deposit_percentage}',    'label' => 'Order Deposit Percentage (real calculated %)',   'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_effective_recipes}',     'label' => 'Order Effective Recipes (qty × pax ratio)',       'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -445,6 +446,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_order_deposit_percentage}') {
             return $this->getOrderDepositPercentage($post);
         }
+        if ($tag === '{zs_order_effective_recipes}') {
+            return $this->getOrderEffectiveRecipes($post);
+        }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -522,6 +526,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_vehicles_list}',               $this->getVehiclesList($post),            $content);
         $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
         $content = str_replace('{zs_order_deposit_percentage}',  $this->getOrderDepositPercentage($post), $content);
+        $content = str_replace('{zs_order_effective_recipes}',   $this->getOrderEffectiveRecipes($post),  $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -3452,6 +3457,42 @@ class BricksDynamicTags implements FeatureInterface
 
         $shoppingList = new \ZeroSense\Features\WooCommerce\ShoppingList();
         return $shoppingList->buildSignedUrl($eventDate, $eventDate, $loc, [$orderId]);
+    }
+
+    private function getOrderEffectiveRecipes($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('order_effective_recipes');
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $paxRatio = $this->getPaxRatio($order);
+        $totalEq  = 0.0;
+
+        foreach ($order->get_items('line_item') as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $qty = (float) $item->get_quantity();
+            if ($qty <= 0) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            if ($this->resolveRecipeIdForItem($item, $product) <= 0) {
+                continue;
+            }
+            $totalEq += $qty * $paxRatio;
+        }
+
+        return $totalEq > 0 ? $this->formatNumber($totalEq) : '';
     }
 
     private function getOrderDepositPercentage($post): string
