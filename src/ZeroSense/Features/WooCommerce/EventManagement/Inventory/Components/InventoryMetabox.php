@@ -693,7 +693,7 @@ class InventoryMetabox
                 var materialKey = $(this).data('material');
                 var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
                 // Enable the input, mark as user override
-                $input.prop('disabled', false).addClass('zs-inventory-override').attr('data-user-override', '1');
+                $input.prop('disabled', false).addClass('zs-inventory-override').data('user-override', '1');
                 // Update badge to MAN
                 var $td = $input.parent();
                 $td.find('.zs-inventory-badge-container').html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
@@ -774,7 +774,7 @@ class InventoryMetabox
                 
                 // If dependent field: remove user-override flag, re-disable and show lock icon
                 if ($input.data('dependent') == '1') {
-                    $input.removeAttr('data-user-override').prop('disabled', true);
+                    $input.removeData('user-override').prop('disabled', true);
                     $td.find('.zs-inventory-dep-lock').show();
                 }
                 
@@ -816,7 +816,7 @@ class InventoryMetabox
                                 var $input = $(this);
                                 var autoValue = $input.data('auto');
                                 var displayValue = (autoValue == '0') ? '' : autoValue;
-                                $input.val(displayValue).removeClass('zs-inventory-override').removeAttr('data-user-override');
+                                $input.val(displayValue).removeClass('zs-inventory-override').removeData('user-override');
                                 
                                 // Dependent fields: re-disable but do NOT show dep-lock (panel stays locked)
                                 if ($input.data('dependent') == '1') {
@@ -887,7 +887,7 @@ class InventoryMetabox
                     $input.addClass('zs-inventory-override');
                     // If this is a dependent field being edited by the user, mark it as user override
                     if ($input.data('dependent') == '1') {
-                        $input.attr('data-user-override', '1');
+                        $input.data('user-override', '1');
                     }
                     
                     // Update badge to manual
