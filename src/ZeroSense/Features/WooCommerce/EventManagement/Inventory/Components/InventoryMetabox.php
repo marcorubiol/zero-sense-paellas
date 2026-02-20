@@ -77,6 +77,7 @@ class InventoryMetabox
     public function render(\WC_Order $order): void
     {
         $postId = $order->get_id();
+        $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
         
         if (!$order) {
             return;
@@ -545,6 +546,90 @@ class InventoryMetabox
             var dirtyFields = new Set();
             var orderId = <?php echo (int) $postId; ?>;
             var nonce = '<?php echo wp_create_nonce('zs_inventory_ajax'); ?>';
+            var totalGuests = <?php echo (int) $totalGuests; ?>;
+            
+            // Paella dependencies mapping
+            var paellaCremadorMap = {
+                'paella_135cm': 'cremador_90cm',
+                'paella_115cm': 'cremador_90cm',
+                'paella_100cm': 'cremador_90cm',
+                'paella_90cm': 'cremador_70cm',
+                'paella_80cm': 'cremador_70cm',
+                'paella_70cm': 'cremador_60cm',
+                'paella_65cm': 'cremador_50cm',
+                'paella_55cm': 'cremador_50cm'
+            };
+
+            // Recalculate dependencies when paella quantities change
+            function recalculatePaellaDependencies() {
+                var totalPaellas = 0;
+                var cremadorCounts = {};
+                
+                // Reset cremador counts
+                for (var paellaKey in paellaCremadorMap) {
+                    var cremadorKey = paellaCremadorMap[paellaKey];
+                    cremadorCounts[cremadorKey] = 0;
+                }
+                
+                // Calculate paellas and required cremadors
+                for (var paellaKey in paellaCremadorMap) {
+                    var $input = $('input[name="zs_inventory[' + paellaKey + ']"]');
+                    if ($input.length) {
+                        var val = parseInt($input.val()) || 0;
+                        if (val > 0) {
+                            totalPaellas += val;
+                            var cremadorKey = paellaCremadorMap[paellaKey];
+                            cremadorCounts[cremadorKey] += val;
+                        }
+                    }
+                }
+                
+                // Update cremadors
+                var totalCremadors = 0;
+                for (var cremadorKey in cremadorCounts) {
+                    var count = cremadorCounts[cremadorKey];
+                    totalCremadors += count;
+                    updateInputAndTriggerEvent(cremadorKey, count);
+                }
+                
+                // Update potes_tripodes
+                updateInputAndTriggerEvent('potes_tripodes', totalCremadors);
+                
+                // Update buta
+                var butaCount = totalCremadors;
+                if (totalGuests > 60 && totalCremadors > 0) {
+                    butaCount += 1;
+                }
+                updateInputAndTriggerEvent('buta', butaCount);
+                
+                // Update catifes
+                updateInputAndTriggerEvent('catifes', totalPaellas);
+            }
+
+            function updateInputAndTriggerEvent(materialKey, newValue) {
+                var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
+                if (!$input.length) return;
+                
+                var currentValue = parseInt($input.val()) || 0;
+                var autoValue = parseInt($input.data('auto')) || 0;
+                
+                // Only update if it changes from current value
+                if (currentValue !== newValue) {
+                    var valToSet = newValue === 0 && autoValue === 0 ? '' : newValue;
+                    $input.val(valToSet);
+                    $input.trigger('input');
+                }
+            }
+
+            // Bind the recalculation to paella inputs
+            var paellaSelectors = Object.keys(paellaCremadorMap).map(function(key) {
+                return 'input[name="zs_inventory[' + key + ']"]';
+            }).join(', ');
+
+            $('.zs-inventory-metabox').on('input', paellaSelectors, function() {
+                if (isLocked) return;
+                recalculatePaellaDependencies();
+            });
             
             // Lock/Unlock toggle
             $('.zs-inventory-lock-btn').on('click', function(e) {

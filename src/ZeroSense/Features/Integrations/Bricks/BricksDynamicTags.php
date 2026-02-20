@@ -2409,23 +2409,6 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
-            // Ingredients
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
-            if (is_array($recipeIngredients)) {
-                foreach ($recipeIngredients as $ingRow) {
-                    if (!is_array($ingRow)) continue;
-                    $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
-                    $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
-                    $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
-                    if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
-                    $amount = $eqItem * $perPax;
-                    if ($amount <= 0) continue;
-                    $normalized = $this->normalizeUnit($amount, $unit);
-                    $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
-                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="fdr-card__unit">' . esc_html($normalized['unit']) . '</span></span></div>';
-                }
-            }
-
             // Liquids
             $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
             if (is_array($recipeLiquids)) {
@@ -2440,6 +2423,23 @@ class BricksDynamicTags implements FeatureInterface
                     if ($liqName === '') continue;
                     $normalizedLiq = $this->normalizeUnit($amount, 'l');
                     $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($liqName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html($this->formatNumber($normalizedLiq['qty'])) . '</span><span class="fdr-card__unit">' . esc_html($normalizedLiq['unit']) . '</span></span></div>';
+                }
+            }
+
+            // Ingredients
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            if (is_array($recipeIngredients)) {
+                foreach ($recipeIngredients as $ingRow) {
+                    if (!is_array($ingRow)) continue;
+                    $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
+                    $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
+                    $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
+                    if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
+                    $amount = $eqItem * $perPax;
+                    if ($amount <= 0) continue;
+                    $normalized = $this->normalizeUnit($amount, $unit);
+                    $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
+                    $html .= '<div class="brxe-div fdr-card__field"><span class="brxe-text-basic fdr-card__field-label">' . esc_html($ingName) . '</span><span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html($this->formatNumber($normalized['qty'])) . '</span><span class="fdr-card__unit">' . esc_html($normalized['unit']) . '</span></span></div>';
                 }
             }
 
@@ -3128,7 +3128,7 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function getRecipeFullSimple($post): string
     {
-        return $this->getRecipeTotalIngredientsSimple($post) . $this->getRecipeLiquidsSimple($post);
+        return $this->getRecipeLiquidsSimple($post) . $this->getRecipeTotalIngredientsSimple($post);
     }
 
     /**
