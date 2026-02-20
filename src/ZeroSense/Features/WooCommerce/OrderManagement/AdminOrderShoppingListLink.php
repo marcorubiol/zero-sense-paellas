@@ -12,8 +12,9 @@ class AdminOrderShoppingListLink implements FeatureInterface
     public function getName(): string        { return __('Admin Order Shopping List Link', 'zero-sense'); }
     public function getDescription(): string { return __('Adds a shopping cart icon in the orders list linking to the shopping list page pre-filtered for that order.', 'zero-sense'); }
     public function getCategory(): string    { return 'WooCommerce'; }
-    public function isToggleable(): bool     { return false; }
-    public function isEnabled(): bool        { return true; }
+    public function isToggleable(): bool     { return true; }
+    public function isEnabled(): bool        { return (bool) get_option($this->getOptionName(), true); }
+    public function getOptionName(): string  { return 'zs_feature_admin_order_shopping_list_link'; }
     public function getPriority(): int       { return 10; }
     public function getConditions(): array   { return ['is_admin', 'class_exists:WooCommerce']; }
 

@@ -83,8 +83,7 @@ class Plugin
     public static function activate(): void
     {
         // Clear feature discovery cache on activation
-        $cacheKey = 'zs_feature_classes_v' . ZERO_SENSE_VERSION;
-        delete_transient($cacheKey);
+        (new FeatureCache())->clear();
 
         // Flush rewrite rules
         flush_rewrite_rules();

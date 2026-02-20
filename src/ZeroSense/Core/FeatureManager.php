@@ -31,27 +31,35 @@ class FeatureManager
     ];
 
     /**
+     * Cache handler
+     */
+    private FeatureCache $cache;
+
+    public function __construct()
+    {
+        $this->cache = new FeatureCache();
+    }
+
+    /**
      * Auto-discover all features by scanning directories
      * Uses transient cache to avoid filesystem scans on every request
      */
     public function registerCacheInvalidation(): void
     {
-        add_action('update_option_zero_sense_settings', [$this, 'clearCache']);
-        add_action('update_option_zero_sense_features', [$this, 'clearCache']);
+        $this->cache->registerInvalidationHooks();
     }
 
     public function clearCache(): void
     {
-        delete_transient('zs_feature_classes_v' . ZERO_SENSE_VERSION);
+        $this->cache->clear();
     }
 
     public function discoverFeatures(): void
     {
         // Try to get cached feature class names
-        $cacheKey = 'zs_feature_classes_v' . ZERO_SENSE_VERSION;
-        $cachedClasses = get_transient($cacheKey);
+        $cachedClasses = $this->cache->get();
         
-        if ($cachedClasses !== false && is_array($cachedClasses)) {
+        if ($cachedClasses !== null) {
             // Load features from cache
             foreach ($cachedClasses as $className) {
                 if (class_exists($className)) {
@@ -84,7 +92,7 @@ class FeatureManager
             return get_class($feature);
         }, $this->features);
         
-        set_transient($cacheKey, $featureClasses, DAY_IN_SECONDS);
+        $this->cache->set($featureClasses);
     }
     
     /**
@@ -253,8 +261,7 @@ class FeatureManager
     public function reloadFeatures(): void
     {
         // Clear the cache
-        $cacheKey = 'zs_feature_classes_v' . ZERO_SENSE_VERSION;
-        delete_transient($cacheKey);
+        $this->cache->clear();
         
         $this->features = [];
         $this->discoverFeatures();

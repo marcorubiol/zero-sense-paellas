@@ -36,8 +36,9 @@ class ShoppingList implements FeatureInterface
     public function getName(): string        { return __('Shopping List', 'zero-sense'); }
     public function getDescription(): string { return __('Token-protected public page aggregating ingredients across orders by date range and location.', 'zero-sense'); }
     public function getCategory(): string    { return 'WooCommerce'; }
-    public function isToggleable(): bool     { return false; }
-    public function isEnabled(): bool        { return true; }
+    public function isToggleable(): bool     { return true; }
+    public function isEnabled(): bool        { return (bool) get_option($this->getOptionName(), true); }
+    public function getOptionName(): string  { return 'zs_feature_shopping_list'; }
     public function getPriority(): int       { return 30; }
     public function getConditions(): array   { return ['class_exists:WooCommerce']; }
 
