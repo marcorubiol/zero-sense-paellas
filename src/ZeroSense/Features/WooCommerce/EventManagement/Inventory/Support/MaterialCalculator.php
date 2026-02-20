@@ -230,8 +230,8 @@ class MaterialCalculator
             $result['buta'] += 1;
         }
         
-        // Catifes: 1 por paella
-        $result['catifes'] = $totalPaellas;
+        // Catifes: 1 por cremador
+        $result['catifes'] = $totalCremadors;
         
         return $result;
     }

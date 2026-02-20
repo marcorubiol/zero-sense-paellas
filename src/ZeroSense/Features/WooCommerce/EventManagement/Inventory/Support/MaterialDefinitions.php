@@ -150,8 +150,8 @@ class MaterialDefinitions
                 'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per paella',
-                'dependency_label' => '↳ Calculat a partir de les paelles',
+                'description' => '1 per cremador',
+                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
 
             // MATÈRIA PESADA — cassoles

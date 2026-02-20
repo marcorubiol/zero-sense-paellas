@@ -620,8 +620,8 @@ class InventoryMetabox
                 }
                 updateInputAndTriggerEvent('buta', butaCount);
                 
-                // Update catifes
-                updateInputAndTriggerEvent('catifes', totalPaellas);
+                // Update catifes (1 per cremador)
+                updateInputAndTriggerEvent('catifes', totalCremadors);
             }
 
             function updateInputAndTriggerEvent(materialKey, newValue) {
@@ -779,6 +779,14 @@ class InventoryMetabox
                 }
                 
                 $(this).attr('data-has-override', '0').addClass('hidden');
+                
+                // Cascade recalculation when resetting a primary field
+                if (materialKey in paellaCremadorMap) {
+                    recalculatePaellaDependencies();
+                }
+                if (cassolaKeys.indexOf(materialKey) !== -1) {
+                    recalculateVitro();
+                }
             });
             
             // Recalculate all
