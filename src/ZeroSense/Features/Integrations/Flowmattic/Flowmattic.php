@@ -27,12 +27,12 @@ class Flowmattic implements FeatureInterface
         if (!current_user_can('edit_shop_orders')) {
             wp_send_json_error('forbidden');
         }
-        $nonce = sanitize_text_field(wp_unslash($_POST['nonce'] ?? ''));
-        if (!wp_verify_nonce($nonce, 'zs_manual_email_nonce')) {
+
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'zs_manual_email_nonce')) {
             wp_send_json_error('bad_nonce');
         }
 
-        $orderId = intval(wp_unslash($_POST['order_id'] ?? 0));
+        $orderId = isset($_POST['order_id']) ? intval(wp_unslash($_POST['order_id'])) : 0;
         if ($orderId <= 0) {
             wp_send_json_error('bad_params');
         }

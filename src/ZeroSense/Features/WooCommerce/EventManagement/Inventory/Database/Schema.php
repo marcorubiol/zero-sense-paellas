@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database;
 
 class Schema
@@ -80,6 +82,9 @@ class Schema
         $stockTable = self::getStockTableName();
         $reservationsTable = self::getReservationsTableName();
         
+        // Note: db table names cannot be parameterized with prepare(), 
+        // but since these are internal methods returning wpdb->prefix concatenated strings, 
+        // we use standard string interpolation which is safe here.
         $wpdb->query("DROP TABLE IF EXISTS {$reservationsTable}");
         $wpdb->query("DROP TABLE IF EXISTS {$stockTable}");
     }
