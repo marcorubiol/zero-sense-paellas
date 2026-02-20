@@ -302,7 +302,7 @@ class ShoppingList implements FeatureInterface
         });
         
         // Cache the result for 1 hour
-        set_transient($cacheKey, $result, HOUR_IN_SECONDS);
+        set_transient($cacheKey, $result, 5 * MINUTE_IN_SECONDS);
         
         return $result;
     }
@@ -573,7 +573,9 @@ class ShoppingList implements FeatureInterface
             $adults   += (int) ($o['adults']   ?? 0);
             $children += (int) ($o['children'] ?? 0);
             $babies   += (int) ($o['babies']   ?? 0);
-            $eq       += (float) ($o['eq']     ?? 0);
+            foreach ($o['items'] ?? [] as $item) {
+                $eq += (float) ($item['eq'] ?? 0);
+            }
         }
         return [
             'adults'   => $adults,
