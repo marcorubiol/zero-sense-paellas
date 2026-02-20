@@ -96,17 +96,10 @@
     }
 
     function zsPrint() {
-        var list = document.querySelector('.zs-sl__list');
-        if (!list) { return; }
-        var placeholder = document.createElement('div');
-        placeholder.id = 'zs-sl-print-placeholder';
-        list.parentNode.insertBefore(placeholder, list);
-        document.body.appendChild(list);
+        if (!document.querySelector('.zs-sl__list')) { return; }
         document.body.classList.add('zs-printing');
         window.addEventListener('afterprint', function handler() {
             document.body.classList.remove('zs-printing');
-            placeholder.parentNode.insertBefore(list, placeholder);
-            placeholder.remove();
             window.removeEventListener('afterprint', handler);
         });
         window.print();
