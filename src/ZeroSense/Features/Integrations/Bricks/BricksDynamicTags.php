@@ -2396,22 +2396,13 @@ class BricksDynamicTags implements FeatureInterface
 
         $html = '';
 
-        $adults   = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
-        $babies   = (int) $order->get_meta(self::META_EVENT_BABIES, true);
-
         foreach ($recipeGroups as $recipeId => $group) {
             $eqItem = $group['total_qty'] * $paxRatio;
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
-            $breakdown = [];
-            if ($adults   > 0) { $breakdown[] = '<span class="fdr-recipe__pax-adults">'  . esc_html((string) $adults)   . ' ad</span>'; }
-            if ($children > 0) { $breakdown[] = '<span class="fdr-recipe__pax-nens">'    . esc_html((string) $children) . ' nens</span>'; }
-            if ($babies   > 0) { $breakdown[] = '<span class="fdr-recipe__pax-bebes">'   . esc_html((string) $babies)   . ' bebès</span>'; }
-            $breakdownStr = !empty($breakdown) ? ' (' . implode(' · ', $breakdown) . ')' : '';
-            $html .= '<p class="brxe-text-basic fdr-recipe__pax-subtitle"><span class="fdr-recipe__pax-eq">' . esc_html($this->formatNumber($eqItem)) . ' racions eq.</span>' . $breakdownStr . '</p>';
+            $html .= '<p class="brxe-text-basic fdr-recipe__pax-subtitle"><span class="fdr-recipe__pax-eq">' . esc_html($this->formatNumber($eqItem)) . ' racions eq.</span></p>';
 
             // Liquids
             $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
