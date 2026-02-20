@@ -156,6 +156,8 @@
                 }
 
                 currentSignedUrl = res.data.signed_url || '';
+                console.log('[ZS-SL] orders:', JSON.stringify(res.data.orders));
+                console.log('[ZS-SL] totals:', JSON.stringify(res.data.totals));
                 var ordersHtml = renderOrders(res.data.orders, orderIds);
                 var listHtml   = renderList(res.data.list, res.data.totals);
                 body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
