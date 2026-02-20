@@ -250,7 +250,7 @@ class ShoppingList implements FeatureInterface
 
     private function queryOrders(string $from, string $to, int $loc): array
     {
-        $cacheKey = 'zs_sl_orders_' . md5($from . '_' . $to . '_' . $loc);
+        $cacheKey = 'zs_sl_orders_v2_' . md5($from . '_' . $to . '_' . $loc);
         $cached = get_transient($cacheKey);
         
         if ($cached !== false && is_array($cached)) {
