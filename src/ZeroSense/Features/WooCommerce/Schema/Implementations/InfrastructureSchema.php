@@ -17,7 +17,7 @@ class InfrastructureSchema extends AbstractSchemaAdminPage
     
     public function getSchemaTitle(): string
     {
-        return __('Complementary Infrastructure Schema', 'zero-sense');
+        return __('Complementary Infrastructure', 'zero-sense');
     }
     
     public function getSchemaDescription(): string

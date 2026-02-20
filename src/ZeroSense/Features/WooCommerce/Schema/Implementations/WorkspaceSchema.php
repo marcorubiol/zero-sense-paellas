@@ -17,7 +17,7 @@ class WorkspaceSchema extends AbstractSchemaAdminPage
     
     public function getSchemaTitle(): string
     {
-        return __('Workspace & Access Schema', 'zero-sense');
+        return __('Workspace & Access', 'zero-sense');
     }
     
     public function getSchemaDescription(): string

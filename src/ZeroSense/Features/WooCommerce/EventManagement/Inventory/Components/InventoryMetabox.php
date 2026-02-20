@@ -760,13 +760,11 @@ class InventoryMetabox
                         if (isDependent && !isUserOverride) {
                             // Keep disabled — user must click lock icon to edit
                             $inp.prop('disabled', true);
+                            // Both cascade and pure-auto dependents show 🔒 (value is auto-calculated)
+                            $wrapper.find('.zs-inventory-dep-lock').show();
                             if (isCascade) {
-                                // Cascade: show ↺ so user can reset to pure auto
-                                $wrapper.find('.zs-inventory-reset-icon').removeClass('hidden');
-                                console.log('  ' + key + ': CASCADE → show ↺');
+                                console.log('  ' + key + ': CASCADE → show 🔒');
                             } else {
-                                // Pure auto dependent: show 🔒
-                                $wrapper.find('.zs-inventory-dep-lock').show();
                                 console.log('  ' + key + ': AUTO dependent → show 🔒');
                             }
                         } else {
