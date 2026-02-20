@@ -898,19 +898,19 @@ class InventoryMetabox
                     var $resetIcon = $td.find('.zs-inventory-reset-icon');
                     $resetIcon.removeClass('hidden');
                 } else {
-                    // Value matches auto
+                    // Value matches expected (auto or cascade)
                     $input.removeClass('zs-inventory-override');
+                    if ($input.data('dependent') == '1') {
+                        $input.removeData('user-override');
+                    }
                     
-                    // Update badge: only show AUTO if auto value is > 0
                     var $container = $td.find('.zs-inventory-badge-container');
-                    if (normalizedAuto > 0) {
+                    if (normalizedRef > 0) {
                         $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     } else {
-                        // Auto is 0 and value is 0: no badge
                         $container.html('');
                     }
                     
-                    // Hide reset icon
                     var $resetIcon = $td.find('.zs-inventory-reset-icon');
                     $resetIcon.addClass('hidden');
                 }
