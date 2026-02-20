@@ -283,9 +283,16 @@
         left: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: var(--space-s) !important;
+        padding: 16px !important;
         box-sizing: border-box !important;
         background: #fff !important;
+    }
+    #zs-sl-print-target .zs-sl__list {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border: none !important;
+        padding: 0 !important;
     }
     #zs-sl-print-target .zs-sl__list-items {
         columns: 1;
