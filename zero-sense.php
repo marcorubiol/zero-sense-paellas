@@ -48,7 +48,7 @@ function zero_sense_autoloader_error()
     if (current_user_can('manage_options')) {
         echo '<div class="notice notice-error"><p>';
         echo '<strong>Zerø Sense:</strong> ';
-        echo __('Composer autoloader not found. Please run "composer install" in the plugin directory.', 'zero-sense');
+        echo esc_html__('Composer autoloader not found. Please run "composer install" in the plugin directory.', 'zero-sense');
         echo '</p></div>';
     }
 }

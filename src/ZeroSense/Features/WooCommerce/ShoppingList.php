@@ -247,6 +247,13 @@ class ShoppingList implements FeatureInterface
 
     private function queryOrders(string $from, string $to, int $loc): array
     {
+        $cacheKey = 'zs_sl_orders_' . md5($from . '_' . $to . '_' . $loc);
+        $cached = get_transient($cacheKey);
+        
+        if ($cached !== false && is_array($cached)) {
+            return $cached;
+        }
+
         $statuses = array_unique(array_map(function (string $s): string {
             return strpos($s, 'wc-') === 0 ? $s : 'wc-' . $s;
         }, self::ALLOWED_STATUSES));
@@ -261,7 +268,10 @@ class ShoppingList implements FeatureInterface
                 ['key' => self::META_SERVICE_LOC, 'value' => (string) $loc, 'compare' => '='],
             ],
         ]);
-        if (!is_array($ids)) { return []; }
+        
+        if (!is_array($ids)) { 
+            return []; 
+        }
 
         $result = [];
         foreach ($ids as $id) {
@@ -281,6 +291,10 @@ class ShoppingList implements FeatureInterface
         usort($result, function (array $a, array $b): int {
             return strcmp((string) $a['date_raw'], (string) $b['date_raw']);
         });
+        
+        // Cache the result for 1 hour
+        set_transient($cacheKey, $result, HOUR_IN_SECONDS);
+        
         return $result;
     }
 
