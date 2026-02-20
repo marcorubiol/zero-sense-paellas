@@ -609,6 +609,9 @@ class InventoryMetabox
             function updateInputAndTriggerEvent(materialKey, newValue) {
                 var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
                 if (!$input.length) return;
+
+                // Skip if user has manually overridden this field
+                if ($input.hasClass('zs-inventory-override')) return;
                 
                 var currentValue = parseInt($input.val()) || 0;
                 var autoValue = parseInt($input.data('auto')) || 0;
