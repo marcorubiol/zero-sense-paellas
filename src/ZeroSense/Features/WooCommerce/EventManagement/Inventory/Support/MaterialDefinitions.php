@@ -88,7 +88,65 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 paella per cada recepta amb 60-80 persones',
             ],
-            
+
+            // MATÈRIA PESADA — equipament paella
+            [
+                'key' => 'cremador_50cm',
+                'label' => 'Cremador 50cm',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cada paella de 55cm o 65cm',
+            ],
+            [
+                'key' => 'cremador_60cm',
+                'label' => 'Cremador 60cm',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cada paella de 70cm',
+            ],
+            [
+                'key' => 'cremador_70cm',
+                'label' => 'Cremador 70cm',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cada paella de 80cm o 90cm',
+            ],
+            [
+                'key' => 'cremador_90cm',
+                'label' => 'Cremador 90cm',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cada paella de 100cm, 115cm o 135cm',
+            ],
+            [
+                'key' => 'potes_tripodes',
+                'label' => 'Potes / Trípodes',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador',
+            ],
+            [
+                'key' => 'buta',
+                'label' => 'Butà',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador + 1 extra si >60pax',
+            ],
+            [
+                'key' => 'catifes',
+                'label' => 'Catifes',
+                'category' => 'equipament_paella',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per paella',
+            ],
+
             // MATÈRIA PESADA — cassoles
             [
                 'key' => 'cassola_5l',
@@ -155,79 +213,19 @@ class MaterialDefinitions
                 'description' => '1 per varietat de paella',
             ],
 
-            // MATÈRIA PESADA — equipament paella
-            [
-                'key' => 'cremador_50cm',
-                'label' => 'Cremador 50cm',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cada paella de 55cm o 65cm',
-            ],
-            [
-                'key' => 'cremador_60cm',
-                'label' => 'Cremador 60cm',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cada paella de 70cm',
-            ],
-            [
-                'key' => 'cremador_70cm',
-                'label' => 'Cremador 70cm',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cada paella de 80cm o 90cm',
-            ],
-            [
-                'key' => 'cremador_90cm',
-                'label' => 'Cremador 90cm',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cada paella de 100cm, 115cm o 135cm',
-            ],
-            [
-                'key' => 'potes_tripodes',
-                'label' => 'Potes / Trípodes',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador',
-            ],
-            [
-                'key' => 'buta',
-                'label' => 'Butà',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador + 1 extra si >60pax',
-            ],
-            [
-                'key' => 'catifes',
-                'label' => 'Catifes',
-                'category' => 'equipament_paella',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per paella',
-            ],
-
-            // MATÈRIA PESADA — equipament pesant
+            // LOGÍSTICA
             [
                 'key' => 'carreto',
                 'label' => 'Carretó',
-                'category' => 'equipament_pesant',
-                'parent_category' => 'materia_pesada',
+                'category' => 'logistica',
+                'parent_category' => 'logistica',
                 'unit' => 'u',
                 'description' => '1 per event',
             ],
-
-            // LOGÍSTICA — cuina
             [
                 'key' => 'taules_treball',
                 'label' => 'Taules Treball',
-                'category' => 'logistica_cuina',
+                'category' => 'logistica',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
                 'description' => '≤20pax:1, ≤35:2, ≤50:3, ≤70:4, >70:ceil/20',
@@ -235,7 +233,7 @@ class MaterialDefinitions
             [
                 'key' => 'poals_fems',
                 'label' => 'Poals Fems',
-                'category' => 'logistica_cuina',
+                'category' => 'logistica',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
                 'description' => '1 cada 20pax',
@@ -243,7 +241,7 @@ class MaterialDefinitions
             [
                 'key' => 'neveres_portatils',
                 'label' => 'Nevera portàtil',
-                'category' => 'logistica_cuina',
+                'category' => 'logistica',
                 'parent_category' => 'logistica',
                 'unit' => 'u',
                 'description' => '1 cada 30 persones',
