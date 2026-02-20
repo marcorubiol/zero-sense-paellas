@@ -1135,12 +1135,3 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     font-size: 16px;
     line-height: 1.5;
 }
-
-.widefat td {
-    vertical-align: middle;
-}
-
-.widefat td,
-.widefat th {
-    color: #ccc;
-}

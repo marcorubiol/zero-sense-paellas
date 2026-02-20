@@ -1791,14 +1791,19 @@ class BricksDynamicTags implements FeatureInterface
     /**
      * Calculate equivalent pax for an order
      */
-    private function getEquivalentPax(WC_Order $order): float
+    private function getPaxRatio(WC_Order $order): float
     {
         $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
         $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
         $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
 
+        $totalGuests = $adults + $children + $babies;
+        if ($totalGuests <= 0) {
+            return 1.0;
+        }
+
         $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return $eq > 0 ? (float) $eq : 0.0;
+        return $eq / $totalGuests;
     }
 
     /**
@@ -2006,10 +2011,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2017,8 +2019,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $recipeGroups = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2039,17 +2039,16 @@ class BricksDynamicTags implements FeatureInterface
                 $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
             }
             $recipeGroups[$recipeId]['total_qty'] += $qty;
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($recipeGroups) || $sumQty <= 0) {
+        if (empty($recipeGroups) ) {
             return '';
         }
 
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+            $eqItem = $group['total_qty'] * $paxRatio;
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
@@ -2092,10 +2091,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2104,8 +2100,6 @@ class BricksDynamicTags implements FeatureInterface
 
         // Group products by recipe
         $recipeGroups = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2140,16 +2134,15 @@ class BricksDynamicTags implements FeatureInterface
                 'qty' => $qty,
             ];
             $recipeGroups[$recipeId]['total_qty'] += $qty;
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($recipeGroups) || $sumQty <= 0) {
+        if (empty($recipeGroups) ) {
             return '';
         }
 
         // Calculate ingredients for each recipe
         foreach ($recipeGroups as $recipeId => &$group) {
-            $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+            $eqItem = $group['total_qty'] * $paxRatio;
             
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (!is_array($recipeIngredients)) {
@@ -2245,10 +2238,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2256,8 +2246,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2275,10 +2263,9 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($eligible) || $sumQty <= 0) {
+        if (empty($eligible) ) {
             return '';
         }
 
@@ -2286,7 +2273,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($eligible as $row) {
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }
@@ -2362,10 +2349,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2373,8 +2357,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $recipeGroups = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2395,17 +2377,16 @@ class BricksDynamicTags implements FeatureInterface
                 $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
             }
             $recipeGroups[$recipeId]['total_qty'] += $qty;
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($recipeGroups) || $sumQty <= 0) {
+        if (empty($recipeGroups) ) {
             return '';
         }
 
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $eqItem = $eqTotal * ($group['total_qty'] / $sumQty);
+            $eqItem = $group['total_qty'] * $paxRatio;
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
@@ -2465,10 +2446,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2476,8 +2454,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2499,10 +2475,9 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($eligible) || $sumQty <= 0) {
+        if (empty($eligible) ) {
             return '';
         }
 
@@ -2511,7 +2486,7 @@ class BricksDynamicTags implements FeatureInterface
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
 
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }
@@ -2604,10 +2579,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2615,8 +2587,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2638,10 +2608,9 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($eligible) || $sumQty <= 0) {
+        if (empty($eligible) ) {
             return '';
         }
 
@@ -2650,7 +2619,7 @@ class BricksDynamicTags implements FeatureInterface
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
 
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }
@@ -2740,10 +2709,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2751,8 +2717,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2774,10 +2738,9 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($eligible) || $sumQty <= 0) {
+        if (empty($eligible) ) {
             return '';
         }
 
@@ -2786,7 +2749,7 @@ class BricksDynamicTags implements FeatureInterface
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
 
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }
@@ -2872,10 +2835,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2883,8 +2843,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -2902,10 +2860,9 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($eligible) || $sumQty <= 0) {
+        if (empty($eligible) ) {
             return '';
         }
 
@@ -2913,7 +2870,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($eligible as $row) {
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }
@@ -3015,10 +2972,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -3026,8 +2980,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -3050,10 +3002,9 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if (empty($eligible) || $sumQty <= 0) {
+        if (empty($eligible) ) {
             return '';
         }
 
@@ -3061,7 +3012,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($eligible as $row) {
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }

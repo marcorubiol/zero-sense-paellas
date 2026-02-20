@@ -208,10 +208,7 @@ class EventShortcodes implements FeatureInterface
             return '';
         }
 
-        $eqTotal = $this->getEquivalentPax($order);
-        if ($eqTotal <= 0) {
-            return '';
-        }
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -219,8 +216,6 @@ class EventShortcodes implements FeatureInterface
         }
 
         $eligible = [];
-        $sumQty = 0.0;
-
         foreach ($lineItems as $item) {
             if (!$item instanceof WC_Order_Item_Product) {
                 continue;
@@ -247,10 +242,9 @@ class EventShortcodes implements FeatureInterface
             }
 
             $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            $sumQty += $qty;
-        }
+            }
 
-        if ($eligible === [] || $sumQty <= 0) {
+        if ($eligible === [] ) {
             return '';
         }
 
@@ -259,7 +253,7 @@ class EventShortcodes implements FeatureInterface
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
 
-            $eqItem = $eqTotal * ($qty / $sumQty);
+            $eqItem = $qty * $paxRatio;
             if ($eqItem <= 0) {
                 continue;
             }
@@ -365,14 +359,19 @@ class EventShortcodes implements FeatureInterface
         return $orderId > 0 ? $orderId : null;
     }
 
-    private function getEquivalentPax(WC_Order $order): float
+    private function getPaxRatio(WC_Order $order): float
     {
         $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
         $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
         $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
 
+        $totalGuests = $adults + $children + $babies;
+        if ($totalGuests <= 0) {
+            return 1.0;
+        }
+
         $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return $eq > 0 ? (float) $eq : 0.0;
+        return $eq / $totalGuests;
     }
 
     private function getMaterialSchema(): array

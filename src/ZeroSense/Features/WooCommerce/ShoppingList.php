@@ -338,8 +338,7 @@ class ShoppingList implements FeatureInterface
         foreach ($byOrder as $orderId => $allowedIdxs) {
             $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
-            $eqTotal = $this->getEquivalentPax($order);
-            if ($eqTotal <= 0) { continue; }
+            $paxRatio = $this->getPaxRatio($order);
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
@@ -350,17 +349,7 @@ class ShoppingList implements FeatureInterface
                 $idx++;
             }
 
-            // Compute totalQty from ALL recipe items in the order (fixed denominator)
-            $totalQty = 0.0;
-            foreach ($allItems as $i => $item) {
-                $qty = (float) $item->get_quantity();
-                if ($qty <= 0) { continue; }
-                $product = $item->get_product();
-                if (!$product instanceof \WC_Product) { continue; }
-                if ($this->resolveRecipeId($item, $product) <= 0) { continue; }
-                $totalQty += $qty;
-            }
-            if ($totalQty <= 0) { continue; }
+            
 
             $eligible = [];
             foreach ($allowedIdxs as $i) {
@@ -378,7 +367,7 @@ class ShoppingList implements FeatureInterface
 
             foreach ($eligible as $row) {
                 $recipeId = (int) $row['recipe_id'];
-                $eqItem   = $eqTotal * ((float) $row['qty'] / $totalQty);
+                $eqItem = (float) $row['qty'] * $paxRatio;
                 if ($eqItem <= 0) { continue; }
 
                 $recipeIng = get_post_meta($recipeId, self::META_RECIPE_ING, true);
