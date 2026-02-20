@@ -96,10 +96,16 @@
     }
 
     function zsPrint() {
-        if (!document.querySelector('.zs-sl__list')) { return; }
+        var list = document.querySelector('.zs-sl__list');
+        if (!list) { return; }
+        var target = document.createElement('div');
+        target.id = 'zs-sl-print-target';
+        target.appendChild(list.cloneNode(true));
+        document.body.appendChild(target);
         document.body.classList.add('zs-printing');
         window.addEventListener('afterprint', function handler() {
             document.body.classList.remove('zs-printing');
+            target.remove();
             window.removeEventListener('afterprint', handler);
         });
         window.print();
