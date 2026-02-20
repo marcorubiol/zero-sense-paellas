@@ -350,7 +350,19 @@ class ShoppingList implements FeatureInterface
                 $idx++;
             }
 
-            $eligible = []; $sumQty = 0.0;
+            // Compute totalQty from ALL recipe items in the order (fixed denominator)
+            $totalQty = 0.0;
+            foreach ($allItems as $i => $item) {
+                $qty = (float) $item->get_quantity();
+                if ($qty <= 0) { continue; }
+                $product = $item->get_product();
+                if (!$product instanceof \WC_Product) { continue; }
+                if ($this->resolveRecipeId($item, $product) <= 0) { continue; }
+                $totalQty += $qty;
+            }
+            if ($totalQty <= 0) { continue; }
+
+            $eligible = [];
             foreach ($allowedIdxs as $i) {
                 if (!isset($allItems[$i])) { continue; }
                 $item = $allItems[$i];
@@ -361,13 +373,12 @@ class ShoppingList implements FeatureInterface
                 $recipeId = $this->resolveRecipeId($item, $product);
                 if ($recipeId <= 0) { continue; }
                 $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-                $sumQty += $qty;
             }
-            if (empty($eligible) || $sumQty <= 0) { continue; }
+            if (empty($eligible)) { continue; }
 
             foreach ($eligible as $row) {
                 $recipeId = (int) $row['recipe_id'];
-                $eqItem   = $eqTotal * ((float) $row['qty'] / $sumQty);
+                $eqItem   = $eqTotal * ((float) $row['qty'] / $totalQty);
                 if ($eqItem <= 0) { continue; }
 
                 $recipeIng = get_post_meta($recipeId, self::META_RECIPE_ING, true);
