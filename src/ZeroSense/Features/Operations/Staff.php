@@ -58,10 +58,10 @@ class Staff implements FeatureInterface
         add_filter(self::TAX_ROLE . '_row_actions', [$this, 'removeCoreRoleActions'], 10, 2);
     }
     
-    public function sortRoleTerms(array $terms, array $taxonomies, array $args): array
+    public function sortRoleTerms(array $terms, ?array $taxonomies, array $args): array
     {
         // Only apply to our staff role taxonomy
-        if (!in_array(self::TAX_ROLE, $taxonomies, true)) {
+        if (empty($taxonomies) || !in_array(self::TAX_ROLE, $taxonomies, true)) {
             return $terms;
         }
         
