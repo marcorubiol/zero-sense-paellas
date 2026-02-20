@@ -54,22 +54,15 @@
             html += '<span class="zs-sl__order-customer">' + esc(o.customer) + '</span>';
             html += '<span class="zs-sl__order-date">' + esc(o.date) + '</span>';
             html += '<span class="zs-sl__order-guests">' + esc(o.guests) + ' pax</span>';
-            if (o.eq > 0) {
-                var breakdown = [];
-                if (o.adults   > 0) { breakdown.push('<span class="zs-sl__order-adults">'   + esc(o.adults)   + ' ad</span>'); }
-                if (o.children > 0) { breakdown.push('<span class="zs-sl__order-children">' + esc(o.children) + ' nens</span>'); }
-                if (o.babies   > 0) { breakdown.push('<span class="zs-sl__order-babies">'   + esc(o.babies)   + ' bebès</span>'); }
-                var breakdownStr = breakdown.length > 0 ? ' (' + breakdown.join(' · ') + ')' : '';
-                html += '<span class="zs-sl__order-pax-detail"><span class="zs-sl__order-eq">' + esc(o.eq) + ' racions eq.</span>' + breakdownStr + '</span>';
-            }
             html += '</div>';
             html += '<div class="zs-sl__order-row2">';
             orderItems.forEach(function (item) {
-                var label = item.name + (item.qty > 1 ? ' ×' + item.qty : '');
+                var eqStr = item.eq > 0 ? ' <span class="zs-sl__item-eq">· ' + esc(item.eq) + ' eq.</span>' : '';
+                var labelText = esc(item.name) + (item.qty > 1 ? ' ×' + esc(item.qty) : '') + eqStr;
                 var isChecked = !selectedKeys || selectedKeys.indexOf(item.key) !== -1;
                 html += '<label class="zs-sl__item-check-label">';
                 html += '<span class="zs-sl__switch"><input type="checkbox" class="zs-sl__item-check" value="' + esc(item.key) + '" data-order-id="' + esc(oid) + '"' + (isChecked ? ' checked' : '') + '><span class="zs-sl__switch-track"></span></span>';
-                html += '<span>' + esc(label) + '</span>';
+                html += '<span>' + labelText + '</span>';
                 html += '</label>';
             });
             html += '</div>';

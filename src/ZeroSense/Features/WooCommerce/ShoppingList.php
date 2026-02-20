@@ -294,7 +294,6 @@ class ShoppingList implements FeatureInterface
                 'adults'   => $adults,
                 'children' => $children,
                 'babies'   => $babies,
-                'eq'       => round($this->getEffectiveRecipes($order), 1),
                 'items'    => $this->getOrderItems($order),
             ];
         }
@@ -318,6 +317,13 @@ class ShoppingList implements FeatureInterface
 
     private function getOrderItems(WC_Order $order): array
     {
+        $adults   = (int) $order->get_meta(self::META_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_CHILDREN, true);
+        $babies   = (int) $order->get_meta(self::META_BABIES, true);
+        $total    = $adults + $children + $babies;
+        $eqTotal  = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
+        $paxRatio = $total > 0 ? $eqTotal / $total : 1.0;
+
         $items = []; $idx = 0;
         foreach ($order->get_items('line_item') as $item) {
             if (!$item instanceof \WC_Order_Item_Product) { $idx++; continue; }
@@ -326,6 +332,7 @@ class ShoppingList implements FeatureInterface
             $qty     = (int) $item->get_quantity();
             $items[] = [
                 'key'  => $order->get_id() . ':' . $idx,
+                'eq'   => round($qty * $paxRatio, 1),
                 'name' => $item->get_name(),
                 'qty'  => $qty,
             ];
