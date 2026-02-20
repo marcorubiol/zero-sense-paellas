@@ -269,7 +269,7 @@ class RecipeMetabox
                         }
                         ?>
                         <tr data-row="<?php echo $row_index; ?>">
-                            <td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
+                            <td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
                                 <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
                             </td>
                             <td>
@@ -341,7 +341,7 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $liquid_row_index; ?>">
-                                <td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
+                                <td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
                                     <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
                                 </td>
                                 <td>
@@ -410,7 +410,7 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $utensil_row_index; ?>">
-                                <td style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
+                                <td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;">
                                     <span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span>
                                 </td>
                                 <td>
@@ -650,8 +650,8 @@ class RecipeMetabox
             wp_register_script(
                 'zs-recipes-admin',
                 plugin_dir_url(dirname(dirname(dirname(dirname(dirname(__FILE__)))))) . 'assets/js/recipes-admin.js',
-                ['jquery', 'selectWoo'],
-                '1.0',
+                ['jquery', 'selectWoo', 'jquery-ui-sortable'],
+                time(),
                 true
             );
             wp_enqueue_script('zs-recipes-admin');
