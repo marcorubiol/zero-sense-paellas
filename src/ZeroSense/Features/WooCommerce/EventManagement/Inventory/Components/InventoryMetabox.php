@@ -780,9 +780,14 @@ class InventoryMetabox
                 
                 $(this).attr('data-has-override', '0').addClass('hidden');
                 
-                // Cascade recalculation when resetting a primary field
+                // Cascade recalculation
                 if (materialKey in paellaCremadorMap) {
+                    // Resetting a paella → recalculate all dependents
                     recalculatePaellaDependencies();
+                } else if ($input.data('dependent') == '1') {
+                    // Resetting a dependent → recalculate from current primaries
+                    recalculatePaellaDependencies();
+                    recalculateVitro();
                 }
                 if (cassolaKeys.indexOf(materialKey) !== -1) {
                     recalculateVitro();
