@@ -355,7 +355,12 @@ class ShoppingList implements FeatureInterface
         foreach ($byOrder as $orderId => $allowedIdxs) {
             $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
-            $paxRatio = $this->getEquivalentPax($order);
+            $adults   = (int) $order->get_meta(self::META_ADULTS, true);
+            $children = (int) $order->get_meta(self::META_CHILDREN, true);
+            $babies   = (int) $order->get_meta(self::META_BABIES, true);
+            $total    = $adults + $children + $babies;
+            $eqTotal  = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
+            $paxRatio = $total > 0 ? $eqTotal / $total : 1.0;
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
