@@ -49,6 +49,7 @@
     border: 1px solid var(--border-color-light);
     border-radius: var(--radius);
     background: var(--white);
+    color: var(--text-dark-muted);
     font-size: inherit;
     width: 100%;
     box-sizing: border-box;
