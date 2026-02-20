@@ -349,8 +349,6 @@ class ShoppingList implements FeatureInterface
                 $idx++;
             }
 
-            
-
             $eligible = [];
             foreach ($allowedIdxs as $i) {
                 if (!isset($allItems[$i])) { continue; }
