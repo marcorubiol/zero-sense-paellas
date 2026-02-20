@@ -95,11 +95,12 @@ class InventoryMetabox
             $calculated = [];
         }
         
-        // Obtener overrides manuales
+        // Obtener overrides manuales y de cascada
         $overrides = ManualOverride::get($postId);
+        $cascadeOverrides = ManualOverride::getCascade($postId);
         
-        // Aplicar overrides
-        $final = ManualOverride::apply($calculated, $overrides);
+        // Aplicar overrides (cascada primero, luego usuario — usuario tiene prioridad)
+        $final = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $overrides));
         
         // Calcular alertas de stock solo si el pedido está confirmado
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
@@ -390,8 +391,10 @@ class InventoryMetabox
                                         $materialKey = $material['key'];
                                         $autoValue = $calculated[$materialKey] ?? 0;
                                         $overrideValue = $overrides[$materialKey] ?? null;
+                                        $cascadeValue = $cascadeOverrides[$materialKey] ?? null;
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
+                                        $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
                                         $dependentKeys = ['cremador_50cm','cremador_60cm','cremador_70cm','cremador_90cm','potes_tripodes','buta','catifes','vitro'];
                                         $isDependent = in_array($materialKey, $dependentKeys, true);
                                         ?>
@@ -496,12 +499,12 @@ class InventoryMetabox
                                             </td>
                                             <td>
                                                 <div class="zs-inventory-quantity-wrapper">
-                                                    <span class="dashicons dashicons-update zs-inventory-reset-icon hidden" 
+                                                    <span class="dashicons dashicons-update zs-inventory-reset-icon <?php echo ($hasOverride || $hasCascade) ? '' : 'hidden'; ?>" 
                                                        data-material="<?php echo esc_attr($materialKey); ?>"
-                                                       data-has-override="<?php echo $hasOverride ? '1' : '0'; ?>"
+                                                       data-has-override="<?php echo ($hasOverride || $hasCascade) ? '1' : '0'; ?>"
                                                        title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
                                                     </span>
-                                                    <?php if ($isDependent && !$hasOverride): ?>
+                                                    <?php if ($isDependent && !$hasOverride && !$hasCascade): ?>
                                                     <span class="dashicons dashicons-lock zs-inventory-dep-lock"
                                                        data-material="<?php echo esc_attr($materialKey); ?>"
                                                        title="<?php esc_attr_e('This value is auto-calculated. Click to override manually.', 'zero-sense'); ?>">
@@ -510,7 +513,7 @@ class InventoryMetabox
                                                     <span class="zs-inventory-badge-container">
                                                         <?php if ($hasOverride): ?>
                                                             <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
-                                                        <?php elseif ($autoValue > 0): ?>
+                                                        <?php elseif ($hasCascade || $autoValue > 0): ?>
                                                             <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
                                                         <?php endif; ?>
                                                     </span>
@@ -518,12 +521,13 @@ class InventoryMetabox
                                                         type="number" 
                                                         name="zs_inventory[<?php echo esc_attr($materialKey); ?>]"
                                                         value="<?php 
-                                                            $displayValue = $hasOverride ? $overrideValue : $autoValue;
-                                                            // Show 0 explicitly if it's a manual override, otherwise empty if 0
-                                                            if ($hasOverride && $displayValue == 0) {
-                                                                echo '0';
+                                                            if ($hasOverride) {
+                                                                $displayValue = $overrideValue;
+                                                                echo ($displayValue == 0) ? '0' : esc_attr($displayValue);
+                                                            } elseif ($hasCascade) {
+                                                                echo esc_attr($cascadeValue);
                                                             } else {
-                                                                echo esc_attr($displayValue ?: '');
+                                                                echo esc_attr($autoValue ?: '');
                                                             }
                                                         ?>"
                                                         data-auto="<?php echo esc_attr($autoValue); ?>"
@@ -906,21 +910,21 @@ class InventoryMetabox
                 var $btn = $(this);
                 $btn.addClass('is-saving');
                 
-                // Collect all field values
+                // Collect all field values, split into user overrides and cascade overrides
                 var data = {};
+                var cascadeData = {};
                 $('.zs-inventory-input').each(function() {
                     var $input = $(this);
                     var materialKey = $input.attr('name').match(/\[([^\]]+)\]/)[1];
                     var value = $input.val();
                     var autoValue = $input.data('auto');
                     
-                    // For dependent fields, only save if the user explicitly overrode them
-                    if ($input.data('dependent') == '1' && $input.data('user-override') != '1') {
-                        return;
-                    }
+                    if (value === '' || value == autoValue) return;
                     
-                    // Only send if different from auto or explicitly set
-                    if (value !== '' && value != autoValue) {
+                    // Dependent fields without explicit user override go to cascade bucket
+                    if ($input.data('dependent') == '1' && $input.data('user-override') != '1') {
+                        cascadeData[materialKey] = value;
+                    } else {
                         data[materialKey] = value;
                     }
                 });
@@ -932,7 +936,8 @@ class InventoryMetabox
                         action: 'zs_save_equipment',
                         nonce: nonce,
                         order_id: orderId,
-                        inventory: data
+                        inventory: data,
+                        inventory_cascade: cascadeData
                     },
                     success: function(response) {
                         if (response.success) {
@@ -1196,6 +1201,7 @@ class InventoryMetabox
         
         $orderId = (int) ($_POST['order_id'] ?? 0);
         $inventory = $_POST['inventory'] ?? [];
+        $inventoryCascade = $_POST['inventory_cascade'] ?? [];
         
         if (!$orderId) {
             wp_send_json_error(['message' => 'Invalid order ID']);
@@ -1210,15 +1216,19 @@ class InventoryMetabox
         // Obtener overrides existentes
         $existingOverrides = ManualOverride::get($orderId);
         
-        // Merge con nuevos overrides (preservar los existentes)
+        // Merge con nuevos overrides de usuario (preservar los existentes)
         $mergedOverrides = array_merge($existingOverrides, $inventory);
         
-        // Guardar overrides combinados
+        // Guardar overrides de usuario
         ManualOverride::save($orderId, $mergedOverrides);
+        
+        // Guardar overrides de cascada (campos dependientes actualizados automáticamente)
+        ManualOverride::saveCascade($orderId, $inventoryCascade);
         
         // Calcular materiales finales
         $calculated = MaterialCalculator::calculate($order);
-        $final = ManualOverride::apply($calculated, $mergedOverrides);
+        $cascadeOverrides = ManualOverride::getCascade($orderId);
+        $final = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $mergedOverrides));
         
         // Crear/actualizar reservas solo si el pedido está confirmado
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
@@ -1254,8 +1264,9 @@ class InventoryMetabox
             wp_send_json_error(['message' => 'Order not found']);
         }
         
-        // Eliminar todos los overrides
+        // Eliminar todos los overrides (usuario y cascada)
         ManualOverride::removeAll($orderId);
+        ManualOverride::saveCascade($orderId, []);
         
         // Recalcular materiales finales (solo automáticos)
         $calculated = MaterialCalculator::calculate($order);

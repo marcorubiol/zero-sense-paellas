@@ -66,6 +66,34 @@ class ManualOverride
         return $result;
     }
     
+    const CASCADE_META_KEY = 'zs_equipment_cascade_overrides';
+
+    /**
+     * Guarda overrides de cascada (calculados automáticamente por JS, no por el usuario)
+     */
+    public static function saveCascade(int $orderId, array $overrides): void
+    {
+        $filtered = array_filter($overrides, function($value) {
+            return $value !== '' && $value !== null;
+        });
+
+        if (empty($filtered)) {
+            delete_post_meta($orderId, self::CASCADE_META_KEY);
+            return;
+        }
+
+        update_post_meta($orderId, self::CASCADE_META_KEY, $filtered);
+    }
+
+    /**
+     * Obtiene overrides de cascada de un pedido
+     */
+    public static function getCascade(int $orderId): array
+    {
+        $overrides = get_post_meta($orderId, self::CASCADE_META_KEY, true);
+        return is_array($overrides) ? $overrides : [];
+    }
+
     /**
      * Elimina un override específico
      * 
