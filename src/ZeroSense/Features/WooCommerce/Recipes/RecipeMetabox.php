@@ -269,7 +269,7 @@ class RecipeMetabox
                         }
                         ?>
                         <tr data-row="<?php echo $row_index; ?>">
-                            <td class="zs-drag-handle">
+                            <td class="zs-drag-handle" style="color: #a7aaad;">
                                 <span class="dashicons dashicons-menu"></span>
                             </td>
                             <td>
@@ -341,7 +341,7 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $liquid_row_index; ?>">
-                                <td class="zs-drag-handle">
+                                <td class="zs-drag-handle" style="color: #a7aaad;">
                                     <span class="dashicons dashicons-menu"></span>
                                 </td>
                                 <td>
@@ -410,7 +410,7 @@ class RecipeMetabox
                             }
                             ?>
                             <tr data-row="<?php echo $utensil_row_index; ?>">
-                                <td class="zs-drag-handle">
+                                <td class="zs-drag-handle" style="color: #a7aaad;">
                                     <span class="dashicons dashicons-menu"></span>
                                 </td>
                                 <td>
