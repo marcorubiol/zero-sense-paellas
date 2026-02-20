@@ -99,11 +99,13 @@ class ShoppingList implements FeatureInterface
                 }
             }
         }
+        $preTotalsForJs = !empty($preItemKeysForJs) ? $this->aggregatePaxTotals($orders ?? [], $preItemKeysForJs) : null;
         wp_localize_script('zs-shopping-list', 'zsShoppingList', [
             'ajaxUrl'      => admin_url('admin-ajax.php'),
             'nonce'        => wp_create_nonce('zs_shopping_list_nonce'),
             'pageUrl'      => (string) get_permalink(get_page_by_path(self::PAGE_SLUG)),
             'preItemKeys'  => $preItemKeysForJs,
+            'preTotals'    => $preTotalsForJs,
         ]);
     }
 
@@ -190,8 +192,10 @@ class ShoppingList implements FeatureInterface
             }
         }
 
+        $preTotals = !empty($preItemKeys) ? $this->aggregatePaxTotals($preOrders, $preItemKeys) : [];
+
         ob_start();
-        $this->renderPage($from, $to, $loc, $locations, $preOrders, $preItemKeys, $preList);
+        $this->renderPage($from, $to, $loc, $locations, $preOrders, $preItemKeys, $preList, $preTotals);
         return (string) ob_get_clean();
     }
 
@@ -459,7 +463,7 @@ class ShoppingList implements FeatureInterface
     // HTML
     // -------------------------------------------------------------------------
 
-    private function renderPage(string $from, string $to, int $loc, array $locations, array $preOrders, array $preItemKeys, array $preList): void
+    private function renderPage(string $from, string $to, int $loc, array $locations, array $preOrders, array $preItemKeys, array $preList, array $preTotals = []): void
     {
         require __DIR__ . '/Views/shopping-list.php';
     }
