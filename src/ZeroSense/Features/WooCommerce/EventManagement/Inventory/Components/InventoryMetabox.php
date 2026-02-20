@@ -619,8 +619,8 @@ class InventoryMetabox
                 var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
                 if (!$input.length) return;
 
-                // Skip if user has manually overridden this field
-                if ($input.hasClass('zs-inventory-override')) return;
+                // Skip if user has explicitly overridden this field
+                if ($input.data('user-override') == '1') return;
                 
                 var currentValue = parseInt($input.val()) || 0;
                 var autoValue = parseInt($input.data('auto')) || 0;
@@ -674,8 +674,8 @@ class InventoryMetabox
                 if (isLocked) return;
                 var materialKey = $(this).data('material');
                 var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
-                // Enable the input and mark as override
-                $input.prop('disabled', false).addClass('zs-inventory-override');
+                // Enable the input, mark as user override
+                $input.prop('disabled', false).addClass('zs-inventory-override').attr('data-user-override', '1');
                 // Update badge to MAN
                 var $td = $input.parent();
                 $td.find('.zs-inventory-badge-container').html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
@@ -712,7 +712,7 @@ class InventoryMetabox
                     // Enable non-dependent inputs; keep dependent ones disabled unless already overridden
                     $inputs.each(function() {
                         var $inp = $(this);
-                        if ($inp.data('dependent') == '1' && !$inp.hasClass('zs-inventory-override')) {
+                        if ($inp.data('dependent') == '1' && $inp.data('user-override') != '1') {
                             $inp.prop('disabled', true);
                         } else {
                             $inp.prop('disabled', false);
@@ -754,9 +754,9 @@ class InventoryMetabox
                     $container.html('');
                 }
                 
-                // If dependent field: re-disable and show lock icon
+                // If dependent field: remove user-override flag, re-disable and show lock icon
                 if ($input.data('dependent') == '1') {
-                    $input.prop('disabled', true);
+                    $input.removeAttr('data-user-override').prop('disabled', true);
                     $td.find('.zs-inventory-dep-lock').show();
                 }
                 
@@ -790,7 +790,13 @@ class InventoryMetabox
                                 var $input = $(this);
                                 var autoValue = $input.data('auto');
                                 var displayValue = (autoValue == '0') ? '' : autoValue;
-                                $input.val(displayValue).removeClass('zs-inventory-override');
+                                $input.val(displayValue).removeClass('zs-inventory-override').removeAttr('data-user-override');
+                                
+                                // Re-disable dependent fields and show their lock icons
+                                if ($input.data('dependent') == '1') {
+                                    $input.prop('disabled', true);
+                                    $input.parent().find('.zs-inventory-dep-lock').show();
+                                }
                                 
                                 // Update badges
                                 var $td = $input.parent();
@@ -840,6 +846,10 @@ class InventoryMetabox
                 if (normalizedValue != normalizedAuto) {
                     // User set a value different from auto (including 0 when auto is non-zero)
                     $input.addClass('zs-inventory-override');
+                    // If this is a dependent field being edited by the user, mark it as user override
+                    if ($input.data('dependent') == '1') {
+                        $input.attr('data-user-override', '1');
+                    }
                     
                     // Show '0' explicitly if manual override is 0
                     if (normalizedValue === 0) {
