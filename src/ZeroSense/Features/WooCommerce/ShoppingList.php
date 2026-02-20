@@ -550,8 +550,15 @@ class ShoppingList implements FeatureInterface
 
     private function getEffectiveRecipes(WC_Order $order): float
     {
-        $paxRatio  = $this->getPaxRatio($order);
-        $totalEq   = 0.0;
+        $adults   = (int) $order->get_meta(self::META_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_CHILDREN, true);
+        $babies   = (int) $order->get_meta(self::META_BABIES, true);
+        $total    = $adults + $children + $babies;
+        if ($total <= 0) { return 0.0; }
+        $eq       = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
+        $paxRatio = $eq / $total;
+
+        $totalEq = 0.0;
         foreach ($order->get_items('line_item') as $item) {
             if (!$item instanceof \WC_Order_Item_Product) { continue; }
             $product = $item->get_product();
