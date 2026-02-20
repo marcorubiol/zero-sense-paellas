@@ -97,6 +97,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 55cm o 65cm',
+                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'cremador_60cm',
@@ -105,6 +106,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 70cm',
+                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'cremador_70cm',
@@ -113,6 +115,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 80cm o 90cm',
+                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'cremador_90cm',
@@ -121,6 +124,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 100cm, 115cm o 135cm',
+                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'potes_tripodes',
@@ -129,6 +133,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador',
+                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
             [
                 'key' => 'buta',
@@ -137,6 +142,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador + 1 extra si >60pax',
+                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
             [
                 'key' => 'catifes',
@@ -145,6 +151,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per paella',
+                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
 
             // MATÈRIA PESADA — cassoles
@@ -211,6 +218,7 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada varietat de paella',
+                'dependency_label' => '↳ Calculat a partir de les cassoles',
             ],
 
             // TRANSPORT I MUNTATGE — caixes

@@ -156,6 +156,13 @@
     font-style: italic;
 }
 
+.zs-inventory-dependency-label {
+    font-size: 10px;
+    color: #2271b1;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+
 /* =================================================================
    ACCORDION
    ================================================================= */

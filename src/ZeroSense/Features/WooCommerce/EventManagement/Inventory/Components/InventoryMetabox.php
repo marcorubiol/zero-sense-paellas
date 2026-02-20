@@ -406,6 +406,9 @@ class InventoryMetabox
                                                 <?php if (!empty($material['description'])): ?>
                                                     <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
                                                 <?php endif; ?>
+                                                <?php if (!empty($material['dependency_label'])): ?>
+                                                    <div class="zs-inventory-dependency-label"><?php echo esc_html($material['dependency_label']); ?></div>
+                                                <?php endif; ?>
                                                 
                                                 <?php 
                                                 // Check if this material has an alert
@@ -563,29 +566,6 @@ class InventoryMetabox
             var nonce = '<?php echo wp_create_nonce('zs_inventory_ajax'); ?>';
             var totalGuests = <?php echo (int) $totalGuests; ?>;
 
-            // DEBUG: Log initial state of all inventory inputs
-            console.group('[ZS Inventory] Page load state');
-            $('.zs-inventory-input').each(function() {
-                var $input = $(this);
-                var key = $input.attr('name').match(/\[([^\]]+)\]/)[1];
-                var val = $input.val();
-                var auto = $input.data('auto');
-                var dep = $input.data('dependent');
-                var userOverride = $input.data('user-override');
-                var hasOverrideClass = $input.hasClass('zs-inventory-override');
-                var $resetIcon = $input.parent().find('.zs-inventory-reset-icon');
-                var resetVisible = !$resetIcon.hasClass('hidden');
-                if (val || dep || hasOverrideClass || resetVisible) {
-                    console.log(key + ':', {
-                        val: val, auto: auto, dep: dep,
-                        userOverride: userOverride,
-                        hasOverrideClass: hasOverrideClass,
-                        resetIconVisible: resetVisible
-                    });
-                }
-            });
-            console.groupEnd();
-            
             // Paella dependencies mapping
             var paellaCremadorMap = {
                 'paella_135cm': 'cremador_90cm',
@@ -748,37 +728,22 @@ class InventoryMetabox
                     $saveBtn.hide();
                 } else {
                     // Unlocked state
-                    console.group('[ZS Inventory] Unlocking panel');
                     $inputs.each(function() {
                         var $inp = $(this);
-                        var key = $inp.attr('name').match(/\[([^\]]+)\]/)[1];
                         var isDependent = $inp.data('dependent') == '1';
-                        var isUserOverride = $inp.hasClass('zs-inventory-override'); // PHP sets this class for MAN fields
-                        var isCascade = $inp.data('cascade') == '1';
+                        var isUserOverride = $inp.hasClass('zs-inventory-override');
                         var $wrapper = $inp.parent();
 
                         if (isDependent && !isUserOverride) {
-                            // Keep disabled — user must click lock icon to edit
                             $inp.prop('disabled', true);
-                            // Both cascade and pure-auto dependents show 🔒 (value is auto-calculated)
                             $wrapper.find('.zs-inventory-dep-lock').show();
-                            if (isCascade) {
-                                console.log('  ' + key + ': CASCADE → show 🔒');
-                            } else {
-                                console.log('  ' + key + ': AUTO dependent → show 🔒');
-                            }
                         } else {
                             $inp.prop('disabled', false);
                             if (isUserOverride) {
-                                // MAN field: show ↺
                                 $wrapper.find('.zs-inventory-reset-icon').removeClass('hidden');
-                                console.log('  ' + key + ': MAN → show ↺');
-                            } else {
-                                console.log('  ' + key + ': AUTO non-dependent → editable');
                             }
                         }
                     });
-                    console.groupEnd();
                     $lockBtn.attr('data-locked', 'false');
                     $lockBtn.hide();
                     $saveBtn.show();
@@ -863,7 +828,6 @@ class InventoryMetabox
                             // Hide all reset icons and dep-lock icons (panel stays locked)
                             $('.zs-inventory-reset-icon').addClass('hidden');
                             $('.zs-inventory-dep-lock').hide();
-                            console.log('[ZS Inventory] Recalculate All complete. Panel stays locked.');
                             
                             showToast('<?php echo esc_js(__('All materials recalculated', 'zero-sense')); ?>', 'success');
                         } else {
