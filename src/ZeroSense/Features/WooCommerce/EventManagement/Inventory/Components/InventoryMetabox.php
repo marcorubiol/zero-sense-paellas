@@ -710,6 +710,7 @@ class InventoryMetabox
                     // Locked state: show Unlock button, hide Save & Lock
                     $inputs.prop('disabled', true);
                     $resetIcons.addClass('hidden');
+                    $('.zs-inventory-dep-lock').hide();
                     $lockBtn.attr('data-locked', 'true');
                     $lockBtn.find('.dashicons').removeClass('dashicons-unlock').addClass('dashicons-lock');
                     $lockBtn.find('.lock-text').text('<?php echo esc_js(__('Unlock', 'zero-sense')); ?>');
