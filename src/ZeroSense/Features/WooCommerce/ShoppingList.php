@@ -234,9 +234,12 @@ class ShoppingList implements FeatureInterface
 
         $list = !empty($itemKeys) ? $this->aggregateIngredients($itemKeys) : [];
 
+        $totals = $this->aggregatePaxTotals($orders, $orderIds);
+
         wp_send_json_success([
             'orders'     => $orders,
             'list'       => $list,
+            'totals'     => $totals,
             'signed_url' => $this->buildSignedUrl($from, $to, $loc, array_values($orderIds)),
         ]);
     }
@@ -546,6 +549,26 @@ class ShoppingList implements FeatureInterface
         if ($unit === 'l'  && $qty < 1)     { return ['qty' => $qty * 1000, 'unit' => 'ml']; }
         $map = ['g' => 'gr', 'kg' => 'kg', 'ml' => 'ml', 'l' => 'lit', 'u' => 'pcs'];
         return ['qty' => $qty, 'unit' => $map[$unit] ?? $unit];
+    }
+
+    private function aggregatePaxTotals(array $orders, array $selectedOrderIds): array
+    {
+        $selectedIds = array_map('intval', $selectedOrderIds);
+        $adults = $children = $babies = 0;
+        $eq = 0.0;
+        foreach ($orders as $o) {
+            if (!in_array((int) $o['id'], $selectedIds, true)) { continue; }
+            $adults   += (int) ($o['adults']   ?? 0);
+            $children += (int) ($o['children'] ?? 0);
+            $babies   += (int) ($o['babies']   ?? 0);
+            $eq       += (float) ($o['eq']     ?? 0);
+        }
+        return [
+            'adults'   => $adults,
+            'children' => $children,
+            'babies'   => $babies,
+            'eq'       => round($eq, 1),
+        ];
     }
 
     private function getEffectiveRecipes(WC_Order $order): float

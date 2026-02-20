@@ -84,7 +84,7 @@
         return html;
     }
 
-    function renderList(list) {
+    function renderList(list, totals) {
         if (!list || list.length === 0) {
             return '<div class="zs-sl__list-empty"><p>No hi ha ingredients per a les comandes seleccionades.</p></div>';
         }
@@ -92,6 +92,14 @@
         var icon = '<svg class="zs-sl__list-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
         var html = '<div class="zs-sl__list print-only" id="zs-sl-list">';
         html += '<div class="zs-sl__list-header"><h3 class="zs-sl__list-title">Llista de la compra</h3>' + icon + '</div>';
+        if (totals && totals.eq > 0) {
+            var bd = [];
+            if (totals.adults   > 0) { bd.push('<span class="zs-sl__totals-adults">'   + esc(totals.adults)   + ' ad</span>'); }
+            if (totals.children > 0) { bd.push('<span class="zs-sl__totals-children">' + esc(totals.children) + ' nens</span>'); }
+            if (totals.babies   > 0) { bd.push('<span class="zs-sl__totals-babies">'   + esc(totals.babies)   + ' bebès</span>'); }
+            var bdStr = bd.length > 0 ? ' (' + bd.join(' · ') + ')' : '';
+            html += '<p class="zs-sl__list-subtitle"><span class="zs-sl__totals-eq">' + esc(totals.eq) + ' racions eq.</span>' + bdStr + '</p>';
+        }
         html += '<div class="zs-sl__list-items">';
         list.forEach(function (item) {
             html += '<div class="zs-sl__list-item">';
@@ -156,7 +164,7 @@
 
                 currentSignedUrl = res.data.signed_url || '';
                 var ordersHtml = renderOrders(res.data.orders, orderIds);
-                var listHtml   = renderList(res.data.list);
+                var listHtml   = renderList(res.data.list, res.data.totals);
                 body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
                 bindBodyEvents();
             })
