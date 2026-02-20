@@ -13,9 +13,6 @@ use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database\Schema;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\InventoryMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\StockAdminPage;
-use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\AlertsDashboardPage;
-use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\AlertsAdminNotice;
-use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\OrderAlertsColumn;
 
 /**
  * Bootstrap for Event Management module
@@ -38,9 +35,6 @@ class Bootstrap
         // Inventory system
         (new InventoryMetabox())->register();
         (new StockAdminPage())->register();
-        (new AlertsDashboardPage())->register();
-        (new AlertsAdminNotice())->register();
-        (new OrderAlertsColumn())->register();
     }
     
     private function initializeInventorySystem(): void
