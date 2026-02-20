@@ -30,7 +30,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 4-6 persones',
+                'description' => '1 per cada recepta de paella amb 4-6 persones',
             ],
             [
                 'key' => 'paella_65cm',
@@ -38,7 +38,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 6-9 persones',
+                'description' => '1 per cada recepta de paella amb 6-9 persones',
             ],
             [
                 'key' => 'paella_70cm',
@@ -46,7 +46,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 8-12 persones',
+                'description' => '1 per cada recepta de paella amb 8-12 persones',
             ],
             [
                 'key' => 'paella_80cm',
@@ -54,7 +54,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 12-15 persones',
+                'description' => '1 per cada recepta de paella amb 12-15 persones',
             ],
             [
                 'key' => 'paella_90cm',
@@ -62,7 +62,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 15-25 persones',
+                'description' => '1 per cada recepta de paella amb 15-25 persones',
             ],
             [
                 'key' => 'paella_100cm',
@@ -70,7 +70,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 25-40 persones',
+                'description' => '1 per cada recepta de paella amb 25-40 persones',
             ],
             [
                 'key' => 'paella_115cm',
@@ -78,7 +78,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 40-60 persones',
+                'description' => '1 per cada recepta de paella amb 40-60 persones',
             ],
             [
                 'key' => 'paella_135cm',
@@ -86,7 +86,7 @@ class MaterialDefinitions
                 'category' => 'paelles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 paella per cada recepta amb 60-80 persones',
+                'description' => '1 per cada recepta de paella amb 60-80 persones',
             ],
 
             // MATÈRIA PESADA — equipament paella
@@ -210,7 +210,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per varietat de paella',
+                'description' => '1 per cassola',
             ],
 
             // LOGÍSTICA

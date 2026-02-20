@@ -268,9 +268,15 @@ class MaterialCalculator
         // Poals fems: 1 cada 20pax
         $result['poals_fems'] = (int) ceil($guests / 20);
 
-        // Vitro: 1 per varietat de paella
-        $varieties = array_unique($analysis['paella_varieties']);
-        $result['vitro'] = count($varieties);
+        // Vitro: 1 per cassola
+        $totalCassoles = 0;
+        foreach (array_keys(self::CASSOLA_SIZES) as $capacity) {
+            $cassolaKey = self::CASSOLA_SIZES[$capacity];
+            if (isset($result[$cassolaKey])) {
+                $totalCassoles += $result[$cassolaKey];
+            }
+        }
+        $result['vitro'] = $totalCassoles;
 
         return $result;
     }

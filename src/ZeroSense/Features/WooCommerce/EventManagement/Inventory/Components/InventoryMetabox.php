@@ -131,14 +131,14 @@ class InventoryMetabox
         
         // Nombres de categorías
         $categoryLabels = [
-            'paelles' => 'Paelles',
-            'cremadors' => 'Cremadors',
-            'equipament_pesant' => 'Equipament Pesant',
-            'logistica_cuina' => 'Logística Cuina',
-            'caixes' => 'Caixes',
-            'roba_personal' => 'Vestimenta Staff',
-            'textils_neteja' => 'Vestimenta Taules',
-            'altres' => 'Altres',
+            'paelles'           => 'Paelles',
+            'equipament_paella' => 'Equipament Paella',
+            'cassoles'          => 'Cassoles',
+            'logistica'         => 'Logística',
+            'caixes'            => 'Caixes',
+            'roba_personal'     => 'Vestimenta Staff',
+            'textils_neteja'    => 'Vestimenta Taules',
+            'altres'            => 'Altres',
         ];
         
         ?>
@@ -621,6 +621,21 @@ class InventoryMetabox
                 }
             }
 
+            // Cassola keys
+            var cassolaKeys = [
+                'cassola_5l', 'cassola_6l', 'cassola_9l',
+                'cassola_xata_11l', 'cassola_xata_13l', 'cassola_15l', 'cassola_33l'
+            ];
+
+            function recalculateVitro() {
+                var totalCassoles = 0;
+                cassolaKeys.forEach(function(key) {
+                    var val = parseInt($('input[name="zs_inventory[' + key + ']"]').val()) || 0;
+                    totalCassoles += val;
+                });
+                updateInputAndTriggerEvent('vitro', totalCassoles);
+            }
+
             // Bind the recalculation to paella inputs
             var paellaSelectors = Object.keys(paellaCremadorMap).map(function(key) {
                 return 'input[name="zs_inventory[' + key + ']"]';
@@ -629,6 +644,16 @@ class InventoryMetabox
             $('.zs-inventory-metabox').on('input', paellaSelectors, function() {
                 if (isLocked) return;
                 recalculatePaellaDependencies();
+            });
+
+            // Bind vitro recalculation to cassola inputs
+            var cassolaSelectors = cassolaKeys.map(function(key) {
+                return 'input[name="zs_inventory[' + key + ']"]';
+            }).join(', ');
+
+            $('.zs-inventory-metabox').on('input', cassolaSelectors, function() {
+                if (isLocked) return;
+                recalculateVitro();
             });
             
             // Lock/Unlock toggle

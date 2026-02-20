@@ -99,14 +99,14 @@ class StockAdminPage
         
         // Labels de categorías
         $categoryLabels = [
-            'paelles' => 'Paelles',
-            'cremadors' => 'Cremadors',
-            'equipament_pesant' => 'Equipament Pesant',
-            'logistica_cuina' => 'Logística Cuina',
-            'caixes' => 'Caixes',
-            'roba_personal' => 'Vestimenta Staff',
-            'textils_neteja' => 'Vestimenta Taules',
-            'altres' => 'Altres',
+            'paelles'           => 'Paelles',
+            'equipament_paella' => 'Equipament Paella',
+            'cassoles'          => 'Cassoles',
+            'logistica'         => 'Logística',
+            'caixes'            => 'Caixes',
+            'roba_personal'     => 'Vestimenta Staff',
+            'textils_neteja'    => 'Vestimenta Taules',
+            'altres'            => 'Altres',
         ];
         
         ?>
