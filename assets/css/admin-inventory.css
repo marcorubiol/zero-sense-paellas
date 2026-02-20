@@ -137,6 +137,19 @@
     display: none;
 }
 
+.zs-inventory-dep-lock {
+    cursor: pointer;
+    color: #a0a5aa;
+    font-size: 14px;
+    line-height: 1;
+    transition: color 0.2s ease;
+    display: none;
+}
+
+.zs-inventory-dep-lock:hover {
+    color: #d67136;
+}
+
 .zs-inventory-description {
     font-size: var(--zs-mb-description-size, 11px);
     color: var(--zs-mb-description-color, #646970);

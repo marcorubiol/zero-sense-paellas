@@ -392,6 +392,8 @@ class InventoryMetabox
                                         $overrideValue = $overrides[$materialKey] ?? null;
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
+                                        $dependentKeys = ['cremador_50cm','cremador_60cm','cremador_70cm','cremador_90cm','potes_tripodes','buta','catifes','vitro'];
+                                        $isDependent = in_array($materialKey, $dependentKeys, true);
                                         ?>
                                         <tr>
                                             <td>
@@ -499,6 +501,12 @@ class InventoryMetabox
                                                        data-has-override="<?php echo $hasOverride ? '1' : '0'; ?>"
                                                        title="<?php esc_attr_e('Reset to auto', 'zero-sense'); ?>">
                                                     </span>
+                                                    <?php if ($isDependent && !$hasOverride): ?>
+                                                    <span class="dashicons dashicons-lock zs-inventory-dep-lock"
+                                                       data-material="<?php echo esc_attr($materialKey); ?>"
+                                                       title="<?php esc_attr_e('This value is auto-calculated. Click to override manually.', 'zero-sense'); ?>">
+                                                    </span>
+                                                    <?php endif; ?>
                                                     <span class="zs-inventory-badge-container">
                                                         <?php if ($hasOverride): ?>
                                                             <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
@@ -519,6 +527,7 @@ class InventoryMetabox
                                                             }
                                                         ?>"
                                                         data-auto="<?php echo esc_attr($autoValue); ?>"
+                                                        data-dependent="<?php echo $isDependent ? '1' : '0'; ?>"
                                                         min="0"
                                                         class="zs-inventory-input <?php echo $hasOverride ? 'zs-inventory-override' : ''; ?>"
                                                         disabled
@@ -659,6 +668,26 @@ class InventoryMetabox
                 recalculateVitro();
             });
             
+            // Per-field lock click: unlock a dependent field for manual override
+            $(document).on('click', '.zs-inventory-dep-lock', function(e) {
+                e.preventDefault();
+                if (isLocked) return;
+                var materialKey = $(this).data('material');
+                var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
+                // Enable the input and mark as override
+                $input.prop('disabled', false).addClass('zs-inventory-override');
+                // Update badge to MAN
+                var $td = $input.parent();
+                $td.find('.zs-inventory-badge-container').html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
+                // Show reset icon
+                var $resetIcon = $td.find('.zs-inventory-reset-icon');
+                $resetIcon.attr('data-has-override', '1').removeClass('hidden');
+                // Hide this lock icon
+                $(this).hide();
+                // Focus the input
+                $input.focus();
+            });
+
             // Lock/Unlock toggle
             $('.zs-inventory-lock-btn').on('click', function(e) {
                 e.preventDefault();
@@ -680,7 +709,17 @@ class InventoryMetabox
                     $saveBtn.hide();
                 } else {
                     // Unlocked state: hide Unlock button, show Save & Lock
-                    $inputs.prop('disabled', false);
+                    // Enable non-dependent inputs; keep dependent ones disabled unless already overridden
+                    $inputs.each(function() {
+                        var $inp = $(this);
+                        if ($inp.data('dependent') == '1' && !$inp.hasClass('zs-inventory-override')) {
+                            $inp.prop('disabled', true);
+                        } else {
+                            $inp.prop('disabled', false);
+                        }
+                    });
+                    // Show dep-lock icons for non-overridden dependent fields
+                    $('.zs-inventory-dep-lock').show();
                     // Only show reset icons for fields with overrides
                     $resetIcons.each(function() {
                         if ($(this).data('has-override') == '1') {
@@ -715,7 +754,13 @@ class InventoryMetabox
                     $container.html('');
                 }
                 
-                $(this).addClass('hidden');
+                // If dependent field: re-disable and show lock icon
+                if ($input.data('dependent') == '1') {
+                    $input.prop('disabled', true);
+                    $td.find('.zs-inventory-dep-lock').show();
+                }
+                
+                $(this).attr('data-has-override', '0').addClass('hidden');
             });
             
             // Recalculate all
