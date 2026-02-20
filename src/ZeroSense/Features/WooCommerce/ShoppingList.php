@@ -345,7 +345,7 @@ class ShoppingList implements FeatureInterface
         foreach ($byOrder as $orderId => $allowedIdxs) {
             $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
-            $paxRatio = $this->getPaxRatio($order);
+            $paxRatio = $this->getEquivalentPax($order);
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
