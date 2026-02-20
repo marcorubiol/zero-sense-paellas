@@ -281,7 +281,11 @@
         visibility: visible !important;
     }
     body.zs-printing .zs-sl__list {
-        width: 50% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }
     body.zs-printing .zs-sl__list-items {
