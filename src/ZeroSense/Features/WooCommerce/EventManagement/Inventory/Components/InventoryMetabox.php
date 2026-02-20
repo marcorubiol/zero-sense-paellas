@@ -636,7 +636,7 @@ class InventoryMetabox
 
                 // Update value directly (no trigger to avoid marking as manual)
                 var valToSet = newValue === 0 ? '' : newValue;
-                $input.val(valToSet);
+                $input.val(valToSet).data('expected', newValue);
 
                 // Update badge: show AUTO if value matches auto, otherwise keep as-is
                 var autoValue = parseInt($input.data('auto')) || 0;
@@ -686,23 +686,18 @@ class InventoryMetabox
                 recalculateVitro();
             });
             
-            // Per-field lock click: unlock a dependent field for manual override
+            // Per-field lock click: unlock a dependent field for editing
             $(document).on('click', '.zs-inventory-dep-lock', function(e) {
                 e.preventDefault();
                 if (isLocked) return;
                 var materialKey = $(this).data('material');
                 var $input = $('input[name="zs_inventory[' + materialKey + ']"]');
-                // Enable the input, mark as user override
-                $input.prop('disabled', false).addClass('zs-inventory-override').data('user-override', '1');
-                // Update badge to MAN
+                // Enable editing but keep current badge (AUTO) — MAN only on actual value change
+                $input.prop('disabled', false);
                 var $td = $input.parent();
-                $td.find('.zs-inventory-badge-container').html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
-                // Show reset icon
-                var $resetIcon = $td.find('.zs-inventory-reset-icon');
-                $resetIcon.attr('data-has-override', '1').removeClass('hidden');
-                // Hide this lock icon
+                // Show reset icon so user can re-lock
+                $td.find('.zs-inventory-reset-icon').attr('data-has-override', '1').removeClass('hidden');
                 $(this).hide();
-                // Focus the input
                 $input.focus();
             });
 
@@ -861,10 +856,10 @@ class InventoryMetabox
                 if (isLocked) return;
                 var $input = $(this);
                 var currentValue = $input.val();
-                var autoValue = $input.data('auto');
+                var refVal = $input.data('expected') !== undefined ? $input.data('expected') : $input.data('auto');
                 var normalizedValue = (currentValue === '' || currentValue === null) ? 0 : parseInt(currentValue);
-                var normalizedAuto = (autoValue === '' || autoValue === null) ? 0 : parseInt(autoValue);
-                if (normalizedValue !== normalizedAuto && normalizedValue === 0) {
+                var normalizedRef = (refVal === '' || refVal === null) ? 0 : parseInt(refVal);
+                if (normalizedValue !== normalizedRef && normalizedValue === 0) {
                     $input.val('0');
                 }
             });
@@ -875,19 +870,19 @@ class InventoryMetabox
                 
                 var $input = $(this);
                 var currentValue = $input.val();
-                var autoValue = $input.data('auto');
                 var materialKey = $input.attr('name').match(/\[([^\]]+)\]/)[1];
                 var $td = $input.parent();
                 
                 // Track dirty field
                 dirtyFields.add(materialKey);
                 
-                // Normalize values (treat empty as 0)
+                // For dependent fields, compare against cascade value (data-expected) if available
+                var referenceValue = $input.data('expected') !== undefined ? $input.data('expected') : $input.data('auto');
                 var normalizedValue = (currentValue === '' || currentValue === null) ? 0 : parseInt(currentValue);
-                var normalizedAuto = (autoValue === '' || autoValue === null) ? 0 : parseInt(autoValue);
+                var normalizedRef = (referenceValue === '' || referenceValue === null) ? 0 : parseInt(referenceValue);
                 
-                // Check if value differs from auto
-                if (normalizedValue != normalizedAuto) {
+                // Check if value differs from reference
+                if (normalizedValue != normalizedRef) {
                     // User set a value different from auto (including 0 when auto is non-zero)
                     $input.addClass('zs-inventory-override');
                     // If this is a dependent field being edited by the user, mark it as user override
