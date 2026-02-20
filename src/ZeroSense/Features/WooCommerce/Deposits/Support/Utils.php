@@ -242,6 +242,10 @@ class Utils
                 'decimals' => wc_get_price_decimals(),
             ];
 
+            $actualPercentage = ($orderTotal > 0)
+                ? round(($depositAmount / $orderTotal) * 100, 2)
+                : $depositPercentage;
+
             $baseInfo = [
                 'order_id' => $orderId,
                 'order_total' => $orderTotal,
@@ -250,8 +254,8 @@ class Utils
                 'deposit_display' => wc_price($depositAmount, $priceArgs),
                 'remaining_display' => wc_price($remainingAmount, $priceArgs),
                 'full_display' => wc_price($orderTotal, $priceArgs),
-                'deposit_percentage' => $depositPercentage,
-                'deposit_percentage_display' => rtrim(rtrim(number_format($depositPercentage, 2, '.', ''), '0'), '.'),
+                'deposit_percentage' => $actualPercentage,
+                'deposit_percentage_display' => rtrim(rtrim(number_format($actualPercentage, 2, '.', ''), '0'), '.'),
                 'has_deposit' => $hasDeposit,
                 'order_currency' => $orderCurrency,
                 'currency_settings' => $currencySettings,

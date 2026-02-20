@@ -11,6 +11,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Components\FieldChangeTracker
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialCalculator;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDefinitions;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\ManualOverride;
+use ZeroSense\Features\WooCommerce\Deposits\Support\Utils as DepositsUtils;
 use WC_Order;
 use WP_Post;
 
@@ -273,6 +274,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_inventory_list}',              'label' => 'Inventory & Materials (one field per item)',     'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_vehicles_list}',               'label' => 'Vehicles (one field per vehicle)',               'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_deposit_percentage}',    'label' => 'Order Deposit Percentage (real calculated %)',   'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -440,6 +442,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_rabbit_toggle}') {
             return $this->getRabbitToggle($post);
         }
+        if ($tag === '{zs_order_deposit_percentage}') {
+            return $this->getOrderDepositPercentage($post);
+        }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -516,6 +521,7 @@ class BricksDynamicTags implements FeatureInterface
         $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
         $content = str_replace('{zs_vehicles_list}',               $this->getVehiclesList($post),            $content);
         $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
+        $content = str_replace('{zs_order_deposit_percentage}',  $this->getOrderDepositPercentage($post), $content);
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
