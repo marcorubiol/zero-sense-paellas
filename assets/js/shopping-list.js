@@ -262,6 +262,15 @@
         if (searchBtn) {
             searchBtn.addEventListener('click', function () { doRequest(null); });
         }
+        if (cfg.preTotals && cfg.preTotals.eq > 0) {
+            var listHeader = document.querySelector('#zs-sl-list .zs-sl__list-header');
+            if (listHeader && !document.querySelector('.zs-sl__list-subtitle')) {
+                var sub = document.createElement('p');
+                sub.className = 'zs-sl__list-subtitle';
+                sub.innerHTML = '<span class="zs-sl__totals-eq">' + esc(cfg.preTotals.eq) + ' racions eq.</span>';
+                listHeader.insertAdjacentElement('afterend', sub);
+            }
+        }
         var preKeys = cfg.preItemKeys && cfg.preItemKeys.length > 0 ? cfg.preItemKeys : null;
         if (preKeys) {
             var ordersEl = document.getElementById('zs-sl-orders');
