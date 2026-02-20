@@ -57,7 +57,7 @@
             html += '</div>';
             html += '<div class="zs-sl__order-row2">';
             orderItems.forEach(function (item) {
-                var eqStr = item.eq > 0 ? ' <span class="zs-sl__item-eq">· ' + esc(item.eq) + ' eq.</span>' : '';
+                var eqStr = item.eq > 0 ? ' <span class="zs-sl__item-eq">· ' + esc(item.eq) + ' racions eq.</span>' : '';
                 var labelText = esc(item.name) + (item.qty > 1 ? ' ×' + esc(item.qty) : '') + eqStr;
                 var isChecked = !selectedKeys || selectedKeys.indexOf(item.key) !== -1;
                 html += '<label class="zs-sl__item-check-label">';
@@ -86,12 +86,7 @@
         var html = '<div class="zs-sl__list print-only" id="zs-sl-list">';
         html += '<div class="zs-sl__list-header"><h3 class="zs-sl__list-title">Llista de la compra</h3>' + icon + '</div>';
         if (totals && totals.eq > 0) {
-            var bd = [];
-            if (totals.adults   > 0) { bd.push('<span class="zs-sl__totals-adults">'   + esc(totals.adults)   + ' ad</span>'); }
-            if (totals.children > 0) { bd.push('<span class="zs-sl__totals-children">' + esc(totals.children) + ' nens</span>'); }
-            if (totals.babies   > 0) { bd.push('<span class="zs-sl__totals-babies">'   + esc(totals.babies)   + ' bebès</span>'); }
-            var bdStr = bd.length > 0 ? ' (' + bd.join(' · ') + ')' : '';
-            html += '<p class="zs-sl__list-subtitle"><span class="zs-sl__totals-eq">' + esc(totals.eq) + ' racions eq.</span>' + bdStr + '</p>';
+            html += '<p class="zs-sl__list-subtitle"><span class="zs-sl__totals-eq">' + esc(totals.eq) + ' racions eq.</span></p>';
         }
         html += '<div class="zs-sl__list-items">';
         list.forEach(function (item) {
@@ -156,8 +151,6 @@
                 }
 
                 currentSignedUrl = res.data.signed_url || '';
-                console.log('[ZS-SL] orders:', JSON.stringify(res.data.orders));
-                console.log('[ZS-SL] totals:', JSON.stringify(res.data.totals));
                 var ordersHtml = renderOrders(res.data.orders, orderIds);
                 var listHtml   = renderList(res.data.list, res.data.totals);
                 body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
