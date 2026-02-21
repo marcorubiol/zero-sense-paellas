@@ -3272,54 +3272,19 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // Group vehicles by type (using post category or default to "Vehículos")
-        $vehiclesByType = [];
+        $html = '';
         foreach ($vehicleIds as $vehicleId) {
             $post2 = get_post((int) $vehicleId);
             if (!$post2) {
                 continue;
             }
 
-            // Get vehicle type from taxonomy or use default
-            $typeTerms = wp_get_post_terms($vehicleId, 'zs_vehicle_type');
-            $typeSlug = !empty($typeTerms) && !is_wp_error($typeTerms) ? $typeTerms[0]->slug : 'vehiculos';
-            $typeName = !empty($typeTerms) && !is_wp_error($typeTerms) ? $typeTerms[0]->name : 'Vehículos';
-
-            if (!isset($vehiclesByType[$typeSlug])) {
-                $vehiclesByType[$typeSlug] = [
-                    'name' => $typeName,
-                    'vehicles' => []
-                ];
-            }
-
             $name = $post2->post_title;
             $plate = get_post_meta($post2->ID, 'zs_vehicle_plate', true);
-            $label = $plate ? $name . ' (' . $plate . ')' : $name;
-
-            $vehiclesByType[$typeSlug]['vehicles'][] = $label;
-        }
-
-        if (empty($vehiclesByType)) {
-            return '';
-        }
-
-        // Build HTML output — one fdr-card__field per vehicle type
-        $html = '';
-        foreach ($vehiclesByType as $typeData) {
-            if (empty($typeData['vehicles'])) {
-                continue;
-            }
-
-            $vehicleHtml = '';
-            foreach ($typeData['vehicles'] as $vehicleLabel) {
-                $vehicleHtml .= '<span class="zs-vehicle-item">';
-                $vehicleHtml .= '<p class="zs-vehicle-name">' . esc_html($vehicleLabel) . '</p>';
-                $vehicleHtml .= '</span>';
-            }
 
             $html .= '<div class="brxe-div fdr-card__field">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($typeData['name']) . '</span>';
-            $html .= '<div class="brxe-text-basic fdr-card__field-value">' . $vehicleHtml . '</div>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($name) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($plate ?: '') . '</span>';
             $html .= '</div>';
         }
 
