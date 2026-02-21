@@ -47,8 +47,9 @@
    ---------------------------------------------------------------- */
 
 .zs-sl__filters {
-    background: var(--bg-ultra-light);
+    background: var(--bg-light);
     border-radius: var(--radius);
+    padding: var(--space-m);
 }
 
 .zs-sl__filter-row {
