@@ -6,6 +6,9 @@
     max-width: 600px;
     margin: 0 auto;
     font-family: inherit;
+    gap: var(--content-gap);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ----------------------------------------------------------------
@@ -13,9 +16,8 @@
    ---------------------------------------------------------------- */
 
 .zs-sl__header {
-    margin-bottom: var(--space-m);
     padding-bottom: var(--space-m);
-    border-bottom: 1px solid var(--border-color-light);
+    border-bottom: var(--border-light);
 }
 
 .zs-sl__header-title {
@@ -24,7 +26,6 @@
     gap: 8px;
     margin: 0 0 4px 0;
     font-size: var(--h3);
-    font-weight: var(--h3-font-weight, 700);
     line-height: 1.2;
 }
 
@@ -37,7 +38,7 @@
 
 .zs-sl__header-sub {
     margin: 0;
-    font-size: var(--text-xs, 12px);
+    font-size: var(--text-s);
     color: var(--text-dark-muted);
 }
 
@@ -46,10 +47,8 @@
    ---------------------------------------------------------------- */
 
 .zs-sl__filters {
-    background: var(--off-white);
+    background: var(--bg-ultra-light);
     border-radius: var(--radius);
-    padding: var(--space-s);
-    margin-bottom: var(--space-m);
 }
 
 .zs-sl__filter-row {
@@ -61,7 +60,7 @@
 .zs-sl__filter-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--content-gap);
 }
 
 .zs-sl__filter-group--full {
