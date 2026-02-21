@@ -191,6 +191,7 @@ class BricksDynamicTags implements FeatureInterface
 
     public function trackOrderModification(int $orderId): void
     {
+        $this->invalidateFdrTransients($orderId);
         $order = $this->getOrder($orderId);
         if ($order instanceof WC_Order) {
             $order->update_meta_data('_zs_last_modified', current_time('mysql'));
@@ -1185,6 +1186,9 @@ class BricksDynamicTags implements FeatureInterface
     private bool $resolvedOrderIdCacheSet = false;
     private array $orderCache = [];
     private array $computedCache = [];
+    private bool $recipeMetaPrimed = false;
+
+    private const FDR_TRANSIENT_TTL = 3600;
 
     private function getOrder(int $orderId): ?WC_Order
     {
@@ -1193,6 +1197,66 @@ class BricksDynamicTags implements FeatureInterface
             $this->orderCache[$orderId] = $order instanceof WC_Order ? $order : null;
         }
         return $this->orderCache[$orderId];
+    }
+
+    private function getOrderVersion(WC_Order $order): string
+    {
+        $mod = $order->get_meta('_zs_last_modified', true);
+        return $mod ?: ($order->get_date_modified() ? $order->get_date_modified()->getTimestamp() : '0');
+    }
+
+    private function getFdrTransient(string $tag, int $orderId, WC_Order $order): ?string
+    {
+        $key = 'zs_fdr_' . $tag . '_' . $orderId . '_' . $this->getOrderVersion($order);
+        $val = get_transient($key);
+        return is_string($val) ? $val : null;
+    }
+
+    private function setFdrTransient(string $tag, int $orderId, WC_Order $order, string $html): string
+    {
+        $key = 'zs_fdr_' . $tag . '_' . $orderId . '_' . $this->getOrderVersion($order);
+        set_transient($key, $html, self::FDR_TRANSIENT_TTL);
+        return $html;
+    }
+
+    public function invalidateFdrTransients(int $orderId): void
+    {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+            '_transient_zs_fdr_%_' . $orderId . '_%',
+            '_transient_timeout_zs_fdr_%_' . $orderId . '_%'
+        ));
+    }
+
+    private function primeRecipeMeta(WC_Order $order): void
+    {
+        if ($this->recipeMetaPrimed) {
+            return;
+        }
+        $this->recipeMetaPrimed = true;
+
+        $recipeIds = [];
+        foreach ($order->get_items('line_item') as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $rid = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            if ($rid > 0) {
+                $recipeIds[$rid] = true;
+            }
+            $ridNr = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+            if ($ridNr > 0) {
+                $recipeIds[$ridNr] = true;
+            }
+        }
+        if (!empty($recipeIds)) {
+            update_meta_cache('post', array_keys($recipeIds));
+        }
     }
 
     private function resolveOrderId($contextPost = null): ?int
@@ -2045,6 +2109,10 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        $cached = $this->getFdrTransient('rc', $orderId, $order);
+        if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
+
+        $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
         $paxRatio = $this->getPaxRatio($order);
 
@@ -2107,6 +2175,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
+        $this->setFdrTransient('rc', $orderId, $order, $html);
         return $this->computedCache[$cacheKey] = $html;
     }
 
@@ -2274,6 +2343,10 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        $cached = $this->getFdrTransient('ris', $orderId, $order);
+        if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
+
+        $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
         $paxRatio = $this->getPaxRatio($order);
 
@@ -2367,6 +2440,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
+        $this->setFdrTransient('ris', $orderId, $order, $html);
         return $this->computedCache[$cacheKey] = $html;
     }
 
@@ -2387,6 +2461,10 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        $cached = $this->getFdrTransient('rfc', $orderId, $order);
+        if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
+
+        $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
         $paxRatio = $this->getPaxRatio($order);
 
@@ -2469,6 +2547,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
+        $this->setFdrTransient('rfc', $orderId, $order, $html);
         return $this->computedCache[$cacheKey] = $html;
     }
 
@@ -2752,6 +2831,10 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        $cached = $this->getFdrTransient('rus', $orderId, $order);
+        if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
+
+        $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
         $paxRatio = $this->getPaxRatio($order);
 
@@ -2863,6 +2946,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
+        $this->setFdrTransient('rus', $orderId, $order, $html);
         return $this->computedCache[$cacheKey] = $html;
     }
 
@@ -3017,6 +3101,10 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        $cached = $this->getFdrTransient('rls', $orderId, $order);
+        if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
+
+        $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
         $paxRatio = $this->getPaxRatio($order);
 
@@ -3117,6 +3205,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
+        $this->setFdrTransient('rls', $orderId, $order, $html);
         return $this->computedCache[$cacheKey] = $html;
     }
 
@@ -3305,6 +3394,9 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        $cached = $this->getFdrTransient('inv', $orderId, $order);
+        if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
+
         $calculated = MaterialCalculator::calculate($order);
         $overrides  = ManualOverride::get($orderId);
         $final      = ManualOverride::apply($calculated, $overrides);
@@ -3330,6 +3422,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
+        $this->setFdrTransient('inv', $orderId, $order, $html);
         return $this->computedCache[$cacheKey] = $html;
     }
 
