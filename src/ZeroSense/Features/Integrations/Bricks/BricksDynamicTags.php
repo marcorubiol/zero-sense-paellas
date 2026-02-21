@@ -161,7 +161,7 @@ class BricksDynamicTags implements FeatureInterface
     
     public function trackBillingShippingChangesOnSave(int $orderId): void
     {
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return;
         }
@@ -191,7 +191,7 @@ class BricksDynamicTags implements FeatureInterface
 
     public function trackOrderModification(int $orderId): void
     {
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if ($order instanceof WC_Order) {
             $order->update_meta_data('_zs_last_modified', current_time('mysql'));
             $order->save_meta_data();
@@ -587,7 +587,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Billing ' . $field);
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -619,7 +619,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Ops notes');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -640,7 +640,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder($title . ' List');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -725,7 +725,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder(ucfirst($schemaKey) . ' ' . $field);
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -765,7 +765,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Shipping ' . $field);
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -807,7 +807,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Customer note');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order) {
             return '';
         }
@@ -833,7 +833,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Number');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -848,7 +848,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Service Location Name');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -885,7 +885,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Status');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -900,7 +900,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Products');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -953,7 +953,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Products');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -981,7 +981,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Products Count');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '0';
         }
@@ -996,7 +996,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Language');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -1027,7 +1027,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Last Modified');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -1074,7 +1074,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Products by Category');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -1186,6 +1186,15 @@ class BricksDynamicTags implements FeatureInterface
     private array $orderCache = [];
     private array $computedCache = [];
 
+    private function getOrder(int $orderId): ?WC_Order
+    {
+        if (!isset($this->orderCache[$orderId])) {
+            $order = wc_get_order($orderId);
+            $this->orderCache[$orderId] = $order instanceof WC_Order ? $order : null;
+        }
+        return $this->orderCache[$orderId];
+    }
+
     private function resolveOrderId($contextPost = null): ?int
     {
         if ($contextPost instanceof WP_Post && get_post_type($contextPost->ID) === 'shop_order') {
@@ -1288,7 +1297,7 @@ class BricksDynamicTags implements FeatureInterface
         // Use direct zs_ key (legacy mapping no longer needed)
         $metaKey = $directMetaKey;
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -1586,7 +1595,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Event Media Gallery');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -1770,7 +1779,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Event Media URLs');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -1941,7 +1950,7 @@ class BricksDynamicTags implements FeatureInterface
             return '0';
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '0';
         }
@@ -1980,7 +1989,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Recipes');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2028,8 +2037,10 @@ class BricksDynamicTags implements FeatureInterface
         if (!$orderId) {
             return $this->builderPlaceholder('Order Recipes Card');
         }
+        $cacheKey = 'recipe_card_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) { return $this->computedCache[$cacheKey]; }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2096,7 +2107,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
-        return $html;
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     /**
@@ -2109,7 +2120,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Recipes');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2255,8 +2266,10 @@ class BricksDynamicTags implements FeatureInterface
         if (!$orderId) {
             return $this->builderPlaceholder('Recipe Ingredients Simple');
         }
+        $cacheKey = 'recipe_total_ing_simple_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) { return $this->computedCache[$cacheKey]; }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2354,7 +2367,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
-        return $html;
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     /**
@@ -2366,8 +2379,10 @@ class BricksDynamicTags implements FeatureInterface
         if (!$orderId) {
             return $this->builderPlaceholder('Order Recipes Full Card');
         }
+        $cacheKey = 'recipe_full_card_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) { return $this->computedCache[$cacheKey]; }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2454,7 +2469,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
-        return $html;
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     /**
@@ -2467,7 +2482,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Ingredients Simple');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2600,7 +2615,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Utensils Total');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2729,8 +2744,10 @@ class BricksDynamicTags implements FeatureInterface
         if (!$orderId) {
             return $this->builderPlaceholder('Order Utensils Simple');
         }
+        $cacheKey = 'recipe_utensils_simple_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) { return $this->computedCache[$cacheKey]; }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2846,7 +2863,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
-        return $html;
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     private function getRecipeUtensilsList($post): string
@@ -2856,7 +2873,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Order Utensils List');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -2992,8 +3009,10 @@ class BricksDynamicTags implements FeatureInterface
         if (!$orderId) {
             return $this->builderPlaceholder('Order Liquids Simple');
         }
+        $cacheKey = 'recipe_liquids_simple_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) { return $this->computedCache[$cacheKey]; }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof \WC_Order) {
             return '';
         }
@@ -3098,7 +3117,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
-        return $html;
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     /**
@@ -3138,7 +3157,7 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order) {
             return '';
         }
@@ -3243,7 +3262,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Vehicles');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -3276,8 +3295,10 @@ class BricksDynamicTags implements FeatureInterface
         if (!$orderId) {
             return $this->builderPlaceholder('Inventory & Materials');
         }
+        $cacheKey = 'inventory_list_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) { return $this->computedCache[$cacheKey]; }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -3307,7 +3328,7 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '</div>';
         }
 
-        return $html;
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     /**
@@ -3459,7 +3480,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('Shopping List Link');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -3482,7 +3503,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('order_effective_recipes');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
@@ -3518,7 +3539,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->builderPlaceholder('order_deposit_percentage');
         }
 
-        $order = wc_get_order($orderId);
+        $order = $this->getOrder($orderId);
         if (!$order instanceof WC_Order) {
             return '';
         }
