@@ -88,8 +88,24 @@
     min-height: 44px;
 }
 
+.zs-sl .flatpickr-input {
+    cursor: pointer;
+}
+
+.zs-sl__filter-actions {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: stretch;
+}
+
 .zs-sl__search-btn {
-    width: 100%;
+    flex: 1;
+    min-height: 48px;
+    box-sizing: border-box;
+}
+
+.zs-sl__reset-btn {
+    flex: 0 0 auto;
     min-height: 48px;
     box-sizing: border-box;
 }

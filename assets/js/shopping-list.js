@@ -255,11 +255,39 @@
         }
     }
 
+    function initFlatpickr() {
+        if (typeof flatpickr === 'undefined') { return; }
+        var opts = {
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+            locale: { firstDayOfWeek: 1 },
+            disableMobile: false
+        };
+        flatpickr('#zs-sl-from', opts);
+        flatpickr('#zs-sl-to', opts);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        initFlatpickr();
+
         var searchBtn = document.getElementById('zs-sl-search');
         if (searchBtn) {
             searchBtn.addEventListener('click', function () { doRequest(null); });
         }
+
+        var resetBtn = document.getElementById('zs-sl-reset');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+                var fromEl = document.getElementById('zs-sl-from');
+                var toEl   = document.getElementById('zs-sl-to');
+                var locEl  = document.getElementById('zs-sl-loc');
+                if (fromEl && fromEl._flatpickr) { fromEl._flatpickr.clear(); } else if (fromEl) { fromEl.value = ''; }
+                if (toEl   && toEl._flatpickr)   { toEl._flatpickr.clear(); }   else if (toEl)   { toEl.value = ''; }
+                if (locEl) { locEl.value = ''; }
+                body.innerHTML = '<div class="zs-sl__empty" id="zs-sl-empty"><p>Selecciona un rang de dates i una localització per veure la llista de la compra.</p></div>';
+            });
+        }
+
         var preKeys = cfg.preItemKeys && cfg.preItemKeys.length > 0 ? cfg.preItemKeys : null;
         if (preKeys) {
             doRequest(preKeys);

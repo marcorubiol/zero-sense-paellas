@@ -64,8 +64,10 @@ class ShoppingList implements FeatureInterface
     public function enqueueAssets(): void
     {
         if (!$this->isShoppingListPage()) { return; }
-        wp_enqueue_style('zs-shopping-list', ZERO_SENSE_URL . 'assets/css/shopping-list.css', [], ZERO_SENSE_VERSION);
-        wp_enqueue_script('zs-shopping-list', ZERO_SENSE_URL . 'assets/js/shopping-list.js', [], ZERO_SENSE_VERSION, true);
+        wp_enqueue_style('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css', [], '4.6.13');
+        wp_enqueue_style('zs-shopping-list', ZERO_SENSE_URL . 'assets/css/shopping-list.css', ['flatpickr'], ZERO_SENSE_VERSION);
+        wp_enqueue_script('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js', [], '4.6.13', true);
+        wp_enqueue_script('zs-shopping-list', ZERO_SENSE_URL . 'assets/js/shopping-list.js', ['flatpickr'], ZERO_SENSE_VERSION, true);
         $preItemKeysForJs = [];
         if ($this->verifySignature()) {
             $from  = sanitize_text_field((string) get_query_var(self::QUERY_FROM));
