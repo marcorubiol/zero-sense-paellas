@@ -8,11 +8,17 @@
     var body    = document.getElementById('zs-sl-body');
     var loading = document.getElementById('zs-sl-loading');
 
+    function getInputValue(id) {
+        var el = document.getElementById(id);
+        if (!el) { return ''; }
+        return el._flatpickr ? el.value : el.value;
+    }
+
     function getFormValues() {
         return {
-            from: document.getElementById('zs-sl-from').value,
-            to:   document.getElementById('zs-sl-to').value,
-            loc:  document.getElementById('zs-sl-loc').value,
+            from: getInputValue('zs-sl-from'),
+            to:   getInputValue('zs-sl-to'),
+            loc:  document.getElementById('zs-sl-loc') ? document.getElementById('zs-sl-loc').value : '',
         };
     }
 
@@ -149,9 +155,10 @@
                 }
 
                 currentSignedUrl = res.data.signed_url || '';
-                var ordersHtml = renderOrders(res.data.orders, orderIds);
-                var listHtml   = renderList(res.data.list, res.data.totals);
-                body.innerHTML = ordersHtml + '<div id="zs-sl-list-wrap">' + listHtml + '</div>';
+                var orders = res.data.orders;
+                var ordersHtml = renderOrders(orders, orderIds);
+                var listHtml   = (orders && orders.length > 0) ? renderList(res.data.list, res.data.totals) : '';
+                body.innerHTML = ordersHtml + (listHtml ? '<div id="zs-sl-list-wrap">' + listHtml + '</div>' : '');
                 bindBodyEvents();
             })
             .catch(function () {
@@ -259,6 +266,8 @@
         if (typeof flatpickr === 'undefined') { return; }
         var opts = {
             dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
             allowInput: true,
             locale: { firstDayOfWeek: 1 },
             disableMobile: false
