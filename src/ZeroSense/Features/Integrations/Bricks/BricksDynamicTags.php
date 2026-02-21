@@ -482,65 +482,76 @@ class BricksDynamicTags implements FeatureInterface
 
         // --- Canonical {zs_*} replacements ---
 
-        $content = $this->replaceTagsInContent($content, $post, 'zs_billing_', function (string $field) use ($post): string {
-            return $this->getBillingFieldValue($field, $post);
-        });
-        $content = $this->replaceTagsInContent($content, $post, 'zs_shipping_', function (string $field) use ($post): string {
-            return $this->getShippingFieldValue($field, $post);
-        });
+        if (str_contains($content, '{zs_billing_')) {
+            $content = $this->replaceTagsInContent($content, $post, 'zs_billing_', function (string $field) use ($post): string {
+                return $this->getBillingFieldValue($field, $post);
+            });
+        }
+        if (str_contains($content, '{zs_shipping_')) {
+            $content = $this->replaceTagsInContent($content, $post, 'zs_shipping_', function (string $field) use ($post): string {
+                return $this->getShippingFieldValue($field, $post);
+            });
+        }
 
-        $content = str_replace('{zs_order_id}',     $this->getOrderId($post),     $content);
-        $content = str_replace('{zs_order_number}', $this->getOrderNumber($post), $content);
-        $content = str_replace('{zs_order_status}', $this->getOrderStatus($post), $content);
-        $content = str_replace('{zs_order_note}',   $this->getOrderNote($post),   $content);
+        if (str_contains($content, '{zs_order_id}'))     { $content = str_replace('{zs_order_id}',     $this->getOrderId($post),     $content); }
+        if (str_contains($content, '{zs_order_number}')) { $content = str_replace('{zs_order_number}', $this->getOrderNumber($post), $content); }
+        if (str_contains($content, '{zs_order_status}')) { $content = str_replace('{zs_order_status}', $this->getOrderStatus($post), $content); }
+        if (str_contains($content, '{zs_order_note}'))   { $content = str_replace('{zs_order_note}',   $this->getOrderNote($post),   $content); }
 
-        $content = str_replace('{zs_event_service_location_name}', $this->getEventServiceLocationName($post), $content);
-        $content = str_replace('{zs_event_staff_all}',             $this->getEventStaffFormatted($post), $content);
-        $content = str_replace('{zs_event_ops_notes}',             $this->getEventOpsNotes($post),       $content);
-        $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),   $content);
-        $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),      $content);
-        $content = str_replace('{zs_order_products}',              $this->getOrderProducts($post),       $content);
-        $content = str_replace('{zs_order_products_simple}',       $this->getOrderProductsSimple($post), $content);
-        $content = str_replace('{zs_order_products_count}',        $this->getOrderProductsCount($post),  $content);
-        $content = str_replace('{zs_order_products_by_category}',  $this->getOrderProductsByCategory($post), $content);
-        $content = str_replace('{zs_order_last_modified}',         $this->getOrderLastModified($post),        $content);
-        $content = str_replace('{zs_order_last_modified_date}',    $this->getOrderLastModified($post, 'date'), $content);
-        $content = str_replace('{zs_order_last_modified_time}',    $this->getOrderLastModified($post, 'time'), $content);
-        $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),        $content);
-        $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),  $content);
-        $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('intolerances', $post), $content);
-        $content = str_replace('{zs_recipe_card}',                $this->getRecipeCard($post),       $content);
-        $content = str_replace('{zs_recipe_full_card}',           $this->getRecipeFullCard($post),    $content);
-        $content = str_replace('{zs_recipe_simple}',              $this->getRecipeSimple($post),     $content);
-        $content = str_replace('{zs_recipe_exists}',              $this->getRecipeExists($post),        $content);
-        $content = str_replace('{zs_recipe_total_ingredients_list}',   $this->getRecipeTotalIngredientsList($post),   $content);
-        $content = str_replace('{zs_recipe_total_ingredients_simple}', $this->getRecipeTotalIngredientsSimple($post), $content);
-        $content = str_replace('{zs_recipe_ingredients_simple}',      $this->getRecipeTotalIngredientsSimple($post), $content);
-        $content = str_replace('{zs_recipe_utensils_total}',      $this->getRecipeUtensilsTotal($post),     $content);
-        $content = str_replace('{zs_recipe_utensils_simple}',     $this->getRecipeUtensilsSimple($post),    $content);
-        $content = str_replace('{zs_recipe_utensils_list}',       $this->getRecipeUtensilsList($post),      $content);
-        $content = str_replace('{zs_recipe_liquids_simple}',      $this->getRecipeLiquidsSimple($post),     $content);
-        $content = str_replace('{zs_recipe_full_simple}',         $this->getRecipeFullSimple($post),        $content);
-        $content = str_replace('{zs_shopping_list_link}',         $this->getShoppingListLink($post),        $content);
-        $content = str_replace('{zs_inventory_list}',              $this->getInventoryList($post),           $content);
-        $content = str_replace('{zs_vehicles_list}',               $this->getVehiclesList($post),            $content);
-        $content = str_replace('{zs_rabbit_toggle}',              $this->getRabbitToggle($post), $content);
-        $content = str_replace('{zs_order_deposit_percentage}',  $this->getOrderDepositPercentage($post), $content);
-        $content = str_replace('{zs_order_effective_recipes}',   $this->getOrderEffectiveRecipes($post),  $content);
+        if (str_contains($content, '{zs_event_service_location_name}')) { $content = str_replace('{zs_event_service_location_name}', $this->getEventServiceLocationName($post), $content); }
+        if (str_contains($content, '{zs_event_staff_all}'))             { $content = str_replace('{zs_event_staff_all}',             $this->getEventStaffFormatted($post),       $content); }
+        if (str_contains($content, '{zs_event_ops_notes}'))             { $content = str_replace('{zs_event_ops_notes}',             $this->getEventOpsNotes($post),             $content); }
+        if (str_contains($content, '{zs_event_media}'))                 { $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),         $content); }
+        if (str_contains($content, '{zs_event_media_urls}'))            { $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),            $content); }
+        if (str_contains($content, '{zs_order_products_by_category}'))  { $content = str_replace('{zs_order_products_by_category}',  $this->getOrderProductsByCategory($post),   $content); }
+        if (str_contains($content, '{zs_order_products_simple}'))       { $content = str_replace('{zs_order_products_simple}',       $this->getOrderProductsSimple($post),       $content); }
+        if (str_contains($content, '{zs_order_products_count}'))        { $content = str_replace('{zs_order_products_count}',        $this->getOrderProductsCount($post),        $content); }
+        if (str_contains($content, '{zs_order_products}'))              { $content = str_replace('{zs_order_products}',              $this->getOrderProducts($post),             $content); }
+        if (str_contains($content, '{zs_order_last_modified_date}'))    { $content = str_replace('{zs_order_last_modified_date}',    $this->getOrderLastModified($post, 'date'), $content); }
+        if (str_contains($content, '{zs_order_last_modified_time}'))    { $content = str_replace('{zs_order_last_modified_time}',    $this->getOrderLastModified($post, 'time'), $content); }
+        if (str_contains($content, '{zs_order_last_modified}'))         { $content = str_replace('{zs_order_last_modified}',         $this->getOrderLastModified($post),         $content); }
+        if (str_contains($content, '{zs_order_language_name}'))         { $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),       $content); }
+        if (str_contains($content, '{zs_order_language}'))              { $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),             $content); }
+        if (str_contains($content, '{zs_event_intolerances}'))          { $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('intolerances', $post), $content); }
+        if (str_contains($content, '{zs_recipe_full_card}'))            { $content = str_replace('{zs_recipe_full_card}',            $this->getRecipeFullCard($post),            $content); }
+        if (str_contains($content, '{zs_recipe_card}'))                 { $content = str_replace('{zs_recipe_card}',                 $this->getRecipeCard($post),                $content); }
+        if (str_contains($content, '{zs_recipe_simple}'))               { $content = str_replace('{zs_recipe_simple}',               $this->getRecipeSimple($post),              $content); }
+        if (str_contains($content, '{zs_recipe_exists}'))               { $content = str_replace('{zs_recipe_exists}',               $this->getRecipeExists($post),              $content); }
+        if (str_contains($content, '{zs_recipe_total_ingredients_list}'))   { $content = str_replace('{zs_recipe_total_ingredients_list}',   $this->getRecipeTotalIngredientsList($post),   $content); }
+        if (str_contains($content, '{zs_recipe_total_ingredients_simple}')) { $content = str_replace('{zs_recipe_total_ingredients_simple}', $this->getRecipeTotalIngredientsSimple($post), $content); }
+        if (str_contains($content, '{zs_recipe_ingredients_simple}'))       { $content = str_replace('{zs_recipe_ingredients_simple}',       $this->getRecipeTotalIngredientsSimple($post), $content); }
+        if (str_contains($content, '{zs_recipe_utensils_total}'))        { $content = str_replace('{zs_recipe_utensils_total}',        $this->getRecipeUtensilsTotal($post),          $content); }
+        if (str_contains($content, '{zs_recipe_utensils_simple}'))       { $content = str_replace('{zs_recipe_utensils_simple}',       $this->getRecipeUtensilsSimple($post),         $content); }
+        if (str_contains($content, '{zs_recipe_utensils_list}'))         { $content = str_replace('{zs_recipe_utensils_list}',         $this->getRecipeUtensilsList($post),           $content); }
+        if (str_contains($content, '{zs_recipe_liquids_simple}'))        { $content = str_replace('{zs_recipe_liquids_simple}',        $this->getRecipeLiquidsSimple($post),          $content); }
+        if (str_contains($content, '{zs_recipe_full_simple}'))           { $content = str_replace('{zs_recipe_full_simple}',           $this->getRecipeFullSimple($post),             $content); }
+        if (str_contains($content, '{zs_shopping_list_link}'))           { $content = str_replace('{zs_shopping_list_link}',           $this->getShoppingListLink($post),             $content); }
+        if (str_contains($content, '{zs_inventory_list}'))               { $content = str_replace('{zs_inventory_list}',               $this->getInventoryList($post),                $content); }
+        if (str_contains($content, '{zs_vehicles_list}'))                { $content = str_replace('{zs_vehicles_list}',                $this->getVehiclesList($post),                 $content); }
+        if (str_contains($content, '{zs_rabbit_toggle}'))                { $content = str_replace('{zs_rabbit_toggle}',                $this->getRabbitToggle($post),                 $content); }
+        if (str_contains($content, '{zs_order_deposit_percentage}'))     { $content = str_replace('{zs_order_deposit_percentage}',     $this->getOrderDepositPercentage($post),       $content); }
+        if (str_contains($content, '{zs_order_effective_recipes}'))      { $content = str_replace('{zs_order_effective_recipes}',      $this->getOrderEffectiveRecipes($post),        $content); }
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
         foreach ($schemaRegistry->getKeys() as $schemaKey) {
-            $content = str_replace('{zs_' . $schemaKey . '_list}', $this->getSchemaList($schemaKey, $post), $content);
-            $content = $this->replaceTagsInContent($content, $post, 'zs_' . $schemaKey . '_', function (string $field) use ($post, $schemaKey): string {
-                return $this->getSchemaFieldValue($schemaKey, $field, $post);
-            });
+            $listTag = '{zs_' . $schemaKey . '_list}';
+            if (str_contains($content, $listTag)) {
+                $content = str_replace($listTag, $this->getSchemaList($schemaKey, $post), $content);
+            }
+            if (str_contains($content, '{zs_' . $schemaKey . '_')) {
+                $content = $this->replaceTagsInContent($content, $post, 'zs_' . $schemaKey . '_', function (string $field) use ($post, $schemaKey): string {
+                    return $this->getSchemaFieldValue($schemaKey, $field, $post);
+                });
+            }
         }
 
         // MetaBox fields: {zs_event_start_time}, {zs_event_total_guests}, etc.
-        $content = $this->replaceTagsInContent($content, $post, 'zs_', function (string $field) use ($post): string {
-            return $this->getMetaBoxFieldValue($field, $post);
-        });
+        if (str_contains($content, '{zs_')) {
+            $content = $this->replaceTagsInContent($content, $post, 'zs_', function (string $field) use ($post): string {
+                return $this->getMetaBoxFieldValue($field, $post);
+            });
+        }
 
         return $content;
     }
@@ -1172,6 +1183,8 @@ class BricksDynamicTags implements FeatureInterface
 
     private ?int $resolvedOrderIdCache = null;
     private bool $resolvedOrderIdCacheSet = false;
+    private array $orderCache = [];
+    private array $computedCache = [];
 
     private function resolveOrderId($contextPost = null): ?int
     {
@@ -1192,7 +1205,7 @@ class BricksDynamicTags implements FeatureInterface
             $token = sanitize_text_field($_GET['zs_event_token']);
             $orders = wc_get_orders([
                 'limit' => 1,
-                'meta_key' => 'zs_event_token',
+                'meta_key' => 'zs_event_public_token',
                 'meta_value' => $token,
                 'return' => 'ids',
             ]);
