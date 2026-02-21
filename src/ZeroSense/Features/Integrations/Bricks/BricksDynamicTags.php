@@ -216,8 +216,9 @@ class BricksDynamicTags implements FeatureInterface
 
         $timestamp = FieldChangeTracker::getFieldChangeTimestamp($orderId, $fieldKey);
         $timestampAttr = $timestamp ? ' data-changed="' . esc_attr($timestamp) . '"' : '';
-        
-        return '<span class="zs-recent-change" data-field="' . esc_attr($fieldKey) . '"' . $timestampAttr . '>' . $value . '</span>';
+        $dateLabel = $timestamp ? '<span class="zs-recent-change__date">Modificat: ' . date_i18n('d/m/Y', strtotime($timestamp)) . '</span>' : '';
+
+        return '<span class="zs-recent-change" data-field="' . esc_attr($fieldKey) . '"' . $timestampAttr . '>' . $value . $dateLabel . '</span>';
     }
 
     /**
