@@ -47,9 +47,10 @@
    ---------------------------------------------------------------- */
 
 .zs-sl__filters {
-    background: var(--bg-light);
+    background: var(--bg-ultra-light);
     border-radius: var(--radius);
     padding: var(--space-m);
+    border: var(--border);
 }
 
 .zs-sl__filter-row {
@@ -78,7 +79,7 @@
 .zs-sl__input,
 .zs-sl__select {
     padding: 10px var(--space-xs);
-    border: 1px solid var(--border-color-light);
+    border: var(--border);
     border-radius: var(--radius);
     background: var(--white);
     color: var(--text-dark-muted);
