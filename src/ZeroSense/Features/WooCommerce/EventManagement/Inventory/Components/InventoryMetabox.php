@@ -395,7 +395,7 @@ class InventoryMetabox
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
                                         $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
-                                        $dependentKeys = ['cremador_50cm','cremador_60cm','cremador_70cm','cremador_90cm','potes_tripodes','buta','catifes','vitro'];
+                                        $dependentKeys = ['cremador_50cm','cremador_60cm','cremador_70cm','cremador_90cm','potes_tripodes','buta','vitro_petita','catifes'];
                                         $isDependent = in_array($materialKey, $dependentKeys, true);
                                         ?>
                                         <tr>
