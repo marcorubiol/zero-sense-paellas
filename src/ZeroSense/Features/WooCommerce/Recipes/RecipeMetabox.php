@@ -65,15 +65,26 @@ class RecipeMetabox
 
     public function renderLinkedProductsMetabox(WP_Post $post): void
     {
+        $recipeId = $post->ID;
+
         $products = get_posts([
             'post_type'      => 'product',
             'post_status'    => 'any',
             'numberposts'    => -1,
             'orderby'        => 'title',
             'order'          => 'ASC',
-            'meta_key'       => self::META_PRODUCT_RECIPE_ID,
-            'meta_value'     => $post->ID,
             'suppress_filters' => true,
+            'meta_query'     => [
+                'relation' => 'OR',
+                [
+                    'key'   => self::META_PRODUCT_RECIPE_ID,
+                    'value' => $recipeId,
+                ],
+                [
+                    'key'   => self::META_PRODUCT_RECIPE_NO_RABBIT,
+                    'value' => $recipeId,
+                ],
+            ],
         ]);
 
         echo '<div style="padding:4px 0;">';
@@ -86,10 +97,12 @@ class RecipeMetabox
                 if (!$product instanceof WP_Post) {
                     continue;
                 }
-                $editUrl = get_edit_post_link($product->ID);
-                $status  = $product->post_status !== 'publish' ? ' <span style="color:#646970; font-size:11px;">(' . esc_html($product->post_status) . ')</span>' : '';
+                $editUrl  = get_edit_post_link($product->ID);
+                $status   = $product->post_status !== 'publish' ? ' <span style="color:#646970; font-size:11px;">(' . esc_html($product->post_status) . ')</span>' : '';
+                $noRabbit = get_post_meta($product->ID, self::META_PRODUCT_RECIPE_NO_RABBIT, true) == $recipeId;
+                $tag      = $noRabbit ? ' <span style="color:#646970; font-size:11px;">(no rabbit)</span>' : '';
                 echo '<li style="padding:4px 0; border-bottom:1px solid #f0f0f1; font-size:13px;">';
-                echo '<a href="' . esc_url((string) $editUrl) . '" target="_blank" style="text-decoration:none;">' . esc_html($product->post_title) . '</a>' . $status;
+                echo '<a href="' . esc_url((string) $editUrl) . '" target="_blank" style="text-decoration:none;">' . esc_html($product->post_title) . '</a>' . $tag . $status;
                 echo '</li>';
             }
             echo '</ul>';
