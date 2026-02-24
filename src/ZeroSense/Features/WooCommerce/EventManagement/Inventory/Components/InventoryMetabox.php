@@ -497,6 +497,7 @@ class InventoryMetabox
                                                                     </div>
                                                                 <?php endif; ?>
                                                                 
+                                                                <?php if ($materialAlert['alert_type'] === AlertCalculator::ALERT_CRITICAL): ?>
                                                                 <div class="zs-alert-resolve-controls">
                                                                     <input type="text" 
                                                                            class="zs-alert-notes-input" 
@@ -509,6 +510,7 @@ class InventoryMetabox
                                                                         ✓ <?php _e('Mark as Alert Resolved', 'zero-sense'); ?>
                                                                     </button>
                                                                 </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </div>
                                                     <?php endif; ?>
