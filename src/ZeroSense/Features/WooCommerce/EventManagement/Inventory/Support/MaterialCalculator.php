@@ -306,11 +306,11 @@ class MaterialCalculator
 
     /**
      * Select the smallest cassola that fits the required litres.
-     * Returns empty string if no litres defined.
+     * Returns empty string if no litres defined or if exceeds 34L.
      */
     private static function selectCassola(float $totalLitres): string
     {
-        if ($totalLitres <= 0) {
+        if ($totalLitres <= 0 || $totalLitres > 34) {
             return '';
         }
 

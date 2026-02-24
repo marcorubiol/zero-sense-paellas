@@ -209,7 +209,7 @@ class MaterialDefinitions
                 'category' => 'cassoles',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per recepta amb > 16L totals',
+                'description' => '1 per recepta amb 16L-34L totals',
             ],
             [
                 'key' => 'vitro_gran',
