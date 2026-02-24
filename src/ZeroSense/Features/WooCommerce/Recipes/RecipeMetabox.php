@@ -279,7 +279,7 @@ class RecipeMetabox
             </div>
 
             <!-- Liquids Section (shown only in Paella Mode — placed first so order is: Liquids → Ingredients → Stock → Utensils) -->
-            <div class="zs-mb-section zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
+            <div class="zs-mb-section zs-mb-section--first zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
                 <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Cooking liquids (water & broth)', 'zero-sense'); ?></h3>
                 <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Only add the main cooking liquid (water, stock…) used to cook the rice. This determines the cassola size. Fats like oil belong in Ingredients.', 'zero-sense'); ?></p>
                 <table class="widefat striped" style="margin-top:8px;">
@@ -344,7 +344,7 @@ class RecipeMetabox
                 </p>
             </div>
 
-            <div class="zs-mb-section">
+            <div class="zs-mb-section<?php echo $needsPaella !== '1' ? ' zs-mb-section--first' : ''; ?>">
             <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>

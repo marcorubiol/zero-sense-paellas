@@ -126,11 +126,17 @@
 }
 
 
-/* Section separator: border between consecutive sections */
-.zs-mb-section + .zs-mb-section {
+/* Section separator: top border on each section header */
+.zs-mb-section {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid #dcdcde;
+}
+
+.zs-mb-section.zs-mb-section--first {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 /* Sub-section header: replaces inline h4 styles */
