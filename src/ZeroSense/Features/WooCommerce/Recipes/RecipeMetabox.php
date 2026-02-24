@@ -279,7 +279,7 @@ class RecipeMetabox
             </div>
 
             <!-- Liquids Section (shown only in Paella Mode — placed first so order is: Liquids → Ingredients → Stock → Utensils) -->
-            <div class="zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
+            <div class="zs-mb-section zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
                 <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Cooking liquids (water & broth)', 'zero-sense'); ?></h3>
                 <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Only add the main cooking liquid (water, stock…) used to cook the rice. This determines the cassola size. Fats like oil belong in Ingredients.', 'zero-sense'); ?></p>
                 <table class="widefat striped" style="margin-top:8px;">
@@ -344,6 +344,7 @@ class RecipeMetabox
                 </p>
             </div>
 
+            <div class="zs-mb-section">
             <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
             <table class="widefat striped" style="margin-top:8px;">
                 <thead>
@@ -414,9 +415,10 @@ class RecipeMetabox
                     <?php esc_html_e('Manage all ingredients', 'zero-sense'); ?> →
                 </a>
             </p>
+            </div><!-- /.zs-mb-section Ingredients -->
 
             <!-- Equipment Stock Section (between Ingredients and Utensils) -->
-            <div class="zs-stock-section">
+            <div class="zs-mb-section zs-stock-section">
                 <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Equipment Stock', 'zero-sense'); ?></h3>
                 <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Materials required by this recipe. Qty and ratio work like utensils: ceil(guests / every-X) × qty is added to the order\'s equipment total.', 'zero-sense'); ?></p>
                 <table class="widefat striped" style="margin-top:8px;">
@@ -485,7 +487,7 @@ class RecipeMetabox
             </div>
 
             <!-- Utensils Section -->
-            <div class="zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
+            <div class="zs-mb-section zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
                 <h3 class="zs-mb-subheader"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
                 <table class="widefat striped">
                     <thead>
