@@ -348,6 +348,17 @@ class MaterialCalculator
             }
         }
 
+        // Apply cascade: for each parent key that has cascade children,
+        // set child qty = parent qty (same count, e.g. taules_treball → teles_negres, estovalles)
+        foreach (MaterialDefinitions::getStockCascade() as $parentKey => $childKeys) {
+            if (!isset($result[$parentKey]) || $result[$parentKey] <= 0) {
+                continue;
+            }
+            foreach ($childKeys as $childKey) {
+                $result[$childKey] = ($result[$childKey] ?? 0) + $result[$parentKey];
+            }
+        }
+
         return $result;
     }
 
