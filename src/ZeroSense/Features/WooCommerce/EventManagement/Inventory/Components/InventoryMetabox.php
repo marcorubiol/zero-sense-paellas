@@ -397,7 +397,8 @@ class InventoryMetabox
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
                                         $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
-                                        $isDependent = MaterialDefinitions::getDependencyLabelFor($materialKey) !== null;
+                                        $dependencyLabel = MaterialDefinitions::getDependencyLabelFor($materialKey);
+                                        $isDependent = $dependencyLabel !== null;
                                         ?>
                                         <tr>
                                             <td>
@@ -407,7 +408,6 @@ class InventoryMetabox
                                                 <?php if (!empty($material['description'])): ?>
                                                     <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
                                                 <?php endif; ?>
-                                                <?php $dependencyLabel = MaterialDefinitions::getDependencyLabelFor($materialKey); ?>
                                                 <?php if ($dependencyLabel !== null): ?>
                                                     <div class="zs-inventory-dependency-label"><?php echo esc_html($dependencyLabel); ?></div>
                                                 <?php endif; ?>
