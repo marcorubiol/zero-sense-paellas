@@ -350,7 +350,7 @@ class RecipeMetabox
                     <tr>
                         <th style="width: 5%; text-align: center;"></th>
                         <th style="width: 40%;"><?php esc_html_e('Ingredient', 'zero-sense'); ?></th>
-                        <th style="width: 20%;"><?php esc_html_e('Qty per pax', 'zero-sense'); ?></th>
+                        <th style="width: 20%;"><?php esc_html_e('Qty / pax', 'zero-sense'); ?></th>
                         <th style="width: 20%;"><?php esc_html_e('Unit', 'zero-sense'); ?></th>
                         <th style="width: 15%;"></th>
                     </tr>
@@ -426,7 +426,7 @@ class RecipeMetabox
                             <th style="width:5%; text-align:center;"></th>
                             <th style="width:40%;"><?php esc_html_e('Material', 'zero-sense'); ?></th>
                             <th style="width:15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
-                            <th style="width:25%;"><?php esc_html_e('Every X guests', 'zero-sense'); ?></th>
+                            <th style="width:25%;"><?php esc_html_e('Per X pax', 'zero-sense'); ?></th>
                             <th style="width:15%;"></th>
                         </tr>
                     </thead>
@@ -481,7 +481,7 @@ class RecipeMetabox
                     <button type="button" class="button" id="zs-stock-add-row"><?php esc_html_e('Add material', 'zero-sense'); ?></button>
                 </p>
                 <p class="zs-mb-description" style="font-style:italic;">
-                    <?php esc_html_e('"Every X guests" = ratio (1 = per person, 10 = every 10 guests, 50 = every 50 guests)', 'zero-sense'); ?>
+                    <?php esc_html_e('"Per X pax" = ratio (1 = per pax, 10 = every 10 pax, 50 = every 50 pax)', 'zero-sense'); ?>
                 </p>
             </div>
 
@@ -494,7 +494,7 @@ class RecipeMetabox
                             <th style="width: 5%; text-align: center;"></th>
                             <th style="width: 30%;"><?php esc_html_e('Utensil', 'zero-sense'); ?></th>
                             <th style="width: 15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
-                            <th style="width: 20%;"><?php esc_html_e('Every X people', 'zero-sense'); ?></th>
+                            <th style="width: 20%;"><?php esc_html_e('Per X pax', 'zero-sense'); ?></th>
                             <th style="width: 15%;"><?php esc_html_e('Unit', 'zero-sense'); ?></th>
                             <th style="width: 15%;"></th>
                         </tr>
@@ -564,7 +564,7 @@ class RecipeMetabox
                     </a>
                 </p>
                 <p class="zs-mb-description" style="font-style: italic;">
-                    <?php esc_html_e('"Every X people" = ratio (1 = per person, 4 = every 4 people, 10 = every 10 people)', 'zero-sense'); ?>
+                    <?php esc_html_e('"Per X pax" = ratio (1 = per pax, 4 = every 4 pax, 10 = every 10 pax)', 'zero-sense'); ?>
                 </p>
             </div>
 
