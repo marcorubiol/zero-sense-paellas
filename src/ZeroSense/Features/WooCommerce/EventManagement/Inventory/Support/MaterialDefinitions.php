@@ -387,6 +387,38 @@ class MaterialDefinitions
     }
     
     /**
+     * Returns cascade dependencies for stock materials.
+     * When a key is selected in the recipe stock picker, these additional
+     * materials are auto-calculated by MaterialCalculator and shown as hints.
+     */
+    public static function getStockCascade(): array
+    {
+        return [
+            'taules_treball' => ['teles_negres', 'estovalles'],
+        ];
+    }
+
+    /**
+     * Returns materials eligible for manual recipe stock assignment.
+     * Excludes: materia_pesada (all auto-paella), dependency_label items, roba_personal (staff clothing).
+     */
+    public static function getStockEligible(): array
+    {
+        return array_values(array_filter(self::getAll(), function(array $mat): bool {
+            if ($mat['parent_category'] === 'materia_pesada') {
+                return false;
+            }
+            if (isset($mat['dependency_label'])) {
+                return false;
+            }
+            if ($mat['category'] === 'roba_personal') {
+                return false;
+            }
+            return true;
+        }));
+    }
+
+    /**
      * Obtiene materiales por categoría
      * 
      * @param string $category

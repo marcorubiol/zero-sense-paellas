@@ -239,12 +239,22 @@ class RecipeMetabox
 
         $stockRows = get_post_meta($post->ID, self::META_STOCK, true);
         $stockRows = is_array($stockRows) ? $stockRows : [];
-        $allMaterials = MaterialDefinitions::getAll();
+        $eligibleMaterials = MaterialDefinitions::getStockEligible();
         $materialsByGroup = [];
-        foreach ($allMaterials as $mat) {
+        foreach ($eligibleMaterials as $mat) {
             $materialsByGroup[$mat['parent_category']][$mat['category']][] = $mat;
         }
         $parentCategoryLabels = MaterialDefinitions::getParentCategories();
+        $stockCascade = MaterialDefinitions::getStockCascade();
+        $cascadeLabels = [];
+        foreach ($stockCascade as $parentKey => $childKeys) {
+            $childLabels = [];
+            foreach ($childKeys as $ck) {
+                $def = MaterialDefinitions::get($ck);
+                $childLabels[] = $def ? $def['label'] : $ck;
+            }
+            $cascadeLabels[$parentKey] = implode(', ', $childLabels);
+        }
 
         ?>
         <div class="zs-mb-wrapper">
@@ -266,6 +276,72 @@ class RecipeMetabox
                     <?php esc_html_e('Fats like oil belong in Ingredients.', 'zero-sense'); ?><br>
                     <?php esc_html_e('The system uses the total volume to select the right cassola size.', 'zero-sense'); ?>
                 </div>
+            </div>
+
+            <!-- Liquids Section (shown only in Paella Mode — placed first so order is: Liquids → Ingredients → Stock → Utensils) -->
+            <div class="zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Cooking liquids (water & broth)', 'zero-sense'); ?></h3>
+                <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Only add the main cooking liquid (water, stock…) used to cook the rice. This determines the cassola size. Fats like oil belong in Ingredients.', 'zero-sense'); ?></p>
+                <table class="widefat striped" style="margin-top:8px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%; text-align: center;"></th>
+                            <th style="width: 65%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
+                            <th style="width: 20%;"><?php esc_html_e('Litres per pax', 'zero-sense'); ?></th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="zs-liquid-rows">
+                        <?php
+                        $liquid_row_index = 0;
+                        foreach ($liquids as $row):
+                            $termId = isset($row['liquid']) ? (int) $row['liquid'] : 0;
+                            $qty = isset($row['qty']) ? (string) $row['qty'] : '';
+
+                            $termName = '';
+                            if ($termId > 0 && isset($loadedTerms[$termId])) {
+                                $termName = $loadedTerms[$termId]->name;
+                            }
+                            ?>
+                            <tr data-row="<?php echo $liquid_row_index; ?>">
+                                <td class="zs-drag-handle">
+                                    <span class="dashicons dashicons-menu"></span>
+                                </td>
+                                <td>
+                                    <select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
+                                        <?php if ($termId > 0 && $termName !== ''): ?>
+                                            <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
+                                        <?php endif; ?>
+                                        <?php 
+                                        if (is_array($existing_liquids)) {
+                                            foreach ($existing_liquids as $liquid) {
+                                                if ($liquid instanceof WP_Term && $liquid->term_id != $termId) {
+                                                    echo '<option value="' . esc_attr((string) $liquid->term_id) . '">' . esc_html($liquid->name) . '</option>';
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="<?php echo esc_attr($qty); ?>">
+                                </td>
+                                <td>
+                                    <button type="button" class="button zs-liquid-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                                </td>
+                            </tr>
+                            <?php
+                            $liquid_row_index++;
+                        endforeach;
+                        ?>
+                    </tbody>
+                </table>
+                <p class="zs-mb-row-actions">
+                    <button type="button" class="button" id="zs-liquid-add-row"><?php esc_html_e('Add liquid', 'zero-sense'); ?></button>
+                    <a href="<?php echo esc_url($manage_liquids_url); ?>" target="_blank" class="zs-mb-link">
+                        <?php esc_html_e('Manage all liquids', 'zero-sense'); ?> →
+                    </a>
+                </p>
             </div>
 
             <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Ingredients', 'zero-sense'); ?></h3>
@@ -339,69 +415,72 @@ class RecipeMetabox
                 </a>
             </p>
 
-            <!-- Liquids Section -->
-            <div class="zs-liquids-section"<?php echo $needsPaella === '1' ? '' : ' style="display:none;"'; ?>>
-                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Cooking liquids (water & broth)', 'zero-sense'); ?></h3>
-                <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Only add the main cooking liquid (water, stock…) used to cook the rice. This determines the cassola size. Fats like oil belong in Ingredients.', 'zero-sense'); ?></p>
+            <!-- Equipment Stock Section (between Ingredients and Utensils) -->
+            <div class="zs-stock-section">
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Equipment Stock', 'zero-sense'); ?></h3>
+                <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Materials required by this recipe. Qty and ratio work like utensils: ceil(guests / every-X) × qty is added to the order\'s equipment total.', 'zero-sense'); ?></p>
                 <table class="widefat striped" style="margin-top:8px;">
                     <thead>
                         <tr>
-                            <th style="width: 5%; text-align: center;"></th>
-                            <th style="width: 65%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
-                            <th style="width: 20%;"><?php esc_html_e('Litres per pax', 'zero-sense'); ?></th>
-                            <th style="width: 10%;"></th>
+                            <th style="width:5%; text-align:center;"></th>
+                            <th style="width:40%;"><?php esc_html_e('Material', 'zero-sense'); ?></th>
+                            <th style="width:15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
+                            <th style="width:25%;"><?php esc_html_e('Every X guests', 'zero-sense'); ?></th>
+                            <th style="width:15%;"></th>
                         </tr>
                     </thead>
-                    <tbody id="zs-liquid-rows">
+                    <tbody id="zs-stock-rows">
                         <?php
-                        $liquid_row_index = 0;
-                        foreach ($liquids as $row):
-                            $termId = isset($row['liquid']) ? (int) $row['liquid'] : 0;
-                            $qty = isset($row['qty']) ? (string) $row['qty'] : '';
-
-                            $termName = '';
-                            if ($termId > 0 && isset($loadedTerms[$termId])) {
-                                $termName = $loadedTerms[$termId]->name;
-                            }
+                        $stock_row_index = 0;
+                        foreach ($stockRows as $row):
+                            $matKey  = isset($row['material_key']) ? (string) $row['material_key'] : '';
+                            $qty     = isset($row['qty']) ? (string) $row['qty'] : '';
+                            $ratio   = isset($row['pax_ratio']) ? (int) $row['pax_ratio'] : 1;
                             ?>
-                            <tr data-row="<?php echo $liquid_row_index; ?>">
-                                <td class="zs-drag-handle">
-                                    <span class="dashicons dashicons-menu"></span>
-                                </td>
+                            <tr data-row="<?php echo $stock_row_index; ?>">
+                                <td class="zs-drag-handle"><span class="dashicons dashicons-menu"></span></td>
                                 <td>
-                                    <select name="zs_recipe_liquids[liquid][]" class="zs-liquid-select" data-placeholder="<?php echo esc_attr(__('Search or create…', 'zero-sense')); ?>">
-                                        <?php if ($termId > 0 && $termName !== ''): ?>
-                                            <option value="<?php echo esc_attr((string) $termId); ?>" selected="selected"><?php echo esc_html($termName); ?></option>
-                                        <?php endif; ?>
-                                        <?php 
-                                        if (is_array($existing_liquids)) {
-                                            foreach ($existing_liquids as $liquid) {
-                                                if ($liquid instanceof WP_Term && $liquid->term_id != $termId) {
-                                                    echo '<option value="' . esc_attr((string) $liquid->term_id) . '">' . esc_html($liquid->name) . '</option>';
-                                                }
-                                            }
-                                        }
-                                        ?>
+                                    <select name="zs_recipe_stock[material_key][]" style="width:100%;" class="zs-stock-material-select">
+                                        <option value=""><?php esc_html_e('— Select material —', 'zero-sense'); ?></option>
+                                        <?php foreach ($materialsByGroup as $parentKey => $categories): ?>
+                                            <optgroup label="<?php echo esc_attr($parentCategoryLabels[$parentKey] ?? $parentKey); ?>">
+                                                <?php foreach ($categories as $catKey => $mats): ?>
+                                                    <?php foreach ($mats as $mat): ?>
+                                                        <option value="<?php echo esc_attr($mat['key']); ?>" <?php selected($matKey, $mat['key']); ?>>
+                                                            <?php echo esc_html($mat['label']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
                                     </select>
+                                    <?php if ($matKey !== '' && isset($cascadeLabels[$matKey])): ?>
+                                        <small class="zs-stock-cascade-hint" style="display:block; color:#666; font-size:11px; margin-top:3px;">↳ <?php esc_html_e('Also auto-adds:', 'zero-sense'); ?> <?php echo esc_html($cascadeLabels[$matKey]); ?></small>
+                                    <?php else: ?>
+                                        <small class="zs-stock-cascade-hint" style="display:none;"></small>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.001" min="0" name="zs_recipe_liquids[qty][]" value="<?php echo esc_attr($qty); ?>">
+                                    <input type="number" step="0.001" min="0" name="zs_recipe_stock[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
                                 </td>
                                 <td>
-                                    <button type="button" class="button zs-liquid-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                                    <input type="number" step="1" min="1" name="zs_recipe_stock[pax_ratio][]" value="<?php echo esc_attr((string) $ratio); ?>" style="width:100%;" placeholder="1">
+                                </td>
+                                <td>
+                                    <button type="button" class="button zs-stock-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
                                 </td>
                             </tr>
                             <?php
-                            $liquid_row_index++;
+                            $stock_row_index++;
                         endforeach;
                         ?>
                     </tbody>
                 </table>
                 <p class="zs-mb-row-actions">
-                    <button type="button" class="button" id="zs-liquid-add-row"><?php esc_html_e('Add liquid', 'zero-sense'); ?></button>
-                    <a href="<?php echo esc_url($manage_liquids_url); ?>" target="_blank" class="zs-mb-link">
-                        <?php esc_html_e('Manage all liquids', 'zero-sense'); ?> →
-                    </a>
+                    <button type="button" class="button" id="zs-stock-add-row"><?php esc_html_e('Add material', 'zero-sense'); ?></button>
+                </p>
+                <p class="zs-mb-description" style="font-style:italic;">
+                    <?php esc_html_e('"Every X guests" = ratio (1 = per person, 10 = every 10 guests, 50 = every 50 guests)', 'zero-sense'); ?>
                 </p>
             </div>
 
@@ -488,69 +567,6 @@ class RecipeMetabox
                 </p>
             </div>
 
-            <!-- Equipment Stock Section -->
-            <div class="zs-stock-section">
-                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Equipment Stock', 'zero-sense'); ?></h3>
-                <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Materials required by this recipe. Qty and ratio work like utensils: ceil(guests / every-X) × qty is added to the order\'s equipment total.', 'zero-sense'); ?></p>
-                <table class="widefat striped" style="margin-top:8px;">
-                    <thead>
-                        <tr>
-                            <th style="width:5%; text-align:center;"></th>
-                            <th style="width:40%;"><?php esc_html_e('Material', 'zero-sense'); ?></th>
-                            <th style="width:15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
-                            <th style="width:25%;"><?php esc_html_e('Every X guests', 'zero-sense'); ?></th>
-                            <th style="width:15%;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="zs-stock-rows">
-                        <?php
-                        $stock_row_index = 0;
-                        foreach ($stockRows as $row):
-                            $matKey  = isset($row['material_key']) ? (string) $row['material_key'] : '';
-                            $qty     = isset($row['qty']) ? (string) $row['qty'] : '';
-                            $ratio   = isset($row['pax_ratio']) ? (int) $row['pax_ratio'] : 1;
-                            ?>
-                            <tr data-row="<?php echo $stock_row_index; ?>">
-                                <td class="zs-drag-handle"><span class="dashicons dashicons-menu"></span></td>
-                                <td>
-                                    <select name="zs_recipe_stock[material_key][]" style="width:100%;">
-                                        <option value=""><?php esc_html_e('— Select material —', 'zero-sense'); ?></option>
-                                        <?php foreach ($materialsByGroup as $parentKey => $categories): ?>
-                                            <optgroup label="<?php echo esc_attr($parentCategoryLabels[$parentKey] ?? $parentKey); ?>">
-                                                <?php foreach ($categories as $catKey => $mats): ?>
-                                                    <?php foreach ($mats as $mat): ?>
-                                                        <option value="<?php echo esc_attr($mat['key']); ?>" <?php selected($matKey, $mat['key']); ?>>
-                                                            <?php echo esc_html($mat['label']); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php endforeach; ?>
-                                            </optgroup>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="number" step="0.001" min="0" name="zs_recipe_stock[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
-                                </td>
-                                <td>
-                                    <input type="number" step="1" min="1" name="zs_recipe_stock[pax_ratio][]" value="<?php echo esc_attr((string) $ratio); ?>" style="width:100%;" placeholder="1">
-                                </td>
-                                <td>
-                                    <button type="button" class="button zs-stock-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
-                                </td>
-                            </tr>
-                            <?php
-                            $stock_row_index++;
-                        endforeach;
-                        ?>
-                    </tbody>
-                </table>
-                <p class="zs-mb-row-actions">
-                    <button type="button" class="button" id="zs-stock-add-row"><?php esc_html_e('Add material', 'zero-sense'); ?></button>
-                </p>
-                <p class="zs-mb-description" style="font-style:italic;">
-                    <?php esc_html_e('"Every X guests" = ratio (1 = per person, 10 = every 10 guests, 50 = every 50 guests)', 'zero-sense'); ?>
-                </p>
-            </div>
         </div>
         <?php
         wp_localize_script('zs-recipes-admin', 'zsRecipesData', [
@@ -578,8 +594,9 @@ class RecipeMetabox
             ],
             'stockMaterials' => array_values(array_map(function($mat) {
                 return ['key' => $mat['key'], 'label' => $mat['label'], 'group' => $mat['parent_category']];
-            }, $allMaterials)),
-            'stockMaterialGroups' => array_map(function($label) { return $label; }, $parentCategoryLabels)
+            }, $eligibleMaterials)),
+            'stockMaterialGroups' => array_map(function($label) { return $label; }, $parentCategoryLabels),
+            'stockCascade' => $cascadeLabels
         ]);
     }
 

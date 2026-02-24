@@ -227,10 +227,25 @@
         return html;
     }
 
+    function updateStockCascadeHint($select) {
+        var cascade = zsRecipesData.stockCascade || {};
+        var key = $select.val();
+        var $hint = $select.siblings('.zs-stock-cascade-hint');
+        if (!$hint.length) {
+            $hint = $('<small class="zs-stock-cascade-hint" style="display:none; color:#666; font-size:11px; margin-top:3px;"></small>');
+            $select.after($hint);
+        }
+        if (key && cascade[key]) {
+            $hint.text('\u21b3 ' + (zsRecipesData.i18n.also_auto_adds || 'Also auto-adds:') + ' ' + cascade[key]).show();
+        } else {
+            $hint.hide().text('');
+        }
+    }
+
     function addNewStockRow() {
         var newRow = '<tr data-row="' + stockRowCount + '">' +
             '<td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;"><span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span></td>' +
-            '<td><select name="zs_recipe_stock[material_key][]" style="width:100%;">' + buildStockMaterialOptions('') + '</select></td>' +
+            '<td><select name="zs_recipe_stock[material_key][]" style="width:100%;" class="zs-stock-material-select">' + buildStockMaterialOptions('') + '</select><small class="zs-stock-cascade-hint" style="display:none; color:#666; font-size:11px; margin-top:3px;"></small></td>' +
             '<td><input type="number" step="0.001" min="0" name="zs_recipe_stock[qty][]" value="" style="width:100%;"></td>' +
             '<td><input type="number" step="1" min="1" name="zs_recipe_stock[pax_ratio][]" value="1" style="width:100%;" placeholder="1"></td>' +
             '<td><button type="button" class="button zs-stock-remove">' + zsRecipesData.i18n.remove + '</button></td>' +
@@ -241,6 +256,10 @@
 
     $('#zs-stock-add-row').on('click', addNewStockRow);
     $(document).on('click', '.zs-stock-remove', function() { $(this).closest('tr').remove(); });
+    $(document).on('change', '.zs-stock-material-select', function() { updateStockCascadeHint($(this)); });
+
+    // Init hints for existing rows on page load
+    $('#zs-stock-rows .zs-stock-material-select').each(function() { updateStockCascadeHint($(this)); });
 
     // Paella mode toggle
     $('input[name="zs_recipe_needs_paella"]').on('change', function() {
