@@ -418,13 +418,12 @@ class InventoryMetabox
                                                     $rbTotal = (int) $rb['total'];
                                                     $eventQty = max(0, $autoValue - $rbTotal);
                                                     ?>
+                                                    <?php if ($rb['source'] === 'cascade'): ?>
+                                                        <div class="zs-inventory-recipe-hint">↳ <?php printf(esc_html__('Via %s', 'zero-sense'), esc_html($rb['via'])); ?></div>
+                                                    <?php endif; ?>
                                                     <div class="zs-inventory-recipe-hint">
-                                                        ↳ <?php if ($eventQty > 0): ?><?php echo $eventQty; ?> <?php esc_html_e("de l'event", 'zero-sense'); ?> · <?php endif; ?>
-                                                        <?php if ($rb['source'] === 'cascade'): ?>
-                                                            <?php echo $rbTotal; ?> <?php printf(esc_html__('de la recepta (via %s)', 'zero-sense'), esc_html($rb['via'])); ?>
-                                                        <?php else: ?>
-                                                            <?php echo $rbTotal; ?> <?php esc_html_e('de la recepta', 'zero-sense'); ?>
-                                                        <?php endif; ?>
+                                                        ↳ <?php if ($eventQty > 0): ?><?php echo $eventQty; ?> <?php esc_html_e("des de l'esdeveniment", 'zero-sense'); ?> · <?php endif; ?>
+                                                        <?php echo $rbTotal; ?> <?php esc_html_e('des de la recepta', 'zero-sense'); ?>
                                                     </div>
                                                 <?php endif; ?>
 
