@@ -133,8 +133,8 @@ class InventoryMetabox
         // Nombres de categorías
         $categoryLabels = [
             'paelles'          => 'Paelles',
-            'equipament_foc'   => 'Equipament de Foc',
             'cassoles'         => 'Cassoles',
+            'equipament_foc'   => 'Equipament de Foc',
             'caixes'           => 'Caixes',
             'suport_muntatge'  => 'Suport Muntatge',
             'roba_personal'    => 'Vestimenta Staff',
