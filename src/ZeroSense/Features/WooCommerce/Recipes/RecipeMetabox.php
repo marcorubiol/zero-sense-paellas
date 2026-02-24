@@ -271,10 +271,9 @@ class RecipeMetabox
                     <p><?php esc_html_e('Enable to automatically calculate paella pans, burners and cassola size for this recipe.', 'zero-sense'); ?></p>
                 </div>
                 <div class="zs-paella-mode-notice" style="display:<?php echo $needsPaella === '1' ? 'block' : 'none'; ?>; background:#fff8e1; border-left:3px solid #f0a500; padding:8px 12px; margin:8px 0 4px; border-radius:3px; font-size:12px; color:#444;">
-                    <strong><?php esc_html_e('⚠️ Liquids section', 'zero-sense'); ?></strong><br>
-                    <?php esc_html_e('Add the cooking liquids (water, stock…) in the Liquids section below.', 'zero-sense'); ?><br>
-                    <?php esc_html_e('Fats like oil belong in Ingredients.', 'zero-sense'); ?><br>
-                    <?php esc_html_e('The system uses the total volume to select the right cassola size.', 'zero-sense'); ?>
+                    <strong><?php esc_html_e('💧 Liquids determine the cassola size', 'zero-sense'); ?></strong><br>
+                    <?php esc_html_e('Enter the main cooking liquid (water, broth…) in the Liquids section below. The system adds up all liquid volume across items in the order to automatically pick the right cassola.', 'zero-sense'); ?><br>
+                    <?php esc_html_e('Oils and fats go in Ingredients — they are not counted for cassola sizing.', 'zero-sense'); ?>
                 </div>
             </div>
 
