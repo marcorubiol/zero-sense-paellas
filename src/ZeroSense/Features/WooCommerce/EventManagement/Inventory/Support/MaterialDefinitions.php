@@ -395,24 +395,23 @@ class MaterialDefinitions
     }
 
     /**
-     * Returns the Catalan dependency label for a child key, e.g.:
-     * 'cremador_50cm' → '↳ Calculat a partir de les paelles'
-     * 'teles_negres'  → '↳ Calculat a partir de les Taules Treball'
-     * Returns null if the key is not a cascade child.
+     * Returns the parent display name for a child key, e.g.:
+     * 'cremador_50cm' → 'Paelles'
+     * 'teles_negres'  → 'Taules Treball'
+     * Returns null if the key is not a dependency child.
      */
     public static function getDependencyLabelFor(string $key): ?string
     {
         $parentLabels = [
-            'paelles'        => 'les paelles',
-            'cremadors'      => 'els cremadors',
-            'cassoles'       => 'les cassoles',
-            'taules_treball' => 'les Taules Treball',
+            'paelles'        => 'Paelles',
+            'cremadors'      => 'Cremadors',
+            'cassoles'       => 'Cassoles',
+            'taules_treball' => 'Taules Treball',
         ];
 
         foreach (self::getDependencyMap() as $parentKey => $childKeys) {
             if (in_array($key, $childKeys, true)) {
-                $label = $parentLabels[$parentKey] ?? $parentKey;
-                return '↳ Calculat a partir de ' . $label;
+                return $parentLabels[$parentKey] ?? $parentKey;
             }
         }
 

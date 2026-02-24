@@ -409,7 +409,7 @@ class InventoryMetabox
                                                     <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
                                                 <?php endif; ?>
                                                 <?php if ($dependencyLabel !== null): ?>
-                                                    <div class="zs-inventory-dependency-label"><?php echo esc_html($dependencyLabel); ?></div>
+                                                    <div class="zs-inventory-dependency-label">↳ <?php printf(esc_html__('Via %s', 'zero-sense'), esc_html($dependencyLabel)); ?></div>
                                                 <?php endif; ?>
 
                                                 <?php if (!empty($recipeBreakdown[$materialKey])): ?>
@@ -418,9 +418,6 @@ class InventoryMetabox
                                                     $rbTotal = (int) $rb['total'];
                                                     $eventQty = max(0, $autoValue - $rbTotal);
                                                     ?>
-                                                    <?php if ($rb['source'] === 'cascade'): ?>
-                                                        <div class="zs-inventory-recipe-hint">↳ <?php printf(esc_html__('Via %s', 'zero-sense'), esc_html($rb['via'])); ?></div>
-                                                    <?php endif; ?>
                                                     <div class="zs-inventory-recipe-hint">
                                                         ↳ <?php if ($eventQty > 0): ?><?php echo $eventQty; ?> <?php esc_html_e("des de l'esdeveniment", 'zero-sense'); ?> · <?php endif; ?>
                                                         <?php echo $rbTotal; ?> <?php esc_html_e('des de la recepta', 'zero-sense'); ?>
