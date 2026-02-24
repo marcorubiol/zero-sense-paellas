@@ -487,7 +487,7 @@ class RecipeMetabox
 
             <!-- Utensils Section -->
             <div class="zs-mb-section zs-utensils-section"<?php echo $needsPaella === '1' ? ' style="display:none;"' : ''; ?>>
-                <h3 class="zs-mb-subheader"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Utensils', 'zero-sense'); ?></h3>
                 <table class="widefat striped">
                     <thead>
                         <tr>
