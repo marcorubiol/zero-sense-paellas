@@ -404,7 +404,14 @@ class MaterialDefinitions
      */
     public static function getStockEligible(): array
     {
-        return array_values(array_filter(self::getAll(), function(array $mat): bool {
+        $cascadeChildren = [];
+        foreach (self::getStockCascade() as $childKeys) {
+            foreach ($childKeys as $ck) {
+                $cascadeChildren[$ck] = true;
+            }
+        }
+
+        return array_values(array_filter(self::getAll(), function(array $mat) use ($cascadeChildren): bool {
             if ($mat['parent_category'] === 'materia_pesada') {
                 return false;
             }
@@ -412,6 +419,9 @@ class MaterialDefinitions
                 return false;
             }
             if ($mat['category'] === 'roba_personal') {
+                return false;
+            }
+            if (isset($cascadeChildren[$mat['key']])) {
                 return false;
             }
             return true;
