@@ -253,16 +253,14 @@ class MaterialCalculator
             }
 
             $totalLitres = self::calculateTotalLitres($recipeId, $itemGuests);
-            $cassolaKey = self::selectCassola($totalLitres);
+            $cassoles = self::selectCassoles($totalLitres);
 
-            if ($cassolaKey === '') {
-                continue;
+            foreach ($cassoles as $cassolaKey) {
+                if (!isset($result[$cassolaKey])) {
+                    $result[$cassolaKey] = 0;
+                }
+                $result[$cassolaKey]++;
             }
-
-            if (!isset($result[$cassolaKey])) {
-                $result[$cassolaKey] = 0;
-            }
-            $result[$cassolaKey]++;
         }
 
         // Poals fems: 1 cada 20pax
@@ -305,24 +303,53 @@ class MaterialCalculator
     }
 
     /**
-     * Select the smallest cassola that fits the required litres.
-     * Returns empty string if no litres defined or if exceeds 34L.
+     * Select cassoles greedily to cover the required litres.
+     * Uses the largest fitting cassola first, then repeats for the remainder.
+     * Returns empty array if no litres defined.
      */
-    private static function selectCassola(float $totalLitres): string
+    private static function selectCassoles(float $totalLitres): array
     {
-        if ($totalLitres <= 0 || $totalLitres > 34) {
-            return '';
+        if ($totalLitres <= 0) {
+            return [];
         }
 
-        // Sizes are sorted largest to smallest; find the smallest that fits
-        $best = 'cassola_34l';
-        foreach (self::CASSOLA_SIZES as $capacity => $key) {
-            if ((float) $capacity >= $totalLitres) {
-                $best = $key;
+        $cassoles = [];
+        $remaining = $totalLitres;
+        $sizes = self::CASSOLA_SIZES; // sorted largest to smallest
+
+        while ($remaining > 0) {
+            $selected = null;
+            foreach ($sizes as $capacity => $key) {
+                if ((float) $capacity >= $remaining) {
+                    $selected = $key;
+                }
+            }
+
+            if ($selected === null) {
+                // Remaining exceeds all sizes; use the largest
+                $selected = reset($sizes);
+            }
+
+            $cassoles[] = $selected;
+
+            // Find the capacity of the selected cassola
+            $selectedCapacity = 0.0;
+            foreach ($sizes as $capacity => $key) {
+                if ($key === $selected) {
+                    $selectedCapacity = (float) $capacity;
+                    break;
+                }
+            }
+
+            $remaining -= $selectedCapacity;
+
+            // Safety: avoid infinite loop if largest cassola has 0 capacity
+            if ($selectedCapacity <= 0) {
+                break;
             }
         }
 
-        return $best;
+        return $cassoles;
     }
     
     /**
