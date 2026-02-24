@@ -203,16 +203,6 @@ class MaterialDefinitions
                 'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
             [
-                'key' => 'catifes',
-                'label' => 'Catifes',
-                'category' => 'equipament_foc',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cremador',
-                'dependency_label' => '↳ Calculat a partir dels cremadors',
-            ],
-
-            [
                 'key' => 'vitro_gran',
                 'label' => 'Vitro Gran',
                 'category' => 'equipament_foc',
@@ -228,6 +218,15 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 per cassola',
                 'dependency_label' => '↳ Calculat a partir de les cassoles',
+            ],
+            [
+                'key' => 'catifes',
+                'label' => 'Catifes',
+                'category' => 'equipament_foc',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador',
+                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
 
             // TRANSPORT I MUNTATGE — caixes

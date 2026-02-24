@@ -8,7 +8,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\AlertResolu
 class AlertsAdminNotice
 {
     const TRANSIENT_KEY = 'zs_active_equipment_alerts';
-    const TRANSIENT_TTL = 300; // 5 minutes
+    const TRANSIENT_TTL = 60; // 1 minute
 
     public function register(): void
     {
@@ -96,7 +96,7 @@ class AlertsAdminNotice
         }
 
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
-        $orderIds = AlertCalculator::getOrderIdsWithReservations(1, 30);
+        $orderIds = AlertCalculator::getOrderIdsWithReservations(1, null);
         $orderIds = array_filter($orderIds, function ($id) use ($allowedStatuses) {
             $order = wc_get_order($id);
             return $order && in_array($order->get_status(), $allowedStatuses, true);

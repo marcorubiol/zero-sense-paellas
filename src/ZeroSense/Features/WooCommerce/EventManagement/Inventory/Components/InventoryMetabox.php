@@ -1206,6 +1206,8 @@ class InventoryMetabox
         } else {
             ReservationManager::deleteAll($postId);
         }
+
+        delete_transient('zs_active_equipment_alerts');
     }
     
     /**
@@ -1250,6 +1252,8 @@ class InventoryMetabox
         } else {
             ReservationManager::deleteAll($orderId);
         }
+
+        delete_transient('zs_active_equipment_alerts');
         
         wp_send_json_success(['message' => 'Inventory saved successfully']);
     }
@@ -1291,6 +1295,8 @@ class InventoryMetabox
         } else {
             ReservationManager::deleteAll($orderId);
         }
+
+        delete_transient('zs_active_equipment_alerts');
         
         wp_send_json_success(['message' => 'All overrides cleared successfully']);
     }
