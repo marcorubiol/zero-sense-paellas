@@ -421,9 +421,9 @@ class InventoryMetabox
                                                     <div class="zs-inventory-recipe-hint">
                                                         ↳ <?php if ($eventQty > 0): ?><?php echo $eventQty; ?> <?php esc_html_e('from event', 'zero-sense'); ?> · <?php endif; ?>
                                                         <?php if ($rb['source'] === 'cascade'): ?>
-                                                            +<?php echo $rbTotal; ?> <?php printf(esc_html__('from recipe (via %s)', 'zero-sense'), esc_html($rb['via'])); ?>
+                                                            <?php echo $rbTotal; ?> <?php printf(esc_html__('from recipe (via %s)', 'zero-sense'), esc_html($rb['via'])); ?>
                                                         <?php else: ?>
-                                                            +<?php echo $rbTotal; ?> <?php esc_html_e('from recipe', 'zero-sense'); ?>
+                                                            <?php echo $rbTotal; ?> <?php esc_html_e('from recipe', 'zero-sense'); ?>
                                                         <?php endif; ?>
                                                     </div>
                                                 <?php endif; ?>
