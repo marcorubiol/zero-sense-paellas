@@ -397,8 +397,7 @@ class InventoryMetabox
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
                                         $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
-                                        $dependentKeys = ['cremador_50cm','cremador_60cm','cremador_70cm','cremador_90cm','potes_tripodes','buta','vitro_petita','catifes'];
-                                        $isDependent = in_array($materialKey, $dependentKeys, true);
+                                        $isDependent = MaterialDefinitions::getDependencyLabelFor($materialKey) !== null;
                                         ?>
                                         <tr>
                                             <td>
@@ -408,8 +407,9 @@ class InventoryMetabox
                                                 <?php if (!empty($material['description'])): ?>
                                                     <div class="zs-inventory-description"><?php echo esc_html($material['description']); ?></div>
                                                 <?php endif; ?>
-                                                <?php if (!empty($material['dependency_label'])): ?>
-                                                    <div class="zs-inventory-dependency-label"><?php echo esc_html($material['dependency_label']); ?></div>
+                                                <?php $dependencyLabel = MaterialDefinitions::getDependencyLabelFor($materialKey); ?>
+                                                <?php if ($dependencyLabel !== null): ?>
+                                                    <div class="zs-inventory-dependency-label"><?php echo esc_html($dependencyLabel); ?></div>
                                                 <?php endif; ?>
 
                                                 <?php if (!empty($recipeBreakdown[$materialKey])): ?>
@@ -419,11 +419,11 @@ class InventoryMetabox
                                                     $eventQty = max(0, $autoValue - $rbTotal);
                                                     ?>
                                                     <div class="zs-inventory-recipe-hint">
-                                                        ↳ <?php if ($eventQty > 0): ?><?php echo $eventQty; ?> <?php esc_html_e('from event', 'zero-sense'); ?> · <?php endif; ?>
+                                                        ↳ <?php if ($eventQty > 0): ?><?php echo $eventQty; ?> <?php esc_html_e("de l'event", 'zero-sense'); ?> · <?php endif; ?>
                                                         <?php if ($rb['source'] === 'cascade'): ?>
-                                                            <?php echo $rbTotal; ?> <?php printf(esc_html__('from recipe (via %s)', 'zero-sense'), esc_html($rb['via'])); ?>
+                                                            <?php echo $rbTotal; ?> <?php printf(esc_html__('de la recepta (via %s)', 'zero-sense'), esc_html($rb['via'])); ?>
                                                         <?php else: ?>
-                                                            <?php echo $rbTotal; ?> <?php esc_html_e('from recipe', 'zero-sense'); ?>
+                                                            <?php echo $rbTotal; ?> <?php esc_html_e('de la recepta', 'zero-sense'); ?>
                                                         <?php endif; ?>
                                                     </div>
                                                 <?php endif; ?>

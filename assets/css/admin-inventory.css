@@ -165,9 +165,9 @@
 
 .zs-inventory-recipe-hint {
     font-size: 10px;
-    color: #888;
+    color: #2271b1;
     margin-top: 2px;
-    font-style: italic;
+    opacity: 0.8;
 }
 
 /* =================================================================

@@ -155,7 +155,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 55cm o 65cm',
-                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'cremador_60cm',
@@ -164,7 +163,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 70cm',
-                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'cremador_70cm',
@@ -173,7 +171,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 80cm o 90cm',
-                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'cremador_90cm',
@@ -182,7 +179,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cada paella de 100cm, 115cm o 135cm',
-                'dependency_label' => '↳ Calculat a partir de les paelles',
             ],
             [
                 'key' => 'potes_tripodes',
@@ -191,7 +187,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador',
-                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
             [
                 'key' => 'buta',
@@ -200,7 +195,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador + 1 extra si >60pax',
-                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
             [
                 'key' => 'vitro_gran',
@@ -217,7 +211,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cassola',
-                'dependency_label' => '↳ Calculat a partir de les cassoles',
             ],
             [
                 'key' => 'catifes',
@@ -226,7 +219,6 @@ class MaterialDefinitions
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
                 'description' => '1 per cremador',
-                'dependency_label' => '↳ Calculat a partir dels cremadors',
             ],
 
             // TRANSPORT I MUNTATGE — caixes
@@ -387,10 +379,46 @@ class MaterialDefinitions
     }
     
     /**
-     * Returns cascade dependencies for stock materials.
-     * When a key is selected in the recipe stock picker, these additional
-     * materials are auto-calculated by MaterialCalculator and shown as hints.
+     * Maps parent key/group → child keys for ALL auto-calculated dependencies.
+     * Used to auto-generate dependency labels and for recipe cascade hints.
+     * Groups: 'paelles', 'cremadors', 'cassoles' are logical group names (not material keys).
+     * Single keys (e.g. 'taules_treball') map directly.
      */
+    public static function getDependencyMap(): array
+    {
+        return [
+            'paelles'        => ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm'],
+            'cremadors'      => ['potes_tripodes', 'buta', 'catifes'],
+            'cassoles'       => ['vitro_petita'],
+            'taules_treball' => ['teles_negres', 'estovalles'],
+        ];
+    }
+
+    /**
+     * Returns the Catalan dependency label for a child key, e.g.:
+     * 'cremador_50cm' → '↳ Calculat a partir de les paelles'
+     * 'teles_negres'  → '↳ Calculat a partir de les Taules Treball'
+     * Returns null if the key is not a cascade child.
+     */
+    public static function getDependencyLabelFor(string $key): ?string
+    {
+        $parentLabels = [
+            'paelles'        => 'les paelles',
+            'cremadors'      => 'els cremadors',
+            'cassoles'       => 'les cassoles',
+            'taules_treball' => 'les Taules Treball',
+        ];
+
+        foreach (self::getDependencyMap() as $parentKey => $childKeys) {
+            if (in_array($key, $childKeys, true)) {
+                $label = $parentLabels[$parentKey] ?? $parentKey;
+                return '↳ Calculat a partir de ' . $label;
+            }
+        }
+
+        return null;
+    }
+
     public static function getStockCascade(): array
     {
         return [
@@ -411,11 +439,18 @@ class MaterialDefinitions
             }
         }
 
-        return array_values(array_filter(self::getAll(), function(array $mat) use ($cascadeChildren): bool {
+        $allDependencyChildren = [];
+        foreach (self::getDependencyMap() as $childKeys) {
+            foreach ($childKeys as $ck) {
+                $allDependencyChildren[$ck] = true;
+            }
+        }
+
+        return array_values(array_filter(self::getAll(), function(array $mat) use ($cascadeChildren, $allDependencyChildren): bool {
             if ($mat['parent_category'] === 'materia_pesada') {
                 return false;
             }
-            if (isset($mat['dependency_label'])) {
+            if (isset($allDependencyChildren[$mat['key']])) {
                 return false;
             }
             if ($mat['category'] === 'roba_personal') {
