@@ -8,6 +8,7 @@
     var rowCount = parseInt(zsRecipesData.rowCount, 10);
     var utensilRowCount = parseInt(zsRecipesData.utensilRowCount, 10);
     var liquidRowCount = parseInt(zsRecipesData.liquidRowCount, 10);
+    var stockRowCount = parseInt(zsRecipesData.stockRowCount || 0, 10);
 
     function initSelect(element, taxonomy) {
         if (typeof $.fn.selectWoo === 'undefined') {
@@ -165,7 +166,7 @@
         $('.zs-liquid-select').each(function() { initSelect(this, 'liquid'); });
 
         // Initialize sortable for drag-and-drop reordering
-        $('#zs-recipe-rows, #zs-utensil-rows, #zs-liquid-rows').sortable({
+        $('#zs-recipe-rows, #zs-utensil-rows, #zs-liquid-rows, #zs-stock-rows').sortable({
             handle: '.zs-drag-handle',
             items: '> tr',
             cursor: 'grabbing',
@@ -201,6 +202,45 @@
     
     $('#zs-liquid-add-row').on('click', addNewLiquidRow);
     $(document).on('click', '.zs-liquid-remove', function() { $(this).closest('tr').remove(); });
+
+    // Stock (Equipment)
+    function buildStockMaterialOptions(selectedKey) {
+        var groups = zsRecipesData.stockMaterialGroups || {};
+        var materials = zsRecipesData.stockMaterials || [];
+        var grouped = {};
+        for (var i = 0; i < materials.length; i++) {
+            var m = materials[i];
+            if (!grouped[m.group]) grouped[m.group] = [];
+            grouped[m.group].push(m);
+        }
+        var html = '<option value="">' + zsRecipesData.i18n.select_material + '</option>';
+        for (var groupKey in grouped) {
+            var groupLabel = groups[groupKey] || groupKey;
+            html += '<optgroup label="' + groupLabel + '">';
+            var mats = grouped[groupKey];
+            for (var j = 0; j < mats.length; j++) {
+                var sel = (selectedKey && mats[j].key === selectedKey) ? ' selected="selected"' : '';
+                html += '<option value="' + mats[j].key + '"' + sel + '>' + mats[j].label + '</option>';
+            }
+            html += '</optgroup>';
+        }
+        return html;
+    }
+
+    function addNewStockRow() {
+        var newRow = '<tr data-row="' + stockRowCount + '">' +
+            '<td class="zs-drag-handle" style="cursor: grab; text-align: center; color: #a7aaad; vertical-align: middle;"><span class="dashicons dashicons-menu" style="font-size: 16px; line-height: 2;"></span></td>' +
+            '<td><select name="zs_recipe_stock[material_key][]" style="width:100%;">' + buildStockMaterialOptions('') + '</select></td>' +
+            '<td><input type="number" step="0.001" min="0" name="zs_recipe_stock[qty][]" value="" style="width:100%;"></td>' +
+            '<td><input type="number" step="1" min="1" name="zs_recipe_stock[pax_ratio][]" value="1" style="width:100%;" placeholder="1"></td>' +
+            '<td><button type="button" class="button zs-stock-remove">' + zsRecipesData.i18n.remove + '</button></td>' +
+        '</tr>';
+        $('#zs-stock-rows').append(newRow);
+        stockRowCount++;
+    }
+
+    $('#zs-stock-add-row').on('click', addNewStockRow);
+    $(document).on('click', '.zs-stock-remove', function() { $(this).closest('tr').remove(); });
 
     // Paella mode toggle
     $('input[name="zs_recipe_needs_paella"]').on('change', function() {

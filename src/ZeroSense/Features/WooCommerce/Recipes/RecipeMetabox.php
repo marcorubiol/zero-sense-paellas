@@ -5,6 +5,7 @@ namespace ZeroSense\Features\WooCommerce\Recipes;
 
 use WP_Post;
 use WP_Term;
+use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDefinitions;
 
 class RecipeMetabox
 {
@@ -16,6 +17,7 @@ class RecipeMetabox
     private const META_INGREDIENTS = 'zs_recipe_ingredients';
     private const META_UTENSILS = 'zs_recipe_utensils';
     private const META_LIQUIDS = 'zs_recipe_liquids';
+    private const META_STOCK = 'zs_recipe_stock';
     public const META_PRODUCT_RECIPE_ID = 'zs_recipe_id';
     public const META_PRODUCT_RECIPE_NO_RABBIT = 'zs_recipe_id_no_rabbit';
     private const META_NEEDS_PAELLA = 'zs_recipe_needs_paella';
@@ -221,6 +223,15 @@ class RecipeMetabox
         $existing_ingredients = get_terms(['taxonomy' => self::TAX_INGREDIENT, 'hide_empty' => false, 'number' => 50, 'suppress_filters' => true]);
         $existing_liquids = get_terms(['taxonomy' => self::TAX_LIQUID, 'hide_empty' => false, 'number' => 50, 'suppress_filters' => true]);
         $existing_utensils = get_terms(['taxonomy' => self::TAX_UTENSIL, 'hide_empty' => false, 'number' => 50, 'suppress_filters' => true]);
+
+        $stockRows = get_post_meta($post->ID, self::META_STOCK, true);
+        $stockRows = is_array($stockRows) ? $stockRows : [];
+        $allMaterials = MaterialDefinitions::getAll();
+        $materialsByGroup = [];
+        foreach ($allMaterials as $mat) {
+            $materialsByGroup[$mat['parent_category']][$mat['category']][] = $mat;
+        }
+        $parentCategoryLabels = MaterialDefinitions::getParentCategories();
 
         ?>
         <div class="zs-mb-wrapper">
@@ -463,6 +474,70 @@ class RecipeMetabox
                     <?php esc_html_e('"Every X people" = ratio (1 = per person, 4 = every 4 people, 10 = every 10 people)', 'zero-sense'); ?>
                 </p>
             </div>
+
+            <!-- Equipment Stock Section -->
+            <div class="zs-stock-section">
+                <h3 class="zs-mb-subheader" style="font-size:14px; text-transform:none; letter-spacing:0;"><?php esc_html_e('Equipment Stock', 'zero-sense'); ?></h3>
+                <p style="margin:2px 0 8px; color:#666; font-size:12px;"><?php esc_html_e('Materials required by this recipe. Qty and ratio work like utensils: ceil(guests / every-X) × qty is added to the order\'s equipment total.', 'zero-sense'); ?></p>
+                <table class="widefat striped" style="margin-top:8px;">
+                    <thead>
+                        <tr>
+                            <th style="width:5%; text-align:center;"></th>
+                            <th style="width:40%;"><?php esc_html_e('Material', 'zero-sense'); ?></th>
+                            <th style="width:15%;"><?php esc_html_e('Qty', 'zero-sense'); ?></th>
+                            <th style="width:25%;"><?php esc_html_e('Every X guests', 'zero-sense'); ?></th>
+                            <th style="width:15%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="zs-stock-rows">
+                        <?php
+                        $stock_row_index = 0;
+                        foreach ($stockRows as $row):
+                            $matKey  = isset($row['material_key']) ? (string) $row['material_key'] : '';
+                            $qty     = isset($row['qty']) ? (string) $row['qty'] : '';
+                            $ratio   = isset($row['pax_ratio']) ? (int) $row['pax_ratio'] : 1;
+                            ?>
+                            <tr data-row="<?php echo $stock_row_index; ?>">
+                                <td class="zs-drag-handle"><span class="dashicons dashicons-menu"></span></td>
+                                <td>
+                                    <select name="zs_recipe_stock[material_key][]" style="width:100%;">
+                                        <option value=""><?php esc_html_e('— Select material —', 'zero-sense'); ?></option>
+                                        <?php foreach ($materialsByGroup as $parentKey => $categories): ?>
+                                            <optgroup label="<?php echo esc_attr($parentCategoryLabels[$parentKey] ?? $parentKey); ?>">
+                                                <?php foreach ($categories as $catKey => $mats): ?>
+                                                    <?php foreach ($mats as $mat): ?>
+                                                        <option value="<?php echo esc_attr($mat['key']); ?>" <?php selected($matKey, $mat['key']); ?>>
+                                                            <?php echo esc_html($mat['label']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.001" min="0" name="zs_recipe_stock[qty][]" value="<?php echo esc_attr($qty); ?>" style="width:100%;">
+                                </td>
+                                <td>
+                                    <input type="number" step="1" min="1" name="zs_recipe_stock[pax_ratio][]" value="<?php echo esc_attr((string) $ratio); ?>" style="width:100%;" placeholder="1">
+                                </td>
+                                <td>
+                                    <button type="button" class="button zs-stock-remove"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
+                                </td>
+                            </tr>
+                            <?php
+                            $stock_row_index++;
+                        endforeach;
+                        ?>
+                    </tbody>
+                </table>
+                <p class="zs-mb-row-actions">
+                    <button type="button" class="button" id="zs-stock-add-row"><?php esc_html_e('Add material', 'zero-sense'); ?></button>
+                </p>
+                <p class="zs-mb-description" style="font-style:italic;">
+                    <?php esc_html_e('"Every X guests" = ratio (1 = per person, 10 = every 10 guests, 50 = every 50 guests)', 'zero-sense'); ?>
+                </p>
+            </div>
         </div>
         <?php
         wp_localize_script('zs-recipes-admin', 'zsRecipesData', [
@@ -471,6 +546,7 @@ class RecipeMetabox
             'rowCount' => max(0, count($ingredients)),
             'utensilRowCount' => max(0, count($utensils)),
             'liquidRowCount' => max(0, count($liquids)),
+            'stockRowCount' => max(0, count($stockRows)),
             'units' => array_keys($units),
             'unitLabels' => array_values($units),
             'utensilUnits' => array_keys($utensilUnits),
@@ -484,8 +560,13 @@ class RecipeMetabox
                 'error_create_utensil' => __('Error al crear el utensilio.', 'zero-sense'),
                 'error_conn_utensil' => __('Error de conexión al crear el utensilio.', 'zero-sense'),
                 'error_create_liquid' => __('Error al crear el líquido.', 'zero-sense'),
-                'error_conn_liquid' => __('Error de conexión al crear el líquido.', 'zero-sense')
-            ]
+                'error_conn_liquid' => __('Error de conexión al crear el líquido.', 'zero-sense'),
+                'select_material' => __('— Select material —', 'zero-sense')
+            ],
+            'stockMaterials' => array_values(array_map(function($mat) {
+                return ['key' => $mat['key'], 'label' => $mat['label'], 'group' => $mat['parent_category']];
+            }, $allMaterials)),
+            'stockMaterialGroups' => array_map(function($label) { return $label; }, $parentCategoryLabels)
         ]);
     }
 
@@ -590,6 +671,40 @@ class RecipeMetabox
             }
         }
 
+        // Always save stock regardless of paella mode
+        $rawStock = $_POST['zs_recipe_stock'] ?? null;
+        if (is_array($rawStock)) {
+            $stockKeys   = isset($rawStock['material_key']) && is_array($rawStock['material_key']) ? $rawStock['material_key'] : [];
+            $stockQtys   = isset($rawStock['qty']) && is_array($rawStock['qty']) ? $rawStock['qty'] : [];
+            $stockRatios = isset($rawStock['pax_ratio']) && is_array($rawStock['pax_ratio']) ? $rawStock['pax_ratio'] : [];
+
+            $outStock = [];
+            $countStock = max(count($stockKeys), count($stockQtys), count($stockRatios));
+            for ($i = 0; $i < $countStock; $i++) {
+                $matKey  = isset($stockKeys[$i]) ? sanitize_key((string) $stockKeys[$i]) : '';
+                $qty     = isset($stockQtys[$i]) ? (float) $stockQtys[$i] : 0.0;
+                $ratio   = isset($stockRatios[$i]) ? max(1, (int) $stockRatios[$i]) : 1;
+
+                if ($matKey === '' || $qty <= 0 || MaterialDefinitions::get($matKey) === null) {
+                    continue;
+                }
+
+                $outStock[] = [
+                    'material_key' => $matKey,
+                    'qty'          => $qty,
+                    'pax_ratio'    => $ratio,
+                ];
+            }
+
+            if ($outStock === []) {
+                delete_post_meta($postId, self::META_STOCK);
+            } else {
+                update_post_meta($postId, self::META_STOCK, $outStock);
+            }
+        } else {
+            delete_post_meta($postId, self::META_STOCK);
+        }
+
         if ($isPaellaMode) {
             $rawLiquids = $_POST['zs_recipe_liquids'] ?? null;
             $liquidIds = isset($rawLiquids['liquid']) && is_array($rawLiquids['liquid']) ? $rawLiquids['liquid'] : [];
@@ -667,6 +782,7 @@ class RecipeMetabox
                 $new_columns['ingredients'] = __('Ingredients', 'zero-sense');
                 $new_columns['liquids'] = __('Liquids', 'zero-sense');
                 $new_columns['utensils'] = __('Utensils', 'zero-sense');
+                $new_columns['stock'] = __('Equipment Stock', 'zero-sense');
             }
         }
         return $new_columns;
@@ -794,6 +910,34 @@ class RecipeMetabox
                 echo '<span style="color:#999;">—</span>';
             } else {
                 echo '<span style="font-size:12px;">' . esc_html(implode(', ', $names)) . '</span>';
+            }
+        }
+
+        if ($column === 'stock') {
+            $stockRows = get_post_meta($post_id, self::META_STOCK, true);
+            if (!is_array($stockRows) || empty($stockRows)) {
+                echo '<span style="color:#999;">—</span>';
+                return;
+            }
+
+            $parts = [];
+            foreach ($stockRows as $row) {
+                $matKey = isset($row['material_key']) ? sanitize_key((string) $row['material_key']) : '';
+                $qty    = isset($row['qty']) ? (float) $row['qty'] : 0.0;
+                $ratio  = isset($row['pax_ratio']) ? (int) $row['pax_ratio'] : 1;
+                if ($matKey === '' || $qty <= 0) {
+                    continue;
+                }
+                $matDef = MaterialDefinitions::get($matKey);
+                $label  = $matDef ? $matDef['label'] : $matKey;
+                $ratioStr = $ratio > 1 ? '/' . $ratio . 'p' : '/p';
+                $parts[] = esc_html($qty . '×' . $label . ' ' . $ratioStr);
+            }
+
+            if (empty($parts)) {
+                echo '<span style="color:#999;">—</span>';
+            } else {
+                echo '<span style="font-size:11px; line-height:1.6;">' . implode('<br>', $parts) . '</span>';
             }
         }
     }

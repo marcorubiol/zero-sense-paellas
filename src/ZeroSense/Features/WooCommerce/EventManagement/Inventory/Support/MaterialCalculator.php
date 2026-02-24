@@ -65,6 +65,11 @@ class MaterialCalculator
         
         // Calcular textil
         $result = array_merge($result, self::calculateTextil($totalGuests, $result));
+
+        // Calcular stock requerido por recetas (aditivo sobre todo lo anterior)
+        foreach (self::calculateRecipeStock($order) as $key => $qty) {
+            $result[$key] = ($result[$key] ?? 0) + $qty;
+        }
         
         return $result;
     }
@@ -277,6 +282,86 @@ class MaterialCalculator
         $result['vitro_petita'] = $totalCassoles;
 
         return $result;
+    }
+
+    /**
+     * RECIPE STOCK
+     * Calcula materiales extra declarados en cada receta del pedido.
+     * Fórmula: ceil(guests / pax_ratio) * qty  — igual que utensilios.
+     */
+    private static function calculateRecipeStock(WC_Order $order): array
+    {
+        $result = [];
+
+        foreach ($order->get_items() as $item) {
+            $product = $item->get_product();
+            if (!$product) {
+                continue;
+            }
+
+            $guests = (int) $item->get_quantity();
+            if ($guests <= 0) {
+                continue;
+            }
+
+            $originalId = self::resolveOriginalProductId($product->get_id());
+            $recipeId   = (int) get_post_meta($originalId, 'zs_recipe_id', true);
+
+            // Rabbit-choice bifurcation
+            if ($recipeId > 0 && method_exists($item, 'get_meta')) {
+                $rabbitChoice = $item->get_meta('_zs_rabbit_choice', true);
+                if ($rabbitChoice === 'without') {
+                    $noRabbitId = (int) get_post_meta($originalId, 'zs_recipe_id_no_rabbit', true);
+                    if ($noRabbitId > 0) {
+                        $recipeId = $noRabbitId;
+                    }
+                }
+            }
+
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $stockRows = get_post_meta($recipeId, 'zs_recipe_stock', true);
+            if (!is_array($stockRows) || empty($stockRows)) {
+                continue;
+            }
+
+            foreach ($stockRows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $matKey = isset($row['material_key']) ? sanitize_key((string) $row['material_key']) : '';
+                $qty    = isset($row['qty']) ? (float) $row['qty'] : 0.0;
+                $ratio  = isset($row['pax_ratio']) ? max(1, (int) $row['pax_ratio']) : 1;
+
+                if ($matKey === '' || $qty <= 0) {
+                    continue;
+                }
+
+                $amount = (int) ceil($guests / $ratio) * $qty;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $result[$matKey] = ($result[$matKey] ?? 0) + $amount;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Resolve original product ID (WPML support)
+     */
+    private static function resolveOriginalProductId(int $productId): int
+    {
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            return $productId;
+        }
+        $defaultLang = apply_filters('wpml_default_language', null);
+        $originalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
+        return $originalId ? (int) $originalId : $productId;
     }
 
     /**

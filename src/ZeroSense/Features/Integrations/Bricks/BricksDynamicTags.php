@@ -270,6 +270,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_recipe_utensils_total}',       'label' => 'Recipe Utensils (Total Calculated)',             'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_simple}',      'label' => 'Recipe Utensils (Inline — one field per utensil)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_utensils_list}',        'label' => 'Recipe Utensils (List with header)',             'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_recipe_stock_simple}',         'label' => 'Recipe Equipment Stock (Inline — one field per material)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_liquids_simple}',       'label' => 'Recipe Liquids (Inline — one field per liquid)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_recipe_full_simple}',          'label' => 'Recipe Ingredients + Liquids (Inline — combined)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_shopping_list_link}',          'label' => 'Shopping List URL (signed link for this order)',  'group' => 'ZeroSense'];
@@ -427,6 +428,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_recipe_utensils_list}') {
             return $this->getRecipeUtensilsList($post);
         }
+        if ($tag === '{zs_recipe_stock_simple}') {
+            return $this->getRecipeStockSimple($post);
+        }
         if ($tag === '{zs_recipe_liquids_simple}') {
             return $this->getRecipeLiquidsSimple($post);
         }
@@ -525,6 +529,7 @@ class BricksDynamicTags implements FeatureInterface
         if (str_contains($content, '{zs_recipe_utensils_total}'))        { $content = str_replace('{zs_recipe_utensils_total}',        $this->getRecipeUtensilsTotal($post),          $content); }
         if (str_contains($content, '{zs_recipe_utensils_simple}'))       { $content = str_replace('{zs_recipe_utensils_simple}',       $this->getRecipeUtensilsSimple($post),         $content); }
         if (str_contains($content, '{zs_recipe_utensils_list}'))         { $content = str_replace('{zs_recipe_utensils_list}',         $this->getRecipeUtensilsList($post),           $content); }
+        if (str_contains($content, '{zs_recipe_stock_simple}'))          { $content = str_replace('{zs_recipe_stock_simple}',          $this->getRecipeStockSimple($post),            $content); }
         if (str_contains($content, '{zs_recipe_liquids_simple}'))        { $content = str_replace('{zs_recipe_liquids_simple}',        $this->getRecipeLiquidsSimple($post),          $content); }
         if (str_contains($content, '{zs_recipe_full_simple}'))           { $content = str_replace('{zs_recipe_full_simple}',           $this->getRecipeFullSimple($post),             $content); }
         if (str_contains($content, '{zs_shopping_list_link}'))           { $content = str_replace('{zs_shopping_list_link}',           $this->getShoppingListLink($post),             $content); }
@@ -3064,6 +3069,103 @@ class BricksDynamicTags implements FeatureInterface
         $html .= '</div>';
 
         return $html;
+    }
+
+    /**
+     * Get equipment stock requirements from all recipes in the order (one fdr-card__field per material).
+     * Formula: ceil(guests / pax_ratio) * qty — same as utensils.
+     */
+    private function getRecipeStockSimple($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('Recipe Equipment Stock');
+        }
+
+        $cacheKey = 'recipe_stock_simple_' . $orderId;
+        if (isset($this->computedCache[$cacheKey])) {
+            return $this->computedCache[$cacheKey];
+        }
+
+        $order = $this->getOrder($orderId);
+        if (!$order instanceof WC_Order) {
+            return $this->computedCache[$cacheKey] = '';
+        }
+
+        $lineItems = $order->get_items('line_item');
+        if (!$lineItems) {
+            return $this->computedCache[$cacheKey] = '';
+        }
+
+        $totals = [];
+
+        foreach ($lineItems as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+
+            $guests = (int) $item->get_quantity();
+            if ($guests <= 0) {
+                continue;
+            }
+
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+
+            $recipeId = $this->resolveRecipeIdForItem($item, $product);
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $stockRows = get_post_meta($recipeId, 'zs_recipe_stock', true);
+            if (!is_array($stockRows) || empty($stockRows)) {
+                continue;
+            }
+
+            foreach ($stockRows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $matKey = isset($row['material_key']) ? sanitize_key((string) $row['material_key']) : '';
+                $qty    = isset($row['qty']) ? (float) $row['qty'] : 0.0;
+                $ratio  = isset($row['pax_ratio']) ? max(1, (int) $row['pax_ratio']) : 1;
+
+                if ($matKey === '' || $qty <= 0) {
+                    continue;
+                }
+
+                $amount = ceil($guests / $ratio) * $qty;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $totals[$matKey] = ($totals[$matKey] ?? 0.0) + $amount;
+            }
+        }
+
+        if (empty($totals)) {
+            return $this->computedCache[$cacheKey] = '';
+        }
+
+        $materialDefs = \ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDefinitions::getAll();
+        $labelMap = [];
+        foreach ($materialDefs as $mat) {
+            $labelMap[$mat['key']] = $mat['label'];
+        }
+
+        $html = '';
+        foreach ($totals as $matKey => $total) {
+            $label = $labelMap[$matKey] ?? $matKey;
+            $formatted = $this->formatNumber($total);
+            $html .= '<div class="brxe-div fdr-card__field">';
+            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($label) . '</span>';
+            $html .= '<span class="brxe-text-basic fdr-card__field-value">' . esc_html($formatted) . '</span>';
+            $html .= '</div>';
+        }
+
+        return $this->computedCache[$cacheKey] = $html;
     }
 
     /**
