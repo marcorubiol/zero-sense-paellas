@@ -31,15 +31,22 @@ class AlertsAdminNotice
 
         $screen = get_current_screen();
 
-        // No mostrar el notice en el propio dashboard de alertas
-        if (isset($_GET['page']) && $_GET['page'] === 'zs-stock-alerts') {
+        if (!$screen) {
             return;
         }
 
-        $isOrderPage = $screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true);
+        $isOrdersList  = in_array($screen->id, ['edit-shop_order', 'woocommerce_page_wc-orders'], true)
+                         && !isset($_GET['id']) && !isset($_GET['post']);
+        $isOrderEdit   = in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)
+                         && (isset($_GET['id']) || isset($_GET['post']));
+        $isAlertsPage  = isset($_GET['page']) && $_GET['page'] === 'zs-stock-alerts';
 
-        if ($isOrderPage) {
-            $orderId = isset($_GET['id']) ? absint($_GET['id']) : (isset($_GET['post']) ? absint($_GET['post']) : 0);
+        if ($isAlertsPage) {
+            return;
+        }
+
+        if ($isOrderEdit) {
+            $orderId = isset($_GET['id']) ? absint($_GET['id']) : absint($_GET['post']);
             if (!$orderId) {
                 return;
             }
@@ -68,7 +75,10 @@ class AlertsAdminNotice
                 esc_url('#zs_event_equipment'),
                 esc_html(__('View in Event Equipment', 'zero-sense'))
             );
-        } else {
+            return;
+        }
+
+        if ($isOrdersList) {
             printf(
                 '<div class="notice notice-error"><p>⚠️ %s <a href="%s">%s</a></p></div>',
                 sprintf(
