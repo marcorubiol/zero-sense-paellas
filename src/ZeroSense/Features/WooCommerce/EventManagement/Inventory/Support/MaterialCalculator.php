@@ -363,6 +363,90 @@ class MaterialCalculator
     }
 
     /**
+     * Returns recipe stock contributions per material key for display purposes.
+     * Structure: [ 'key' => ['total' => N, 'source' => 'recipe'|'cascade', 'via' => 'parent_label'] ]
+     * Does NOT affect calculate() — purely for InventoryMetabox breakdown hints.
+     */
+    public static function calculateRecipeStockBreakdown(WC_Order $order): array
+    {
+        // Re-run the same accumulation as calculateRecipeStock() to get direct totals
+        $direct = [];
+
+        foreach ($order->get_items() as $item) {
+            $product = $item->get_product();
+            if (!$product) {
+                continue;
+            }
+            $guests = (int) $item->get_quantity();
+            if ($guests <= 0) {
+                continue;
+            }
+            $originalId = self::resolveOriginalProductId($product->get_id());
+            $recipeId   = (int) get_post_meta($originalId, 'zs_recipe_id', true);
+
+            if ($recipeId > 0 && method_exists($item, 'get_meta')) {
+                $rabbitChoice = $item->get_meta('_zs_rabbit_choice', true);
+                if ($rabbitChoice === 'without') {
+                    $noRabbitId = (int) get_post_meta($originalId, 'zs_recipe_id_no_rabbit', true);
+                    if ($noRabbitId > 0) {
+                        $recipeId = $noRabbitId;
+                    }
+                }
+            }
+            if ($recipeId <= 0) {
+                continue;
+            }
+
+            $stockRows = get_post_meta($recipeId, 'zs_recipe_stock', true);
+            if (!is_array($stockRows) || empty($stockRows)) {
+                continue;
+            }
+
+            foreach ($stockRows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $matKey = isset($row['material_key']) ? sanitize_key((string) $row['material_key']) : '';
+                $qty    = isset($row['qty']) ? (float) $row['qty'] : 0.0;
+                $ratio  = isset($row['pax_ratio']) ? max(1, (int) $row['pax_ratio']) : 1;
+                if ($matKey === '' || $qty <= 0) {
+                    continue;
+                }
+                $amount = (int) ceil($guests / $ratio) * $qty;
+                if ($amount <= 0) {
+                    continue;
+                }
+                $direct[$matKey] = ($direct[$matKey] ?? 0) + $amount;
+            }
+        }
+
+        $breakdown = [];
+
+        foreach ($direct as $key => $total) {
+            $breakdown[$key] = ['total' => $total, 'source' => 'recipe', 'via' => null];
+        }
+
+        // Add cascade children
+        foreach (MaterialDefinitions::getStockCascade() as $parentKey => $childKeys) {
+            if (!isset($direct[$parentKey]) || $direct[$parentKey] <= 0) {
+                continue;
+            }
+            $parentDef   = MaterialDefinitions::get($parentKey);
+            $parentLabel = $parentDef ? $parentDef['label'] : $parentKey;
+            foreach ($childKeys as $childKey) {
+                $cascadeTotal = $direct[$parentKey];
+                if (isset($breakdown[$childKey])) {
+                    $breakdown[$childKey]['total'] += $cascadeTotal;
+                } else {
+                    $breakdown[$childKey] = ['total' => $cascadeTotal, 'source' => 'cascade', 'via' => $parentLabel];
+                }
+            }
+        }
+
+        return $breakdown;
+    }
+
+    /**
      * Resolve original product ID (WPML support)
      */
     private static function resolveOriginalProductId(int $productId): int

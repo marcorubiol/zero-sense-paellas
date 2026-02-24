@@ -90,9 +90,11 @@ class InventoryMetabox
         $orderItems = $order->get_items();
         if (!empty($orderItems)) {
             $calculated = MaterialCalculator::calculate($order);
+            $recipeBreakdown = MaterialCalculator::calculateRecipeStockBreakdown($order);
         } else {
             // Si no hay items, usar array vacío (se calculará al guardar)
             $calculated = [];
+            $recipeBreakdown = [];
         }
         
         // Obtener overrides manuales y de cascada
@@ -409,7 +411,24 @@ class InventoryMetabox
                                                 <?php if (!empty($material['dependency_label'])): ?>
                                                     <div class="zs-inventory-dependency-label"><?php echo esc_html($material['dependency_label']); ?></div>
                                                 <?php endif; ?>
-                                                
+
+                                                <?php if (!empty($recipeBreakdown[$materialKey])): ?>
+                                                    <?php
+                                                    $rb      = $recipeBreakdown[$materialKey];
+                                                    $rbTotal = (int) $rb['total'];
+                                                    $eventQty = max(0, $autoValue - $rbTotal);
+                                                    ?>
+                                                    <div class="zs-inventory-recipe-hint">
+                                                        <?php if ($rb['source'] === 'cascade'): ?>
+                                                            ↳ +<?php echo $rbTotal; ?> <?php printf(esc_html__('via %s (recipe)', 'zero-sense'), esc_html($rb['via'])); ?>
+                                                            <?php if ($eventQty > 0): ?> · <?php echo $eventQty; ?> <?php esc_html_e('from event', 'zero-sense'); ?><?php endif; ?>
+                                                        <?php else: ?>
+                                                            ↳ +<?php echo $rbTotal; ?> <?php esc_html_e('from recipe', 'zero-sense'); ?>
+                                                            <?php if ($eventQty > 0): ?> · <?php echo $eventQty; ?> <?php esc_html_e('from event', 'zero-sense'); ?><?php endif; ?>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endif; ?>
+
                                                 <?php 
                                                 // Check if this material has an alert
                                                 $materialAlert = $alerts[$materialKey] ?? null;
