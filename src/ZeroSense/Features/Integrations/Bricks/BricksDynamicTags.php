@@ -1251,11 +1251,12 @@ class BricksDynamicTags implements FeatureInterface
             if (!$product instanceof \WC_Product) {
                 continue;
             }
-            $rid = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+            $originalId = $this->resolveOriginalProductId($product->get_id());
+            $rid = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_ID, true);
             if ($rid > 0) {
                 $recipeIds[$rid] = true;
             }
-            $ridNr = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+            $ridNr = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_NO_RABBIT, true);
             if ($ridNr > 0) {
                 $recipeIds[$ridNr] = true;
             }
@@ -3654,7 +3655,8 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function resolveRecipeIdForItem(\WC_Order_Item_Product $item, \WC_Product $product): int
     {
-        $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
+        $originalId = $this->resolveOriginalProductId($product->get_id());
+        $recipeId = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_ID, true);
         if ($recipeId <= 0) {
             return 0;
         }
@@ -3664,8 +3666,22 @@ class BricksDynamicTags implements FeatureInterface
             return $recipeId;
         }
 
-        $noRabbitId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
+        $noRabbitId = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_NO_RABBIT, true);
         return $noRabbitId > 0 ? $noRabbitId : $recipeId;
+    }
+
+    private function resolveOriginalProductId(int $productId): int
+    {
+        $parentId = wp_get_post_parent_id($productId);
+        $checkId  = $parentId ? $parentId : $productId;
+
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            return $checkId;
+        }
+
+        $defaultLang = apply_filters('wpml_default_language', null);
+        $originalId  = apply_filters('wpml_object_id', $checkId, 'product', true, $defaultLang);
+        return $originalId ? (int) $originalId : $checkId;
     }
 
     /**
