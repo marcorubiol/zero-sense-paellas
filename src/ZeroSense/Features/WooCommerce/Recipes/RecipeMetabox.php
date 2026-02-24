@@ -285,9 +285,9 @@ class RecipeMetabox
                     <thead>
                         <tr>
                             <th style="width: 5%; text-align: center;"></th>
-                            <th style="width: 65%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
-                            <th style="width: 20%;"><?php esc_html_e('Litres per pax', 'zero-sense'); ?></th>
-                            <th style="width: 10%;"></th>
+                            <th style="width: 60%;"><?php esc_html_e('Liquid', 'zero-sense'); ?></th>
+                            <th style="width: 20%;"><?php esc_html_e('Litres / pax', 'zero-sense'); ?></th>
+                            <th style="width: 15%;"></th>
                         </tr>
                     </thead>
                     <tbody id="zs-liquid-rows">
