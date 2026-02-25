@@ -360,6 +360,8 @@ class AdminOrder
 
         if ($manualOverride) {
             MetaKeys::update($order, MetaKeys::IS_MANUAL_OVERRIDE, 'yes');
+        } else {
+            MetaKeys::delete($order, MetaKeys::IS_MANUAL_OVERRIDE);
         }
 
         $order->save();
