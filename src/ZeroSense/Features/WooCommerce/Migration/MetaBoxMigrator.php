@@ -35,8 +35,8 @@ class MetaBoxMigrator
         'promo_code' => 'zs_event_promo_code',
         'intolerances' => 'zs_event_intolerances',
         'location' => 'zs_event_location',
-        'budget_emails_content' => 'zs_budget_email_content',
-        'final_details_emails_content' => 'zs_final_details_email_content',
+        'budget_email_content' => 'zs_budget_email_content',
+        'final_details_email_content' => 'zs_final_details_email_content',
         'marketing_consent_checkbox' => 'zs_marketing_consent',
     ];
 
@@ -63,8 +63,8 @@ class MetaBoxMigrator
         'promo_code' => '_event_promo_code',
         'intolerances' => '_event_intolerances',
         'location' => '_event_location',
-        'budget_emails_content' => '_budget_email_content',
-        'final_details_emails_content' => '_final_details_email_content',
+        'budget_email_content' => '_budget_email_content',
+        'final_details_email_content' => '_final_details_email_content',
         'marketing_consent_checkbox' => '_marketing_consent_checkbox',
     ];
 
