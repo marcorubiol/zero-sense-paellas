@@ -20,35 +20,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/**
- * Detect if running in local/development environment
- */
-function is_local_env() {
-    // Check URL patterns
-    $home_url = get_home_url();
-    if (strpos($home_url, 'localhost') !== false || 
-        strpos($home_url, '.local') !== false ||
-        strpos($home_url, '.dev') !== false ||
-        strpos($home_url, '127.0.0.1') !== false) {
-        return true;
-    }
-    
-    // Check WordPress debug mode
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        return true;
-    }
-    
-    // Check if we're in a git repository (development indicator)
-    $git_dir = plugin_dir_path(__FILE__) . '.git';
-    if (is_dir($git_dir)) {
-        return true;
-    }
-    
-    return false;
-}
-
 // Define plugin constants
-define('ZERO_SENSE_VERSION', is_local_env() ? '3.3.1-dev' : '3.3.1');
+define('ZERO_SENSE_VERSION', in_array(wp_get_environment_type(), ['local', 'development']) ? '3.3.1-dev' : '3.3.1');
 define('ZERO_SENSE_FILE', __FILE__);
 define('ZERO_SENSE_PATH', plugin_dir_path(__FILE__));
 define('ZERO_SENSE_URL', plugin_dir_url(__FILE__));
