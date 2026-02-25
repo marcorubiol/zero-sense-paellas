@@ -57,6 +57,9 @@ class AdminOrdersCsvExport implements FeatureInterface
         // Render button — HPOS orders screen
         add_action('woocommerce_order_list_table_restrict_manage_orders', [$this, 'renderButton'], 20);
 
+        // Move button to search row via JS
+        add_action('admin_footer', [$this, 'renderMoveButtonScript']);
+
         // Show column selector page
         add_action('admin_post_' . self::ACTION, [$this, 'handleColumnSelector']);
 
@@ -87,11 +90,43 @@ class AdminOrdersCsvExport implements FeatureInterface
         $icon = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;" aria-hidden="true"><ellipse cx="10" cy="10" rx="7.5" ry="7.5" stroke="currentColor" stroke-width="1.8"/><line x1="4.5" y1="15.5" x2="15.5" y2="4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
         printf(
-            '<a href="%s" class="zs-btn is-primary" style="margin-left:12px;">%s%s</a>',
+            '<a href="%s" id="zs-export-csv-btn" class="zs-btn is-primary" style="margin-left:4px;display:none;">%s%s</a>',
             esc_url($actionUrl),
             $icon,
             esc_html__('Export CSV', 'zero-sense')
         );
+    }
+
+    public function renderMoveButtonScript(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || !in_array($screen->id, ['edit-shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+        ?>
+        <script>
+        (function() {
+            var btn = document.getElementById('zs-export-csv-btn');
+            if (!btn) return;
+            // HPOS: .wc-order-search-input row or .search-box
+            var target = document.querySelector('.woocommerce-order-search-form, .search-box');
+            if (target) {
+                target.appendChild(btn);
+                btn.style.display = 'inline-flex';
+                btn.style.verticalAlign = 'middle';
+                btn.style.marginLeft = '8px';
+                return;
+            }
+            // Classic: the search box at top right
+            var searchBox = document.querySelector('#post-search-input');
+            if (searchBox) {
+                searchBox.parentNode.appendChild(btn);
+                btn.style.display = 'inline-flex';
+                btn.style.marginLeft = '8px';
+            }
+        })();
+        </script>
+        <?php
     }
 
     public function handleColumnSelector(): void
