@@ -57,6 +57,7 @@ class CartIntegration
         $choice = 'with';
         if (function_exists('WC') && WC()->session) {
             $stored = WC()->session->get('zs_rabbit_choice_' . $productId);
+            error_log('[ZS_RABBIT] addToCartData pid=' . $productId . ' session_stored=' . var_export($stored, true));
 
             // WPML fallback: try canonical (default lang) ID if not found with current ID
             if (!in_array($stored, ['with', 'without'], true) && defined('ICL_SITEPRESS_VERSION')) {
@@ -113,6 +114,7 @@ class CartIntegration
 
     public function saveToOrderItem(WC_Order_Item_Product $item, string $cartItemKey, array $values, $order): void
     {
+        error_log('[ZS_RABBIT] saveToOrderItem cart_key=' . ($values[MetaKeys::CART_KEY] ?? 'NOT_SET'));
         if (!empty($values[MetaKeys::CART_KEY])) {
             $item->add_meta_data(MetaKeys::RABBIT_CHOICE, $values[MetaKeys::CART_KEY], true);
         }
