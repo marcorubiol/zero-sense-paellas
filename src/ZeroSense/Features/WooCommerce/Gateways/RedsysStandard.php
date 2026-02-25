@@ -81,10 +81,7 @@ class RedsysStandard extends WC_Payment_Gateway
 
     public function is_available(): bool
     {
-        $isOrderPay = (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay'))
-            || isset($_GET['pay_for_order']);
-
-        if (!parent::is_available() && !$isOrderPay) {
+        if ($this->enabled !== 'yes') {
             return false;
         }
 

@@ -32,9 +32,14 @@ class ReturnHandler
         }
 
         // Fast-path: S2S callback already updated the order — redirect to thank-you without needing GET params.
-        if ($order->has_status(['deposit-paid', 'fully-paid'])) {
+        // deposit-paid on order-pay must NOT redirect (customer is there to pay the remainder).
+        $isOrderPay = is_checkout_pay_page();
+        $isFullyPaid = $order->has_status('fully-paid');
+        $isDepositPaid = $order->has_status('deposit-paid');
+
+        if ($isFullyPaid || ($isDepositPaid && !$isOrderPay)) {
             $originalLanguage = $this->switchToOrderLanguage($order);
-            $type = $order->has_status('deposit-paid') ? 'deposit' : 'full';
+            $type = $isDepositPaid ? 'deposit' : 'full';
             $redirectUrl = $this->buildRedirectUrl($order, $type);
             $this->restoreLanguage($originalLanguage, $order);
             if ($redirectUrl) {
