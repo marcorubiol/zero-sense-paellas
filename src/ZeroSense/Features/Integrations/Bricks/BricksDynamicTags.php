@@ -3585,8 +3585,8 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $labelWithout = function_exists('icl_t')
-            ? esc_html(icl_t('zero-sense', 'rabbit_toggle_label', 'Sin conejo'))
-            : esc_html__('Sin conejo', 'zero-sense');
+            ? esc_html(icl_t('zero-sense', 'rabbit_toggle_label', 'Without rabbit'))
+            : esc_html__('Without rabbit', 'zero-sense');
 
         $infoText = esc_html(function_exists('icl_t')
             ? icl_t('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.')
@@ -3594,7 +3594,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $infoIconSvg = '<svg class="fill stroke brxe-bwhjmy brxe-icon info-box__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><title>48 c info</title><g fill="currentColor" class="nc-icon-wrapper"><path d="M24,1C11.297,1,1,11.297,1,24s10.297,23,23,23,23-10.297,23-23S36.703,1,24,1Zm2,36c0,.552-.448,1-1,1h-2c-.552,0-1-.448-1-1V19c0-.552,.448-1,1-1h2c.552,0,1,.448,1,1v18Zm-2-23c-1.381,0-2.5-1.119-2.5-2.5s1.119-2.5,2.5-2.5,2.5,1.119,2.5,2.5-1.119,2.5-2.5,2.5Z" fill="currentColor" class="nc-icon-wrapper"></path></g></svg>';
 
-        return '<label class="zs-rabbit-toggle" aria-label="' . esc_attr__('Sin conejo', 'zero-sense') . '">'
+        return '<label class="zs-rabbit-toggle" aria-label="' . esc_attr(function_exists('icl_t') ? icl_t('zero-sense', 'rabbit_toggle_label', 'Without rabbit') : __('Without rabbit', 'zero-sense')) . '">'
             . '<input type="checkbox" name="zs_rabbit_choice" value="without" class="zs-rabbit-toggle__input" data-pid="' . (int) $pidForJs . '"' . ($isWithout ? ' checked' : '') . '>'
             . '<span class="zs-rabbit-toggle__track">'
             . '<span class="zs-rabbit-toggle__thumb"></span>'
@@ -3622,7 +3622,7 @@ class BricksDynamicTags implements FeatureInterface
         if (!function_exists('icl_register_string')) {
             return;
         }
-        icl_register_string('zero-sense', 'rabbit_toggle_label', 'Sin conejo');
+        icl_register_string('zero-sense', 'rabbit_toggle_label', 'Without rabbit');
         icl_register_string('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.');
     }
 
