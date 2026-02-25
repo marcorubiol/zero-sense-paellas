@@ -20,3 +20,10 @@ node_modules/
 
 # Dev-only
 bricks-templates/
+
+# Composer dependencies (regenerate with composer install)
+vendor/
+
+# Deploy & utility scripts
+webhook-deploy.php
+clear-feature-cache.php
