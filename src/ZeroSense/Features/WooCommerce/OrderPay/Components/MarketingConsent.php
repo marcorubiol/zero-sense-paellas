@@ -30,7 +30,7 @@ class MarketingConsent
         add_action('woocommerce_pay_order_before_submit', [$this, 'add_consent_checkbox'], 9);
         
         // Save checkbox value and add order notes
-        add_action('woocommerce_checkout_update_order_meta', [$this, 'save_consent_to_order'], 10, 1);
+        add_action('woocommerce_checkout_order_processed', [$this, 'save_consent_to_order'], 10, 1);
     }
 
     /**
