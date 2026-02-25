@@ -205,6 +205,11 @@ class BricksDynamicTags implements FeatureInterface
             return $value;
         }
 
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/fdr/') === false) {
+            return $value;
+        }
+
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
             return $value;
