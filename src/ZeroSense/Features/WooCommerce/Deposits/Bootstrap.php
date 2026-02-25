@@ -48,6 +48,29 @@ class Bootstrap
         (new StatusSync())->register();
 
         add_filter('woocommerce_payment_gateways', [$this, 'registerGateways']);
+
+        // Legacy S2S aliases: if Redsys back-office still points to the old official plugin URLs,
+        // proxy those callbacks to our deposit-aware handlers. Priority 5 = before standalone gateways (10).
+        add_action('woocommerce_api_wc_redsys_bizum', [$this, 'legacyBizumCallback'], 5);
+        add_action('woocommerce_api_wc_redsys', [$this, 'legacyRedsysCallback'], 5);
+    }
+
+    public function legacyBizumCallback(): void
+    {
+        $gateways = WC()->payment_gateways()->payment_gateways();
+        $gw = $gateways[BizumGateway::GATEWAY_ID] ?? null;
+        if ($gw instanceof BizumGateway) {
+            $gw->handleCallback();
+        }
+    }
+
+    public function legacyRedsysCallback(): void
+    {
+        $gateways = WC()->payment_gateways()->payment_gateways();
+        $gw = $gateways[RedsysGateway::GATEWAY_ID] ?? null;
+        if ($gw && method_exists($gw, 'handleCallback')) {
+            $gw->handleCallback();
+        }
     }
 
     private function registerMetaFields(): void
