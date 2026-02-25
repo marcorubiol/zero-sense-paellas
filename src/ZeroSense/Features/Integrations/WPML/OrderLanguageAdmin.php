@@ -11,6 +11,7 @@ class OrderLanguageAdmin
     public function register(): void
     {
         add_action('woocommerce_admin_order_data_after_order_details', [$this, 'renderOrderLanguageField'], 20);
+        add_action('admin_init', [$this, 'registerAdminStrings']);
         
         // Classic WooCommerce hooks
         add_filter('manage_edit-shop_order_columns', [$this, 'injectLanguageColumn']);
@@ -51,7 +52,7 @@ class OrderLanguageAdmin
         ?>
         <div class="form-field form-field-wide zs-wpml-language">
             <h4 style="margin-bottom: 0.5em;">
-                <span><?php esc_html_e('Order Language', 'zero-sense'); ?></span>
+                <span><?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_order_language', 'Order Language') : __('Order Language', 'zero-sense')); ?></span>
                 <?php if (defined('ICL_SITEPRESS_VERSION')) : ?>
                     <span class="dashicons dashicons-translation" style="color: #007cba; vertical-align: middle;" title="<?php esc_attr_e('WPML is active', 'zero-sense'); ?>"></span>
                 <?php endif; ?>
@@ -65,11 +66,11 @@ class OrderLanguageAdmin
                         </span>
                         <?php echo esc_html($currentLanguageName); ?>
                     <?php else : ?>
-                        <em><?php esc_html_e('Not set', 'zero-sense'); ?></em>
+                        <em><?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_not_set', 'Not set') : __('Not set', 'zero-sense')); ?></em>
                     <?php endif; ?>
                 </span>
                 <a href="#" class="zs-mb-link wpml-language-edit">
-                    <?php esc_html_e('Change', 'zero-sense'); ?>
+                    <?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_change', 'Change') : __('Change', 'zero-sense')); ?>
                 </a>
             </div>
 
@@ -82,11 +83,11 @@ class OrderLanguageAdmin
                     <?php endforeach; ?>
                 </select>
                 <div class="wpml-language-actions zs-mb-row-actions">
-                    <button type="button" class="zs-btn is-neutral wpml-language-cancel"><?php esc_html_e('Cancel', 'zero-sense'); ?></button>
-                    <button type="button" class="zs-btn is-primary wpml-language-save"><?php esc_html_e('Update Language', 'zero-sense'); ?></button>
+                    <button type="button" class="zs-btn is-neutral wpml-language-cancel"><?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_cancel', 'Cancel') : __('Cancel', 'zero-sense')); ?></button>
+                    <button type="button" class="zs-btn is-primary wpml-language-save"><?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_update_language', 'Update Language') : __('Update Language', 'zero-sense')); ?></button>
                 </div>
                 <p class="description" style="margin-top: 0.5em;">
-                    <?php esc_html_e('The language affects payment URLs and customer communications.', 'zero-sense'); ?>
+                    <?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_language_description', 'The language affects payment URLs and customer communications.') : __('The language affects payment URLs and customer communications.', 'zero-sense')); ?>
                 </p>
             </div>
         </div>
@@ -112,14 +113,14 @@ class OrderLanguageAdmin
                 ?>
                 <div class="form-field form-field-wide" style="margin-top: 1em;">
                     <h4 style="margin-bottom: 0.5em;">
-                        <?php esc_html_e('Event Information Sheet', 'zero-sense'); ?>
+                        <?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_event_information_sheet', 'Event Information Sheet') : __('Event Information Sheet', 'zero-sense')); ?>
                     </h4>
                     <a 
                         href="<?php echo esc_url($eventLink); ?>" 
                         target="_blank"
                         class="zs-btn is-neutral"
                     >
-                        <?php esc_html_e('Open Event Sheet', 'zero-sense'); ?>
+                        <?php echo esc_html(function_exists('icl_t') ? icl_t('zero-sense', 'admin_open_event_sheet', 'Open Event Sheet') : __('Open Event Sheet', 'zero-sense')); ?>
                     </a>
                 </div>
                 <?php
@@ -155,7 +156,7 @@ class OrderLanguageAdmin
                     var notice = $(
                         '<div class="notice notice-info"><p>' +
                         '<span class="spinner is-active" style="float: none; margin: 0 5px 0 0;"></span>' +
-                        '<?php echo esc_js(__('Updating order language and saving changes...', 'zero-sense')); ?>' +
+                        '<?php echo esc_js(function_exists('icl_t') ? icl_t('zero-sense', 'admin_updating_language', 'Updating order language and saving changes...') : __('Updating order language and saving changes...', 'zero-sense')); ?>' +
                         '</p></div>'
                     );
                     $container.prepend(notice);
@@ -167,6 +168,23 @@ class OrderLanguageAdmin
         <?php
     }
 
+    public function registerAdminStrings(): void
+    {
+        if (!function_exists('icl_register_string')) {
+            return;
+        }
+        icl_register_string('zero-sense', 'admin_order_language', 'Order Language');
+        icl_register_string('zero-sense', 'admin_not_set', 'Not set');
+        icl_register_string('zero-sense', 'admin_change', 'Change');
+        icl_register_string('zero-sense', 'admin_cancel', 'Cancel');
+        icl_register_string('zero-sense', 'admin_update_language', 'Update Language');
+        icl_register_string('zero-sense', 'admin_language_description', 'The language affects payment URLs and customer communications.');
+        icl_register_string('zero-sense', 'admin_event_information_sheet', 'Event Information Sheet');
+        icl_register_string('zero-sense', 'admin_open_event_sheet', 'Open Event Sheet');
+        icl_register_string('zero-sense', 'admin_updating_language', 'Updating order language and saving changes...');
+        icl_register_string('zero-sense', 'admin_language_column', 'Language');
+    }
+
     public function injectLanguageColumn(array $columns): array
     {
         $newColumns = [];
@@ -174,7 +192,7 @@ class OrderLanguageAdmin
         foreach ($columns as $key => $value) {
             $newColumns[$key] = $value;
             if ($key === 'order_number') {
-                $newColumns['order_language'] = __('Language', 'zero-sense');
+                $newColumns['order_language'] = function_exists('icl_t') ? icl_t('zero-sense', 'admin_language_column', 'Language') : __('Language', 'zero-sense');
             }
         }
 
