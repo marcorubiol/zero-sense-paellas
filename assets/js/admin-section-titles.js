@@ -8,15 +8,11 @@ jQuery(document).ready(function ($) {
             }
 
             var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
-            var editLink = elem.find('a.edit_address');
-            var editHtml = editLink.length ? editLink[0].outerHTML : '';
 
             if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                if (editLink.length) editLink.remove();
-                elem.after('<div class="zs-subtitle zs-subtitle-client">Client' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                elem.after('<div class="zs-subtitle zs-subtitle-client">Client</div>');
             } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                if (editLink.length) editLink.remove();
-                elem.after('<div class="zs-subtitle zs-subtitle-venue">Wedding Planner - Venue' + (editHtml ? '<span class="zs-subtitle-edit">' + editHtml + '</span>' : '') + '</div>');
+                elem.after('<div class="zs-subtitle zs-subtitle-venue">Wedding Planner - Venue</div>');
             }
         });
 
