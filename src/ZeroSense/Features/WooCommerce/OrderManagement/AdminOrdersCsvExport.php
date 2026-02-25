@@ -84,10 +84,10 @@ class AdminOrdersCsvExport implements FeatureInterface
 
         $actionUrl = add_query_arg($params, admin_url('admin-post.php'));
 
-        $icon = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;margin-right:5px;margin-top:-1px;" aria-hidden="true"><ellipse cx="10" cy="10" rx="8.5" ry="8.5" stroke="currentColor" stroke-width="2"/><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+        $icon = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;margin-right:4px;margin-top:-1px;opacity:.9;" aria-hidden="true"><ellipse cx="10" cy="10" rx="7.5" ry="7.5" stroke="currentColor" stroke-width="1.8"/><line x1="4.5" y1="15.5" x2="15.5" y2="4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
         printf(
-            '<a href="%s" style="display:inline-flex;align-items:center;margin-left:12px;margin-right:4px;padding:0 12px;height:30px;line-height:30px;background:#5c58f9;color:#fff;border:none;border-radius:3px;font-size:13px;font-weight:500;text-decoration:none;box-shadow:0 1px 2px rgba(92,88,249,.25);transition:background .15s;" onmouseover="this.style.background=\'#4340d4\'" onmouseout="this.style.background=\'#5c58f9\'">%s%s</a>',
+            '<a href="%s" style="display:inline-flex;align-items:center;margin-left:12px;margin-right:4px;padding:0 10px;height:30px;line-height:28px;background:transparent;color:#5c58f9;border:1px solid #5c58f9;border-radius:3px;font-size:13px;font-weight:500;text-decoration:none;transition:background .15s,color .15s;" onmouseover="this.style.background=\'#5c58f9\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'#5c58f9\'">%s%s</a>',
             esc_url($actionUrl),
             $icon,
             esc_html__('Export CSV', 'zero-sense')
