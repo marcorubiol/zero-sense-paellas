@@ -29,6 +29,10 @@ class EventDetailsMetabox
         MetaKeys::HOW_FOUND_US => 'how_found_us',
     ];
 
+    private const RENAMED_KEYS = [
+        MetaKeys::SERVING_TIME => 'zs_event_serving_time',
+    ];
+
     private const LEGACY_EVENT_KEYS = [
         MetaKeys::TOTAL_GUESTS => '_event_total_guests',
         MetaKeys::ADULTS => '_event_adults',
@@ -387,7 +391,7 @@ class EventDetailsMetabox
                     
                     <div class="zs-mb-field">
                         <label for="event_how_found_us">
-                            <?php esc_html_e('How found us', 'zero-sense'); ?>
+                            <?php esc_html_e('How did you find us?', 'zero-sense'); ?>
                         </label>
                         <select id="event_how_found_us" name="event_how_found_us" class="widefat">
                             <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
@@ -588,38 +592,46 @@ class EventDetailsMetabox
             FieldChangeTracker::compareAndTrack($orderId, MetaKeys::EVENT_DATE, $order->get_meta(MetaKeys::EVENT_DATE, true), $newValue);
             $order->update_meta_data(MetaKeys::EVENT_DATE, $newValue);
         }
-        if (isset($_POST['event_team_arrival_time'])) {
-            $newValue = sanitize_text_field((string) $_POST['event_team_arrival_time']);
-            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::TEAM_ARRIVAL_TIME, $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true), $newValue);
-            $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $newValue);
-        }
         if (isset($_POST['event_serving_time'])) {
             $servingTime = sanitize_text_field($_POST['event_serving_time']);
             FieldChangeTracker::compareAndTrack($orderId, MetaKeys::SERVING_TIME, $order->get_meta(MetaKeys::SERVING_TIME, true), $servingTime);
             $order->update_meta_data(MetaKeys::SERVING_TIME, $servingTime);
-            
-            // Auto-calculate starters service time if not set and serving time is provided
-            $existingStartersTime = $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true);
-            if (($existingStartersTime === '' || $existingStartersTime === null) && $servingTime !== '') {
-                $startersTime = $this->calculateStartersTime($servingTime);
-                if ($startersTime !== '') {
-                    $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $startersTime);
-                }
-            }
-            
-            // Auto-calculate team arrival time if not set and serving time is provided
-            $existingTeamArrivalTime = $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true);
-            if (($existingTeamArrivalTime === '' || $existingTeamArrivalTime === null) && $servingTime !== '') {
-                $teamArrivalTime = $this->calculateTeamArrivalTime($servingTime);
-                if ($teamArrivalTime !== '') {
-                    $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $teamArrivalTime);
+        } else {
+            $servingTime = (string) $order->get_meta(MetaKeys::SERVING_TIME, true);
+        }
+
+        // Starters service time: save POST value if non-empty, else auto-calculate from serving time
+        if (isset($_POST['event_starters_service_time'])) {
+            $newValue = sanitize_text_field($_POST['event_starters_service_time']);
+            if ($newValue !== '') {
+                FieldChangeTracker::compareAndTrack($orderId, MetaKeys::STARTERS_SERVICE_TIME, $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true), $newValue);
+                $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $newValue);
+            } elseif ($servingTime !== '') {
+                $existing = $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true);
+                if ($existing === '' || $existing === false || $existing === null) {
+                    $calculated = $this->calculateStartersTime($servingTime);
+                    if ($calculated !== '') {
+                        $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $calculated);
+                    }
                 }
             }
         }
-        if (isset($_POST['event_starters_service_time'])) {
-            $newValue = sanitize_text_field($_POST['event_starters_service_time']);
-            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::STARTERS_SERVICE_TIME, $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true), $newValue);
-            $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $newValue);
+
+        // Team arrival time: save POST value if non-empty, else auto-calculate from serving time
+        if (isset($_POST['event_team_arrival_time'])) {
+            $newValue = sanitize_text_field((string) $_POST['event_team_arrival_time']);
+            if ($newValue !== '') {
+                FieldChangeTracker::compareAndTrack($orderId, MetaKeys::TEAM_ARRIVAL_TIME, $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true), $newValue);
+                $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $newValue);
+            } elseif ($servingTime !== '') {
+                $existing = $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true);
+                if ($existing === '' || $existing === false || $existing === null) {
+                    $calculated = $this->calculateTeamArrivalTime($servingTime);
+                    if ($calculated !== '') {
+                        $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $calculated);
+                    }
+                }
+            }
         }
         if (isset($_POST['event_start_time'])) {
             $newValue = sanitize_text_field($_POST['event_start_time']);
@@ -684,7 +696,15 @@ class EventDetailsMetabox
 
         $legacyEventKey = self::LEGACY_EVENT_KEYS[$key] ?? null;
         if (is_string($legacyEventKey) && $legacyEventKey !== '') {
-            return $order->get_meta($legacyEventKey, true);
+            $legacyValue = $order->get_meta($legacyEventKey, true);
+            if ($legacyValue !== '' && $legacyValue !== null) {
+                return $legacyValue;
+            }
+        }
+
+        $renamedKey = self::RENAMED_KEYS[$key] ?? null;
+        if (is_string($renamedKey) && $renamedKey !== '') {
+            return $order->get_meta($renamedKey, true);
         }
 
         return '';

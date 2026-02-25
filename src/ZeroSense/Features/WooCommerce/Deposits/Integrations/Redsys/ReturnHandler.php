@@ -16,7 +16,8 @@ class ReturnHandler
 
     public function handleReturn(): void
     {
-        if (!$this->hasRedsysParameters()) {
+        $isReturnPage = is_order_received_page() || is_checkout_pay_page();
+        if (!$isReturnPage) {
             return;
         }
 
@@ -27,6 +28,30 @@ class ReturnHandler
 
         $order = wc_get_order($orderId);
         if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        // Fast-path: S2S callback already updated the order — redirect to thank-you without needing GET params.
+        // deposit-paid on order-pay must NOT redirect (customer is there to pay the remainder).
+        $isOrderPay = is_checkout_pay_page();
+        $isFullyPaid = $order->has_status('fully-paid');
+        $isDepositPaid = $order->has_status('deposit-paid');
+
+        if ($isFullyPaid || ($isDepositPaid && !$isOrderPay)) {
+            $originalLanguage = $this->switchToOrderLanguage($order);
+            $type = $isDepositPaid ? 'deposit' : 'full';
+            $redirectUrl = $this->buildRedirectUrl($order, $type);
+            $this->restoreLanguage($originalLanguage, $order);
+            if ($redirectUrl) {
+                $this->emptyCart();
+                wp_safe_redirect($redirectUrl);
+                exit;
+            }
+            return;
+        }
+
+        // Normal path: Redsys GET params present (used as fallback when S2S hasn't fired yet).
+        if (!$this->hasRedsysParameters()) {
             return;
         }
 
@@ -54,11 +79,7 @@ class ReturnHandler
 
     private function hasRedsysParameters(): bool
     {
-        if (!isset($_GET['Ds_SignatureVersion'], $_GET['Ds_MerchantParameters'], $_GET['Ds_Signature'])) {
-            return false;
-        }
-
-        return is_order_received_page() || is_checkout_pay_page();
+        return isset($_GET['Ds_SignatureVersion'], $_GET['Ds_MerchantParameters'], $_GET['Ds_Signature']);
     }
 
     private function resolveOrderId(): int

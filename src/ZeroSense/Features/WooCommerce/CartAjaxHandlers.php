@@ -189,18 +189,26 @@ class CartAjaxHandlers implements FeatureInterface
         
         // Ensure session exists
         $this->ensureWcSession();
-        
+
+        $rabbitChoice = isset($_POST['zs_rabbit_choice']) && in_array($_POST['zs_rabbit_choice'], ['with', 'without'], true)
+            ? sanitize_text_field($_POST['zs_rabbit_choice'])
+            : null;
+
         // Check if product already exists in cart
         $existingCartItemKey = $this->findProductInCart($productId);
-        
+
         if ($existingCartItemKey) {
-            // Product exists, update quantity
             $currentQuantity = WC()->cart->cart_contents[$existingCartItemKey]['quantity'];
-            $newQuantity = $currentQuantity + $quantity;
-            WC()->cart->set_quantity($existingCartItemKey, $newQuantity);
-            $cartItemKey = $existingCartItemKey;
+
+            if ($rabbitChoice !== null) {
+                // Rabbit choice update: remove old item and re-add keeping the same quantity
+                WC()->cart->remove_cart_item($existingCartItemKey);
+                $cartItemKey = WC()->cart->add_to_cart($productId, $currentQuantity);
+            } else {
+                WC()->cart->set_quantity($existingCartItemKey, $currentQuantity + $quantity);
+                $cartItemKey = $existingCartItemKey;
+            }
         } else {
-            // Product doesn't exist, add new
             $cartItemKey = WC()->cart->add_to_cart($productId, $quantity);
         }
         

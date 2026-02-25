@@ -4,11 +4,13 @@ namespace ZeroSense\Features\WooCommerce\Gateways;
 use WC_Order;
 use WC_Payment_Gateway;
 use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\Config;
+use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\PaymentApplicator;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\Gateways\RedsysApi;
 
 class RedsysBizum extends WC_Payment_Gateway
 {
+    use PaymentApplicator;
     public const GATEWAY_ID = 'redsys_bizum';
 
     private ?RedsysApi $api = null;
@@ -79,10 +81,7 @@ class RedsysBizum extends WC_Payment_Gateway
 
     public function is_available(): bool
     {
-        $isOrderPay = (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay'))
-            || isset($_GET['pay_for_order']);
-
-        if (!parent::is_available() && !$isOrderPay) {
+        if ($this->enabled !== 'yes') {
             return false;
         }
 
@@ -237,7 +236,17 @@ class RedsysBizum extends WC_Payment_Gateway
 
             $orderId = 0; if ($dsOrder && preg_match('/^(\d+)/', $dsOrder, $m)) { $orderId = (int) $m[1]; }
             $order = $orderId ? wc_get_order($orderId) : null;
-            if (!$order instanceof \WC_Order) { status_header(200); exit; }
+            if (!$order instanceof \WC_Order) {
+                if ($logger) { $logger->error('Redsys Bizum callback: order not found for Ds_Order ' . $dsOrder, ['source' => 'zero-sense-redsys-bizum']); }
+                status_header(200); exit;
+            }
+
+            if ($logger) {
+                $logger->info(sprintf(
+                    'Redsys Bizum S2S callback: order=%d ds_order=%s response=%d signature=%s',
+                    $orderId, $dsOrder, $dsResponse, $signatureOk ? 'ok' : 'FAIL'
+                ), ['source' => 'zero-sense-redsys-bizum']);
+            }
 
             if (!$signatureOk) {
                 $order->add_order_note(__('Redsys Bizum callback: signature verification failed. No status change.', 'zero-sense'));
@@ -248,13 +257,10 @@ class RedsysBizum extends WC_Payment_Gateway
             if ($isSuccess) {
                 // Idempotency: already processed
                 if ($order->has_status(['deposit-paid', 'fully-paid'])) { status_header(200); exit; }
-                $order->add_order_note(sprintf(__('Redsys Bizum payment success via callback. Response: %d', 'zero-sense'), $dsResponse));
-                $previousStatus = $order->get_status();
-                $order->update_status('fully-paid');
-                $order->save();
-                if ($previousStatus === 'fully-paid') {
-                    do_action('woocommerce_order_status_changed', $order->get_id(), $previousStatus, 'fully-paid', $order);
-                }
+                $intent    = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                $amountRaw = (float) (isset($params['Ds_Amount']) ? $params['Ds_Amount'] : 0) / 100;
+                $order->add_order_note(sprintf(__('Redsys Bizum payment success via callback (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
+                $this->applyPaymentSuccess($order, $intent, $amountRaw);
             } else {
                 $order->add_order_note(sprintf(__('Redsys Bizum payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
                 $order->save();

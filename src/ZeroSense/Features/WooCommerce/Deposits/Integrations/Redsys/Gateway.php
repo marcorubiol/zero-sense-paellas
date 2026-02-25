@@ -237,9 +237,13 @@ class Gateway extends WC_Payment_Gateway
         $this->api->setParameter('DS_MERCHANT_TRANSACTIONTYPE', Config::TRANSACTION_TYPE_AUTHORIZATION);
         $this->api->setParameter('DS_MERCHANT_TERMINAL', $this->get_option('terminal'));
         $this->api->setParameter('DS_MERCHANT_MERCHANTCODE', $this->get_option('merchant_code'));
-        $this->api->setParameter('DS_MERCHANT_MERCHANTURL', \ZeroSense\Features\WooCommerce\Gateways\RedsysHelpers::getMerchantUrl(self::GATEWAY_ID));
+        $merchantUrl = \ZeroSense\Features\WooCommerce\Gateways\RedsysHelpers::getMerchantUrl(self::GATEWAY_ID);
+        $this->api->setParameter('DS_MERCHANT_MERCHANTURL', $merchantUrl);
         $this->api->setParameter('DS_MERCHANT_URLOK', \ZeroSense\Features\WooCommerce\Gateways\RedsysHelpers::getOkUrl($order));
         $this->api->setParameter('DS_MERCHANT_URLKO', \ZeroSense\Features\WooCommerce\Gateways\RedsysHelpers::getKoUrl());
+        if (function_exists('wc_get_logger')) {
+            wc_get_logger()->info(sprintf('Redsys params: order=%d MERCHANTURL=%s gateway=%s', $order->get_id(), $merchantUrl, static::GATEWAY_ID), ['source' => 'zero-sense-redsys-deposits']);
+        }
         $this->api->setParameter('DS_MERCHANT_PAYMETHODS', $this->getPayMethods());
         // Localize Redsys form
         $this->api->setParameter('DS_MERCHANT_CONSUMERLANGUAGE', $this->getConsumerLanguageForOrder($order));
@@ -380,7 +384,12 @@ class Gateway extends WC_Payment_Gateway
                     'ds_order' => $dsOrder,
                 ]);
             } catch (\Throwable $e) { /* no-op */ }
-            // suppress info-level callback log
+            if ($logger) {
+                $logger->info(sprintf(
+                    'Redsys S2S callback: order=%d ds_order=%s response=%d signature=%s',
+                    $orderId, $dsOrder, $dsResponse, $signatureOk ? 'ok' : 'FAIL'
+                ), ['source' => 'zero-sense-redsys-deposits']);
+            }
 
             if (!$signatureOk) {
                 // Do not alter order, just note failure

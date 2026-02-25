@@ -10,8 +10,12 @@ class MarketingConsent
 
     public function __construct()
     {
-        // Only apply on order-pay pages
+        // Display hooks: only on order-pay page load
         add_action('template_redirect', [$this, 'maybeAddOrderPayMarketing'], 1);
+
+        // Universal consent capture: runs before DirectPaymentHandler (wp:10)
+        // and before WC_Form_Handler::pay_action, for ANY payment method and status
+        add_action('wp', [$this, 'captureConsentFromOrderPayPost'], 1);
     }
 
     public function maybeAddOrderPayMarketing(): void
@@ -28,9 +32,6 @@ class MarketingConsent
         add_action('woocommerce_review_order_before_submit', [$this, 'add_consent_checkbox'], 9);
         // Bricks form-pay template hook
         add_action('woocommerce_pay_order_before_submit', [$this, 'add_consent_checkbox'], 9);
-        
-        // Save checkbox value and add order notes
-        add_action('woocommerce_checkout_update_order_meta', [$this, 'save_consent_to_order'], 10, 1);
     }
 
     /**
@@ -49,7 +50,19 @@ class MarketingConsent
      */
     public function add_consent_checkbox()
     {
-        $checkbox_label = __('Quiero recibir información y ofertas especiales (tranquilos, ¡nosotros también odiamos el spam!)', 'zero-sense');
+        $order = $this->getOrderFromPage();
+
+        if ($order instanceof WC_Order) {
+            if (!$order->has_status(['pending', 'deposit-paid'])) {
+                return;
+            }
+
+            if ($order->get_meta(self::CANONICAL_CONSENT_KEY, true) === '1') {
+                return;
+            }
+        }
+
+        $checkbox_label = __('I want to receive information and special offers (don\'t worry, we hate spam too!)', 'zero-sense');
         
         woocommerce_form_field(self::FORM_CONSENT_KEY, [
             'type'          => 'checkbox',
@@ -62,21 +75,45 @@ class MarketingConsent
     }
 
     /**
-     * Save checkbox value to order meta and add order notes
+     * Capture marketing consent from any order-pay form POST.
+     * Runs at wp:1, before DirectPaymentHandler (wp:10) and WC_Form_Handler.
+     * Only saves when the checkbox was actually rendered (field present in POST).
      */
-    public function save_consent_to_order($order_id)
+    public function captureConsentFromOrderPayPost(): void
     {
-        $order = wc_get_order($order_id);
-        if (!$order instanceof WC_Order) {
+        global $wp;
+
+        if (empty($_POST['woocommerce_pay']) || empty($_POST['woocommerce-pay-nonce'])) {
             return;
         }
 
-        $marketing_consent = isset($_POST[self::FORM_CONSENT_KEY]) ? 1 : 0;
+        if (!wp_verify_nonce($_POST['woocommerce-pay-nonce'], 'woocommerce-pay')) {
+            return;
+        }
 
-        $order->update_meta_data(self::CANONICAL_CONSENT_KEY, $marketing_consent);
+        if (empty($wp->query_vars['order-pay']) || empty($_GET['key'])) {
+            return;
+        }
+
+        $order = wc_get_order(absint($wp->query_vars['order-pay']));
+        if (!$order instanceof WC_Order || $order->get_order_key() !== $_GET['key']) {
+            return;
+        }
+
+        // Only save if checkbox field was present in POST (i.e. it was rendered).
+        // Unchecked checkboxes are absent from POST, but so are non-rendered ones.
+        // We distinguish by checking if the form could have shown the checkbox:
+        // if consent is already '1', checkbox was NOT rendered → do nothing.
+        $existing = $order->get_meta(self::CANONICAL_CONSENT_KEY, true);
+        if ($existing === '1') {
+            return;
+        }
+
+        $consent = isset($_POST[self::FORM_CONSENT_KEY]) ? 1 : 0;
+        $order->update_meta_data(self::CANONICAL_CONSENT_KEY, $consent);
         $order->save();
 
-        $consent_text = $marketing_consent ? __('yes', 'zero-sense') : __('no', 'zero-sense');
+        $consent_text = $consent ? __('yes', 'zero-sense') : __('no', 'zero-sense');
         $order->add_order_note(sprintf(__('Marketing Consent: %s', 'zero-sense'), $consent_text));
     }
 
@@ -84,5 +121,24 @@ class MarketingConsent
     {
         return (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) ||
                (isset($_GET['pay_for_order'], $_GET['key']));
+    }
+
+    private function getOrderFromPage(): ?WC_Order
+    {
+        global $wp;
+
+        $orderId = 0;
+        if (!empty($wp->query_vars['order-pay'])) {
+            $orderId = absint($wp->query_vars['order-pay']);
+        } elseif (isset($_GET['key']) && function_exists('wc_get_order_id_by_order_key')) {
+            $orderId = absint(wc_get_order_id_by_order_key(wp_unslash($_GET['key'])));
+        }
+
+        if ($orderId <= 0) {
+            return null;
+        }
+
+        $order = wc_get_order($orderId);
+        return $order instanceof WC_Order ? $order : null;
     }
 }

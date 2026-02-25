@@ -205,6 +205,11 @@ class BricksDynamicTags implements FeatureInterface
             return $value;
         }
 
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, '/fdr/') === false) {
+            return $value;
+        }
+
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
             return $value;
@@ -3575,12 +3580,17 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // Read current session choice to restore toggle state
+        // Read current choice from cart item (persisted via restoreFromSession)
         $isWithout = false;
-        if (function_exists('WC') && WC()->session) {
-            $stored = WC()->session->get('zs_rabbit_choice_' . $pidForJs);
-            if ($stored === 'without') {
-                $isWithout = true;
+        $inCart = false;
+        if (function_exists('WC') && WC()->cart) {
+            foreach (WC()->cart->get_cart() as $cartItem) {
+                $cartPid = isset($cartItem['product_id']) ? (int) $cartItem['product_id'] : 0;
+                if ($cartPid === $pidForJs || $cartPid === $productId) {
+                    $inCart = true;
+                    $isWithout = (($cartItem['zs_rabbit_choice'] ?? 'with') === 'without');
+                    break;
+                }
             }
         }
 
@@ -3589,12 +3599,16 @@ class BricksDynamicTags implements FeatureInterface
             : esc_html__('Without rabbit', 'zero-sense');
 
         $infoText = esc_html(function_exists('icl_t')
-            ? icl_t('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.')
-            : __('This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.', 'zero-sense'));
+            ? icl_t('zero-sense', 'rabbit_toggle_info', 'Choosing the "without rabbit" option means you will handle the rabbit ingredient yourself. We will provide the paella with all other ingredients except the rabbit.')
+            : __('Choosing the "without rabbit" option means you will handle the rabbit ingredient yourself. We will provide the paella with all other ingredients except the rabbit.', 'zero-sense')
+        );
 
         $infoIconSvg = '<svg class="fill stroke brxe-bwhjmy brxe-icon info-box__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><title>48 c info</title><g fill="currentColor" class="nc-icon-wrapper"><path d="M24,1C11.297,1,1,11.297,1,24s10.297,23,23,23,23-10.297,23-23S36.703,1,24,1Zm2,36c0,.552-.448,1-1,1h-2c-.552,0-1-.448-1-1V19c0-.552,.448-1,1-1h2c.552,0,1,.448,1,1v18Zm-2-23c-1.381,0-2.5-1.119-2.5-2.5s1.119-2.5,2.5-2.5,2.5,1.119,2.5,2.5-1.119,2.5-2.5,2.5Z" fill="currentColor" class="nc-icon-wrapper"></path></g></svg>';
 
-        return '<label class="zs-rabbit-toggle" aria-label="' . esc_attr(function_exists('icl_t') ? icl_t('zero-sense', 'rabbit_toggle_label', 'Without rabbit') : __('Without rabbit', 'zero-sense')) . '">'
+        $displayStyle = $inCart ? '' : ' style="display:none"';
+
+        return '<div class="zs-rabbit-toggle-wrap" data-rabbit-toggle-pid="' . (int) $pidForJs . '" data-in-cart="' . ($inCart ? '1' : '0') . '"' . $displayStyle . '>'
+            . '<label class="zs-rabbit-toggle" aria-label="' . esc_attr(function_exists('icl_t') ? icl_t('zero-sense', 'rabbit_toggle_label', 'Without rabbit') : __('Without rabbit', 'zero-sense')) . '">'
             . '<input type="checkbox" name="zs_rabbit_choice" value="without" class="zs-rabbit-toggle__input" data-pid="' . (int) $pidForJs . '"' . ($isWithout ? ' checked' : '') . '>'
             . '<span class="zs-rabbit-toggle__track">'
             . '<span class="zs-rabbit-toggle__thumb"></span>'
@@ -3605,6 +3619,7 @@ class BricksDynamicTags implements FeatureInterface
             . '<p class="brxe-text-basic info-box__text">' . $infoText . '</p>'
             . $infoIconSvg
             . '</div>'
+            . '</div>'
             . '<style>'
             . '.zs-rabbit-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:14px;}'
             . '.zs-rabbit-toggle__input{position:absolute;opacity:0;width:0;height:0;}'
@@ -3612,7 +3627,10 @@ class BricksDynamicTags implements FeatureInterface
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track{background:#2271b1;}'
             . '.zs-rabbit-toggle__thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}'
             . '.zs-rabbit-toggle__input:checked+.zs-rabbit-toggle__track .zs-rabbit-toggle__thumb{transform:translateX(18px);}'
-            . '.zs-rabbit-toggle__label{font-size:var(--text-m;}'
+            . '.zs-rabbit-toggle__label{font-size:var(--text-m);}'
+            . '.cart-circle-btn.zs-rabbit-updating{background-color:var(--cart-bg-success,#4CAF50)!important;border-color:var(--border-color-light)!important;}'
+            . '.cart-circle-btn.zs-rabbit-updating::after{--shimmer-primary:rgba(76,175,80,0.3);--shimmer-secondary:rgba(255,255,255,0.4);}'
+            . '.cart-circle-btn.zs-rabbit-updating:hover{background-color:var(--cart-bg-success,#4CAF50)!important;}'
             . '</style>';
 
     }
@@ -3629,20 +3647,75 @@ class BricksDynamicTags implements FeatureInterface
     public function enqueueRabbitToggleAssets(): void
     {
         $ajaxUrl = esc_js(admin_url('admin-ajax.php'));
-        $js = '(function(){
-            document.addEventListener("change", function(e) {
-                var toggle = e.target;
-                if (!toggle.classList || !toggle.classList.contains("zs-rabbit-toggle__input")) return;
-                var pid = toggle.dataset.pid;
-                if (!pid) return;
-                var choice = toggle.checked ? "without" : "with";
-                var fd = new FormData();
-                fd.append("action", "zs_set_rabbit_choice");
-                fd.append("product_id", pid);
-                fd.append("choice", choice);
-                fetch("' . $ajaxUrl . '", {method:"POST", body:fd, credentials:"same-origin"});
+        $js = '(function($){
+            // Global map: pid -> choice, readable by cart scripts
+            window.zsRabbitChoices = window.zsRabbitChoices || {};
+
+            // Show/hide toggle wrapper and reset state
+            function syncToggleVisibility(pid, inCart) {
+                var $wrap = $("[data-rabbit-toggle-pid=\'" + pid + "\']");
+                if (!$wrap.length) return;
+                if (inCart) {
+                    $wrap.show();
+                } else {
+                    $wrap.hide();
+                    $wrap.find(".zs-rabbit-toggle__input").prop("checked", false);
+                    delete window.zsRabbitChoices[pid];
+                }
+            }
+
+            // Toggle changed: update global map; if product is in cart, auto re-add with new choice
+            $(document).on("change", ".zs-rabbit-toggle__input", function() {
+                var pid = String($(this).data("pid"));
+                var choice = this.checked ? "without" : "with";
+                window.zsRabbitChoices[pid] = choice;
+                console.log("[ZS_RABBIT] toggle changed pid=" + pid + " choice=" + choice);
+
+                var $btn = $(".cart-circle-btn[data-product-id=\'" + pid + "\']");
+                if ($btn.hasClass("in-cart") && typeof zsCartHandler !== "undefined") {
+                    console.log("[ZS_RABBIT] auto-updating cart choice for pid=" + pid);
+                    $btn.addClass("loading zs-rabbit-updating");
+                    if (typeof window.zsSetGlobalCartLock === "function") window.zsSetGlobalCartLock(true);
+                    $.ajax({
+                        url: zsCartHandler.ajaxUrl,
+                        type: "POST",
+                        data: {
+                            action: "zs_add_to_cart",
+                            security: zsCartHandler.nonce,
+                            product_id: pid,
+                            quantity: 1,
+                            zs_rabbit_choice: choice
+                        }
+                    }).done(function(response) {
+                        if (response.success) {
+                            $btn.attr("data-cart-item-key", response.data.cart_item_key || "");
+                            console.log("[ZS_RABBIT] cart updated with choice=" + choice);
+                        }
+                    }).always(function() {
+                        $btn.removeClass("loading zs-rabbit-updating");
+                        if (typeof window.zsSetGlobalCartLock === "function") window.zsSetGlobalCartLock(false);
+                    });
+                }
             });
-        })();';
+
+            // Listen to WooCommerce cart events dispatched by the Bricks cart script
+            $(document.body).on("added_to_cart", function(e, fragments, cartHash, $btn) {
+                var pid = $btn && $btn.data ? String($btn.data("product-id")) : null;
+                if (pid) {
+                    console.log("[ZS_RABBIT] added_to_cart event pid=" + pid);
+                    syncToggleVisibility(pid, true);
+                }
+            });
+
+            $(document.body).on("removed_from_cart", function(e, fragments, cartHash, $btn) {
+                var pid = $btn && $btn.data ? String($btn.data("product-id")) : null;
+                if (pid) {
+                    console.log("[ZS_RABBIT] removed_from_cart event pid=" + pid);
+                    syncToggleVisibility(pid, false);
+                }
+            });
+
+        })(jQuery);';
         wp_enqueue_script('jquery');
         wp_add_inline_script('jquery', $js);
     }

@@ -225,7 +225,7 @@ class CheckoutFields
         $howFoundUsOptions = array_merge(['' => $selectPlaceholder], FieldOptions::getHowFoundUsOptions());
         woocommerce_form_field(MetaKeys::HOW_FOUND_US, [
             'type'     => 'select',
-            'label'    => __('Y por último, ¿Cómo nos conociste?', 'zero-sense'),
+            'label'    => __('And finally, how did you find us?', 'zero-sense'),
             'required' => true,
             'options'  => $howFoundUsOptions,
             'class'    => ['form-row-wide'],
@@ -250,13 +250,13 @@ class CheckoutFields
     public function validate_event_fields(): void
     {
         $required = [
-            MetaKeys::TOTAL_GUESTS   => __('Número total de comensales', 'zero-sense'),
-            MetaKeys::ADULTS         => __('Adultos', 'zero-sense'),
-            'event_address_checkout' => __('Dirección del evento', 'zero-sense'),
-            MetaKeys::EVENT_DATE     => __('Fecha del evento', 'zero-sense'),
-            MetaKeys::SERVING_TIME   => __('Hora de servir la paella (aprox)', 'zero-sense'),
-            MetaKeys::EVENT_TYPE     => __('Tipo de evento', 'zero-sense'),
-            MetaKeys::HOW_FOUND_US   => __('¿Cómo nos conociste?', 'zero-sense'),
+            MetaKeys::TOTAL_GUESTS   => __('Total number of guests', 'zero-sense'),
+            MetaKeys::ADULTS         => __('Adults', 'zero-sense'),
+            'event_address_checkout' => __('Event address', 'zero-sense'),
+            MetaKeys::EVENT_DATE     => __('Event date', 'zero-sense'),
+            MetaKeys::SERVING_TIME   => __('Paellas service time', 'zero-sense'),
+            MetaKeys::EVENT_TYPE     => __('Event type', 'zero-sense'),
+            MetaKeys::HOW_FOUND_US   => __('And finally, how did you find us?', 'zero-sense'),
         ];
 
         foreach ($required as $fieldId => $label) {

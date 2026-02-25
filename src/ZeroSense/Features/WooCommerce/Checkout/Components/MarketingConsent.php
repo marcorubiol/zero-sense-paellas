@@ -46,7 +46,7 @@ class MarketingConsent
      */
     public function add_consent_checkbox()
     {
-        $checkbox_label = __('Quiero recibir información y ofertas especiales (tranquilos, ¡nosotros también odiamos el spam!)', 'zero-sense');
+        $checkbox_label = __('I want to receive information and special offers (don\'t worry, we hate spam too!)', 'zero-sense');
         
         woocommerce_form_field(self::FORM_CONSENT_KEY, [
             'type'          => 'checkbox',

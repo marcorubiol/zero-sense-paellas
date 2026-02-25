@@ -137,7 +137,7 @@ class Bootstrap
             'label' => $labels[MetaKeys::SERVING_TIME] ?? 'Paellas service time',
             'type' => 'text',
             'translatable' => false,
-            'legacy_keys' => ['serving_time', '_event_serving_time', 'paellas_service_time'],
+            'legacy_keys' => ['serving_time', '_event_serving_time', 'paellas_service_time', 'zs_event_serving_time'],
             'feature' => 'EventManagement',
         ]);
 
