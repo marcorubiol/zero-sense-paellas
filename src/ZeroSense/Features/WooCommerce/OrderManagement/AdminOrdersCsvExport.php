@@ -11,16 +11,41 @@ if (!defined('ABSPATH')) { exit; }
 
 class AdminOrdersCsvExport implements FeatureInterface
 {
-    private const ACTION      = 'zs_export_orders_csv';
-    private const NONCE_KEY   = 'zs_export_orders_csv';
-    private const CAPABILITY  = 'manage_woocommerce';
-    private const BATCH_SIZE  = 50;
+    private const ACTION         = 'zs_export_orders_csv';
+    private const ACTION_DOWNLOAD = 'zs_download_orders_csv';
+    private const NONCE_KEY       = 'zs_export_orders_csv';
+    private const CAPABILITY      = 'manage_woocommerce';
+    private const BATCH_SIZE      = 50;
+
+    private const ALL_COLUMNS = [
+        'order_id'        => 'Order ID',
+        'date'            => 'Date',
+        'status'          => 'Status',
+        'customer_name'   => 'Customer name',
+        'email'           => 'Email',
+        'phone'           => 'Phone',
+        'event_date'      => 'Event date',
+        'start_time'      => 'Event start time',
+        'serving_time'    => 'Paellas service time',
+        'total_guests'    => 'Total guests',
+        'event_type'      => 'Event type',
+        'location'        => 'Service location',
+        'city'            => 'City',
+        'order_total'     => 'Order total',
+        'deposit_amount'  => 'Deposit amount',
+        'deposit_pct'     => 'Deposit %',
+        'remaining'       => 'Remaining amount',
+        'payment_method'  => 'Payment method',
+        'language'        => 'Language',
+        'products'        => 'Products',
+    ];
 
     public function getName(): string        { return __('Orders: CSV Export', 'zero-sense'); }
     public function getDescription(): string { return __('Adds an "Export CSV" button to the WooCommerce orders list that downloads a CSV with event, deposit and order data, respecting active filters.', 'zero-sense'); }
     public function getCategory(): string    { return 'WooCommerce'; }
-    public function isToggleable(): bool     { return false; }
-    public function isEnabled(): bool        { return true; }
+    public function isToggleable(): bool     { return true; }
+    public function getOptionName(): string  { return 'zs_feature_orders_csv_export'; }
+    public function isEnabled(): bool        { return (bool) get_option($this->getOptionName(), true); }
     public function getPriority(): int       { return 10; }
     public function getConditions(): array   { return ['is_admin', 'class_exists:WooCommerce']; }
 
@@ -32,8 +57,11 @@ class AdminOrdersCsvExport implements FeatureInterface
         // Render button — HPOS orders screen
         add_action('woocommerce_order_list_table_restrict_manage_orders', [$this, 'renderButton'], 20);
 
-        // Handle export
-        add_action('admin_post_' . self::ACTION, [$this, 'handleExport']);
+        // Show column selector page
+        add_action('admin_post_' . self::ACTION, [$this, 'handleColumnSelector']);
+
+        // Stream the CSV
+        add_action('admin_post_' . self::ACTION_DOWNLOAD, [$this, 'handleExport']);
     }
 
     public function renderButton(): void
@@ -51,7 +79,7 @@ class AdminOrdersCsvExport implements FeatureInterface
 
         // Pass through all current filter params
         $params = $this->getCurrentFilterParams();
-        $params['action'] = self::ACTION;
+        $params['action']   = self::ACTION;
         $params['_wpnonce'] = wp_create_nonce(self::NONCE_KEY);
 
         $actionUrl = add_query_arg($params, admin_url('admin-post.php'));
@@ -63,6 +91,98 @@ class AdminOrdersCsvExport implements FeatureInterface
         );
     }
 
+    public function handleColumnSelector(): void
+    {
+        if (!current_user_can(self::CAPABILITY)) {
+            wp_die(__('Insufficient permissions.', 'zero-sense'), 403);
+        }
+
+        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), self::NONCE_KEY)) {
+            wp_die(__('Security check failed.', 'zero-sense'), 403);
+        }
+
+        // Pass filters through to the download action
+        $filters = [];
+        foreach (['post_status', 's', '_customer_user', 'm'] as $key) {
+            if (!empty($_GET[$key])) {
+                $filters[$key] = sanitize_text_field(wp_unslash($_GET[$key]));
+            }
+        }
+
+        $downloadBase = add_query_arg(
+            array_merge($filters, [
+                'action'   => self::ACTION_DOWNLOAD,
+                '_wpnonce' => wp_create_nonce(self::NONCE_KEY),
+            ]),
+            admin_url('admin-post.php')
+        );
+
+        $this->renderColumnSelectorPage($downloadBase);
+        exit;
+    }
+
+    private function renderColumnSelectorPage(string $downloadBase): void
+    {
+        $allColumns = self::ALL_COLUMNS;
+        ?>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title><?php esc_html_e('Export CSV — Select columns', 'zero-sense'); ?></title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f0f1; margin: 0; padding: 40px 20px; }
+                .zs-csv-wrap { max-width: 560px; margin: 0 auto; background: #fff; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 32px 36px; }
+                h1 { font-size: 20px; margin: 0 0 20px; color: #1d2327; }
+                .zs-cols { columns: 2; gap: 12px; margin-bottom: 24px; }
+                .zs-col-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; break-inside: avoid; }
+                .zs-col-item label { cursor: pointer; font-size: 14px; color: #1d2327; }
+                .zs-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+                .zs-actions a { font-size: 13px; color: #2271b1; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; }
+                .button-primary { background: #2271b1; color: #fff; border: none; padding: 10px 22px; border-radius: 4px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+                .button-primary:hover { background: #135e96; }
+                .back { font-size: 13px; color: #646970; text-decoration: none; display: block; margin-top: 16px; }
+                .back:hover { color: #2271b1; }
+            </style>
+        </head>
+        <body>
+        <div class="zs-csv-wrap">
+            <h1><?php esc_html_e('Select columns to export', 'zero-sense'); ?></h1>
+            <form method="get" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <?php foreach (['action', '_wpnonce', 'post_status', 's', '_customer_user', 'm'] as $k): ?>
+                    <?php
+                    $v = '';
+                    if ($k === 'action') { $v = self::ACTION_DOWNLOAD; }
+                    elseif ($k === '_wpnonce') { $v = wp_create_nonce(self::NONCE_KEY); }
+                    elseif (!empty($_GET[$k])) { $v = sanitize_text_field(wp_unslash($_GET[$k])); }
+                    if ($v !== ''): ?>
+                        <input type="hidden" name="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($v); ?>">
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
+                <div class="zs-actions">
+                    <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=true);return false;"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
+                    <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=false);return false;"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
+                </div>
+
+                <div class="zs-cols">
+                    <?php foreach ($allColumns as $key => $label): ?>
+                    <div class="zs-col-item">
+                        <input class="zs-col-check" type="checkbox" name="cols[]" value="<?php echo esc_attr($key); ?>" id="col_<?php echo esc_attr($key); ?>" checked>
+                        <label for="col_<?php echo esc_attr($key); ?>"><?php echo esc_html(__($label, 'zero-sense')); ?></label>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <button type="submit" class="button-primary"><?php esc_html_e('Download CSV', 'zero-sense'); ?></button>
+            </form>
+            <a class="back" href="javascript:history.back()">&larr; <?php esc_html_e('Back to orders', 'zero-sense'); ?></a>
+        </div>
+        </body>
+        </html>
+        <?php
+    }
+
     public function handleExport(): void
     {
         if (!current_user_can(self::CAPABILITY)) {
@@ -72,6 +192,11 @@ class AdminOrdersCsvExport implements FeatureInterface
         if (!isset($_GET['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), self::NONCE_KEY)) {
             wp_die(__('Security check failed.', 'zero-sense'), 403);
         }
+
+        // Selected columns (default: all)
+        $selectedCols = isset($_GET['cols']) && is_array($_GET['cols'])
+            ? array_map('sanitize_key', $_GET['cols'])
+            : array_keys(self::ALL_COLUMNS);
 
         $filename = 'orders-' . gmdate('Y-m-d') . '.csv';
 
@@ -88,7 +213,7 @@ class AdminOrdersCsvExport implements FeatureInterface
             wp_die(__('Could not open output stream.', 'zero-sense'));
         }
 
-        fputcsv($out, $this->getHeaders());
+        fputcsv($out, $this->getHeaders($selectedCols));
 
         $queryArgs = $this->buildQueryArgs();
         $page      = 1;
@@ -98,7 +223,7 @@ class AdminOrdersCsvExport implements FeatureInterface
             $orders = $this->fetchOrders($queryArgs);
 
             foreach ($orders as $order) {
-                fputcsv($out, $this->buildRow($order));
+                fputcsv($out, $this->buildRow($order, $selectedCols));
             }
 
             $page++;
@@ -112,33 +237,18 @@ class AdminOrdersCsvExport implements FeatureInterface
     // Helpers
     // -------------------------------------------------------------------------
 
-    private function getHeaders(): array
+    private function getHeaders(array $cols): array
     {
-        return [
-            __('Order ID', 'zero-sense'),
-            __('Date', 'zero-sense'),
-            __('Status', 'zero-sense'),
-            __('Customer name', 'zero-sense'),
-            __('Email', 'zero-sense'),
-            __('Phone', 'zero-sense'),
-            __('Event date', 'zero-sense'),
-            __('Event start time', 'zero-sense'),
-            __('Paellas service time', 'zero-sense'),
-            __('Total guests', 'zero-sense'),
-            __('Event type', 'zero-sense'),
-            __('Service location', 'zero-sense'),
-            __('City', 'zero-sense'),
-            __('Order total', 'zero-sense'),
-            __('Deposit amount', 'zero-sense'),
-            __('Deposit %', 'zero-sense'),
-            __('Remaining amount', 'zero-sense'),
-            __('Payment method', 'zero-sense'),
-            __('Language', 'zero-sense'),
-            __('Products', 'zero-sense'),
-        ];
+        $headers = [];
+        foreach (self::ALL_COLUMNS as $key => $label) {
+            if (in_array($key, $cols, true)) {
+                $headers[] = __($label, 'zero-sense');
+            }
+        }
+        return $headers;
     }
 
-    private function buildRow(WC_Order $order): array
+    private function buildRow(WC_Order $order, array $cols): array
     {
         $eventDate = (string) $order->get_meta('zs_event_date', true);
 
@@ -153,32 +263,39 @@ class AdminOrdersCsvExport implements FeatureInterface
         $depositPct       = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PERCENTAGE, true);
         $remainingAmount  = (string) $order->get_meta(DepositMetaKeys::REMAINING_AMOUNT, true);
 
-        $products = $this->getProductsSummary($order);
-
         $createdDate = $order->get_date_created();
+        $eventTs     = $eventDate !== '' ? strtotime($eventDate) : false;
 
-        return [
-            $order->get_id(),
-            $createdDate ? $createdDate->date('d/m/Y H:i') : '',
-            wc_get_order_status_name($order->get_status()),
-            trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
-            $order->get_billing_email(),
-            $order->get_billing_phone(),
-            $eventDate !== '' ? date('d/m/Y', strtotime($eventDate)) : '',
-            (string) $order->get_meta('zs_event_start_time', true),
-            (string) $order->get_meta('zs_event_paellas_service_time', true),
-            (string) $order->get_meta('zs_event_total_guests', true),
-            (string) $order->get_meta('zs_event_type', true),
-            $serviceLocationName,
-            $order->get_shipping_city() ?: (string) $order->get_meta('zs_event_city', true),
-            number_format((float) $order->get_total(), 2, '.', ''),
-            $depositAmount !== '' ? number_format((float) $depositAmount, 2, '.', '') : '',
-            $depositPct !== '' ? number_format((float) $depositPct, 2, '.', '') : '',
-            $remainingAmount !== '' ? number_format((float) $remainingAmount, 2, '.', '') : '',
-            $order->get_payment_method_title(),
-            (string) $order->get_meta('wpml_language', true),
-            $products,
+        $all = [
+            'order_id'       => $order->get_id(),
+            'date'           => $createdDate ? $createdDate->date('d/m/Y H:i') : '',
+            'status'         => wc_get_order_status_name($order->get_status()),
+            'customer_name'  => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
+            'email'          => $order->get_billing_email(),
+            'phone'          => $order->get_billing_phone(),
+            'event_date'     => ($eventTs !== false) ? date('d/m/Y', $eventTs) : '',
+            'start_time'     => (string) $order->get_meta('zs_event_start_time', true),
+            'serving_time'   => (string) $order->get_meta('zs_event_paellas_service_time', true),
+            'total_guests'   => (string) $order->get_meta('zs_event_total_guests', true),
+            'event_type'     => (string) $order->get_meta('zs_event_type', true),
+            'location'       => $serviceLocationName,
+            'city'           => $order->get_shipping_city() ?: (string) $order->get_meta('zs_event_city', true),
+            'order_total'    => number_format((float) $order->get_total(), 2, '.', ''),
+            'deposit_amount' => $depositAmount !== '' ? number_format((float) $depositAmount, 2, '.', '') : '',
+            'deposit_pct'    => $depositPct !== '' ? number_format((float) $depositPct, 2, '.', '') : '',
+            'remaining'      => $remainingAmount !== '' ? number_format((float) $remainingAmount, 2, '.', '') : '',
+            'payment_method' => $order->get_payment_method_title(),
+            'language'       => (string) $order->get_meta('wpml_language', true),
+            'products'       => $this->getProductsSummary($order),
         ];
+
+        $row = [];
+        foreach (self::ALL_COLUMNS as $key => $_) {
+            if (in_array($key, $cols, true)) {
+                $row[] = $all[$key] ?? '';
+            }
+        }
+        return $row;
     }
 
     private function getProductsSummary(WC_Order $order): string
