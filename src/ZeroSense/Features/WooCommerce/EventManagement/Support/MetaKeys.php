@@ -105,7 +105,7 @@ class MetaKeys
             self::COCKTAIL_START => __('Cocktail start', 'zero-sense'),
             self::COCKTAIL_END => __('Cocktail end', 'zero-sense'),
             self::EVENT_TYPE => __('Event type', 'zero-sense'),
-            self::HOW_FOUND_US => __('How found us', 'zero-sense'),
+            self::HOW_FOUND_US => __('How did you find us?', 'zero-sense'),
             self::INTOLERANCES => __('Allergies / intolerances', 'zero-sense'),
             self::EVENT_STAFF    => __('Event staff', 'zero-sense'),
             self::EVENT_VEHICLES => __('Event vehicles', 'zero-sense'),

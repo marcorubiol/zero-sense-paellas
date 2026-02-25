@@ -387,7 +387,7 @@ class EventDetailsMetabox
                     
                     <div class="zs-mb-field">
                         <label for="event_how_found_us">
-                            <?php esc_html_e('How found us', 'zero-sense'); ?>
+                            <?php esc_html_e('How did you find us?', 'zero-sense'); ?>
                         </label>
                         <select id="event_how_found_us" name="event_how_found_us" class="widefat">
                             <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
@@ -603,8 +603,8 @@ class EventDetailsMetabox
                 FieldChangeTracker::compareAndTrack($orderId, MetaKeys::STARTERS_SERVICE_TIME, $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true), $newValue);
                 $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $newValue);
             } elseif ($servingTime !== '') {
-                $existing = (string) $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true);
-                if ($existing === '') {
+                $existing = $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true);
+                if ($existing === '' || $existing === false || $existing === null) {
                     $calculated = $this->calculateStartersTime($servingTime);
                     if ($calculated !== '') {
                         $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $calculated);
@@ -620,8 +620,8 @@ class EventDetailsMetabox
                 FieldChangeTracker::compareAndTrack($orderId, MetaKeys::TEAM_ARRIVAL_TIME, $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true), $newValue);
                 $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $newValue);
             } elseif ($servingTime !== '') {
-                $existing = (string) $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true);
-                if ($existing === '') {
+                $existing = $order->get_meta(MetaKeys::TEAM_ARRIVAL_TIME, true);
+                if ($existing === '' || $existing === false || $existing === null) {
                     $calculated = $this->calculateTeamArrivalTime($servingTime);
                     if ($calculated !== '') {
                         $order->update_meta_data(MetaKeys::TEAM_ARRIVAL_TIME, $calculated);

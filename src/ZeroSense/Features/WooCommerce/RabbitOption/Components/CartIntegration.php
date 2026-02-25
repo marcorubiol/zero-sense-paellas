@@ -8,8 +8,11 @@ class CartIntegration
 {
     public function register(): void
     {
-        // Store choice in cart item data
+        // Store choice in cart item data when adding to cart
         add_filter('woocommerce_add_cart_item_data', [$this, 'addToCartData'], 10, 2);
+
+        // Restore choice from session when cart is loaded
+        add_filter('woocommerce_get_cart_item_from_session', [$this, 'restoreFromSession'], 10, 2);
 
         // Display choice in cart and checkout
         add_filter('woocommerce_get_item_data', [$this, 'displayInCart'], 10, 2);
@@ -32,16 +35,30 @@ class CartIntegration
         $choice    = isset($_POST['choice']) ? sanitize_text_field($_POST['choice']) : 'with';
 
         if (!in_array($choice, ['with', 'without'], true) || $productId <= 0) {
-            wp_send_json_error();
+            wp_send_json_error(['reason' => 'invalid_params']);
             return;
         }
 
-        if (function_exists('WC') && WC()->session) {
-            $key = 'zs_rabbit_choice_' . $productId;
-            WC()->session->set($key, $choice);
+        if (function_exists('WC')) {
+            if (!WC()->session) {
+                WC()->initialize_session();
+            }
+            if (WC()->session) {
+                $key = 'zs_rabbit_choice_' . $productId;
+                WC()->session->set($key, $choice);
+                WC()->session->save_data();
+            }
         }
 
         wp_send_json_success();
+    }
+
+    public function restoreFromSession(array $cartItem, array $values): array
+    {
+        if (isset($values[MetaKeys::CART_KEY]) && in_array($values[MetaKeys::CART_KEY], ['with', 'without'], true)) {
+            $cartItem[MetaKeys::CART_KEY] = $values[MetaKeys::CART_KEY];
+        }
+        return $cartItem;
     }
 
     public function addToCartData(array $cartItemData, int $productId): array
@@ -55,14 +72,18 @@ class CartIntegration
         }
 
         $choice = 'with';
-        if (function_exists('WC') && WC()->session) {
+
+        // 1. Primary: read from POST (injected as hidden field by toggle JS)
+        if (isset($_POST['zs_rabbit_choice']) && in_array($_POST['zs_rabbit_choice'], ['with', 'without'], true)) {
+            $choice = $_POST['zs_rabbit_choice'];
+        } elseif (function_exists('WC') && WC()->session) {
+            // 2. Fallback: session (set by AJAX)
             $stored = WC()->session->get('zs_rabbit_choice_' . $productId);
-            error_log('[ZS_RABBIT] addToCartData pid=' . $productId . ' session_stored=' . var_export($stored, true));
 
             // WPML fallback: try canonical (default lang) ID if not found with current ID
             if (!in_array($stored, ['with', 'without'], true) && defined('ICL_SITEPRESS_VERSION')) {
-                $defaultLang  = apply_filters('wpml_default_language', null);
-                $canonicalId  = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
+                $defaultLang = apply_filters('wpml_default_language', null);
+                $canonicalId = apply_filters('wpml_object_id', $productId, 'product', true, $defaultLang);
                 if ($canonicalId && (int) $canonicalId !== $productId) {
                     $stored = WC()->session->get('zs_rabbit_choice_' . (int) $canonicalId);
                 }
@@ -71,14 +92,12 @@ class CartIntegration
             if (in_array($stored, ['with', 'without'], true)) {
                 $choice = $stored;
             }
+
+            // Consume session key so it doesn't bleed into future add-to-cart calls
+            WC()->session->set('zs_rabbit_choice_' . $productId, null);
         }
 
         $cartItemData[MetaKeys::CART_KEY] = $choice;
-
-        // Consume session key so it doesn't bleed into future add-to-cart calls
-        if (function_exists('WC') && WC()->session) {
-            WC()->session->set('zs_rabbit_choice_' . $productId, null);
-        }
 
         return $cartItemData;
     }
@@ -114,7 +133,6 @@ class CartIntegration
 
     public function saveToOrderItem(WC_Order_Item_Product $item, string $cartItemKey, array $values, $order): void
     {
-        error_log('[ZS_RABBIT] saveToOrderItem cart_key=' . ($values[MetaKeys::CART_KEY] ?? 'NOT_SET'));
         if (!empty($values[MetaKeys::CART_KEY])) {
             $item->add_meta_data(MetaKeys::RABBIT_CHOICE, $values[MetaKeys::CART_KEY], true);
         }

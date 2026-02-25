@@ -633,7 +633,7 @@ class Flowmattic implements FeatureInterface
                 btn.addEventListener('click', function() {
                     if (this.disabled) return;
 
-                    const workflowLabel = this.textContent.trim();
+                    const workflowLabel = (this.querySelector('.zs-email-btn-label') || this).textContent.trim();
                     const orderIdPreview = this.getAttribute('data-order-id');
                     const templateWithOrder = <?php echo wp_json_encode(__('Send the email workflow "{label}" for order #{order}?', 'zero-sense')); ?>;
                     const templateWithoutOrder = <?php echo wp_json_encode(__('Send the email workflow "{label}" now?', 'zero-sense')); ?>;
@@ -650,8 +650,9 @@ class Flowmattic implements FeatureInterface
                     const nonce = document.getElementById('zs_manual_email_nonce').value;
                     
                     this.disabled = true;
-                    const originalText = this.textContent;
-                    this.textContent = '<?php echo esc_js(__('Sending...', 'zero-sense')); ?>';
+                    const labelEl = this.querySelector('.zs-email-btn-label') || this;
+                    const originalText = labelEl.textContent;
+                    labelEl.textContent = '<?php echo esc_js(__('Sending...', 'zero-sense')); ?>';
                     
                     fetch(ajaxurl, {
                         method: 'POST',
@@ -667,7 +668,7 @@ class Flowmattic implements FeatureInterface
                     })
                     .then(response => response.json())
                     .then(data => {
-                        this.textContent = originalText;
+                        labelEl.textContent = originalText;
 
                         const btn = this;
                         const workflowId = btn.getAttribute('data-workflow-id');
@@ -782,7 +783,7 @@ class Flowmattic implements FeatureInterface
                     .catch(error => {
                         alert('<?php echo esc_js(__('Network error:', 'zero-sense')); ?> ' + error.message);
                         this.disabled = false;
-                        this.textContent = originalText;
+                        labelEl.textContent = originalText;
                     });
                 });
             });
