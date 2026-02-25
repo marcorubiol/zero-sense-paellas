@@ -52,10 +52,13 @@ class AdminOrdersCsvExport implements FeatureInterface
     public function init(): void
     {
         // Render button — classic orders screen
-        add_action('restrict_manage_posts', [$this, 'renderButton'], 20);
+        add_action('restrict_manage_posts', [$this, 'renderButton'], PHP_INT_MAX);
 
         // Render button — HPOS orders screen
-        add_action('woocommerce_order_list_table_restrict_manage_orders', [$this, 'renderButton'], 20);
+        add_action('woocommerce_order_list_table_restrict_manage_orders', [$this, 'renderButton'], PHP_INT_MAX);
+
+        // Move button after the Filter button via JS
+        add_action('admin_footer', [$this, 'renderMoveScript']);
 
         // Show column selector page
         add_action('admin_post_' . self::ACTION, [$this, 'handleColumnSelector']);
@@ -85,10 +88,32 @@ class AdminOrdersCsvExport implements FeatureInterface
         $actionUrl = add_query_arg($params, admin_url('admin-post.php'));
 
         printf(
-            '<a href="%s" class="button" style="margin-left:4px;">%s</a>',
+            '<a id="zs-export-csv-btn" href="%s" class="button" style="margin-left:4px;">%s</a>',
             esc_url($actionUrl),
             esc_html__('Export CSV', 'zero-sense')
         );
+    }
+
+    public function renderMoveScript(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || !in_array($screen->id, ['edit-shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+        ?>
+        <script>
+        (function () {
+            var btn = document.getElementById('zs-export-csv-btn');
+            if (!btn) return;
+            // Classic: Filter button is input[name="filter_action"] or input[value="Filter"]
+            // HPOS: button.search-submit or input[value="Filter"]
+            var filter = document.querySelector('input[name="filter_action"], button.search-submit, input[value="Filter"]');
+            if (filter && filter.parentNode) {
+                filter.parentNode.insertBefore(btn, filter.nextSibling);
+            }
+        })();
+        </script>
+        <?php
     }
 
     public function handleColumnSelector(): void
