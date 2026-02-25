@@ -223,6 +223,9 @@ class AdminOrdersCsvExport implements FeatureInterface
             $orders = $this->fetchOrders($queryArgs);
 
             foreach ($orders as $order) {
+                if (!$order instanceof WC_Order) {
+                    continue;
+                }
                 fputcsv($out, $this->buildRow($order, $selectedCols));
             }
 
