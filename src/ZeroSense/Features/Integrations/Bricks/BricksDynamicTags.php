@@ -3589,8 +3589,8 @@ class BricksDynamicTags implements FeatureInterface
             : esc_html__('Sin conejo', 'zero-sense');
 
         $infoText = esc_html(function_exists('icl_t')
-            ? icl_t('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it with or without rabbit.')
-            : __('This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it with or without rabbit.', 'zero-sense'));
+            ? icl_t('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.')
+            : __('This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.', 'zero-sense'));
 
         $infoIconSvg = '<svg class="fill stroke brxe-bwhjmy brxe-icon info-box__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><title>48 c info</title><g fill="currentColor" class="nc-icon-wrapper"><path d="M24,1C11.297,1,1,11.297,1,24s10.297,23,23,23,23-10.297,23-23S36.703,1,24,1Zm2,36c0,.552-.448,1-1,1h-2c-.552,0-1-.448-1-1V19c0-.552,.448-1,1-1h2c.552,0,1,.448,1,1v18Zm-2-23c-1.381,0-2.5-1.119-2.5-2.5s1.119-2.5,2.5-2.5,2.5,1.119,2.5,2.5-1.119,2.5-2.5,2.5Z" fill="currentColor" class="nc-icon-wrapper"></path></g></svg>';
 
@@ -3623,7 +3623,7 @@ class BricksDynamicTags implements FeatureInterface
             return;
         }
         icl_register_string('zero-sense', 'rabbit_toggle_label', 'Sin conejo');
-        icl_register_string('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it with or without rabbit.');
+        icl_register_string('zero-sense', 'rabbit_toggle_info', 'This dish includes rabbit as a traditional ingredient, but we know it is not common in all cultures; that is why we offer the option to prepare it without rabbit.');
     }
 
     public function enqueueRabbitToggleAssets(): void
