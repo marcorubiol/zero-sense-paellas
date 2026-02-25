@@ -4,10 +4,13 @@ namespace ZeroSense\Features\WooCommerce\Gateways;
 use WC_Order;
 use WC_Payment_Gateway;
 use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\Config;
+use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\PaymentApplicator;
+use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\Gateways\RedsysApi;
 
 class RedsysStandard extends WC_Payment_Gateway
 {
+    use PaymentApplicator;
     public const GATEWAY_ID = 'redsys_standard';
 
     private ?RedsysApi $api = null;
@@ -112,7 +115,12 @@ class RedsysStandard extends WC_Payment_Gateway
         $order->update_meta_data('_zs_redsys_params', $params);
         $order->save();
 
-        // Redirect to receipt page where we'll auto-submit POST to Redsys
+        // On order-pay, immediately output form and exit
+        if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
+            $this->renderImmediateFormAndExit($params);
+        }
+
+        // Checkout-created orders: redirect to receipt page
         return [
             'result' => 'success',
             'redirect' => $order->get_checkout_payment_url(true),
@@ -191,13 +199,10 @@ class RedsysStandard extends WC_Payment_Gateway
             if ($isSuccess) {
                 // Idempotency: already processed
                 if ($order->has_status(['deposit-paid', 'fully-paid'])) { status_header(200); exit; }
-                $order->add_order_note(sprintf(__('Redsys payment success via callback. Response: %d', 'zero-sense'), $dsResponse));
-                $previousStatus = $order->get_status();
-                $order->update_status('fully-paid');
-                $order->save();
-                if ($previousStatus === 'fully-paid') {
-                    do_action('woocommerce_order_status_changed', $order->get_id(), $previousStatus, 'fully-paid', $order);
-                }
+                $intent    = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                $amountRaw = (float) (isset($params['Ds_Amount']) ? $params['Ds_Amount'] : 0) / 100;
+                $order->add_order_note(sprintf(__('Redsys payment success via callback (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
+                $this->applyPaymentSuccess($order, $intent, $amountRaw);
             } else {
                 $order->add_order_note(sprintf(__('Redsys payment failed via callback. Response: %d. Order left unchanged.', 'zero-sense'), $dsResponse));
                 $order->save();
@@ -214,6 +219,28 @@ class RedsysStandard extends WC_Payment_Gateway
     protected function getCallbackEndpoint(): string
     {
         return 'wc_' . self::GATEWAY_ID;
+    }
+
+    private function renderImmediateFormAndExit(array $params): void
+    {
+        while (ob_get_level()) { ob_end_clean(); }
+        header('Content-Type: text/html; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' . esc_html__('Redirecting...', 'zero-sense') . '</title></head><body>';
+        $action = esc_url($params['redirect_url']);
+        $sig    = esc_attr($params['signature']);
+        $mp     = esc_attr($params['merchant_parameters']);
+        $sv     = esc_attr(Config::SIGNATURE_VERSION);
+        echo '<form id="zs-redsys-form" action="' . $action . '" method="post">'
+            . '<input type="hidden" name="Ds_SignatureVersion" value="' . $sv . '" />'
+            . '<input type="hidden" name="Ds_MerchantParameters" value="' . $mp . '" />'
+            . '<input type="hidden" name="Ds_Signature" value="' . $sig . '" />'
+            . '</form>';
+        echo '<p>' . esc_html__('Redirecting to Redsys...', 'zero-sense') . '</p>';
+        echo '<script>document.getElementById("zs-redsys-form").submit();</script>';
+        echo '</body></html>';
+        exit;
     }
 
     public function renderReceipt($orderId): void

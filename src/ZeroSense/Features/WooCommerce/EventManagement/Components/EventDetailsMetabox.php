@@ -29,6 +29,10 @@ class EventDetailsMetabox
         MetaKeys::HOW_FOUND_US => 'how_found_us',
     ];
 
+    private const RENAMED_KEYS = [
+        MetaKeys::SERVING_TIME => 'zs_event_serving_time',
+    ];
+
     private const LEGACY_EVENT_KEYS = [
         MetaKeys::TOTAL_GUESTS => '_event_total_guests',
         MetaKeys::ADULTS => '_event_adults',
@@ -692,7 +696,15 @@ class EventDetailsMetabox
 
         $legacyEventKey = self::LEGACY_EVENT_KEYS[$key] ?? null;
         if (is_string($legacyEventKey) && $legacyEventKey !== '') {
-            return $order->get_meta($legacyEventKey, true);
+            $legacyValue = $order->get_meta($legacyEventKey, true);
+            if ($legacyValue !== '' && $legacyValue !== null) {
+                return $legacyValue;
+            }
+        }
+
+        $renamedKey = self::RENAMED_KEYS[$key] ?? null;
+        if (is_string($renamedKey) && $renamedKey !== '') {
+            return $order->get_meta($renamedKey, true);
         }
 
         return '';

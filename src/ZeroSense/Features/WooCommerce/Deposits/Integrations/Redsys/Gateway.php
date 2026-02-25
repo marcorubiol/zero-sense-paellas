@@ -380,7 +380,12 @@ class Gateway extends WC_Payment_Gateway
                     'ds_order' => $dsOrder,
                 ]);
             } catch (\Throwable $e) { /* no-op */ }
-            // suppress info-level callback log
+            if ($logger) {
+                $logger->info(sprintf(
+                    'Redsys S2S callback: order=%d ds_order=%s response=%d signature=%s',
+                    $orderId, $dsOrder, $dsResponse, $signatureOk ? 'ok' : 'FAIL'
+                ), ['source' => 'zero-sense-redsys-deposits']);
+            }
 
             if (!$signatureOk) {
                 // Do not alter order, just note failure

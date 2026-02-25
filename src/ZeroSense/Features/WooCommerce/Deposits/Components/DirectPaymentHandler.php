@@ -62,6 +62,11 @@ class DirectPaymentHandler
             ));
         }
 
+        // Save marketing consent if present in the form submission
+        $marketingConsent = isset($_POST['marketing_consent']) ? 1 : 0;
+        $order->update_meta_data('zs_marketing_consent', $marketingConsent);
+        $order->save();
+
         $result = $gateway->process_payment($orderId);
 
         if (!empty($result['result']) && 'success' === $result['result'] && isset($result['redirect'])) {

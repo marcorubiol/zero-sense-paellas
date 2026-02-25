@@ -21,7 +21,7 @@ class MetaKeys
     // Event Timing
     public const EVENT_DATE = 'zs_event_date';
     public const TEAM_ARRIVAL_TIME = 'zs_event_team_arrival_time';
-    public const SERVING_TIME = 'zs_event_serving_time';
+    public const SERVING_TIME = 'zs_event_paellas_service_time';
     public const STARTERS_SERVICE_TIME = 'zs_event_starters_service_time';
     public const START_TIME = 'zs_event_start_time';
     public const OPEN_BAR_START = 'zs_event_open_bar_start';
