@@ -212,7 +212,6 @@ class RedsysBizum extends WC_Payment_Gateway
 
     public function handleCallback(): void
     {
-        error_log('[ZS][RedsysBizum] S2S callback received. POST keys: ' . implode(',', array_keys($_POST ?? [])));
         try {
             $logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
             $post = $_POST ?? [];
