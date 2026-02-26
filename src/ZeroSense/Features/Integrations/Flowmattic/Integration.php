@@ -412,6 +412,9 @@ class Integration
                 'started_at' => microtime(true)
             ];
             self::$activeWorkflowContexts[] = $context;
+            // Persist context so it survives PHP requests when Flowmattic has a delay
+            set_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId, $context, 10 * MINUTE_IN_SECONDS);
+            set_transient('zs_wf_ctx_idx_' . $workflowId, $orderId, 10 * MINUTE_IN_SECONDS);
         }
         do_action('flowmattic_trigger_workflow', $workflowId, $debugData);
 
@@ -565,6 +568,9 @@ class Integration
                 'started_at' => microtime(true)
             ];
             self::$activeWorkflowContexts[] = $context;
+            // Persist context so it survives PHP requests when Flowmattic has a delay
+            set_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId, $context, 10 * MINUTE_IN_SECONDS);
+            set_transient('zs_wf_ctx_idx_' . $workflowId, $orderId, 10 * MINUTE_IN_SECONDS);
         }
 
         $debugData = [
@@ -708,6 +714,29 @@ class Integration
             // Get Flowmattic instance to increment count
             $flowmattic = new \ZeroSense\Features\Integrations\Flowmattic\Flowmattic();
             $flowmattic->incrementWorkflowCount($workflowId);
+
+            // Reconstruct workflow context from transient if not already in memory.
+            // This handles the case where Flowmattic executes a delayed workflow in a
+            // separate PHP process where $activeWorkflowContexts is empty.
+            $alreadyTracked = false;
+            foreach (self::$activeWorkflowContexts as $ctx) {
+                if (($ctx['workflow_id'] ?? '') === $workflowId) {
+                    $alreadyTracked = true;
+                    break;
+                }
+            }
+            if (!$alreadyTracked) {
+                $orderId = (int) get_transient('zs_wf_ctx_idx_' . $workflowId);
+                if ($orderId > 0) {
+                    $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+                    if (is_array($context)) {
+                        self::$activeWorkflowContexts[] = $context;
+                        // Clean up — context now lives in memory for this request
+                        delete_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+                        delete_transient('zs_wf_ctx_idx_' . $workflowId);
+                    }
+                }
+            }
         }
     }
 
