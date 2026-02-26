@@ -565,7 +565,6 @@ class EventDetailsMetabox
             '_billing_first_name' => __('Billing first name', 'zero-sense'),
             '_billing_last_name'  => __('Billing last name', 'zero-sense'),
             '_billing_email'      => __('Billing email', 'zero-sense'),
-            '_shipping_address_1' => __('Shipping address', 'zero-sense'),
             '_shipping_city'      => __('Shipping city', 'zero-sense'),
         ];
 
