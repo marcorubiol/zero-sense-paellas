@@ -54,6 +54,7 @@ class Integration
         // No metaboxes, admin columns or manual order actions; all control moves to backend-stored triggers.
 
         (new ApiExtension())->register();
+        OrderExtension::init();
 
         // Hook to detect Flowmattic execution
         add_action('flowmattic_workflow_started', [$this, 'logFlowmatticExecution'], 10, 2);
