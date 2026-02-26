@@ -47,9 +47,26 @@ class OrderLanguage implements FeatureInterface
             return;
         }
 
+        add_action('woocommerce_checkout_order_created', [$this, 'assignLanguageToNewOrder'], 10, 1);
+
         if (is_admin()) {
             (new OrderLanguageAdmin())->register();
         }
+    }
+
+    public function assignLanguageToNewOrder(\WC_Order $order): void
+    {
+        if ($order->get_meta('wpml_language', true) !== '') {
+            return;
+        }
+
+        $currentLanguage = apply_filters('wpml_current_language', null);
+        if (!is_string($currentLanguage) || $currentLanguage === '') {
+            return;
+        }
+
+        $order->update_meta_data('wpml_language', $currentLanguage);
+        $order->save();
     }
 
     private function isWpmlActive(): bool
