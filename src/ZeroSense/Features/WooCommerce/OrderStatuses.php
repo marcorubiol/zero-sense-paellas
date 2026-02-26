@@ -79,7 +79,6 @@ class OrderStatuses implements FeatureInterface
         add_filter('bulk_actions-edit-shop_order', [$this, 'filterBulkActions']);
         add_filter('bulk_actions-woocommerce_page_wc-orders', [$this, 'filterBulkActions']);
         add_filter('woocommerce_reports_order_statuses', [$this, 'exposeStatusesForReports']);
-        add_filter('pre_option_woocommerce_custom_orders_table_data_sync_enabled', [$this, 'forceHposSync']);
         if (is_admin()) {
             add_filter('woocommerce_shop_order_list_table_query_args', [$this, 'filterHposOrderList'], 999);
             add_action('pre_get_posts', [$this, 'filterClassicOrdersList'], 999);
@@ -219,15 +218,6 @@ class OrderStatuses implements FeatureInterface
         $statuses['deposit-paid'] = __('Deposit Paid', 'zero-sense');
         $statuses['fully-paid'] = __('Fully Paid', 'zero-sense');
         return $statuses;
-    }
-
-    /**
-     * Force HPOS sync enabled so all orders are written to both wc_orders AND wp_posts.
-     * This ensures orders are selectable/deletable in the admin UI.
-     */
-    public function forceHposSync(): string
-    {
-        return 'yes';
     }
 
     /**
