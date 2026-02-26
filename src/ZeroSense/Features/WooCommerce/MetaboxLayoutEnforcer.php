@@ -47,6 +47,17 @@ class MetaboxLayoutEnforcer implements FeatureInterface
     public function init(): void
     {
         add_action('current_screen', [$this, 'forceMetaboxLayoutOnce']);
+        add_action('admin_init', [$this, 'handleResetRequest']);
+    }
+
+    public function handleResetRequest(): void
+    {
+        if (!isset($_GET['zs_reset_layout']) || !current_user_can('manage_options')) {
+            return;
+        }
+        self::resetUserLayout(get_current_user_id());
+        wp_safe_redirect(remove_query_arg('zs_reset_layout'));
+        exit;
     }
 
     public function forceMetaboxLayoutOnce($screen): void
