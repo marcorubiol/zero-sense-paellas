@@ -187,7 +187,7 @@ class OrderDiagnostics implements FeatureInterface
         wp_send_json_success(['message' => sprintf(__('%d pedidos HPOS-only borrados.', 'zero-sense'), $deleted)]);
     }
 
-    private function runDiagnostics()
+    private function runDiagnostics(): string|array
     {
         global $wpdb;
 
