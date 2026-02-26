@@ -46,6 +46,7 @@ class MetaboxLayoutEnforcer implements FeatureInterface
 
     public function init(): void
     {
+        add_action('current_screen', [$this, 'forceMetaboxLayoutOnce']);
         add_action('admin_init', [$this, 'handleResetRequest']);
     }
 
