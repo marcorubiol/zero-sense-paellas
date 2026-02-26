@@ -545,6 +545,9 @@ button.zs-mb-link {
     border-radius: 3px;
     text-transform: uppercase;
     line-height: 1;
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 /* Badge base styling for metaboxes (absolute positioning in log wrappers) */
