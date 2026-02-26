@@ -76,35 +76,30 @@ class MetaboxLayoutEnforcer implements FeatureInterface
         $user_id  = get_current_user_id();
         $meta_key = 'zs_metabox_layout_forced_' . $user_id;
 
+        if (get_user_meta($user_id, $meta_key, true)) {
+            return;
+        }
+
         $current_layout = get_user_meta($user_id, $this->getMetaKey($screen->id), true);
 
-        $alreadyForced   = (bool) get_user_meta($user_id, $meta_key, true);
-        $layoutIncomplete = $this->isLayoutIncomplete($current_layout);
-
-        if (!$alreadyForced || $layoutIncomplete) {
+        if (empty($current_layout) || $this->isDefaultLayout($current_layout)) {
             $this->applyPreferredLayout($user_id);
             $this->markAsForced($user_id);
-            if (!$alreadyForced) {
-                add_action('admin_notices', [$this, 'showLayoutNotice']);
-            }
+            add_action('admin_notices', [$this, 'showLayoutNotice']);
         }
     }
 
     private function isDefaultLayout($layout): bool
     {
-        return $this->isLayoutIncomplete($layout);
-    }
-
-    private function isLayoutIncomplete($layout): bool
-    {
-        if (empty($layout) || !is_array($layout)) {
+        if (empty($layout)) {
             return true;
         }
 
+        $side   = $layout['side'] ?? '';
         $normal = $layout['normal'] ?? '';
 
-        return strpos($normal, 'woocommerce-order-billing') === false
-            || strpos($normal, 'woocommerce-order-shipping') === false;
+        return strpos($side, 'woocommerce-order-actions') === false
+            || strpos($normal, 'woocommerce-order-data') === false;
     }
 
     private function applyPreferredLayout(int $user_id): void
