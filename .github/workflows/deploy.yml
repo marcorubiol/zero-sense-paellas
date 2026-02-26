@@ -8,9 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    environment: ${{ github.ref_name == 'main' && 'production' || 'develop' }}
     concurrency:
-      group: deploy-${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      group: deploy-${{ github.ref_name == 'main' && 'production' || 'develop' }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
