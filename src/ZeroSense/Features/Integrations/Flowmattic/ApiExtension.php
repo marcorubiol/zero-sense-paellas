@@ -63,10 +63,14 @@ class ApiExtension
 
     public function addCustomFieldsToApi(WP_REST_Response $response, WC_Order $order, WP_REST_Request $request): WP_REST_Response
     {
-        $data = $response->get_data();
-        $this->addExposedMetaFields($order, $data);
-        $data = array_merge($data, $this->addMultilingualPaymentUrls($order));
-        $response->set_data($data);
+        try {
+            $data = $response->get_data();
+            $this->addExposedMetaFields($order, $data);
+            $data = array_merge($data, $this->addMultilingualPaymentUrls($order));
+            $response->set_data($data);
+        } catch (\Throwable $e) {
+            error_log('[ZeroSense] addCustomFieldsToApi error for order ' . $order->get_id() . ': ' . $e->getMessage());
+        }
 
         return $response;
     }
@@ -77,8 +81,12 @@ class ApiExtension
      */
     public function addCustomFieldsToOrderData(array $data, WC_Order $order): array
     {
-        $this->addExposedMetaFields($order, $data);
-        $data = array_merge($data, $this->addMultilingualPaymentUrls($order));
+        try {
+            $this->addExposedMetaFields($order, $data);
+            $data = array_merge($data, $this->addMultilingualPaymentUrls($order));
+        } catch (\Throwable $e) {
+            error_log('[ZeroSense] addCustomFieldsToOrderData error for order ' . $order->get_id() . ': ' . $e->getMessage());
+        }
 
         return $data;
     }
@@ -133,8 +141,12 @@ class ApiExtension
             return $payload;
         }
 
-        $this->addExposedMetaFields($order, $payload);
-        $payload = array_merge($payload, $this->addMultilingualPaymentUrls($order));
+        try {
+            $this->addExposedMetaFields($order, $payload);
+            $payload = array_merge($payload, $this->addMultilingualPaymentUrls($order));
+        } catch (\Throwable $e) {
+            error_log('[ZeroSense] addCustomFieldsToWebhook error for order ' . $resourceId . ': ' . $e->getMessage());
+        }
 
         return $payload;
     }
