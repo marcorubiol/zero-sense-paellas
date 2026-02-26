@@ -3,7 +3,7 @@
  * Plugin Name: Zerø Sense
  * Plugin URI: https://paellasencasa.com
  * Description: Modern PSR-4 WordPress plugin for Paellas en Casa website with custom fields migration and HPOS compatibility
- * Version: 3.3.1
+ * Version: 3.3.2
  * Author: Zero Sense
  * Author URI: https://zerosense.studio
  * Text Domain: zero-sense
@@ -21,7 +21,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('ZERO_SENSE_VERSION', in_array(wp_get_environment_type(), ['local', 'development']) ? '3.3.1-dev' : '3.3.1');
+$_zs_ver = get_file_data(__FILE__, ['Version' => 'Version'])['Version'] ?? '0.0.0';
+define('ZERO_SENSE_VERSION', in_array(wp_get_environment_type(), ['local', 'development']) ? $_zs_ver . '-dev' : $_zs_ver);
 define('ZERO_SENSE_FILE', __FILE__);
 define('ZERO_SENSE_PATH', plugin_dir_path(__FILE__));
 define('ZERO_SENSE_URL', plugin_dir_url(__FILE__));

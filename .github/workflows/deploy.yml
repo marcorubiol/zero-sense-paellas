@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    concurrency:
+      group: deploy-${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy plugin via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          port: ${{ secrets.SFTP_PORT }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          key: ${{ secrets.SFTP_KEY }}
+          source: "./*"
+          target: ${{ secrets.PLUGIN_TARGET_DIR }}
+          overwrite: true
+
+      - name: Clear caches post-deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          port: ${{ secrets.SFTP_PORT }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          key: ${{ secrets.SFTP_KEY }}
+          script: |
+            # Clear PHP opcache if available
+            if command -v php > /dev/null 2>&1; then
+              php -r "if(function_exists('opcache_reset')){opcache_reset();echo 'opcache cleared';}else{echo 'no opcache';}" 2>/dev/null || true
+            fi
+            # Clear ZS feature transients via WP-CLI if available
+            if command -v wp > /dev/null 2>&1; then
+              wp transient delete --all --path=$(dirname $(dirname $(dirname "${{ secrets.PLUGIN_TARGET_DIR }}"))) 2>/dev/null || true
+            fi
