@@ -2,7 +2,7 @@
   "name": "paellasencasa/zero-sense-v3",
   "description": "Zero Sense v3.0 - Modern PSR-4 WordPress plugin for Paellas en Casa",
   "type": "wordpress-plugin",
-  "version": "3.3.4",
+  "version": "3.0.0",
   "license": "GPL-2.0-or-later",
   "authors": [
     {
