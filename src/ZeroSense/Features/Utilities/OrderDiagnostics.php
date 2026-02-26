@@ -64,7 +64,7 @@ class OrderDiagnostics implements FeatureInterface
             return;
         }
 
-        $lastRun = (int) get_option('zs_order_diagnostics_last_run', 0);
+        $lastRun = get_option('zs_order_diagnostics_last_run', 0);
         $nonce   = wp_create_nonce('zs_order_diagnostics');
         ?>
         <div class="notice notice-info" style="display:flex; align-items:center; gap:12px;">
