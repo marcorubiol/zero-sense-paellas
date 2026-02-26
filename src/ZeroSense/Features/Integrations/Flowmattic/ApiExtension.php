@@ -101,18 +101,6 @@ class ApiExtension
                 $items[$index]['master_id_value'] = $masterId;
             }
 
-            if (isset($items[$index]['meta_data']) && is_array($items[$index]['meta_data'])) {
-                $slim = [];
-                foreach ($items[$index]['meta_data'] as $meta) {
-                    if (is_array($meta) && isset($meta['id'])) {
-                        $id = (int) $meta['id'];
-                        if ($id > 0) {
-                            $slim[] = ['id' => $id];
-                        }
-                    }
-                }
-                $items[$index]['meta_data'] = $slim;
-            }
         }
 
         return $items;
