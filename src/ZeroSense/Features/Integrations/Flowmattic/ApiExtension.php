@@ -243,6 +243,7 @@ class ApiExtension
 
         if ($orderLanguage !== '') {
             $data['zs_order_language_name'] = $this->resolveOrderLanguageName($orderLanguage);
+            $data['zs_order_language_code'] = strtoupper($orderLanguage);
         }
     }
 
