@@ -60,6 +60,13 @@ class MetaboxLayoutEnforcer implements FeatureInterface
         exit;
     }
 
+    private function getMetaKey(string $screenId): string
+    {
+        return $screenId === 'woocommerce_page_wc-orders'
+            ? 'meta-box-order_woocommerce_page_wc-orders'
+            : 'meta-box-order_shop_order';
+    }
+
     public function forceMetaboxLayoutOnce($screen): void
     {
         if (!in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
@@ -73,7 +80,7 @@ class MetaboxLayoutEnforcer implements FeatureInterface
             return;
         }
 
-        $current_layout = get_user_meta($user_id, 'meta-box-order_shop_order', true);
+        $current_layout = get_user_meta($user_id, $this->getMetaKey($screen->id), true);
 
         if (empty($current_layout) || $this->isDefaultLayout($current_layout)) {
             $this->applyPreferredLayout($user_id);
@@ -108,6 +115,7 @@ class MetaboxLayoutEnforcer implements FeatureInterface
         ];
 
         update_user_meta($user_id, 'meta-box-order_shop_order', $preferred_layout);
+        update_user_meta($user_id, 'meta-box-order_woocommerce_page_wc-orders', $preferred_layout);
         Logger::info('MetaboxLayoutEnforcer: applied preferred layout for user ' . $user_id);
     }
 
@@ -135,6 +143,7 @@ class MetaboxLayoutEnforcer implements FeatureInterface
     public static function resetUserLayout(int $user_id): void
     {
         delete_user_meta($user_id, 'meta-box-order_shop_order');
+        delete_user_meta($user_id, 'meta-box-order_woocommerce_page_wc-orders');
         delete_user_meta($user_id, 'zs_metabox_layout_forced_' . $user_id);
         Logger::info('MetaboxLayoutEnforcer: reset layout for user ' . $user_id);
     }
