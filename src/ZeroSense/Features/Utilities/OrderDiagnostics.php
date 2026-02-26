@@ -54,7 +54,6 @@ class OrderDiagnostics implements FeatureInterface
     {
         add_action('admin_init', [$this, 'maybeRunDiagnostics']);
         add_action('wp_ajax_zs_run_order_diagnostics', [$this, 'ajaxRunDiagnostics']);
-        add_action('wp_ajax_zs_delete_hpos_only_orders', [$this, 'ajaxDeleteHposOnlyOrders']);
         add_action('admin_notices', [$this, 'maybeShowDiagnosticsButton']);
     }
 
@@ -81,9 +80,6 @@ class OrderDiagnostics implements FeatureInterface
             <button type="button" class="button" id="zs-run-diagnostics" data-nonce="<?php echo esc_attr($nonce); ?>">
                 <?php _e('Analizar pedidos', 'zero-sense'); ?>
             </button>
-            <button type="button" class="button button-link-delete" id="zs-delete-hpos-orders" data-nonce="<?php echo esc_attr(wp_create_nonce('zs_delete_hpos_orders')); ?>" style="display:none;">
-                <?php _e('Borrar pedidos HPOS-only', 'zero-sense'); ?>
-            </button>
             <span id="zs-diagnostics-result" style="color:#646970;"></span>
         </div>
         <script>
@@ -101,28 +97,9 @@ class OrderDiagnostics implements FeatureInterface
                 btn.disabled = false;
                 if (data.success) {
                     document.getElementById('zs-diagnostics-result').textContent = data.data.message;
-                    if (data.data.hpos_only_count > 0) {
-                        document.getElementById('zs-delete-hpos-orders').style.display = '';
-                    }
                 } else {
                     document.getElementById('zs-diagnostics-result').textContent = '<?php echo esc_js(__('Error al analizar.', 'zero-sense')); ?>';
                 }
-            });
-        });
-        document.getElementById('zs-delete-hpos-orders').addEventListener('click', function() {
-            if (!confirm('<?php echo esc_js(__('¿Borrar todos los pedidos HPOS-only? Esta acción no se puede deshacer.', 'zero-sense')); ?>')) return;
-            var btn = this;
-            btn.disabled = true;
-            fetch(ajaxurl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: 'action=zs_delete_hpos_only_orders&nonce=' + btn.dataset.nonce
-            })
-            .then(r => r.json())
-            .then(data => {
-                btn.disabled = false;
-                document.getElementById('zs-diagnostics-result').textContent = data.success ? data.data.message : '<?php echo esc_js(__('Error al borrar.', 'zero-sense')); ?>';
-                if (data.success) btn.style.display = 'none';
             });
         });
         </script>
@@ -155,39 +132,10 @@ class OrderDiagnostics implements FeatureInterface
         }
 
         $result = $this->runDiagnostics();
-        wp_send_json_success(is_array($result) ? $result : ['message' => $result, 'hpos_only_count' => 0]);
+        wp_send_json_success(['message' => $result]);
     }
 
-    public function ajaxDeleteHposOnlyOrders(): void
-    {
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'zs_delete_hpos_orders')) {
-            wp_send_json_error('Invalid nonce');
-        }
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Insufficient permissions');
-        }
-
-        global $wpdb;
-        $hpos_table = $wpdb->prefix . 'wc_orders';
-        $ids = $wpdb->get_col("
-            SELECT o.id FROM {$hpos_table} o
-            WHERE o.type = 'shop_order'
-            AND o.id NOT IN (SELECT ID FROM {$wpdb->posts} WHERE post_type = 'shop_order')
-        ");
-
-        $deleted = 0;
-        foreach ($ids as $id) {
-            $order = wc_get_order((int) $id);
-            if ($order) {
-                $order->delete(true);
-                $deleted++;
-            }
-        }
-
-        wp_send_json_success(['message' => sprintf(__('%d pedidos HPOS-only borrados.', 'zero-sense'), $deleted)]);
-    }
-
-    private function runDiagnostics(): string|array
+    private function runDiagnostics(): string
     {
         global $wpdb;
 
@@ -241,20 +189,13 @@ class OrderDiagnostics implements FeatureInterface
         }
 
         // Orders in wc_orders but NOT in wp_posts (reverse check)
-        $hpos_only = $wpdb->get_results("
-            SELECT o.id, o.status, o.date_created_gmt
-            FROM {$hpos_table} o
+        $orphan_hpos = $wpdb->get_var("
+            SELECT COUNT(*) FROM {$hpos_table} o
             WHERE o.type = 'shop_order'
             AND o.id NOT IN (SELECT ID FROM {$wpdb->posts} WHERE post_type = 'shop_order')
-            ORDER BY o.id DESC
-            LIMIT 200
         ");
-        $orphan_hpos = count($hpos_only);
 
         $logger->info("HPOS-only orders (in wc_orders, NOT in wp_posts): {$orphan_hpos}", ['source' => self::LOG_SOURCE]);
-        foreach ($hpos_only as $o) {
-            $logger->info("  HPOS-only order #{$o->id} | status: {$o->status} | date: {$o->date_created_gmt}", ['source' => self::LOG_SOURCE]);
-        }
 
         // Check sync status
         $sync_enabled = get_option('woocommerce_custom_orders_table_data_sync_enabled', 'no');
@@ -263,18 +204,14 @@ class OrderDiagnostics implements FeatureInterface
         $logger->info('=== ZS Order Diagnostics END ===', ['source' => self::LOG_SOURCE]);
         update_option('zs_order_diagnostics_last_run', time());
 
-        $result_msg = '';
         if ($count > 0) {
-            $result_msg .= sprintf(__('%d pedidos legacy (wp_posts sin HPOS). ', 'zero-sense'), $count);
-        }
-        if ($orphan_hpos > 0) {
-            $result_msg .= sprintf(__('%d pedidos HPOS-only (no seleccionables). Ver log.', 'zero-sense'), $orphan_hpos);
-        }
-        if (empty($result_msg)) {
-            $result_msg = __('Sin pedidos problemáticos. Todo OK.', 'zero-sense');
+            return sprintf(
+                __('%d pedidos legacy encontrados (no seleccionables en HPOS). Ver log para detalles.', 'zero-sense'),
+                $count
+            );
         }
 
-        return ['message' => $result_msg, 'hpos_only_count' => $orphan_hpos];
+        return __('Sin pedidos legacy. Todo OK.', 'zero-sense');
     }
 
     private function isHposEnabled(): bool
