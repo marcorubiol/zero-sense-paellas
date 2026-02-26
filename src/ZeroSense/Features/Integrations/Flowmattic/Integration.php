@@ -56,9 +56,10 @@ class Integration
         (new ApiExtension())->register();
         OrderExtension::init();
 
-        // Hook to detect Flowmattic execution
-        add_action('flowmattic_workflow_started', [$this, 'logFlowmatticExecution'], 10, 2);
-        add_action('flowmattic_workflow_completed', [$this, 'logFlowmatticExecution'], 10, 2);
+        // Reconstruct workflow context before FlowMattic resumes a delayed workflow.
+        // Priority 1 runs before FlowMattic's own handler at priority 10.
+        add_action('flowmattic_delay_workflow_step', [$this, 'restoreContextBeforeDelayedStep'], 1, 3);
+        add_action('flowmattic_delay_workflow_route', [$this, 'restoreContextBeforeDelayedStep'], 1, 3);
 
         // Async runner for scheduled Flowmattic workflows (status transitions)
         add_action('zs_run_flowmattic_workflow', [$this, 'runScheduledWorkflow'], 10, 2);
@@ -705,38 +706,35 @@ class Integration
     }
 
     /**
-     * Log when Flowmattic actually executes workflows
+     * Restore workflow context from transient before FlowMattic resumes a delayed step.
+     * Hooked on flowmattic_delay_workflow_step / flowmattic_delay_workflow_route at priority 1,
+     * which runs before FlowMattic's own handler at priority 10.
+     * Args: ($task_history_id, $next_step_id, $workflow_id [, $route_context])
      */
-    public function logFlowmatticExecution($workflowId, $data = null): void
+    public function restoreContextBeforeDelayedStep($taskHistoryId, $nextStepId, $workflowId): void
     {
-        $action = current_action();
-        if (is_string($workflowId) && $workflowId !== '' && $action === 'flowmattic_workflow_started') {
-            // Get Flowmattic instance to increment count
-            $flowmattic = new \ZeroSense\Features\Integrations\Flowmattic\Flowmattic();
-            $flowmattic->incrementWorkflowCount($workflowId);
+        if (!is_string($workflowId) || $workflowId === '') {
+            return;
+        }
 
-            // Reconstruct workflow context from transient if not already in memory.
-            // This handles the case where Flowmattic executes a delayed workflow in a
-            // separate PHP process where $activeWorkflowContexts is empty.
-            $alreadyTracked = false;
-            foreach (self::$activeWorkflowContexts as $ctx) {
-                if (($ctx['workflow_id'] ?? '') === $workflowId) {
-                    $alreadyTracked = true;
-                    break;
-                }
+        // Skip if context already in memory for this workflow
+        foreach (self::$activeWorkflowContexts as $ctx) {
+            if (($ctx['workflow_id'] ?? '') === $workflowId) {
+                return;
             }
-            if (!$alreadyTracked) {
-                $orderId = (int) get_transient('zs_wf_ctx_idx_' . $workflowId);
-                if ($orderId > 0) {
-                    $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
-                    if (is_array($context)) {
-                        self::$activeWorkflowContexts[] = $context;
-                        // Clean up — context now lives in memory for this request
-                        delete_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
-                        delete_transient('zs_wf_ctx_idx_' . $workflowId);
-                    }
-                }
-            }
+        }
+
+        $orderId = (int) get_transient('zs_wf_ctx_idx_' . $workflowId);
+        if ($orderId <= 0) {
+            return;
+        }
+
+        $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+        if (is_array($context)) {
+            self::$activeWorkflowContexts[] = $context;
+            // Clean up — context now lives in memory for this request
+            delete_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+            delete_transient('zs_wf_ctx_idx_' . $workflowId);
         }
     }
 
