@@ -61,7 +61,9 @@ class EventDetailsMetabox
         }
         
         add_action('add_meta_boxes', [$this, 'addMetabox']);
+        add_action('woocommerce_process_shop_order_meta', [$this, 'validateRequiredFields'], 1);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20);
+        add_action('admin_notices', [$this, 'showValidationErrors']);
     }
 
     public function addMetabox(): void
@@ -527,6 +529,109 @@ class EventDetailsMetabox
         })();
         </script>
         <?php
+    }
+
+    public function validateRequiredFields($orderId): void
+    {
+        if (!isset($_POST['zs_event_details_nonce']) ||
+            !wp_verify_nonce($_POST['zs_event_details_nonce'], 'zs_event_details_save')) {
+            return;
+        }
+
+        $errors = [];
+
+        $required = [
+            'event_total_guests' => __('Total guests', 'zero-sense'),
+            'event_adults'       => __('Adults', 'zero-sense'),
+            'event_date'         => __('Event date', 'zero-sense'),
+            'event_serving_time' => __('Paellas service time', 'zero-sense'),
+        ];
+
+        foreach ($required as $field => $label) {
+            $value = isset($_POST[$field]) ? sanitize_text_field((string) $_POST[$field]) : '';
+            if ($value === '' || $value === '0') {
+                $errors[] = sprintf(__('<strong>%s</strong> is required.', 'zero-sense'), $label);
+            }
+        }
+
+        // Service location: must be a valid term ID > 0
+        $serviceLocation = isset($_POST['event_service_location']) ? absint($_POST['event_service_location']) : 0;
+        if ($serviceLocation <= 0) {
+            $errors[] = sprintf(__('<strong>%s</strong> is required.', 'zero-sense'), __('Service location', 'zero-sense'));
+        }
+
+        // Native WC billing/shipping fields
+        $nativeRequired = [
+            '_billing_first_name' => __('Billing first name', 'zero-sense'),
+            '_billing_last_name'  => __('Billing last name', 'zero-sense'),
+            '_billing_email'      => __('Billing email', 'zero-sense'),
+            '_shipping_city'      => __('Shipping city', 'zero-sense'),
+        ];
+
+        foreach ($nativeRequired as $field => $label) {
+            $value = isset($_POST[$field]) ? sanitize_text_field((string) $_POST[$field]) : '';
+            if ($value === '') {
+                $errors[] = sprintf(__('<strong>%s</strong> is required.', 'zero-sense'), $label);
+            }
+        }
+
+        if (empty($errors)) {
+            return;
+        }
+
+        $transientKey = 'zs_order_validation_errors_' . get_current_user_id() . '_' . (int) $orderId;
+        set_transient($transientKey, $errors, 60);
+
+        $redirectUrl = add_query_arg(
+            ['post' => (int) $orderId, 'action' => 'edit', 'zs_validation_error' => '1'],
+            admin_url('post.php')
+        );
+
+        wp_safe_redirect($redirectUrl);
+        exit;
+    }
+
+    public function showValidationErrors(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || $screen->id !== wc_get_page_screen_id('shop-order')) {
+            return;
+        }
+
+        if (empty($_GET['zs_validation_error'])) {
+            return;
+        }
+
+        global $post, $theorder;
+        $orderId = 0;
+        if (!empty($_GET['post'])) {
+            $orderId = absint($_GET['post']);
+        } elseif (isset($theorder) && $theorder instanceof \WC_Order) {
+            $orderId = $theorder->get_id();
+        } elseif (isset($post) && $post instanceof \WP_Post) {
+            $orderId = $post->ID;
+        }
+
+        if ($orderId <= 0) {
+            return;
+        }
+
+        $transientKey = 'zs_order_validation_errors_' . get_current_user_id() . '_' . $orderId;
+        $errors = get_transient($transientKey);
+        if (!is_array($errors) || empty($errors)) {
+            return;
+        }
+
+        delete_transient($transientKey);
+
+        echo '<div class="notice notice-error">';
+        echo '<p><strong>' . esc_html__('The order could not be saved. Please fill in the required fields:', 'zero-sense') . '</strong></p>';
+        echo '<ul style="list-style:disc;margin-left:20px;">';
+        foreach ($errors as $error) {
+            echo '<li>' . wp_kses($error, ['strong' => []]) . '</li>';
+        }
+        echo '</ul>';
+        echo '</div>';
     }
 
     public function save($orderId): void
