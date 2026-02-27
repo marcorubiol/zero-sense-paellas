@@ -55,6 +55,25 @@ jQuery(document).ready(function ($) {
             }
         });
         
+        if ($billingCol && $billingCol.length) {
+            // Add Client Details Section Title
+            var $firstNameField = $billingCol.find('._billing_first_name_field');
+            if ($firstNameField.length && $firstNameField.prev('.zs-section-title').length === 0) {
+                $firstNameField.before('<div class="zs-section-title">Client Details</div>');
+            }
+
+            // Add Payment Section Title
+            var $paymentMethodField = $billingCol.find('._billing_payment_method_field, .payment_method_field, select[name="_payment_method"]').closest('.form-field');
+            if ($paymentMethodField.length === 0) {
+                // If standard field not found, try to find the label
+                $paymentMethodField = $billingCol.find('label:contains("Payment"), label:contains("Pago")').closest('.form-field');
+            }
+            
+            if ($paymentMethodField.length && $paymentMethodField.prev('.zs-section-title').length === 0) {
+                $paymentMethodField.before('<div class="zs-section-title">Payment & Transactions</div>');
+            }
+        }
+        
         if ($shippingCol && $shippingCol.length) {
             // Add Contact Section Title
             var $contactField = $shippingCol.find('.zs-contact-block-start');
