@@ -91,6 +91,17 @@ class OrderOps implements FeatureInterface
 
     public function registerShippingCustomFields(array $fields, $order = false, string $context = 'edit'): array
     {
+        if (isset($fields['first_name'])) {
+            $fields['first_name']['label'] = __('Contact First Name', 'zero-sense');
+            $fields['first_name']['wrapper_class'] = ($fields['first_name']['wrapper_class'] ?? '') . ' zs-contact-block-start';
+        }
+        if (isset($fields['last_name'])) {
+            $fields['last_name']['label'] = __('Contact Last Name', 'zero-sense');
+        }
+        if (isset($fields['company'])) {
+            $fields['company']['label'] = __('Agency / Company', 'zero-sense');
+        }
+
         $email_field = [
             'label' => __('Email address', 'woocommerce'),
         ];
@@ -101,6 +112,9 @@ class OrderOps implements FeatureInterface
             if ($raw !== '') {
                 $email_field['value'] = '<a href="' . esc_url('mailto:' . $raw) . '">' . esc_html($raw) . '</a>';
             }
+        } elseif ($context === 'edit' && $order instanceof WC_Order) {
+            $raw = $order->get_meta('_shipping_email', true);
+            $email_field['value'] = is_string($raw) ? $raw : '';
         }
 
         $location_link_field = [
@@ -124,22 +138,11 @@ class OrderOps implements FeatureInterface
             $location_link_field['value'] = is_string($url) ? $url : '';
         }
 
-        $reordered = [];
-        foreach ($fields as $key => $field) {
-            if ($key === 'phone') {
-                $reordered['email'] = $email_field;
-            }
-            $reordered[$key] = $field;
-        }
-
-        if (!isset($reordered['email'])) {
-            $reordered['email'] = $email_field;
-        }
-
         // Add Venue Name field
         $venue_name_field = [
             'label' => __('Venue Name', 'zero-sense'),
             'class' => 'short',
+            'wrapper_class' => 'zs-venue-block-start',
         ];
         
         if ($context === 'view' && $order instanceof WC_Order) {
@@ -169,9 +172,40 @@ class OrderOps implements FeatureInterface
             $venue_phone_field['value'] = is_string($venue_phone) ? $venue_phone : '';
         }
         
-        $reordered['venue_name'] = $venue_name_field;
-        $reordered['venue_phone'] = $venue_phone_field;
-        $reordered['location_link'] = $location_link_field;
+        $fields['email'] = $email_field;
+        $fields['venue_name'] = $venue_name_field;
+        $fields['venue_phone'] = $venue_phone_field;
+        $fields['location_link'] = $location_link_field;
+
+        // Desired order
+        $order_keys = [
+            'first_name',
+            'last_name',
+            'company',
+            'venue_phone',
+            'email',
+            'venue_name',
+            'address_1',
+            'address_2',
+            'city',
+            'postcode',
+            'country',
+            'state',
+            'location_link',
+        ];
+
+        $reordered = [];
+        foreach ($order_keys as $key) {
+            if (isset($fields[$key])) {
+                $reordered[$key] = $fields[$key];
+                unset($fields[$key]);
+            }
+        }
+
+        // Append any remaining fields that might be added by other plugins
+        foreach ($fields as $key => $field) {
+            $reordered[$key] = $field;
+        }
 
         return $reordered;
     }
