@@ -44,6 +44,33 @@ class OrderOps implements FeatureInterface
         add_action('add_meta_boxes', [$this, 'addMetaboxes']);
         add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingCustomFields'], 10, 3);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueUxAssets'], 20);
+    }
+
+    public function enqueueUxAssets(): void
+    {
+        if (!function_exists('get_current_screen')) {
+            return;
+        }
+
+        $screen = get_current_screen();
+        if ($screen && in_array($screen->id, ['shop_order', 'edit-shop_order', 'woocommerce_page_wc-orders'], true)) {
+            $css_rel = 'assets/css/admin-order-data-ux.css';
+            $css_path = defined('ZERO_SENSE_PATH') ? constant('ZERO_SENSE_PATH') . $css_rel : '';
+            if ($css_path && file_exists($css_path)) {
+                $css_url = defined('ZERO_SENSE_URL') ? constant('ZERO_SENSE_URL') . $css_rel : '';
+                $css_ver = (string) filemtime($css_path);
+                wp_enqueue_style('zs-admin-order-data-ux', $css_url, [], $css_ver);
+            }
+
+            $js_rel = 'assets/js/admin-order-data-ux.js';
+            $js_path = defined('ZERO_SENSE_PATH') ? constant('ZERO_SENSE_PATH') . $js_rel : '';
+            if ($js_path && file_exists($js_path)) {
+                $js_url = defined('ZERO_SENSE_URL') ? constant('ZERO_SENSE_URL') . $js_rel : '';
+                $js_ver = (string) filemtime($js_path);
+                wp_enqueue_script('zs-admin-order-data-ux', $js_url, ['jquery'], $js_ver, true);
+            }
+        }
     }
 
     public function getPriority(): int
