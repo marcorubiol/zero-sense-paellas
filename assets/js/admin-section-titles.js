@@ -34,7 +34,7 @@ jQuery(document).ready(function ($) {
                     // Replace only the text node, preserving the edit button
                     elem.contents().filter(function() {
                         return this.nodeType === 3 && this.textContent.trim().length > 0;
-                    }).first().get(0).textContent = 'Wedding Planner & Venue ';
+                    }).first().get(0).textContent = 'In-Situ Contact (WP) & Venue';
                     
                     elem.data('zs-modified', true);
                     elem.parent().css('position', 'relative');
