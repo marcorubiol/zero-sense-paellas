@@ -61,7 +61,7 @@ class OrderLanguageAdmin
             <div class="wpml-language-display zs-mb-field-inline">
                 <span class="wpml-language-current">
                     <?php if ($currentLanguage) : ?>
-                        <span class="zs-badge zs-badge-auto wpml-language-tag">
+                        <span class="zs-badge zs-badge-skipped wpml-language-tag">
                             <?php echo esc_html(strtoupper($currentLanguage)); ?>
                         </span>
                         <?php echo esc_html($currentLanguageName); ?>
