@@ -7,6 +7,16 @@
    1. Global Enhancements for Order Data Metabox
    ========================================================================== */
 
+/* Hide WooCommerce payment meta info */
+.woocommerce-order-data__meta.order_number {
+    display: none !important;
+}
+
+/* Add margin to order data header */
+#order_data .order_data_header {
+    margin-bottom: 20px !important;
+}
+
 /* Disable WooCommerce default float layout to rely on flexbox via JS */
 #order_data .order_data_column {
     padding: 15px 20px !important;
