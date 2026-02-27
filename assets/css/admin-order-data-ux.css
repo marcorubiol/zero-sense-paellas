@@ -80,16 +80,16 @@
     width: 100% !important;
     margin-top: 0 !important;
     padding: 20px !important;
-    background-color: #fff9e6 !important; /* Soft warning/notice yellow */
-    border: 1px solid #f2e3b3 !important;
+    background-color: #fafafa !important; /* Soft very light gray */
+    border: 1px solid #e5e5e5 !important;
     border-radius: 8px !important;
     box-sizing: border-box;
 }
 
 .zs-note-header {
     margin-top: 0;
-    color: #8a6d3b;
-    border-bottom: 1px solid #f2e3b3;
+    color: #444;
+    border-bottom: 1px solid #eee;
     padding-bottom: 10px;
     margin-bottom: 15px;
     font-size: 14px;

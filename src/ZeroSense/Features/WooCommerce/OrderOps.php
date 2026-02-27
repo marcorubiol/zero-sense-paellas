@@ -128,9 +128,12 @@ class OrderOps implements FeatureInterface
         if (isset($fields['company'])) {
             $fields['company']['label'] = __('Agency / Company', 'zero-sense');
         }
+        if (isset($fields['phone'])) {
+            $fields['phone']['label'] = __('Contact Phone', 'zero-sense');
+        }
 
         $email_field = [
-            'label' => __('Email address', 'woocommerce'),
+            'label' => __('Contact Email', 'zero-sense'),
         ];
 
         if ($context === 'view' && $order instanceof WC_Order) {
@@ -186,6 +189,7 @@ class OrderOps implements FeatureInterface
         // Add Venue Phone field
         $venue_phone_field = [
             'label' => __('Venue Phone', 'zero-sense'),
+            'class' => 'short',
         ];
         
         if ($context === 'view' && $order instanceof WC_Order) {
@@ -209,9 +213,10 @@ class OrderOps implements FeatureInterface
             'first_name',
             'last_name',
             'company',
-            'venue_phone',
             'email',
+            'phone',
             'venue_name',
+            'venue_phone',
             'address_1',
             'address_2',
             'city',
