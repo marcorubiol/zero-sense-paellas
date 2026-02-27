@@ -78,23 +78,52 @@ jQuery(document).ready(function ($) {
             if ($billingAddressView.length && !$billingAddressView.data('zs-modified')) {
                 $billingAddressView.data('zs-modified', true);
                 
-                var html = $billingAddressView.html();
-                var $temp = $('<div>').html(html);
+                var clientHtml = '<div class="zs-section-title" style="margin-top:0;">Client Details</div>';
+                clientHtml += '<p>';
+                var bName = ($('#_billing_first_name').val() + ' ' + $('#_billing_last_name').val()).trim();
+                if (bName) clientHtml += bName + '<br>';
+                var bCompany = $('#_billing_company').val();
+                if (bCompany) clientHtml += bCompany + '<br>';
                 
-                $temp.prepend('<div class="zs-section-title" style="margin-top:0;">Client Details</div>');
+                var bAddr1 = $('#_billing_address_1').val();
+                var bAddr2 = $('#_billing_address_2').val();
+                var bCity = $('#_billing_city').val();
+                var bPostcode = $('#_billing_postcode').val();
+                var bCountry = $('#_billing_country option:selected').text();
+                var bState = $('#_billing_state option:selected').text();
                 
-                var nodes = $temp.children();
-                nodes.each(function() {
-                    var $node = $(this);
-                    var text = $node.text().toLowerCase();
-                    // Inject Payment title before anything related to email or phone (since they come after address in WC but before payment usually)
-                    // Wait, WooCommerce default view shows: Address, Email, Phone, Payment via...
-                    if (text.indexOf('payment') > -1 || text.indexOf('pago') > -1 || text.indexOf('transaction') > -1) {
-                        $node.before('<div class="zs-section-title">Payment & Transactions</div>');
+                var bAddrArr = [bAddr1, bAddr2, bCity, bPostcode].filter(function(v) { return v && v.trim() !== ''; });
+                if (bAddrArr.length) clientHtml += bAddrArr.join(', ') + '<br>';
+                
+                var bEmail = $('#_billing_email').val();
+                if (bEmail) clientHtml += '<strong>Email address:</strong> <a href="mailto:' + bEmail + '">' + bEmail + '</a><br>';
+                var bPhone = $('#_billing_phone').val();
+                if (bPhone) clientHtml += '<strong>Phone:</strong> <a href="tel:' + bPhone + '">' + bPhone + '</a><br>';
+                clientHtml += '</p>';
+
+                var paymentHtml = '<div class="zs-section-title">Payment & Transactions</div>';
+                paymentHtml += '<p>';
+                var payMethod = $('#_payment_method option:selected').text() || $('#_payment_method').val() || $billingCol.find('._billing_payment_method_field input, .payment_method_field input').val();
+                if (payMethod && payMethod.trim() !== '') {
+                    paymentHtml += '<strong>Payment method:</strong> ' + payMethod + '<br>';
+                } else {
+                    // Try to extract from original view if not found in inputs
+                    var origHtml = $billingAddressView.html();
+                    if (origHtml.toLowerCase().indexOf('payment via') > -1) {
+                        var pmMatch = origHtml.match(/Payment via ([^<]+)/i);
+                        if (pmMatch && pmMatch[1]) paymentHtml += '<strong>Payment method:</strong> ' + pmMatch[1].trim() + '<br>';
                     }
-                });
+                }
                 
-                $billingAddressView.html($temp.html());
+                var transId = $('#_transaction_id').val();
+                if (transId) paymentHtml += '<strong>Transaction ID:</strong> ' + transId + '<br>';
+                paymentHtml += '</p>';
+                
+                if (paymentHtml.indexOf('<strong>') === -1) {
+                    paymentHtml = '<div class="zs-section-title">Payment & Transactions</div><p><em>Not provided</em></p>';
+                }
+
+                $billingAddressView.html(clientHtml + paymentHtml);
             }
         }
         
@@ -111,48 +140,53 @@ jQuery(document).ready(function ($) {
                 $venueField.before('<div class="zs-section-title">Venue & Location</div>');
             }
 
-            // View Mode: Handle collapsed view
+            // View Mode: Rebuild custom structured view to match edit mode exactly
             var $shippingAddressView = $shippingCol.find('.address');
             if ($shippingAddressView.length && !$shippingAddressView.data('zs-modified')) {
                 $shippingAddressView.data('zs-modified', true);
                 
-                // Keep original content but structure it with titles
-                var html = $shippingAddressView.html();
+                var contactHtml = '<div class="zs-section-title" style="margin-top:0;">Contact Person (In-situ)</div>';
+                contactHtml += '<p>';
+                var sName = ($('#_shipping_first_name').val() + ' ' + $('#_shipping_last_name').val()).trim();
+                if (sName) contactHtml += sName + '<br>';
+                var sCompany = $('#_shipping_company').val();
+                if (sCompany) contactHtml += sCompany + '<br>';
+                var sEmail = $('#_shipping_email').val();
+                if (sEmail) contactHtml += '<strong>Contact Email:</strong> <a href="mailto:' + sEmail + '">' + sEmail + '</a><br>';
+                var sPhone = $('#_shipping_phone').val();
+                if (sPhone) contactHtml += '<strong>Contact Phone:</strong> <a href="tel:' + sPhone + '">' + sPhone + '</a><br>';
+                contactHtml += '</p>';
                 
-                // Find where the address text starts vs email/phone links
-                // WC puts email/phone inside <p> elements
-                var $temp = $('<div>').html(html);
+                if (contactHtml === '<div class="zs-section-title" style="margin-top:0;">Contact Person (In-situ)</div><p></p>') {
+                    contactHtml = '<div class="zs-section-title" style="margin-top:0;">Contact Person (In-situ)</div><p><em>Not provided</em></p>';
+                }
+
+                var venueHtml = '<div class="zs-section-title">Venue & Location</div>';
+                venueHtml += '<p>';
+                var vName = $('#_shipping_venue_name').val();
+                if (vName) venueHtml += '<strong>Venue Name:</strong> ' + vName + '<br>';
+                var vPhone = $('#_shipping_venue_phone').val();
+                if (vPhone) venueHtml += '<strong>Venue Phone:</strong> <a href="tel:' + vPhone + '">' + vPhone + '</a><br>';
                 
-                // Start with Contact title
-                $temp.prepend('<div class="zs-section-title" style="margin-top:0;">Contact Person (In-situ)</div>');
+                var sAddr1 = $('#_shipping_address_1').val();
+                var sAddr2 = $('#_shipping_address_2').val();
+                var sCity = $('#_shipping_city').val();
+                var sPostcode = $('#_shipping_postcode').val();
+                var sCountry = $('#_shipping_country option:selected').text();
+                var sState = $('#_shipping_state option:selected').text();
                 
-                // Assuming standard WC structure: First p is address, subsequent ps are phone/email
-                // But we modified fields order via PHP, so the first lines might actually be Contact Person info
+                var sAddrArr = [sAddr1, sAddr2, sCity, sPostcode].filter(function(v) { return v && v.trim() !== ''; });
+                if (sAddrArr.length) venueHtml += sAddrArr.join(', ') + '<br>';
                 
-                // Let's insert the Venue title before the address part (which typically has <br> tags)
-                // Fallback: just append titles visually if we can't parse easily
-                var nodes = $temp.children();
-                var foundVenue = false;
-                
-                nodes.each(function() {
-                    var $node = $(this);
-                    var text = $node.text().trim();
-                    // Basic heuristic: if it looks like an address line or location link, it belongs to Venue
-                    if (!foundVenue && (text.indexOf('Venue Name') > -1 || text.indexOf('Venue Phone') > -1 || text.indexOf('Location Link') > -1 || $node.find('br').length > 1)) {
-                        $node.before('<div class="zs-section-title">Venue & Location</div>');
-                        foundVenue = true;
-                    }
-                });
-                
-                // If we didn't find a good split point, just add it before the first <p> that has a <br>
-                if (!foundVenue) {
-                    var $addrP = $temp.find('p').filter(function() { return $(this).find('br').length > 0; }).first();
-                    if ($addrP.length) {
-                        $addrP.before('<div class="zs-section-title">Venue & Location</div>');
-                    }
+                var sLink = $('#_shipping_location_link').val();
+                if (sLink) venueHtml += '<strong>Location Link:</strong> <a href="' + sLink + '" target="_blank">View Map</a>';
+                venueHtml += '</p>';
+
+                if (venueHtml === '<div class="zs-section-title">Venue & Location</div><p></p>') {
+                    venueHtml = '<div class="zs-section-title">Venue & Location</div><p><em>Not provided</em></p>';
                 }
                 
-                $shippingAddressView.html($temp.html());
+                $shippingAddressView.html(contactHtml + venueHtml);
             }
             
             // Find the Customer Note field by its label and move it OUT of the shipping column
