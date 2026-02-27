@@ -12,7 +12,6 @@
     padding: 15px 20px !important;
     border-radius: 8px;
     box-sizing: border-box;
-    position: relative;
 }
 
 /* ==========================================================================
@@ -43,7 +42,26 @@
 }
 
 /* ==========================================================================
-   3. Section Titles and Spacing
+   3. Main Section Titles (Solution 2: Hide H3, Show Custom Subtitles)
+   ========================================================================== */
+
+/* Hide original WooCommerce H3 titles */
+#order_data .zs-billing-col h3,
+#order_data .zs-shipping-col h3 {
+    display: none;
+}
+
+/* Style custom subtitles as main titles */
+.zs-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   4. Internal Section Titles (Contact Person, Venue & Location)
    ========================================================================== */
 
 /* Visual Block Section Titles (Injected by JS) */
@@ -59,7 +77,7 @@
     letter-spacing: 0.5px;
 }
 
-/* First section title (Contact Person) - no border */
+/* First section title (Contact Person) - no top border, less top margin */
 .zs-section-title:first-of-type {
     margin-top: 12px;
     padding-top: 0;
@@ -74,7 +92,7 @@
 }
 
 /* ==========================================================================
-   4. Customer Provided Note
+   5. Customer Provided Note
    ========================================================================== */
 
 /* Target our injected class that gets moved out of the column */
@@ -96,50 +114,4 @@
     margin-bottom: 15px;
     font-size: 14px;
     font-weight: 600;
-}
-
-/* ==========================================================================
-   5. Main Section Titles with Small Tag Badge
-   ========================================================================== */
-
-/* H3 titles now show our custom text */
-#order_data .zs-billing-col > h3:first-child,
-#order_data .zs-shipping-col > h3:first-child {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 12px;
-}
-
-/* Small tag badge positioned absolutely in top-right corner */
-.zs-wc-tag {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: inline-block;
-    padding: 3px 8px;
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-radius: 3px;
-    background-color: #2271b1;
-    color: #fff;
-    line-height: 1;
-}
-
-/* ==========================================================================
-   6. Responsive Layout
-   ========================================================================== */
-
-/* Stack columns vertically on smaller screens */
-@media (max-width: 1280px) {
-    #order_data .order_data_column_container {
-        flex-direction: column !important;
-    }
-    
-    #order_data .order_data_column {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
 }
