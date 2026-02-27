@@ -301,7 +301,7 @@ button.zs-mb-link {
     gap: 6px;
 }
 
-.zs-badge.zs-badge-auto.wpml-language-tag {
+.zs-badge.zs-badge-skipped.wpml-language-tag {
     position: static;
     align-content: center;
 }
