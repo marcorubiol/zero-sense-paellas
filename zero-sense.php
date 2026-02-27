@@ -57,15 +57,17 @@ function zero_sense_autoloader_error()
 /**
  * Global helper function for FlowMattic to save Google Calendar Event ID
  * 
- * @param array $params Array with keys: order_id, event_id, event_title (optional)
+ * @param string|int $order_id Order ID
+ * @param string $event_id Google Calendar Event ID
+ * @param string $event_title Event title (optional)
  * @return array Response with success status and message
  */
-function zs_save_calendar_event_id(array $params): array
+function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = ''): array
 {
     try {
-        $orderId = isset($params['order_id']) ? absint($params['order_id']) : 0;
-        $eventId = isset($params['event_id']) ? sanitize_text_field($params['event_id']) : '';
-        $eventTitle = isset($params['event_title']) ? sanitize_text_field($params['event_title']) : '';
+        $orderId = absint($order_id);
+        $eventId = sanitize_text_field($event_id);
+        $eventTitle = sanitize_text_field($event_title);
 
         if ($orderId === 0) {
             return [
