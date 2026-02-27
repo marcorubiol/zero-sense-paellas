@@ -10,9 +10,9 @@ jQuery(document).ready(function ($) {
             var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
 
             if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                elem.after('<div class="zs-subtitle zs-subtitle-client">Client</div>');
+                elem.after('<div class="zs-subtitle zs-subtitle-client" data-wc-label="Billing">Client</div>');
             } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                elem.after('<div class="zs-subtitle zs-subtitle-venue">Wedding Planner - Venue</div>');
+                elem.after('<div class="zs-subtitle zs-subtitle-venue" data-wc-label="Shipping">Wedding Planner - Venue</div>');
             }
         });
 

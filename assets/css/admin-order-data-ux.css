@@ -47,9 +47,9 @@
 
 /* Visual Block Section Titles (Injected by JS) */
 .zs-section-title {
-    margin-top: 10px;
-    margin-bottom: 5px;
-    padding-top: 20px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    padding-top: 12px;
     border-top: 1px solid #e0e0e0;
     font-weight: 600;
     color: #444;
@@ -58,9 +58,10 @@
     letter-spacing: 0.5px;
 }
 
+/* First section title (Contact Person) - no border */
 .zs-section-title:first-of-type {
-    margin-top: 5px;
-    padding-top: 15px;
+    margin-top: 12px;
+    padding-top: 0;
     border-top: none;
 }
 
@@ -94,4 +95,56 @@
     margin-bottom: 15px;
     font-size: 14px;
     font-weight: 600;
+}
+
+/* ==========================================================================
+   5. Main Section Titles (Solution 2: Hide H3, Show Subtitle with Tag)
+   ========================================================================== */
+
+/* Hide the original WooCommerce H3 titles */
+#order_data .zs-billing-col > h3:first-child,
+#order_data .zs-shipping-col > h3:first-child {
+    display: none !important;
+}
+
+/* Style the subtitle as the main title */
+.zs-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Tag-style badge for Billing/Shipping reference */
+.zs-subtitle::before {
+    content: attr(data-wc-label);
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+    background-color: #2271b1;
+    color: #fff;
+}
+
+/* ==========================================================================
+   6. Responsive Layout
+   ========================================================================== */
+
+/* Stack columns vertically on smaller screens */
+@media (max-width: 1280px) {
+    #order_data .order_data_column_container {
+        flex-direction: column !important;
+    }
+    
+    #order_data .order_data_column {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
