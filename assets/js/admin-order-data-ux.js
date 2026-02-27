@@ -18,23 +18,30 @@ jQuery(document).ready(function ($) {
             'float': 'none'
         });
 
-        // Find the columns by looking at their headers to be 100% sure which is which
+        // Find the columns by looking at their headers and edit links
         var $billingCol = null;
         var $shippingCol = null;
         
         $('#order_data .order_data_column').each(function() {
             var $col = $(this);
-            var headerText = $col.find('h3').first().text().trim().toLowerCase();
-            var isBilling = headerText.indexOf('billing') === 0 || headerText.indexOf('facturaci') === 0 || headerText.indexOf('client') === 0;
-            var isShipping = headerText.indexOf('shipping') === 0 || headerText.indexOf('envío') === 0 || headerText.indexOf('wedding') === 0;
+            var isBilling = false;
+            var isShipping = false;
             
-            // In case of the edit icon being present, we might have multiple elements
+            // Primary detection: use edit_address link which is reliable
             if ($col.find('.edit_address').length) {
-                if ($col.find('.edit_address').attr('href').indexOf('billing') > -1) {
+                var editHref = $col.find('.edit_address').attr('href') || '';
+                if (editHref.indexOf('billing') > -1) {
                     isBilling = true;
-                } else if ($col.find('.edit_address').attr('href').indexOf('shipping') > -1) {
+                } else if (editHref.indexOf('shipping') > -1) {
                     isShipping = true;
                 }
+            }
+            
+            // Fallback: check header text (supports both old and new titles)
+            if (!isBilling && !isShipping) {
+                var headerText = $col.find('h3').first().text().trim().toLowerCase();
+                isBilling = headerText.indexOf('billing') === 0 || headerText.indexOf('facturaci') === 0 || headerText.indexOf('client') === 0;
+                isShipping = headerText.indexOf('shipping') === 0 || headerText.indexOf('envío') === 0 || headerText.indexOf('wedding') === 0;
             }
 
             if (isBilling) {
