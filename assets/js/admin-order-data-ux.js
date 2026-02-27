@@ -5,11 +5,35 @@
 jQuery(document).ready(function ($) {
     
     function refineOrderDataLayout() {
-        // order_data_column usually has 3 columns: General (0), Billing (1), Shipping (2)
-        var $billingCol = $('#order_data .order_data_column').eq(1);
-        var $shippingCol = $('#order_data .order_data_column').eq(2);
+        // Find the columns by looking at their headers to be 100% sure which is which
+        var $billingCol = null;
+        var $shippingCol = null;
         
-        if ($shippingCol.length) {
+        $('#order_data .order_data_column').each(function() {
+            var $col = $(this);
+            var headerText = $col.find('h3').first().text().trim().toLowerCase();
+            var isBilling = headerText.indexOf('billing') === 0 || headerText.indexOf('facturaci') === 0 || headerText.indexOf('client') === 0;
+            var isShipping = headerText.indexOf('shipping') === 0 || headerText.indexOf('envío') === 0 || headerText.indexOf('wedding') === 0;
+            
+            // In case of the edit icon being present, we might have multiple elements
+            if ($col.find('.edit_address').length) {
+                if ($col.find('.edit_address').attr('href').indexOf('billing') > -1) {
+                    isBilling = true;
+                } else if ($col.find('.edit_address').attr('href').indexOf('shipping') > -1) {
+                    isShipping = true;
+                }
+            }
+
+            if (isBilling) {
+                $billingCol = $col;
+                $col.addClass('zs-billing-col');
+            } else if (isShipping) {
+                $shippingCol = $col;
+                $col.addClass('zs-shipping-col');
+            }
+        });
+        
+        if ($shippingCol && $shippingCol.length) {
             // Add Contact Section Title
             var $contactField = $shippingCol.find('.zs-contact-block-start');
             if ($contactField.length && $contactField.prev('.zs-section-title').length === 0) {
