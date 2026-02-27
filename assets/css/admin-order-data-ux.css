@@ -42,29 +42,18 @@
 }
 
 /* ==========================================================================
-   3. Main Section Titles (Solution 2: Hide H3, Show Custom Subtitles)
+   3. Section Titles and Spacing
    ========================================================================== */
 
-/* Hide original WooCommerce H3 titles */
-#order_data .zs-billing-col h3,
-#order_data .zs-shipping-col h3 {
-    display: none;
+/* Badge Subtitles (Billing/Shipping) - Positioned absolutely top-right */
+.zs-subtitle-billing,
+.zs-subtitle-shipping {
+    position: absolute;
+    top: 8px;
+    right: 8px;
 }
 
-/* Style custom subtitles as main titles */
-.zs-subtitle {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin-top: 0;
-    margin-bottom: 12px;
-}
-
-/* ==========================================================================
-   4. Internal Section Titles (Contact Person, Venue & Location)
-   ========================================================================== */
-
-/* Visual Block Section Titles (Injected by JS) */
+/* Visual Block Section Titles (Contact Person, Venue & Location) */
 .zs-section-title {
     margin-top: 20px;
     margin-bottom: 8px;
@@ -77,7 +66,7 @@
     letter-spacing: 0.5px;
 }
 
-/* First section title (Contact Person) - no top border, less top margin */
+/* First section title (Contact Person) - no top border */
 .zs-section-title:first-of-type {
     margin-top: 12px;
     padding-top: 0;
@@ -92,7 +81,7 @@
 }
 
 /* ==========================================================================
-   5. Customer Provided Note
+   4. Customer Provided Note
    ========================================================================== */
 
 /* Target our injected class that gets moved out of the column */

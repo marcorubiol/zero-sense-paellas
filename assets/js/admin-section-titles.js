@@ -1,24 +1,29 @@
 jQuery(document).ready(function ($) {
-    function addSubtitles() {
+    function modifyTitles() {
         $('#order_data h3').each(function () {
             var elem = $(this);
-
-            if (elem.next('.zs-subtitle').length) {
-                return;
-            }
-
             var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
 
             if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                elem.after('<div class="zs-subtitle zs-subtitle-client">Client</div>');
+                if (!elem.data('zs-modified')) {
+                    elem.text('Client');
+                    elem.data('zs-modified', true);
+                    elem.parent().css('position', 'relative');
+                    elem.after('<span class="zs-badge zs-subtitle-billing">Billing</span>');
+                }
             } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                elem.after('<div class="zs-subtitle zs-subtitle-venue">Wedding Planner - Venue</div>');
+                if (!elem.data('zs-modified')) {
+                    elem.text('Wedding Planner - Venue');
+                    elem.data('zs-modified', true);
+                    elem.parent().css('position', 'relative');
+                    elem.after('<span class="zs-badge zs-subtitle-shipping">Shipping</span>');
+                }
             }
         });
 
         $('#order_data h3').css('visibility', 'visible');
     }
 
-    addSubtitles();
-    setTimeout(addSubtitles, 100);
+    modifyTitles();
+    setTimeout(modifyTitles, 100);
 });
