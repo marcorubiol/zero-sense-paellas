@@ -5,6 +5,19 @@
 jQuery(document).ready(function ($) {
     
     function refineOrderDataLayout() {
+        // First add a flex gap to the container
+        $('#order_data .order_data_column_container').css({
+            'display': 'flex',
+            'flex-wrap': 'wrap',
+            'gap': '20px'
+        });
+
+        // Ensure columns take up correct width within flex
+        $('#order_data .order_data_column').css({
+            'width': 'calc(33.33% - 14px)',
+            'float': 'none'
+        });
+
         // Find the columns by looking at their headers to be 100% sure which is which
         var $billingCol = null;
         var $shippingCol = null;
@@ -46,7 +59,7 @@ jQuery(document).ready(function ($) {
                 $venueField.before('<div class="zs-section-title">Venue & Location</div>');
             }
             
-            // Find the Customer Note field by its label
+            // Find the Customer Note field by its label and move it OUT of the shipping column
             var $noteLabels = $shippingCol.find('label').filter(function() {
                 var text = $(this).text().toLowerCase();
                 return text.indexOf('note') > -1 || text.indexOf('nota') > -1;
@@ -54,12 +67,19 @@ jQuery(document).ready(function ($) {
             
             if ($noteLabels.length) {
                 var $noteWrapper = $noteLabels.closest('.form-field');
-                $noteWrapper.addClass('zs-customer-note-block');
                 
-                // If it doesn't have an h3, add one
-                if ($noteWrapper.find('h3').length === 0) {
-                    $noteLabels.hide(); // Hide the normal label to replace it with a bolder header
-                    $noteWrapper.prepend('<h3 class="zs-note-header">' + $noteLabels.text() + '</h3>');
+                // Only move it if it's still inside the shipping column
+                if ($noteWrapper.parents('.zs-shipping-col').length > 0) {
+                    $noteWrapper.addClass('zs-customer-note-block');
+                    
+                    // If it doesn't have an h3, add one
+                    if ($noteWrapper.find('h3').length === 0) {
+                        $noteLabels.hide(); // Hide the normal label
+                        $noteWrapper.prepend('<h3 class="zs-note-header">' + $noteLabels.text() + '</h3>');
+                    }
+                    
+                    // Move it to the bottom of the container, OUTSIDE the columns
+                    $('#order_data .order_data_column_container').append($noteWrapper);
                 }
             }
         }

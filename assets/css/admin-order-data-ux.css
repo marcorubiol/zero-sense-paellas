@@ -7,37 +7,49 @@
    1. Global Enhancements for Order Data Metabox
    ========================================================================== */
 
+/* Disable WooCommerce default float layout to rely on flexbox via JS */
 #order_data .order_data_column {
-    padding: 10px 15px !important;
+    padding: 15px 20px !important;
     border-radius: 8px;
-    background: transparent;
     box-sizing: border-box;
 }
 
 /* ==========================================================================
-   2. Billing Column (Client)
+   2. Column Backgrounds and Borders
    ========================================================================== */
 
+/* General Column (First Column) */
+#order_data .order_data_column:nth-child(1) {
+    background-color: rgba(0, 0, 0, 0.01) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Billing Column (Client) */
 #order_data .zs-billing-col {
-    background-color: rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    background-color: rgba(230, 240, 255, 0.25) !important; /* Very subtle blue */
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Shipping Column (Wedding Planner - Venue) */
+#order_data .zs-shipping-col {
+    background-color: rgba(245, 235, 255, 0.2) !important; /* Very subtle purple/pink */
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Remove default hidden state borders in view mode so our border shows cleanly */
+#order_data .order_data_column .address {
+    border: none !important;
 }
 
 /* ==========================================================================
-   3. Shipping Column (Wedding Planner - Venue)
+   3. Section Titles and Spacing
    ========================================================================== */
-
-#order_data .zs-shipping-col {
-    /* Keep background clean or very subtle diff to distinguish from billing */
-    background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
 
 /* Visual Block Section Titles (Injected by JS) */
 .zs-section-title {
-    margin-top: 25px;
-    margin-bottom: 10px;
-    padding-top: 15px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    padding-top: 20px;
     border-top: 1px solid #e0e0e0;
     font-weight: 600;
     color: #444;
@@ -47,21 +59,27 @@
 }
 
 .zs-section-title:first-of-type {
-    margin-top: 15px;
+    margin-top: 5px;
+    padding-top: 15px;
     border-top: none;
+}
+
+/* Reduce some margins for fields right under the titles */
+.zs-section-title + .form-field {
+    margin-top: 5px !important;
+    padding-top: 0 !important;
+    border-top: none !important;
 }
 
 /* ==========================================================================
    4. Customer Provided Note
    ========================================================================== */
 
-/* Instead of relying on nth-child(3) which breaks if there are only 2 columns, target our injected class */
+/* Target our injected class that gets moved out of the column */
 .zs-customer-note-block {
     width: 100% !important;
-    float: none !important;
-    clear: both !important;
-    margin-top: 20px !important;
-    padding: 15px !important;
+    margin-top: 0 !important;
+    padding: 20px !important;
     background-color: #fff9e6 !important; /* Soft warning/notice yellow */
     border: 1px solid #f2e3b3 !important;
     border-radius: 8px !important;
