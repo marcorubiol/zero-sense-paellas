@@ -49,8 +49,8 @@
 .zs-subtitle-billing,
 .zs-subtitle-shipping {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 0;
+    right: 0;
 }
 
 /* Visual Block Section Titles (Contact Person, Venue & Location) */
