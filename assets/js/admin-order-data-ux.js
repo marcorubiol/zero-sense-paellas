@@ -4,22 +4,39 @@
  */
 jQuery(document).ready(function ($) {
     
-    // We already have a title replacement in admin-section-titles.js, 
-    // but just to be sure we're covering all scenarios (view mode vs edit mode), 
-    // we can add a targeted replacement here or rely on the other file.
-    
-    // The main job here is to ensure the Customer Provided Note looks clean 
-    // in both 'edit' and 'view' modes of the HPOS order edit screen.
-    
     function refineOrderDataLayout() {
-        var $orderDataColumn3 = $('#order_data .order_data_column:nth-child(3)');
+        // order_data_column usually has 3 columns: General (0), Billing (1), Shipping (2)
+        var $billingCol = $('#order_data .order_data_column').eq(1);
+        var $shippingCol = $('#order_data .order_data_column').eq(2);
         
-        if ($orderDataColumn3.length) {
-            // Find the "Customer provided note:" label and give it some styling if needed
-            var $noteLabel = $orderDataColumn3.find('h3');
-            if ($noteLabel.length === 0) {
-                // Sometime the label is just text, let's wrap it nicely if it's naked
-                 $orderDataColumn3.prepend('<h3>Customer Notes</h3>');
+        if ($shippingCol.length) {
+            // Add Contact Section Title
+            var $contactField = $shippingCol.find('.zs-contact-block-start');
+            if ($contactField.length && $contactField.prev('.zs-section-title').length === 0) {
+                $contactField.before('<div class="zs-section-title">Contact Person (In-situ)</div>');
+            }
+
+            // Add Venue Section Title
+            var $venueField = $shippingCol.find('.zs-venue-block-start');
+            if ($venueField.length && $venueField.prev('.zs-section-title').length === 0) {
+                $venueField.before('<div class="zs-section-title">Venue & Location</div>');
+            }
+            
+            // Find the Customer Note field by its label
+            var $noteLabels = $shippingCol.find('label').filter(function() {
+                var text = $(this).text().toLowerCase();
+                return text.indexOf('note') > -1 || text.indexOf('nota') > -1;
+            });
+            
+            if ($noteLabels.length) {
+                var $noteWrapper = $noteLabels.closest('.form-field');
+                $noteWrapper.addClass('zs-customer-note-block');
+                
+                // If it doesn't have an h3, add one
+                if ($noteWrapper.find('h3').length === 0) {
+                    $noteLabels.hide(); // Hide the normal label to replace it with a bolder header
+                    $noteWrapper.prepend('<h3 class="zs-note-header">' + $noteLabels.text() + '</h3>');
+                }
             }
         }
     }
