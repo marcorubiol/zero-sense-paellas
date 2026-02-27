@@ -259,6 +259,12 @@ class OrderOps implements FeatureInterface
             $order->update_meta_data(self::META_OPS_NOTES, $newValue);
         }
 
+        // Save Contact Email
+        if (isset($_POST['_shipping_email'])) {
+            $newValue = sanitize_email((string) $_POST['_shipping_email']);
+            $order->update_meta_data('_shipping_email', $newValue);
+        }
+
         // Save Venue Name
         if (isset($_POST['_shipping_venue_name'])) {
             $newValue = sanitize_text_field((string) $_POST['_shipping_venue_name']);
@@ -269,6 +275,12 @@ class OrderOps implements FeatureInterface
         if (isset($_POST['_shipping_venue_phone'])) {
             $newValue = sanitize_text_field((string) $_POST['_shipping_venue_phone']);
             $order->update_meta_data('_shipping_venue_phone', $newValue);
+        }
+
+        // Save Location Link
+        if (isset($_POST['_shipping_location_link'])) {
+            $newValue = esc_url_raw((string) $_POST['_shipping_location_link']);
+            $order->update_meta_data('_shipping_location_link', $newValue);
         }
     }
 
