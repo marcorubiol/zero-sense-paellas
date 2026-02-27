@@ -54,6 +54,78 @@ function zero_sense_autoloader_error()
     }
 }
 
+/**
+ * Global helper function for FlowMattic to save Google Calendar Event ID
+ * 
+ * @param array $params Array with keys: order_id, event_id, event_title (optional)
+ * @return array Response with success status and message
+ */
+function zs_save_calendar_event_id(array $params): array
+{
+    try {
+        $orderId = isset($params['order_id']) ? absint($params['order_id']) : 0;
+        $eventId = isset($params['event_id']) ? sanitize_text_field($params['event_id']) : '';
+        $eventTitle = isset($params['event_title']) ? sanitize_text_field($params['event_title']) : '';
+
+        if ($orderId === 0) {
+            return [
+                'success' => false,
+                'message' => 'Invalid order ID',
+            ];
+        }
+
+        if ($eventId === '') {
+            return [
+                'success' => false,
+                'message' => 'Invalid event ID',
+            ];
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return [
+                'success' => false,
+                'message' => 'Order not found',
+            ];
+        }
+
+        // Save event ID
+        $order->update_meta_data('zs_google_calendar_event_id', $eventId);
+        $order->save_meta_data();
+
+        // Add log entry if CalendarLogs class is available
+        if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+            $logData = [
+                'event_id' => $eventId,
+                'trigger_source' => 'automatic',
+            ];
+            
+            if ($eventTitle !== '') {
+                $logData['event_title'] = $eventTitle;
+            }
+
+            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
+                $order,
+                'created',
+                $logData
+            );
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Event ID saved successfully',
+            'order_id' => $orderId,
+            'event_id' => $eventId,
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+        ];
+    }
+}
+
 // Initialize plugin
 add_action('plugins_loaded', 'zero_sense_init');
 
