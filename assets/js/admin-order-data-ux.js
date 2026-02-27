@@ -12,9 +12,11 @@ jQuery(document).ready(function ($) {
             'gap': '20px'
         });
 
-        // Ensure columns take up correct width within flex
+        // Ensure columns take up correct width within flex, but allow stacking
         $('#order_data .order_data_column').css({
-            'width': 'calc(33.33% - 14px)',
+            'flex': '1 1 min(300px, calc(33.33% - 14px))',
+            'min-width': '300px',
+            'width': 'auto',
             'float': 'none'
         });
 
