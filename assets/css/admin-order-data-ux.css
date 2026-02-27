@@ -18,8 +18,7 @@
    2. Billing Column (Client)
    ========================================================================== */
 
-#order_data .order_data_column:nth-child(1), /* HPOS usually has this as 1 or 2 depending on layout */
-#order_data .order_data_column_container .order_data_column:first-child {
+#order_data .zs-billing-col {
     background-color: rgba(0, 0, 0, 0.02);
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -28,7 +27,7 @@
    3. Shipping Column (Wedding Planner - Venue)
    ========================================================================== */
 
-#order_data .order_data_column_container .order_data_column:nth-child(2) {
+#order_data .zs-shipping-col {
     /* Keep background clean or very subtle diff to distinguish from billing */
     background-color: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.05);
