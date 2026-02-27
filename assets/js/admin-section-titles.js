@@ -38,7 +38,7 @@ jQuery(document).ready(function ($) {
                     
                     elem.data('zs-modified', true);
                     elem.parent().css('position', 'relative');
-                    elem.after('<span class="zs-badge zs-badge-auto zs-subtitle-shipping">Shipping</span>');
+                    elem.after('<span class="zs-badge zs-badge-status zs-subtitle-shipping">Shipping</span>');
                 }
             }
         });

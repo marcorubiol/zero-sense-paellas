@@ -303,6 +303,7 @@ button.zs-mb-link {
 
 .zs-badge.zs-badge-auto.wpml-language-tag {
     position: static;
+    align-content: center;
 }
 
 /* Assignment row: flex row for staff/vehicle assignment entries */
