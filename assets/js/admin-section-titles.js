@@ -14,7 +14,7 @@ jQuery(document).ready(function ($) {
                         return this.nodeType === 3 && this.textContent.trim().length > 0;
                     });
                     if (textNodes.length) {
-                        textNodes[0].textContent = 'In-Situ Contact (WP) & Venue ';
+                        textNodes[0].textContent = 'In-Situ Contact (WP) & Venue Details ';
                     }
                     elem.data('zs-modified', true);
                     elem.parent().css('position', 'relative');

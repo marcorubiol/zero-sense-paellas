@@ -59,7 +59,7 @@ jQuery(document).ready(function ($) {
         if ($shippingCol && $shippingCol.length) {
             var $shippingAddressView = $shippingCol.find('.address');
             if ($shippingAddressView.length) {
-                var contactHtml = '<div class="zs-section-title" style="margin-top:0;">Contact Person (WP)</div>';
+                var contactHtml = '<div class="zs-section-title" style="margin-top:0;">CONTACT PERSON (WP)</div>';
                 contactHtml += '<p>';
                 var sName = ($('#_shipping_first_name').val() + ' ' + $('#_shipping_last_name').val()).trim();
                 if (sName) contactHtml += sName + '<br>';
@@ -71,8 +71,8 @@ jQuery(document).ready(function ($) {
                 if (sPhone) contactHtml += '<strong>Contact Phone:</strong> <a href="tel:' + sPhone + '">' + sPhone + '</a><br>';
                 contactHtml += '</p>';
                 
-                if (contactHtml === '<div class="zs-section-title" style="margin-top:0;">Contact Person (WP)</div><p></p>') {
-                    contactHtml = '<div class="zs-section-title" style="margin-top:0;">Contact Person (WP)</div><p><em>Not provided</em></p>';
+                if (contactHtml === '<div class="zs-section-title" style="margin-top:0;">CONTACT PERSON (WP)</div><p></p>') {
+                    contactHtml = '<div class="zs-section-title" style="margin-top:0;">CONTACT PERSON (WP)</div><p><em>Not provided</em></p>';
                 }
 
                 var venueHtml = '<div class="zs-section-title">Venue & Location</div>';
@@ -176,7 +176,7 @@ jQuery(document).ready(function ($) {
         if ($shippingCol && $shippingCol.length) {
             var $contactField = $shippingCol.find('.zs-contact-block-start');
             if ($contactField.length && $contactField.prev('.zs-section-title').length === 0) {
-                $contactField.before('<div class="zs-section-title">Contact Person (WP)</div>');
+                $contactField.before('<div class="zs-section-title">CONTACT PERSON (WP)</div>');
             }
 
             var $venueField = $shippingCol.find('.zs-venue-block-start');
