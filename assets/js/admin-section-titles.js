@@ -2,17 +2,17 @@ jQuery(document).ready(function ($) {
     function modifyTitles() {
         $('#order_data h3').each(function () {
             var elem = $(this);
-            var fullText = elem.contents().first().text().trim();
-            var firstWord = fullText.split(/\s+/)[0];
+            var text = elem.text().trim();
+            var firstWord = text.split(' ')[0];
 
             // Check if it's already been modified (Client/Wedding Planner - Venue)
-            if (firstWord === 'Client' || firstWord === 'Wedding') {
+            if (firstWord === 'Client' || firstWord === 'In-Situ') {
                 // Already modified, just ensure badge exists
                 if (elem.next('.zs-subtitle-billing, .zs-subtitle-shipping').length === 0) {
                     if (firstWord === 'Client') {
                         elem.after('<span class="zs-badge zs-badge-auto zs-subtitle-billing">Billing</span>');
                     } else {
-                        elem.after('<span class="zs-badge zs-badge-auto zs-subtitle-shipping">Shipping</span>');
+                        elem.after('<span class="zs-badge zs-badge-status zs-subtitle-shipping">Shipping</span>');
                     }
                     elem.parent().css('position', 'relative');
                 }
