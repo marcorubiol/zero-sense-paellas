@@ -53,6 +53,8 @@ class DataExposer
                 'staff_coqueteles' => __('Staff: Coqueteles', 'zero-sense'),
                 'staff_tallador_pernil' => __('Staff: Tallador de pernil', 'zero-sense'),
                 'staff_all_formatted' => __('Staff: All (Formatted)', 'zero-sense'),
+                'google_calendar_event_id' => __('Google Calendar Event ID', 'zero-sense'),
+                'google_calendar_event_url' => __('Google Calendar Event URL', 'zero-sense'),
             ],
         ];
         
@@ -119,6 +121,8 @@ class DataExposer
             'staff_tallador_pernil' => self::getStaffByRole($order, 'tallador-pernil'),
             'staff_all_formatted' => self::getAllStaffFormatted($order),
             'vehicles'            => self::getVehiclesFormatted($order),
+            'google_calendar_event_id' => $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
+            'google_calendar_event_url' => self::getCalendarEventUrl($order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true)),
         ];
     }
 
@@ -216,5 +220,16 @@ class DataExposer
         }
 
         return implode("\n", $output);
+    }
+
+    /**
+     * Get Google Calendar event URL from event ID
+     */
+    private static function getCalendarEventUrl($eventId): string
+    {
+        if (!is_string($eventId) || $eventId === '') {
+            return '';
+        }
+        return 'https://calendar.google.com/calendar/event?eid=' . urlencode($eventId);
     }
 }
