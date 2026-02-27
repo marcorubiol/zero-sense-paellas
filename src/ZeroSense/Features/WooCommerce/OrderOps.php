@@ -44,6 +44,33 @@ class OrderOps implements FeatureInterface
         add_action('add_meta_boxes', [$this, 'addMetaboxes']);
         add_filter('woocommerce_admin_shipping_fields', [$this, 'registerShippingCustomFields'], 10, 3);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save'], 20);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueUxAssets'], 20);
+    }
+
+    public function enqueueUxAssets(): void
+    {
+        if (!function_exists('get_current_screen')) {
+            return;
+        }
+
+        $screen = get_current_screen();
+        if ($screen && in_array($screen->id, ['shop_order', 'edit-shop_order', 'woocommerce_page_wc-orders'], true)) {
+            $css_rel = 'assets/css/admin-order-data-ux.css';
+            $css_path = defined('ZERO_SENSE_PATH') ? constant('ZERO_SENSE_PATH') . $css_rel : '';
+            if ($css_path && file_exists($css_path)) {
+                $css_url = defined('ZERO_SENSE_URL') ? constant('ZERO_SENSE_URL') . $css_rel : '';
+                $css_ver = (string) filemtime($css_path);
+                wp_enqueue_style('zs-admin-order-data-ux', $css_url, [], $css_ver);
+            }
+
+            $js_rel = 'assets/js/admin-order-data-ux.js';
+            $js_path = defined('ZERO_SENSE_PATH') ? constant('ZERO_SENSE_PATH') . $js_rel : '';
+            if ($js_path && file_exists($js_path)) {
+                $js_url = defined('ZERO_SENSE_URL') ? constant('ZERO_SENSE_URL') . $js_rel : '';
+                $js_ver = (string) filemtime($js_path);
+                wp_enqueue_script('zs-admin-order-data-ux', $js_url, ['jquery'], $js_ver, true);
+            }
+        }
     }
 
     public function getPriority(): int
@@ -91,8 +118,22 @@ class OrderOps implements FeatureInterface
 
     public function registerShippingCustomFields(array $fields, $order = false, string $context = 'edit'): array
     {
+        if (isset($fields['first_name'])) {
+            $fields['first_name']['label'] = __('Contact First Name', 'zero-sense');
+            $fields['first_name']['wrapper_class'] = ($fields['first_name']['wrapper_class'] ?? '') . ' zs-contact-block-start';
+        }
+        if (isset($fields['last_name'])) {
+            $fields['last_name']['label'] = __('Contact Last Name', 'zero-sense');
+        }
+        if (isset($fields['company'])) {
+            $fields['company']['label'] = __('Agency / Company', 'zero-sense');
+        }
+        if (isset($fields['phone'])) {
+            $fields['phone']['label'] = __('Contact Phone', 'zero-sense');
+        }
+
         $email_field = [
-            'label' => __('Email address', 'woocommerce'),
+            'label' => __('Contact Email', 'zero-sense'),
         ];
 
         if ($context === 'view' && $order instanceof WC_Order) {
@@ -101,6 +142,9 @@ class OrderOps implements FeatureInterface
             if ($raw !== '') {
                 $email_field['value'] = '<a href="' . esc_url('mailto:' . $raw) . '">' . esc_html($raw) . '</a>';
             }
+        } elseif ($context === 'edit' && $order instanceof WC_Order) {
+            $raw = $order->get_meta('_shipping_email', true);
+            $email_field['value'] = is_string($raw) ? $raw : '';
         }
 
         $location_link_field = [
@@ -124,22 +168,11 @@ class OrderOps implements FeatureInterface
             $location_link_field['value'] = is_string($url) ? $url : '';
         }
 
-        $reordered = [];
-        foreach ($fields as $key => $field) {
-            if ($key === 'phone') {
-                $reordered['email'] = $email_field;
-            }
-            $reordered[$key] = $field;
-        }
-
-        if (!isset($reordered['email'])) {
-            $reordered['email'] = $email_field;
-        }
-
         // Add Venue Name field
         $venue_name_field = [
             'label' => __('Venue Name', 'zero-sense'),
             'class' => 'short',
+            'wrapper_class' => 'zs-venue-block-start',
         ];
         
         if ($context === 'view' && $order instanceof WC_Order) {
@@ -156,6 +189,7 @@ class OrderOps implements FeatureInterface
         // Add Venue Phone field
         $venue_phone_field = [
             'label' => __('Venue Phone', 'zero-sense'),
+            'class' => 'short',
         ];
         
         if ($context === 'view' && $order instanceof WC_Order) {
@@ -169,9 +203,41 @@ class OrderOps implements FeatureInterface
             $venue_phone_field['value'] = is_string($venue_phone) ? $venue_phone : '';
         }
         
-        $reordered['venue_name'] = $venue_name_field;
-        $reordered['venue_phone'] = $venue_phone_field;
-        $reordered['location_link'] = $location_link_field;
+        $fields['email'] = $email_field;
+        $fields['venue_name'] = $venue_name_field;
+        $fields['venue_phone'] = $venue_phone_field;
+        $fields['location_link'] = $location_link_field;
+
+        // Desired order
+        $order_keys = [
+            'first_name',
+            'last_name',
+            'company',
+            'email',
+            'phone',
+            'venue_name',
+            'venue_phone',
+            'address_1',
+            'address_2',
+            'city',
+            'postcode',
+            'country',
+            'state',
+            'location_link',
+        ];
+
+        $reordered = [];
+        foreach ($order_keys as $key) {
+            if (isset($fields[$key])) {
+                $reordered[$key] = $fields[$key];
+                unset($fields[$key]);
+            }
+        }
+
+        // Append any remaining fields that might be added by other plugins
+        foreach ($fields as $key => $field) {
+            $reordered[$key] = $field;
+        }
 
         return $reordered;
     }
@@ -193,6 +259,12 @@ class OrderOps implements FeatureInterface
             $order->update_meta_data(self::META_OPS_NOTES, $newValue);
         }
 
+        // Save Contact Email
+        if (isset($_POST['_shipping_email'])) {
+            $newValue = sanitize_email((string) $_POST['_shipping_email']);
+            $order->update_meta_data('_shipping_email', $newValue);
+        }
+
         // Save Venue Name
         if (isset($_POST['_shipping_venue_name'])) {
             $newValue = sanitize_text_field((string) $_POST['_shipping_venue_name']);
@@ -203,6 +275,12 @@ class OrderOps implements FeatureInterface
         if (isset($_POST['_shipping_venue_phone'])) {
             $newValue = sanitize_text_field((string) $_POST['_shipping_venue_phone']);
             $order->update_meta_data('_shipping_venue_phone', $newValue);
+        }
+
+        // Save Location Link
+        if (isset($_POST['_shipping_location_link'])) {
+            $newValue = esc_url_raw((string) $_POST['_shipping_location_link']);
+            $order->update_meta_data('_shipping_location_link', $newValue);
         }
     }
 

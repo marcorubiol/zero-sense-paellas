@@ -1,0 +1,114 @@
+/* 
+ * UX/UI improvements for Billing/Shipping Admin Fields 
+ * HPOS Compatible
+ */
+
+/* ==========================================================================
+   1. Global Enhancements for Order Data Metabox
+   ========================================================================== */
+
+/* Disable WooCommerce default float layout to rely on flexbox via JS */
+#order_data .order_data_column {
+    padding: 15px 20px !important;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   2. Column Backgrounds and Borders
+   ========================================================================== */
+
+/* General Column (First Column) */
+#order_data .order_data_column:nth-child(1) {
+    background-color: rgba(0, 0, 0, 0.01) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Billing Column (Client) */
+#order_data .zs-billing-col {
+    background-color: rgba(230, 240, 255, 0.25) !important; /* Very subtle blue */
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Shipping Column (Wedding Planner - Venue) */
+#order_data .zs-shipping-col {
+    background-color: rgba(245, 235, 255, 0.2) !important; /* Very subtle purple/pink */
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Remove default hidden state borders in view mode so our border shows cleanly */
+#order_data .order_data_column .address {
+    border: none !important;
+}
+
+/* Ensure the modified view structure displays properly without double margins */
+#order_data .order_data_column .address p {
+    margin-bottom: 1em;
+}
+
+#order_data .order_data_column .address .zs-section-title {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    padding-top: 12px;
+}
+
+/* ==========================================================================
+   3. Section Titles and Spacing
+   ========================================================================== */
+
+/* Badge Subtitles (Billing/Shipping) - Positioned absolutely top-right */
+.zs-subtitle-billing,
+.zs-subtitle-shipping {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+/* Visual Block Section Titles (Contact Person, Venue & Location) */
+.zs-section-title {
+    clear: both;
+    float: left; /* Needed to make margin work with following floated elements */
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+    font-weight: 600;
+    color: #444;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-sizing: border-box;
+}
+
+/* First section title (Contact Person) - no top border */
+.zs-section-title:first-of-type {
+    margin-top: 20px; /* Aumentado para dar más espacio respecto a los enlaces de arriba */
+    padding-top: 0;
+    border-top: none;
+}
+
+/* ==========================================================================
+   4. Customer Provided Note
+   ========================================================================== */
+
+/* Target our injected class that gets moved out of the column */
+.zs-customer-note-block {
+    width: 100% !important;
+    margin-top: 0 !important;
+    padding: 20px !important;
+    background-color: #fafafa !important; /* Soft very light gray */
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 8px !important;
+    box-sizing: border-box;
+}
+
+.zs-note-header {
+    margin-top: 0;
+    color: #444;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
