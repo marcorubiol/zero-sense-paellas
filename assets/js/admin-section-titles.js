@@ -3,16 +3,20 @@ jQuery(document).ready(function ($) {
         $('#order_data h3').each(function () {
             var elem = $(this);
 
-            if (elem.next('.zs-subtitle').length) {
+            if (elem.data('zs-processed')) {
                 return;
             }
 
             var firstWord = elem.contents().first().text().trim().split(/\s+/)[0];
 
             if (firstWord === 'Billing' || firstWord === 'Facturación') {
-                elem.after('<div class="zs-subtitle zs-subtitle-client" data-wc-label="Billing">Client</div>');
+                elem.text('Client');
+                elem.append('<span class="zs-wc-tag">Billing</span>');
+                elem.data('zs-processed', true);
             } else if (firstWord === 'Shipping' || firstWord === 'Envío') {
-                elem.after('<div class="zs-subtitle zs-subtitle-venue" data-wc-label="Shipping">Wedding Planner - Venue</div>');
+                elem.text('Wedding Planner - Venue');
+                elem.append('<span class="zs-wc-tag">Shipping</span>');
+                elem.data('zs-processed', true);
             }
         });
 

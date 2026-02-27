@@ -12,6 +12,7 @@
     padding: 15px 20px !important;
     border-radius: 8px;
     box-sizing: border-box;
+    position: relative;
 }
 
 /* ==========================================================================
@@ -98,39 +99,33 @@
 }
 
 /* ==========================================================================
-   5. Main Section Titles (Solution 2: Hide H3, Show Subtitle with Tag)
+   5. Main Section Titles with Small Tag Badge
    ========================================================================== */
 
-/* Hide the original WooCommerce H3 titles */
+/* H3 titles now show our custom text */
 #order_data .zs-billing-col > h3:first-child,
 #order_data .zs-shipping-col > h3:first-child {
-    display: none !important;
-}
-
-/* Style the subtitle as the main title */
-.zs-subtitle {
     font-size: 16px;
     font-weight: 600;
     color: #333;
-    margin-top: 0;
     margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-/* Tag-style badge for Billing/Shipping reference */
-.zs-subtitle::before {
-    content: attr(data-wc-label);
+/* Small tag badge positioned absolutely in top-right corner */
+.zs-wc-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     display: inline-block;
-    padding: 2px 8px;
-    font-size: 11px;
+    padding: 3px 8px;
+    font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-radius: 3px;
     background-color: #2271b1;
     color: #fff;
+    line-height: 1;
 }
 
 /* ==========================================================================
