@@ -21,9 +21,6 @@ class Bootstrap
 {
     public function boot(): void
     {
-        // Load Calendar helper functions for FlowMattic
-        require_once __DIR__ . '/Calendar/CalendarLogs.php';
-        
         $this->registerMetaFields();
         $this->initializeInventorySystem();
         
