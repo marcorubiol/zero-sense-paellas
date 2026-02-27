@@ -544,7 +544,6 @@ class EventDetailsMetabox
             'event_total_guests' => __('Total guests', 'zero-sense'),
             'event_adults'       => __('Adults', 'zero-sense'),
             'event_date'         => __('Event date', 'zero-sense'),
-            'event_serving_time' => __('Paellas service time', 'zero-sense'),
         ];
 
         foreach ($required as $field => $label) {
@@ -563,7 +562,6 @@ class EventDetailsMetabox
         // Native WC billing/shipping fields
         $nativeRequired = [
             '_billing_first_name' => __('Billing first name', 'zero-sense'),
-            '_billing_last_name'  => __('Billing last name', 'zero-sense'),
             '_billing_email'      => __('Billing email', 'zero-sense'),
             '_shipping_city'      => __('Shipping city', 'zero-sense'),
         ];
