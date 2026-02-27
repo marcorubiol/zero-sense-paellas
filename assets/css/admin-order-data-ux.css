@@ -41,6 +41,17 @@
     border: none !important;
 }
 
+/* Ensure the modified view structure displays properly without double margins */
+#order_data .order_data_column .address p {
+    margin-bottom: 1em;
+}
+
+#order_data .order_data_column .address .zs-section-title {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    padding-top: 12px;
+}
+
 /* ==========================================================================
    3. Section Titles and Spacing
    ========================================================================== */
