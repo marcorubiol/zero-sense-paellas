@@ -563,7 +563,6 @@ class EventDetailsMetabox
         $nativeRequired = [
             '_billing_first_name' => __('Billing first name', 'zero-sense'),
             '_billing_email'      => __('Billing email', 'zero-sense'),
-            '_shipping_city'      => __('Shipping city', 'zero-sense'),
         ];
 
         foreach ($nativeRequired as $field => $label) {
