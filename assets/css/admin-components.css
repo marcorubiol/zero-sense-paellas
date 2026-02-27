@@ -293,6 +293,18 @@ button.zs-mb-link {
     display: none !important;
 }
 
+/* WPML Language Tags */
+.wpml-language-current {
+    align-content: center;
+    justify-content: center;
+    display: flex;
+    gap: 6px;
+}
+
+.zs-badge.zs-badge-auto.wpml-language-tag {
+    position: static;
+}
+
 /* Assignment row: flex row for staff/vehicle assignment entries */
 .zs-assignment-row {
     display: flex;
