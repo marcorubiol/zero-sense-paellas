@@ -72,7 +72,7 @@
 
 /* First section title (Contact Person) - no top border */
 .zs-section-title:first-of-type {
-    margin-top: 30px; /* Aumentado para dar más espacio respecto a los enlaces de arriba */
+    margin-top: 20px; /* Aumentado para dar más espacio respecto a los enlaces de arriba */
     padding-top: 0;
     border-top: none;
 }
