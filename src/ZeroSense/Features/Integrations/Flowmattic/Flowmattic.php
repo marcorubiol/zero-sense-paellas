@@ -1081,11 +1081,20 @@ class Flowmattic implements FeatureInterface
      */
     public function ajaxSendManualEmail(): void
     {
+        // Enable error output capture to prevent HTML error pages
+        @ini_set('display_errors', '0');
+        error_reporting(E_ALL);
+        
         $debugData = [
             'timestamp' => current_time('mysql'),
             'action' => 'zs_flow_send_manual_email',
             'step' => 'init',
+            'php_version' => PHP_VERSION,
+            'memory_limit' => ini_get('memory_limit'),
         ];
+        
+        // Log immediately to catch any early failures
+        Logger::debug('FlowMattic Manual Email - Handler started', $debugData);
         
         if (!current_user_can('edit_shop_orders')) {
             $debugData['error'] = 'insufficient_permissions';
