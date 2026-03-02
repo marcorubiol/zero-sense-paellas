@@ -212,8 +212,11 @@ class AdminOrdersCsvExport implements FeatureInterface
                 .zs-date-inputs { display: flex; align-items: center; gap: 10px; }
                 .zs-date-inputs input[type="date"] { padding: 6px 10px; border: 1px solid #8c8f94; border-radius: 4px; font-size: 13px; }
                 .zs-date-inputs span { color: #646970; font-size: 13px; }
-                .zs-cols { columns: 2; gap: 12px; margin-bottom: 24px; }
-                .zs-col-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; break-inside: avoid; }
+                .zs-cols { margin-bottom: 24px; }
+                .zs-col-group { margin-bottom: 20px; }
+                .zs-col-group-title { font-weight: 600; font-size: 13px; color: #1d2327; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #dcdcde; }
+                .zs-col-group-items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+                .zs-col-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
                 .zs-col-item label { cursor: pointer; font-size: 14px; color: #1d2327; }
                 .zs-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
                 .zs-actions a { font-size: 13px; color: #2271b1; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; }
@@ -284,11 +287,42 @@ class AdminOrdersCsvExport implements FeatureInterface
                 </div>
 
                 <div class="zs-cols">
-                    <?php foreach ($allColumns as $key => $label): ?>
-                    <div class="zs-col-item">
-                        <input class="zs-col-check" type="checkbox" name="cols[]" value="<?php echo esc_attr($key); ?>" id="col_<?php echo esc_attr($key); ?>" checked>
-                        <label for="col_<?php echo esc_attr($key); ?>"><?php echo esc_html(__($label, 'zero-sense')); ?></label>
-                    </div>
+                    <?php
+                    // Group columns by category
+                    $columnGroups = [
+                        'basic' => [
+                            'title' => __('Basic Information', 'zero-sense'),
+                            'columns' => ['order_id', 'date', 'status', 'customer_name', 'email', 'phone']
+                        ],
+                        'event' => [
+                            'title' => __('Event Information', 'zero-sense'),
+                            'columns' => ['event_date', 'start_time', 'serving_time', 'total_guests', 'event_type', 'location', 'city']
+                        ],
+                        'financial' => [
+                            'title' => __('Financial Information', 'zero-sense'),
+                            'columns' => ['order_total', 'total_paid', 'remaining', 'deposit_amount', 'deposit_pct', 'deposit_paid', 'first_payment_date', 'second_payment_date', 'payment_method']
+                        ],
+                        'other' => [
+                            'title' => __('Other', 'zero-sense'),
+                            'columns' => ['language', 'products']
+                        ]
+                    ];
+                    
+                    foreach ($columnGroups as $group):
+                    ?>
+                        <div class="zs-col-group">
+                            <div class="zs-col-group-title"><?php echo esc_html($group['title']); ?></div>
+                            <div class="zs-col-group-items">
+                                <?php foreach ($group['columns'] as $key): ?>
+                                    <?php if (isset($allColumns[$key])): ?>
+                                        <div class="zs-col-item">
+                                            <input class="zs-col-check" type="checkbox" name="cols[]" value="<?php echo esc_attr($key); ?>" id="col_<?php echo esc_attr($key); ?>" checked>
+                                            <label for="col_<?php echo esc_attr($key); ?>"><?php echo esc_html(__($allColumns[$key], 'zero-sense')); ?></label>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
                 </div>
 
