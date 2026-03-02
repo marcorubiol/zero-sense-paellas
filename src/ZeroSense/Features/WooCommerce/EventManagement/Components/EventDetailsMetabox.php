@@ -505,7 +505,6 @@ class EventDetailsMetabox
 
                 // Guest count validation
                 function updateGuestsValidation() {
-                    console.log('updateGuestsValidation called'); // Debug
                     
                     const totalGuestsInput = document.getElementById('event_total_guests');
                     const adultsInput = document.getElementById('event_adults');
@@ -514,16 +513,7 @@ class EventDetailsMetabox
                     const validationContainer = document.getElementById('zs-guests-validation');
                     const validationMessage = validationContainer.querySelector('.zs-guest-validation-message');
                     
-                    console.log('Elements found:', {
-                        totalGuestsInput: !!totalGuestsInput,
-                        adultsInput: !!adultsInput,
-                        children5to8Input: !!children5to8Input,
-                        children0to4Input: !!children0to4Input,
-                        validationContainer: !!validationContainer
-                    }); // Debug
-                    
                     if (!totalGuestsInput || !adultsInput || !children5to8Input || !children0to4Input || !validationContainer) {
-                        console.log('Missing elements, returning'); // Debug
                         return;
                     }
                     
@@ -533,8 +523,6 @@ class EventDetailsMetabox
                     const children0to4 = parseInt(children0to4Input.value) || 0;
                     const sumOfPeople = adults + children5to8 + children0to4;
                     
-                    console.log('Values:', { totalGuests, adults, children5to8, children0to4, sumOfPeople }); // Debug
-                    
                     // Remove all validation classes from input
                     totalGuestsInput.classList.remove('match', 'lower', 'higher');
                     validationContainer.classList.remove('match', 'lower', 'higher');
@@ -543,20 +531,16 @@ class EventDetailsMetabox
                         totalGuestsInput.classList.add('match');
                         validationContainer.classList.add('match');
                         validationMessage.textContent = '';
-                        console.log('Added match class'); // Debug
                     } else if (totalGuests < sumOfPeople && sumOfPeople > 0) {
                         totalGuestsInput.classList.add('lower');
                         validationContainer.classList.add('lower');
                         validationMessage.textContent = 'The total number of people is lower than the sum of people';
-                        console.log('Added lower class'); // Debug
                     } else if (totalGuests > sumOfPeople && totalGuests > 0) {
                         totalGuestsInput.classList.add('higher');
                         validationContainer.classList.add('higher');
                         validationMessage.textContent = 'The total number of people is higher than the sum of people';
-                        console.log('Added higher class'); // Debug
                     } else {
                         validationMessage.textContent = '';
-                        console.log('No validation applied'); // Debug
                     }
                 }
                 
