@@ -169,6 +169,15 @@ class AdminOrdersCsvExport implements FeatureInterface
         $preselectedStatuses = isset($_GET['statuses']) && is_array($_GET['statuses']) 
             ? array_map('sanitize_text_field', wp_unslash($_GET['statuses'])) 
             : [];
+        
+        // If no statuses selected yet, check for WooCommerce post_status filter
+        if (empty($preselectedStatuses) && !empty($_GET['post_status'])) {
+            $postStatus = sanitize_text_field(wp_unslash($_GET['post_status']));
+            if ($postStatus !== 'all') {
+                $preselectedStatuses = [$postStatus];
+            }
+        }
+        
         $dateFrom = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
         $dateTo = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
         ?>
@@ -301,14 +310,18 @@ class AdminOrdersCsvExport implements FeatureInterface
                 };
             }
             
-            // Set past month date range
+            // Set past month date range (full month: day 1 to last day)
             var setPastMonth = document.querySelector('.set-past-month');
             if (setPastMonth) {
                 setPastMonth.onclick = function(e) {
                     e.preventDefault();
                     var today = new Date();
-                    var pastMonth = new Date();
-                    pastMonth.setMonth(today.getMonth() - 1);
+                    
+                    // First day of past month
+                    var firstDayPastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    
+                    // Last day of past month
+                    var lastDayPastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
                     
                     // Format dates as YYYY-MM-DD
                     var formatDate = function(date) {
@@ -322,10 +335,10 @@ class AdminOrdersCsvExport implements FeatureInterface
                     var dateToInput = document.getElementById('date_to');
                     
                     if (dateFromInput) {
-                        dateFromInput.value = formatDate(pastMonth);
+                        dateFromInput.value = formatDate(firstDayPastMonth);
                     }
                     if (dateToInput) {
-                        dateToInput.value = formatDate(today);
+                        dateToInput.value = formatDate(lastDayPastMonth);
                     }
                 };
             }
