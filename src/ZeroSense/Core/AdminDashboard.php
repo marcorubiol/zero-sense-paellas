@@ -57,9 +57,11 @@ class AdminDashboard
             if ($feature->isToggleable()) {
                 $optionName = $this->getFeatureOptionName($feature);
                 register_setting('zero_sense_settings', $optionName, [
-                    'type' => 'boolean',
-                    'default' => true,
-                    'sanitize_callback' => 'rest_sanitize_boolean'
+                    'type' => 'integer',
+                    'default' => 1,
+                    'sanitize_callback' => function($value) {
+                        return $value ? 1 : 0;
+                    }
                 ]);
             }
         }
@@ -650,9 +652,8 @@ class AdminDashboard
             return;
         }
 
-        // Update the option using delete + add approach (more reliable)
-        delete_option($optionName);
-        $updateResult = add_option($optionName, $enabled, '', false);
+        // Update the option - use update_option for reliability with boolean values
+        update_option($optionName, $enabled ? 1 : 0);
         
         // Re-initialize the specific feature to apply the change immediately
         foreach ($this->featureManager->getFeatures() as $feature) {
