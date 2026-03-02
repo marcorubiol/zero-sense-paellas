@@ -44,11 +44,71 @@ jQuery(document).ready(function($) {
         });
     }
     
+    /**
+     * Auto-expand billing/shipping sections if they have empty required fields
+     */
+    function autoExpandRequiredSections() {
+        // Check billing section
+        var billingEmpty = false;
+        $('input[name="_billing_first_name"][required], input[name="_billing_email"][required]').each(function() {
+            if ($(this).val().trim() === '') {
+                billingEmpty = true;
+            }
+        });
+        
+        if (billingEmpty) {
+            // Find the billing column and click the Edit button
+            var billingColumn = $('.order_data_column').filter(function() {
+                return $(this).find('input[name="_billing_first_name"]').length > 0;
+            });
+            
+            if (billingColumn.length) {
+                var editButton = billingColumn.find('.edit_address');
+                if (editButton.length && editButton.is(':visible')) {
+                    editButton.click();
+                }
+            }
+        }
+        
+        // Check shipping section (for future required fields)
+        var shippingEmpty = false;
+        var shippingColumn = $('.order_data_column').filter(function() {
+            return $(this).find('input[name^="_shipping"]').length > 0;
+        });
+        
+        if (shippingColumn.length) {
+            shippingColumn.find('input[required], select[required], textarea[required]').each(function() {
+                if ($(this).val().trim() === '') {
+                    shippingEmpty = true;
+                }
+            });
+            
+            if (shippingEmpty) {
+                var editButton = shippingColumn.find('.edit_address');
+                if (editButton.length && editButton.is(':visible')) {
+                    editButton.click();
+                }
+            }
+        }
+    }
+    
     // Run on page load
     markRequiredFields();
+    autoExpandRequiredSections();
     
     // Run after a short delay to catch dynamically loaded fields
-    setTimeout(markRequiredFields, 100);
-    setTimeout(markRequiredFields, 500);
-    setTimeout(markRequiredFields, 1000);
+    setTimeout(function() {
+        markRequiredFields();
+        autoExpandRequiredSections();
+    }, 100);
+    
+    setTimeout(function() {
+        markRequiredFields();
+        autoExpandRequiredSections();
+    }, 500);
+    
+    setTimeout(function() {
+        markRequiredFields();
+        autoExpandRequiredSections();
+    }, 1000);
 });
