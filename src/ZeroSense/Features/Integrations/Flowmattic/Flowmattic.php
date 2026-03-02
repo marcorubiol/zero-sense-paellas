@@ -1094,17 +1094,17 @@ class Flowmattic implements FeatureInterface
         ];
         
         // Log immediately to catch any early failures
-        Logger::debug('FlowMattic Manual Email - Handler started', $debugData);
+        Logger::debug('FlowMattic Manual Email - Handler started', wp_json_encode($debugData));
         
         if (!current_user_can('edit_shop_orders')) {
             $debugData['error'] = 'insufficient_permissions';
-            Logger::debug('FlowMattic Manual Email - Permission denied', $debugData);
+            Logger::debug('FlowMattic Manual Email - Permission denied', wp_json_encode($debugData));
             wp_send_json_error('insufficient_permissions');
         }
         
         if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'zs_manual_email_nonce')) {
             $debugData['error'] = 'invalid_nonce';
-            Logger::debug('FlowMattic Manual Email - Invalid nonce', $debugData);
+            Logger::debug('FlowMattic Manual Email - Invalid nonce', wp_json_encode($debugData));
             wp_send_json_error('invalid_nonce');
         }
         
@@ -1117,7 +1117,7 @@ class Flowmattic implements FeatureInterface
         
         if (!$workflowId || !$orderId) {
             $debugData['error'] = 'missing_parameters';
-            Logger::debug('FlowMattic Manual Email - Missing parameters', $debugData);
+            Logger::debug('FlowMattic Manual Email - Missing parameters', wp_json_encode($debugData));
             wp_send_json_error('missing_parameters');
         }
         
@@ -1125,7 +1125,7 @@ class Flowmattic implements FeatureInterface
         if (!$order instanceof \WC_Order) {
             $debugData['error'] = 'invalid_order';
             $debugData['order_exists'] = false;
-            Logger::debug('FlowMattic Manual Email - Invalid order', $debugData);
+            Logger::debug('FlowMattic Manual Email - Invalid order', wp_json_encode($debugData));
             wp_send_json_error('invalid_order');
         }
         
@@ -1139,7 +1139,7 @@ class Flowmattic implements FeatureInterface
             $debugData['error'] = 'invalid_trigger';
             $debugData['trigger_found'] = false;
             $debugData['all_triggers'] = $this->getAllEmailTriggers();
-            Logger::debug('FlowMattic Manual Email - Trigger not found', $debugData);
+            Logger::debug('FlowMattic Manual Email - Trigger not found', wp_json_encode($debugData));
             wp_send_json_error('invalid_trigger');
         }
         
@@ -1156,13 +1156,13 @@ class Flowmattic implements FeatureInterface
         $className = $trigger['class'] ?? '';
         if (!$className) {
             $debugData['error'] = 'missing_class';
-            Logger::debug('FlowMattic Manual Email - Missing class name', $debugData);
+            Logger::debug('FlowMattic Manual Email - Missing class name', wp_json_encode($debugData));
             wp_send_json_error('missing_class');
         }
         
         $debugData['class_name'] = $className;
         $debugData['step'] = 'before_trigger';
-        Logger::debug('FlowMattic Manual Email - About to trigger workflow', $debugData);
+        Logger::debug('FlowMattic Manual Email - About to trigger workflow', wp_json_encode($debugData));
         
         // Trigger workflow directly via Integration class method
         // This avoids modifying $_POST (security anti-pattern) and ensures clean JSON response
@@ -1172,12 +1172,12 @@ class Flowmattic implements FeatureInterface
             
             $debugData['step'] = 'workflow_triggered';
             $debugData['success'] = true;
-            Logger::debug('FlowMattic Manual Email - Workflow triggered successfully', $debugData);
+            Logger::debug('FlowMattic Manual Email - Workflow triggered successfully', wp_json_encode($debugData));
         } catch (\Throwable $e) {
             $debugData['error'] = 'exception_during_trigger';
             $debugData['exception_message'] = $e->getMessage();
             $debugData['exception_trace'] = $e->getTraceAsString();
-            Logger::debug('FlowMattic Manual Email - Exception during workflow trigger', $debugData);
+            Logger::debug('FlowMattic Manual Email - Exception during workflow trigger', wp_json_encode($debugData));
             wp_send_json_error([
                 'code' => 'workflow_exception',
                 'message' => $e->getMessage(),
