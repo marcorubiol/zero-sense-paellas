@@ -696,7 +696,19 @@ class Flowmattic implements FeatureInterface
                                 return JSON.parse(text);
                             } catch (e) {
                                 console.error('[ZS FlowMattic] JSON parse error:', e);
-                                console.error('[ZS FlowMattic] First 500 chars of response:', text.substring(0, 500));
+                                console.error('[ZS FlowMattic] First 2000 chars of response:', text.substring(0, 2000));
+                                console.error('[ZS FlowMattic] Response length:', text.length);
+                                
+                                // Try to extract error message from HTML
+                                const errorMatch = text.match(/<h2>(.*?)<\/h2>/);
+                                const messageMatch = text.match(/<p>(.*?)<\/p>/);
+                                if (errorMatch || messageMatch) {
+                                    console.error('[ZS FlowMattic] Extracted error:', {
+                                        title: errorMatch ? errorMatch[1] : 'N/A',
+                                        message: messageMatch ? messageMatch[1] : 'N/A'
+                                    });
+                                }
+                                
                                 throw new Error('Invalid JSON response: ' + e.message);
                             }
                         });
