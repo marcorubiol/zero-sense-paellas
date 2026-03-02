@@ -197,16 +197,25 @@
     $('#zs-recipe-add-row').on('click', addNewRow);
     $(document).on('click', '.zs-recipe-remove', function() { $(this).closest('tr').remove(); });
     
-    // Handle cn unit selection - make qty field readonly (not disabled, so it submits)
+    // Handle cn unit selection - hide qty field and use hidden input with value 1
     function handleUnitChange($unitSelect) {
         var $row = $unitSelect.closest('tr');
-        var $qtyInput = $row.find('input[name="zs_recipe_ingredients[qty][]"]');
+        var $qtyCell = $row.find('td').eq(2); // qty column is 3rd td (index 2)
+        var $qtyInput = $qtyCell.find('input[name="zs_recipe_ingredients[qty][]"]');
         var unit = $unitSelect.val();
         
         if (unit === 'cn') {
-            $qtyInput.prop('readonly', true).css({'opacity': '0.5', 'background-color': '#f5f5f5'}).val('1');
+            // Hide visible input and create hidden input with value 1
+            $qtyInput.hide();
+            if (!$qtyCell.find('input[type="hidden"]').length) {
+                $qtyCell.append('<input type="hidden" name="zs_recipe_ingredients[qty][]" value="1" class="zs-cn-qty-hidden">');
+            }
+            $qtyCell.append('<span class="zs-cn-placeholder" style="color:#999; font-style:italic;">—</span>');
         } else {
-            $qtyInput.prop('readonly', false).css({'opacity': '1', 'background-color': ''});
+            // Show visible input and remove hidden input
+            $qtyInput.show();
+            $qtyCell.find('.zs-cn-qty-hidden').remove();
+            $qtyCell.find('.zs-cn-placeholder').remove();
             if ($qtyInput.val() === '1' || $qtyInput.val() === '') {
                 $qtyInput.val('');
             }
