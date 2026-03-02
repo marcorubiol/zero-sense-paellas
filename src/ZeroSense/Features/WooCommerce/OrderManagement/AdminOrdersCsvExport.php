@@ -300,6 +300,35 @@ class AdminOrdersCsvExport implements FeatureInterface
                     });
                 };
             }
+            
+            // Set past month date range
+            var setPastMonth = document.querySelector('.set-past-month');
+            if (setPastMonth) {
+                setPastMonth.onclick = function(e) {
+                    e.preventDefault();
+                    var today = new Date();
+                    var pastMonth = new Date();
+                    pastMonth.setMonth(today.getMonth() - 1);
+                    
+                    // Format dates as YYYY-MM-DD
+                    var formatDate = function(date) {
+                        var year = date.getFullYear();
+                        var month = String(date.getMonth() + 1).padStart(2, '0');
+                        var day = String(date.getDate()).padStart(2, '0');
+                        return year + '-' + month + '-' + day;
+                    };
+                    
+                    var dateFromInput = document.getElementById('date_from');
+                    var dateToInput = document.getElementById('date_to');
+                    
+                    if (dateFromInput) {
+                        dateFromInput.value = formatDate(pastMonth);
+                    }
+                    if (dateToInput) {
+                        dateToInput.value = formatDate(today);
+                    }
+                };
+            }
         })();
         </script>
         </body>
