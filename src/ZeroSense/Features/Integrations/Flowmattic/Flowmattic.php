@@ -674,8 +674,8 @@ class Flowmattic implements FeatureInterface
                         }
                         labelEl.textContent = originalText;
 
-                        const finalWorkflowId = this.getAttribute('data-workflow-id');
-                        const finalOrderId = this.getAttribute('data-order-id');
+                        const finalWorkflowId = btn.getAttribute('data-workflow-id');
+                        const finalOrderId = btn.getAttribute('data-order-id');
                         const nonceCheck = document.getElementById('zs_manual_email_nonce').value;
 
                         let attempts = 0;
