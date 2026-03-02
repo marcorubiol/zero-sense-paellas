@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace ZeroSense\Features\WooCommerce;
 
 use ZeroSense\Core\FeatureInterface;
@@ -31,12 +33,17 @@ class GoogleCalendarSync implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return (bool) get_option('zero_sense_google_calendar_sync_enabled', false);
+        return (bool) get_option($this->getOptionName(), false);
     }
 
     public function isToggleable(): bool
     {
         return true;
+    }
+
+    public function getOptionName(): string
+    {
+        return 'zs_feature_google_calendar_sync';
     }
 
     public function getPriority(): int

@@ -222,7 +222,7 @@ class AdminDashboard
         
         // Handle force reload (for development)
         $reload = isset($_GET['zs_reload']) ? sanitize_text_field(wp_unslash($_GET['zs_reload'])) : '';
-        if ($reload === '1' && defined('WP_DEBUG') && WP_DEBUG) {
+        if ($reload === '1') {
             $this->featureManager->reloadFeatures();
             echo '<div class="updated notice is-dismissible"><p>Features reloaded successfully!</p></div>';
             $categorizedFeatures = $this->featureManager->getFeaturesByCategory();
