@@ -138,6 +138,17 @@ class AdminOrdersCsvExport implements FeatureInterface
             }
         }
 
+        // New filters: statuses (multi-select) and date range
+        if (!empty($_GET['statuses']) && is_array($_GET['statuses'])) {
+            $filters['statuses'] = array_map('sanitize_text_field', wp_unslash($_GET['statuses']));
+        }
+        if (!empty($_GET['date_from'])) {
+            $filters['date_from'] = sanitize_text_field(wp_unslash($_GET['date_from']));
+        }
+        if (!empty($_GET['date_to'])) {
+            $filters['date_to'] = sanitize_text_field(wp_unslash($_GET['date_to']));
+        }
+
         $downloadBase = add_query_arg(
             array_merge($filters, [
                 'action'   => self::ACTION_DOWNLOAD,
@@ -153,6 +164,13 @@ class AdminOrdersCsvExport implements FeatureInterface
     private function renderColumnSelectorPage(string $downloadBase): void
     {
         $allColumns = self::ALL_COLUMNS;
+        
+        // Pre-selected filters
+        $preselectedStatuses = isset($_GET['statuses']) && is_array($_GET['statuses']) 
+            ? array_map('sanitize_text_field', wp_unslash($_GET['statuses'])) 
+            : [];
+        $dateFrom = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
+        $dateTo = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
         ?>
         <!DOCTYPE html>
         <html>
@@ -161,8 +179,20 @@ class AdminOrdersCsvExport implements FeatureInterface
             <title><?php esc_html_e('Export CSV — Select columns', 'zero-sense'); ?></title>
             <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f0f1; margin: 0; padding: 40px 20px; }
-                .zs-csv-wrap { max-width: 560px; margin: 0 auto; background: #fff; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 32px 36px; }
+                .zs-csv-wrap { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 32px 36px; }
                 h1 { font-size: 20px; margin: 0 0 20px; color: #1d2327; }
+                h2 { font-size: 16px; margin: 24px 0 12px; color: #1d2327; border-bottom: 1px solid #dcdcde; padding-bottom: 8px; }
+                .zs-filters-section { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 2px solid #dcdcde; }
+                .zs-filter-group { margin-bottom: 20px; }
+                .zs-filter-group > label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #1d2327; }
+                .zs-status-checkboxes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+                .zs-status-checkboxes label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #1d2327; cursor: pointer; }
+                .zs-status-checkboxes input[type="checkbox"] { margin: 0; }
+                .zs-filter-actions { display: flex; gap: 10px; }
+                .zs-filter-actions a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
+                .zs-date-inputs { display: flex; align-items: center; gap: 10px; }
+                .zs-date-inputs input[type="date"] { padding: 6px 10px; border: 1px solid #8c8f94; border-radius: 4px; font-size: 13px; }
+                .zs-date-inputs span { color: #646970; font-size: 13px; }
                 .zs-cols { columns: 2; gap: 12px; margin-bottom: 24px; }
                 .zs-col-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; break-inside: avoid; }
                 .zs-col-item label { cursor: pointer; font-size: 14px; color: #1d2327; }
@@ -189,6 +219,43 @@ class AdminOrdersCsvExport implements FeatureInterface
                     <?php endif; ?>
                 <?php endforeach; ?>
 
+                <!-- Filters Section -->
+                <div class="zs-filters-section">
+                    <h2><?php esc_html_e('Filters', 'zero-sense'); ?></h2>
+                    
+                    <!-- Status filter -->
+                    <div class="zs-filter-group">
+                        <label><?php esc_html_e('Order Status', 'zero-sense'); ?></label>
+                        <div class="zs-status-checkboxes">
+                            <?php 
+                            $allStatuses = wc_get_order_statuses();
+                            foreach ($allStatuses as $statusKey => $statusLabel): 
+                                $isChecked = in_array($statusKey, $preselectedStatuses, true);
+                            ?>
+                                <label>
+                                    <input type="checkbox" name="statuses[]" value="<?php echo esc_attr($statusKey); ?>" <?php checked($isChecked); ?>>
+                                    <?php echo esc_html($statusLabel); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="zs-filter-actions">
+                            <a class="select-all-statuses"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
+                            <a class="deselect-all-statuses"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
+                        </div>
+                    </div>
+                    
+                    <!-- Date range filter -->
+                    <div class="zs-filter-group">
+                        <label><?php esc_html_e('Date Range', 'zero-sense'); ?></label>
+                        <div class="zs-date-inputs">
+                            <input type="date" name="date_from" value="<?php echo esc_attr($dateFrom); ?>" placeholder="<?php esc_attr_e('From', 'zero-sense'); ?>">
+                            <span><?php esc_html_e('to', 'zero-sense'); ?></span>
+                            <input type="date" name="date_to" value="<?php echo esc_attr($dateTo); ?>" placeholder="<?php esc_attr_e('To', 'zero-sense'); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <h2><?php esc_html_e('Columns', 'zero-sense'); ?></h2>
                 <div class="zs-actions">
                     <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=true);return false;"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
                     <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=false);return false;"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
@@ -207,6 +274,31 @@ class AdminOrdersCsvExport implements FeatureInterface
             </form>
             <a class="back" href="javascript:history.back()">&larr; <?php esc_html_e('Back to orders', 'zero-sense'); ?></a>
         </div>
+        <script>
+        (function() {
+            // Select/Deselect all statuses
+            var selectAllStatuses = document.querySelector('.select-all-statuses');
+            var deselectAllStatuses = document.querySelector('.deselect-all-statuses');
+            
+            if (selectAllStatuses) {
+                selectAllStatuses.onclick = function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('input[name="statuses[]"]').forEach(function(c) {
+                        c.checked = true;
+                    });
+                };
+            }
+            
+            if (deselectAllStatuses) {
+                deselectAllStatuses.onclick = function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('input[name="statuses[]"]').forEach(function(c) {
+                        c.checked = false;
+                    });
+                };
+            }
+        })();
+        </script>
         </body>
         </html>
         <?php
@@ -384,10 +476,23 @@ class AdminOrdersCsvExport implements FeatureInterface
             'return'  => 'objects',
         ];
 
-        // Status filter
-        $status = isset($_GET['post_status']) ? sanitize_text_field(wp_unslash($_GET['post_status'])) : '';
-        if ($status !== '' && $status !== 'all') {
-            $args['status'] = str_replace('wc-', '', $status);
+        // Multi-status filter (new, has priority over single status)
+        $statuses = isset($_GET['statuses']) && is_array($_GET['statuses']) 
+            ? array_map('sanitize_text_field', wp_unslash($_GET['statuses'])) 
+            : [];
+
+        if (!empty($statuses)) {
+            // Remove 'wc-' prefix from status keys
+            $cleanStatuses = array_map(function($s) {
+                return str_replace('wc-', '', $s);
+            }, $statuses);
+            $args['status'] = $cleanStatuses; // WC_Order_Query accepts array
+        } else {
+            // Fallback to legacy single status filter from WooCommerce
+            $status = isset($_GET['post_status']) ? sanitize_text_field(wp_unslash($_GET['post_status'])) : '';
+            if ($status !== '' && $status !== 'all') {
+                $args['status'] = str_replace('wc-', '', $status);
+            }
         }
 
         // Search
@@ -402,12 +507,22 @@ class AdminOrdersCsvExport implements FeatureInterface
             $args['customer_id'] = $customerId;
         }
 
-        // Date range (m = YYYYMM, passed by WP's month dropdown)
-        $month = isset($_GET['m']) ? sanitize_text_field(wp_unslash($_GET['m'])) : '';
-        if (strlen($month) === 6) {
-            $year  = (int) substr($month, 0, 4);
-            $mon   = (int) substr($month, 4, 2);
-            $args['date_created'] = sprintf('%d-%02d-01...%d-%02d-%02d', $year, $mon, $year, $mon, (int) date('t', mktime(0, 0, 0, $mon, 1, $year)));
+        // Date range filter (new, has priority over month dropdown)
+        $dateFrom = isset($_GET['date_from']) ? sanitize_text_field(wp_unslash($_GET['date_from'])) : '';
+        $dateTo = isset($_GET['date_to']) ? sanitize_text_field(wp_unslash($_GET['date_to'])) : '';
+
+        if ($dateFrom !== '' || $dateTo !== '') {
+            $from = $dateFrom !== '' ? $dateFrom : '1970-01-01';
+            $to = $dateTo !== '' ? $dateTo : gmdate('Y-m-d');
+            $args['date_created'] = $from . '...' . $to;
+        } else {
+            // Fallback to legacy month dropdown (m = YYYYMM)
+            $month = isset($_GET['m']) ? sanitize_text_field(wp_unslash($_GET['m'])) : '';
+            if (strlen($month) === 6) {
+                $year  = (int) substr($month, 0, 4);
+                $mon   = (int) substr($month, 4, 2);
+                $args['date_created'] = sprintf('%d-%02d-01...%d-%02d-%02d', $year, $mon, $year, $mon, (int) date('t', mktime(0, 0, 0, $mon, 1, $year)));
+            }
         }
 
         return $args;
