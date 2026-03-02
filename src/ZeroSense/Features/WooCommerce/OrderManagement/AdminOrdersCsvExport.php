@@ -220,7 +220,8 @@ class AdminOrdersCsvExport implements FeatureInterface
                 h1 { font-size: 20px; margin: 0 0 20px; color: #1d2327; }
                 h2 { font-size: 16px; margin: 24px 0 12px; color: #1d2327; border-bottom: 1px solid #dcdcde; padding-bottom: 8px; }
                 .zs-filters-section { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 2px solid #dcdcde; }
-                .zs-filter-group { margin-bottom: 20px; }
+                .zs-filter-group { margin-bottom: 20px; padding-top: 20px; border-top: 1px solid #dcdcde; }
+                .zs-filter-group:first-child { border-top: none; padding-top: 0; }
                 .zs-filter-group > label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #1d2327; }
                 .zs-status-checkboxes { display: flex; flex-direction: column; gap: 8px; }
                 .zs-status-checkboxes label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #1d2327; cursor: pointer; }
@@ -236,8 +237,9 @@ class AdminOrdersCsvExport implements FeatureInterface
                 .zs-date-month-nav a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
                 .zs-date-month-nav .month-display { font-size: 13px; color: #1d2327; min-width: 120px; text-align: center; }
                 .zs-cols { margin-bottom: 24px; }
-                .zs-col-group { margin-bottom: 20px; }
-                .zs-col-group-title { font-weight: 600; font-size: 13px; color: #1d2327; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #dcdcde; }
+                .zs-col-group { margin-bottom: 20px; padding-top: 20px; border-top: 1px solid #dcdcde; }
+                .zs-col-group:first-child { border-top: none; padding-top: 0; }
+                .zs-col-group-title { font-weight: 600; font-size: 13px; color: #1d2327; margin-bottom: 8px; }
                 .zs-col-group-items { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 16px; row-gap: 8px; }
                 .zs-col-item { display: flex; align-items: center; gap: 6px; padding: 0; }
                 .zs-col-item input[type="checkbox"] { margin: 0; }
