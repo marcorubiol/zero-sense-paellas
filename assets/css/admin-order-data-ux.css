@@ -154,7 +154,7 @@
 
 /* Add spacing above email field */
 #order_data .order_data_column ._billing_email_field {
-    margin-top: 12px !important;
+    padding-top: 12px;
 }
 
 /* ==========================================================================
