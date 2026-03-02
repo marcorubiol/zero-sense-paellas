@@ -18,26 +18,30 @@ class AdminOrdersCsvExport implements FeatureInterface
     private const BATCH_SIZE      = 50;
 
     private const ALL_COLUMNS = [
-        'order_id'        => 'Order ID',
-        'date'            => 'Date',
-        'status'          => 'Status',
-        'customer_name'   => 'Customer name',
-        'email'           => 'Email',
-        'phone'           => 'Phone',
-        'event_date'      => 'Event date',
-        'start_time'      => 'Event start time',
-        'serving_time'    => 'Paellas service time',
-        'total_guests'    => 'Total guests',
-        'event_type'      => 'Event type',
-        'location'        => 'Service location',
-        'city'            => 'City',
-        'order_total'     => 'Order total',
-        'deposit_amount'  => 'Deposit amount',
-        'deposit_pct'     => 'Deposit %',
-        'remaining'       => 'Remaining amount',
-        'payment_method'  => 'Payment method',
-        'language'        => 'Language',
-        'products'        => 'Products',
+        'order_id'           => 'Order ID',
+        'date'               => 'Date',
+        'status'             => 'Status',
+        'customer_name'      => 'Customer name',
+        'email'              => 'Email',
+        'phone'              => 'Phone',
+        'event_date'         => 'Event date',
+        'start_time'         => 'Event start time',
+        'serving_time'       => 'Paellas service time',
+        'total_guests'       => 'Total guests',
+        'event_type'         => 'Event type',
+        'location'           => 'Service location',
+        'city'               => 'City',
+        'order_total'        => 'Order total',
+        'deposit_amount'     => 'Deposit amount',
+        'deposit_pct'        => 'Deposit %',
+        'deposit_paid'       => 'Deposit paid?',
+        'first_payment_date' => 'First payment date',
+        'remaining'          => 'Remaining amount',
+        'second_payment_date'=> 'Second payment date',
+        'total_paid'         => 'Total paid',
+        'payment_method'     => 'Payment method',
+        'language'           => 'Language',
+        'products'           => 'Products',
     ];
 
     public function getName(): string        { return __('Orders: CSV Export', 'zero-sense'); }
@@ -287,34 +291,65 @@ class AdminOrdersCsvExport implements FeatureInterface
             $serviceLocationName = ($term instanceof \WP_Term) ? $term->name : '';
         }
 
-        $depositAmount    = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_AMOUNT, true);
-        $depositPct       = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PERCENTAGE, true);
-        $remainingAmount  = (string) $order->get_meta(DepositMetaKeys::REMAINING_AMOUNT, true);
+        $depositAmount       = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_AMOUNT, true);
+        $depositPct          = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PERCENTAGE, true);
+        $remainingAmount     = (string) $order->get_meta(DepositMetaKeys::REMAINING_AMOUNT, true);
+        $isDepositPaid       = (string) $order->get_meta(DepositMetaKeys::IS_DEPOSIT_PAID, true);
+        $depositPaymentDate  = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PAYMENT_DATE, true);
+        $balancePaymentDate  = (string) $order->get_meta(DepositMetaKeys::BALANCE_PAYMENT_DATE, true);
 
         $createdDate = $order->get_date_created();
         $eventTs     = $eventDate !== '' ? strtotime($eventDate) : false;
 
+        // Calculate total paid
+        $totalPaid = '';
+        if ($remainingAmount !== '') {
+            $totalPaidValue = (float) $order->get_total() - (float) $remainingAmount;
+            $totalPaid = number_format($totalPaidValue, 2, '.', '');
+        }
+
+        // Format deposit paid as Yes/No
+        $depositPaidFormatted = '';
+        if ($isDepositPaid !== '') {
+            $depositPaidFormatted = (in_array($isDepositPaid, ['yes', '1', 1, true], true)) ? 'Yes' : 'No';
+        }
+
+        // Format payment dates
+        $firstPaymentDateFormatted = '';
+        if ($depositPaymentDate !== '' && strtotime($depositPaymentDate) !== false) {
+            $firstPaymentDateFormatted = date('d/m/Y H:i', strtotime($depositPaymentDate));
+        }
+
+        $secondPaymentDateFormatted = '';
+        if ($balancePaymentDate !== '' && strtotime($balancePaymentDate) !== false) {
+            $secondPaymentDateFormatted = date('d/m/Y H:i', strtotime($balancePaymentDate));
+        }
+
         $all = [
-            'order_id'       => $order->get_id(),
-            'date'           => $createdDate ? $createdDate->date('d/m/Y H:i') : '',
-            'status'         => wc_get_order_status_name($order->get_status()),
-            'customer_name'  => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
-            'email'          => $order->get_billing_email(),
-            'phone'          => $order->get_billing_phone(),
-            'event_date'     => ($eventTs !== false) ? date('d/m/Y', $eventTs) : '',
-            'start_time'     => (string) $order->get_meta('zs_event_start_time', true),
-            'serving_time'   => (string) $order->get_meta('zs_event_paellas_service_time', true),
-            'total_guests'   => (string) $order->get_meta('zs_event_total_guests', true),
-            'event_type'     => (string) $order->get_meta('zs_event_type', true),
-            'location'       => $serviceLocationName,
-            'city'           => $order->get_shipping_city() ?: (string) $order->get_meta('zs_event_city', true),
-            'order_total'    => number_format((float) $order->get_total(), 2, '.', ''),
-            'deposit_amount' => $depositAmount !== '' ? number_format((float) $depositAmount, 2, '.', '') : '',
-            'deposit_pct'    => $depositPct !== '' ? number_format((float) $depositPct, 2, '.', '') : '',
-            'remaining'      => $remainingAmount !== '' ? number_format((float) $remainingAmount, 2, '.', '') : '',
-            'payment_method' => $order->get_payment_method_title(),
-            'language'       => (string) $order->get_meta('wpml_language', true),
-            'products'       => $this->getProductsSummary($order),
+            'order_id'            => $order->get_id(),
+            'date'                => $createdDate ? $createdDate->date('d/m/Y H:i') : '',
+            'status'              => wc_get_order_status_name($order->get_status()),
+            'customer_name'       => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
+            'email'               => $order->get_billing_email(),
+            'phone'               => $order->get_billing_phone(),
+            'event_date'          => ($eventTs !== false) ? date('d/m/Y', $eventTs) : '',
+            'start_time'          => (string) $order->get_meta('zs_event_start_time', true),
+            'serving_time'        => (string) $order->get_meta('zs_event_paellas_service_time', true),
+            'total_guests'        => (string) $order->get_meta('zs_event_total_guests', true),
+            'event_type'          => (string) $order->get_meta('zs_event_type', true),
+            'location'            => $serviceLocationName,
+            'city'                => $order->get_shipping_city() ?: (string) $order->get_meta('zs_event_city', true),
+            'order_total'         => number_format((float) $order->get_total(), 2, '.', ''),
+            'deposit_amount'      => $depositAmount !== '' ? number_format((float) $depositAmount, 2, '.', '') : '',
+            'deposit_pct'         => $depositPct !== '' ? number_format((float) $depositPct, 2, '.', '') : '',
+            'deposit_paid'        => $depositPaidFormatted,
+            'first_payment_date'  => $firstPaymentDateFormatted,
+            'remaining'           => $remainingAmount !== '' ? number_format((float) $remainingAmount, 2, '.', '') : '',
+            'second_payment_date' => $secondPaymentDateFormatted,
+            'total_paid'          => $totalPaid,
+            'payment_method'      => $order->get_payment_method_title(),
+            'language'            => (string) $order->get_meta('wpml_language', true),
+            'products'            => $this->getProductsSummary($order),
         ];
 
         $row = [];
