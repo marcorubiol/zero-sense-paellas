@@ -33,7 +33,7 @@ class GoogleCalendarSync implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return (bool) get_option($this->getOptionName(), false);
+        return (bool) get_option($this->getOptionName(), true);
     }
 
     public function isToggleable(): bool
