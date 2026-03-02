@@ -227,6 +227,12 @@ class AdminOrdersCsvExport implements FeatureInterface
                 .zs-status-checkboxes input[type="checkbox"] { margin: 0; }
                 .zs-filter-actions { display: flex; gap: 10px; }
                 .zs-filter-actions a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
+                .zs-date-month-nav { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+                .zs-date-month-nav button { background: #f0f0f1; border: 1px solid #8c8f94; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 13px; color: #1d2327; }
+                .zs-date-month-nav button:hover { background: #dcdcde; }
+                .zs-date-month-nav .month-display { font-weight: 600; font-size: 14px; color: #1d2327; min-width: 140px; text-align: center; }
+                .zs-date-quick-buttons { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+                .zs-date-quick-buttons a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
                 .zs-date-inputs { display: flex; align-items: center; gap: 10px; }
                 .zs-date-inputs input[type="date"] { padding: 6px 10px; border: 1px solid #8c8f94; border-radius: 4px; font-size: 13px; }
                 .zs-date-inputs span { color: #646970; font-size: 13px; }
@@ -287,13 +293,20 @@ class AdminOrdersCsvExport implements FeatureInterface
                     <!-- Date range filter -->
                     <div class="zs-filter-group">
                         <label><?php esc_html_e('Date Range', 'zero-sense'); ?></label>
+                        <div class="zs-date-month-nav">
+                            <button type="button" class="month-nav-prev" title="<?php esc_attr_e('Previous month', 'zero-sense'); ?>">&larr;</button>
+                            <span class="month-display" id="current-month-display"></span>
+                            <button type="button" class="month-nav-next" title="<?php esc_attr_e('Next month', 'zero-sense'); ?>">&rarr;</button>
+                        </div>
+                        <div class="zs-date-quick-buttons">
+                            <a class="set-this-month"><?php esc_html_e('This month', 'zero-sense'); ?></a>
+                            <a class="set-last-month"><?php esc_html_e('Last month', 'zero-sense'); ?></a>
+                            <a class="set-last-30-days"><?php esc_html_e('Last 30 days', 'zero-sense'); ?></a>
+                        </div>
                         <div class="zs-date-inputs">
                             <input type="date" name="date_from" id="date_from" value="<?php echo esc_attr($dateFrom); ?>" placeholder="<?php esc_attr_e('From', 'zero-sense'); ?>">
                             <span><?php esc_html_e('to', 'zero-sense'); ?></span>
                             <input type="date" name="date_to" id="date_to" value="<?php echo esc_attr($dateTo); ?>" placeholder="<?php esc_attr_e('To', 'zero-sense'); ?>">
-                        </div>
-                        <div class="zs-filter-actions">
-                            <a class="set-past-month"><?php esc_html_e('Past month', 'zero-sense'); ?></a>
                         </div>
                     </div>
                 </div>
@@ -372,35 +385,116 @@ class AdminOrdersCsvExport implements FeatureInterface
                 };
             }
             
-            // Set past month date range (full month: day 1 to last day)
-            var setPastMonth = document.querySelector('.set-past-month');
-            if (setPastMonth) {
-                setPastMonth.onclick = function(e) {
+            // Date navigation system
+            var currentMonth = new Date();
+            var dateFromInput = document.getElementById('date_from');
+            var dateToInput = document.getElementById('date_to');
+            var monthDisplay = document.getElementById('current-month-display');
+            
+            var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            // Format date as YYYY-MM-DD
+            var formatDate = function(date) {
+                var year = date.getFullYear();
+                var month = String(date.getMonth() + 1).padStart(2, '0');
+                var day = String(date.getDate()).padStart(2, '0');
+                return year + '-' + month + '-' + day;
+            };
+            
+            // Update month display
+            var updateMonthDisplay = function() {
+                if (monthDisplay) {
+                    monthDisplay.textContent = monthNames[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
+                }
+            };
+            
+            // Set date range to a specific month
+            var setMonthRange = function(year, month) {
+                var firstDay = new Date(year, month, 1);
+                var lastDay = new Date(year, month + 1, 0);
+                
+                if (dateFromInput) dateFromInput.value = formatDate(firstDay);
+                if (dateToInput) dateToInput.value = formatDate(lastDay);
+                
+                currentMonth = new Date(year, month, 1);
+                updateMonthDisplay();
+            };
+            
+            // Initialize display with current month
+            updateMonthDisplay();
+            
+            // Previous month button
+            var prevMonthBtn = document.querySelector('.month-nav-prev');
+            if (prevMonthBtn) {
+                prevMonthBtn.onclick = function(e) {
+                    e.preventDefault();
+                    var newMonth = currentMonth.getMonth() - 1;
+                    var newYear = currentMonth.getFullYear();
+                    if (newMonth < 0) {
+                        newMonth = 11;
+                        newYear--;
+                    }
+                    setMonthRange(newYear, newMonth);
+                };
+            }
+            
+            // Next month button
+            var nextMonthBtn = document.querySelector('.month-nav-next');
+            if (nextMonthBtn) {
+                nextMonthBtn.onclick = function(e) {
+                    e.preventDefault();
+                    var newMonth = currentMonth.getMonth() + 1;
+                    var newYear = currentMonth.getFullYear();
+                    if (newMonth > 11) {
+                        newMonth = 0;
+                        newYear++;
+                    }
+                    setMonthRange(newYear, newMonth);
+                };
+            }
+            
+            // This month button
+            var setThisMonth = document.querySelector('.set-this-month');
+            if (setThisMonth) {
+                setThisMonth.onclick = function(e) {
                     e.preventDefault();
                     var today = new Date();
-                    
-                    // First day of past month
-                    var firstDayPastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                    
-                    // Last day of past month
-                    var lastDayPastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-                    
-                    // Format dates as YYYY-MM-DD
-                    var formatDate = function(date) {
-                        var year = date.getFullYear();
-                        var month = String(date.getMonth() + 1).padStart(2, '0');
-                        var day = String(date.getDate()).padStart(2, '0');
-                        return year + '-' + month + '-' + day;
-                    };
-                    
-                    var dateFromInput = document.getElementById('date_from');
-                    var dateToInput = document.getElementById('date_to');
-                    
-                    if (dateFromInput) {
-                        dateFromInput.value = formatDate(firstDayPastMonth);
+                    setMonthRange(today.getFullYear(), today.getMonth());
+                };
+            }
+            
+            // Last month button
+            var setLastMonth = document.querySelector('.set-last-month');
+            if (setLastMonth) {
+                setLastMonth.onclick = function(e) {
+                    e.preventDefault();
+                    var today = new Date();
+                    var lastMonth = today.getMonth() - 1;
+                    var year = today.getFullYear();
+                    if (lastMonth < 0) {
+                        lastMonth = 11;
+                        year--;
                     }
-                    if (dateToInput) {
-                        dateToInput.value = formatDate(lastDayPastMonth);
+                    setMonthRange(year, lastMonth);
+                };
+            }
+            
+            // Last 30 days button
+            var setLast30Days = document.querySelector('.set-last-30-days');
+            if (setLast30Days) {
+                setLast30Days.onclick = function(e) {
+                    e.preventDefault();
+                    var today = new Date();
+                    var thirtyDaysAgo = new Date(today);
+                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    
+                    if (dateFromInput) dateFromInput.value = formatDate(thirtyDaysAgo);
+                    if (dateToInput) dateToInput.value = formatDate(today);
+                    
+                    // Update display to show current range
+                    if (monthDisplay) {
+                        monthDisplay.textContent = 'Last 30 days';
                     }
                 };
             }
