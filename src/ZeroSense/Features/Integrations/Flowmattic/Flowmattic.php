@@ -641,28 +641,13 @@ class Flowmattic implements FeatureInterface
                         .replace('{label}', workflowLabel)
                         .replace('{order}', orderIdPreview || '');
 
-                    console.log('[ZS FlowMattic] Button clicked:', {
-                        label: workflowLabel,
-                        orderId: orderIdPreview,
-                        workflowId: this.getAttribute('data-workflow-id'),
-                        buttonClasses: this.className,
-                        timestamp: new Date().toISOString()
-                    });
-
                     if (!window.confirm(confirmMessage)) {
-                        console.log('[ZS FlowMattic] User cancelled confirmation');
                         return;
                     }
 
                     const workflowId = this.getAttribute('data-workflow-id');
                     const orderId = this.getAttribute('data-order-id');
                     const nonce = document.getElementById('zs_manual_email_nonce').value;
-                    
-                    console.log('[ZS FlowMattic] Sending AJAX request:', {
-                        workflowId: workflowId,
-                        orderId: orderId,
-                        hasNonce: !!nonce
-                    });
                     
                     this.disabled = true;
                     const labelEl = this.querySelector('.zs-email-btn-label') || this;
@@ -683,38 +668,8 @@ class Flowmattic implements FeatureInterface
                             nonce: nonce
                         })
                     })
-                    .then(response => {
-                        console.log('[ZS FlowMattic] AJAX response received:', {
-                            status: response.status,
-                            statusText: response.statusText,
-                            ok: response.ok,
-                            duration: Date.now() - requestStartTime + 'ms'
-                        });
-                        return response.text().then(text => {
-                            console.log('[ZS FlowMattic] Raw response text:', text);
-                            try {
-                                return JSON.parse(text);
-                            } catch (e) {
-                                console.error('[ZS FlowMattic] JSON parse error:', e);
-                                console.error('[ZS FlowMattic] First 2000 chars of response:', text.substring(0, 2000));
-                                console.error('[ZS FlowMattic] Response length:', text.length);
-                                
-                                // Try to extract error message from HTML
-                                const errorMatch = text.match(/<h2>(.*?)<\/h2>/);
-                                const messageMatch = text.match(/<p>(.*?)<\/p>/);
-                                if (errorMatch || messageMatch) {
-                                    console.error('[ZS FlowMattic] Extracted error:', {
-                                        title: errorMatch ? errorMatch[1] : 'N/A',
-                                        message: messageMatch ? messageMatch[1] : 'N/A'
-                                    });
-                                }
-                                
-                                throw new Error('Invalid JSON response: ' + e.message);
-                            }
-                        });
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        console.log('[ZS FlowMattic] AJAX response parsed:', data);
                         labelEl.textContent = originalText;
 
                         const btn = this;
@@ -755,7 +710,6 @@ class Flowmattic implements FeatureInterface
                             });
                         };
                         const poll = () => {
-                            console.log('[ZS FlowMattic] Polling attempt #' + (attempts + 1));
                             fetch(ajaxurl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -768,10 +722,8 @@ class Flowmattic implements FeatureInterface
                             })
                             .then(r => r.json())
                             .then(res => {
-                                console.log('[ZS FlowMattic] Poll response:', res);
                                 const st = res && res.success ? (res.data?.status ?? null) : null;
                                 if (st === 'manual' || st === 'auto' || st === 'error' || st === 'skipped') {
-                                    console.log('[ZS FlowMattic] Email status confirmed:', st);
                                     this.disabled = false;
                                     prependLatest();
                                     
@@ -811,34 +763,27 @@ class Flowmattic implements FeatureInterface
                                     
                                     return;
                                 }
-                                console.log('[ZS FlowMattic] Status not ready yet, will retry');
                                 if (++attempts < maxAttempts) {
                                     return setTimeout(poll, 1000);
                                 }
-                                console.warn('[ZS FlowMattic] Max polling attempts reached without status');
                                 this.disabled = false;
                             })
                             .catch((err) => {
-                                console.error('[ZS FlowMattic] Poll error:', err);
                                 if (++attempts < maxAttempts) {
                                     return setTimeout(poll, 1000);
                                 }
-                                console.warn('[ZS FlowMattic] Max polling attempts reached with errors');
                                 this.disabled = false;
                             });
                         };
 
                         if (data.success) {
-                            console.log('[ZS FlowMattic] Starting polling for email status');
                             poll();
                         } else {
-                            console.error('[ZS FlowMattic] AJAX request failed:', data);
                             alert('Error: ' + (data.data || data.message || 'Unknown error'));
                             this.disabled = false;
                         }
                     })
                     .catch(error => {
-                        console.error('[ZS FlowMattic] Network error:', error);
                         alert('<?php echo esc_js(__('Network error:', 'zero-sense')); ?> ' + error.message);
                         this.disabled = false;
                         labelEl.textContent = originalText;
@@ -1081,73 +1026,31 @@ class Flowmattic implements FeatureInterface
      */
     public function ajaxSendManualEmail(): void
     {
-        // Enable error output capture to prevent HTML error pages
-        @ini_set('display_errors', '0');
-        error_reporting(E_ALL);
-        
-        $debugData = [
-            'timestamp' => current_time('mysql'),
-            'action' => 'zs_flow_send_manual_email',
-            'step' => 'init',
-            'php_version' => PHP_VERSION,
-            'memory_limit' => ini_get('memory_limit'),
-        ];
-        
-        // Log immediately to catch any early failures
-        Logger::debug('FlowMattic Manual Email - Handler started', wp_json_encode($debugData));
-        
         if (!current_user_can('edit_shop_orders')) {
-            $debugData['error'] = 'insufficient_permissions';
-            Logger::debug('FlowMattic Manual Email - Permission denied', wp_json_encode($debugData));
             wp_send_json_error('insufficient_permissions');
         }
         
         if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'zs_manual_email_nonce')) {
-            $debugData['error'] = 'invalid_nonce';
-            Logger::debug('FlowMattic Manual Email - Invalid nonce', wp_json_encode($debugData));
             wp_send_json_error('invalid_nonce');
         }
         
         $workflowId = sanitize_text_field(wp_unslash($_POST['workflow_id'] ?? ''));
         $orderId = intval(wp_unslash($_POST['order_id'] ?? 0));
         
-        $debugData['workflow_id'] = $workflowId;
-        $debugData['order_id'] = $orderId;
-        $debugData['step'] = 'params_received';
-        
         if (!$workflowId || !$orderId) {
-            $debugData['error'] = 'missing_parameters';
-            Logger::debug('FlowMattic Manual Email - Missing parameters', wp_json_encode($debugData));
             wp_send_json_error('missing_parameters');
         }
         
         $order = wc_get_order($orderId);
         if (!$order instanceof \WC_Order) {
-            $debugData['error'] = 'invalid_order';
-            $debugData['order_exists'] = false;
-            Logger::debug('FlowMattic Manual Email - Invalid order', wp_json_encode($debugData));
             wp_send_json_error('invalid_order');
         }
-        
-        $debugData['order_status'] = $order->get_status();
-        $debugData['order_total'] = $order->get_total();
-        $debugData['step'] = 'order_loaded';
         
         // Check if this is a valid email trigger
         $trigger = $this->getEmailTriggerByWorkflowId($workflowId);
         if (!$trigger) {
-            $debugData['error'] = 'invalid_trigger';
-            $debugData['trigger_found'] = false;
-            $debugData['all_triggers'] = $this->getAllEmailTriggers();
-            Logger::debug('FlowMattic Manual Email - Trigger not found', wp_json_encode($debugData));
             wp_send_json_error('invalid_trigger');
         }
-        
-        $debugData['trigger_found'] = true;
-        $debugData['trigger_title'] = $trigger['title'] ?? 'N/A';
-        $debugData['trigger_class'] = $trigger['class'] ?? 'N/A';
-        $debugData['trigger_config'] = $trigger['email_config'] ?? [];
-        $debugData['step'] = 'trigger_validated';
         
         // Note: Manual buttons can always be used, regardless of send_once setting
         // The send_once limitation only applies to automatic status transitions
@@ -1155,33 +1058,18 @@ class Flowmattic implements FeatureInterface
         // Trigger the workflow manually
         $className = $trigger['class'] ?? '';
         if (!$className) {
-            $debugData['error'] = 'missing_class';
-            Logger::debug('FlowMattic Manual Email - Missing class name', wp_json_encode($debugData));
             wp_send_json_error('missing_class');
         }
-        
-        $debugData['class_name'] = $className;
-        $debugData['step'] = 'before_trigger';
-        Logger::debug('FlowMattic Manual Email - About to trigger workflow', wp_json_encode($debugData));
         
         // Trigger workflow directly via Integration class method
         // This avoids modifying $_POST (security anti-pattern) and ensures clean JSON response
         try {
             $integration = new Integration();
             $integration->triggerClassWorkflow($workflowId, $className, $orderId, 'manual');
-            
-            $debugData['step'] = 'workflow_triggered';
-            $debugData['success'] = true;
-            Logger::debug('FlowMattic Manual Email - Workflow triggered successfully', wp_json_encode($debugData));
         } catch (\Throwable $e) {
-            $debugData['error'] = 'exception_during_trigger';
-            $debugData['exception_message'] = $e->getMessage();
-            $debugData['exception_trace'] = $e->getTraceAsString();
-            Logger::debug('FlowMattic Manual Email - Exception during workflow trigger', wp_json_encode($debugData));
             wp_send_json_error([
                 'code' => 'workflow_exception',
-                'message' => $e->getMessage(),
-                'debug' => $debugData
+                'message' => $e->getMessage()
             ]);
         }
         
@@ -1189,8 +1077,7 @@ class Flowmattic implements FeatureInterface
             'message' => 'Email sent successfully',
             'workflow_id' => $workflowId,
             'class_name' => $className,
-            'order_id' => $orderId,
-            'debug' => $debugData
+            'order_id' => $orderId
         ]);
     }
 

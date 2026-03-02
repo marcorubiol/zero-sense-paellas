@@ -85,31 +85,11 @@ class Integration
      */
     public function trackEmailSend(array $atts): array
     {
-        // Log every wp_mail call for debugging
-        if (function_exists('wc_get_logger')) {
-            wc_get_logger()->debug('wp_mail hook triggered', [
-                'source' => 'zero-sense-flowmattic-email-tracking',
-                'to' => is_array($atts['to']) ? implode(', ', $atts['to']) : $atts['to'],
-                'subject' => $atts['subject'] ?? 'N/A',
-                'has_active_contexts' => !empty(self::$activeWorkflowContexts),
-                'contexts_count' => count(self::$activeWorkflowContexts)
-            ]);
-        }
-        
         if (!empty(self::$activeWorkflowContexts)) {
             $context = end(self::$activeWorkflowContexts);
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
                 // Determine status based on trigger source
                 $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
-
-                if (function_exists('wc_get_logger')) {
-                    wc_get_logger()->debug('Email tracked from active context', [
-                        'source' => 'zero-sense-flowmattic-email-tracking',
-                        'workflow_id' => $context['workflow_id'],
-                        'order_id' => $context['order_id'],
-                        'status' => $status
-                    ]);
-                }
 
                 // Log successful email send
                 $this->logEmailToFlowmattic(
@@ -122,23 +102,9 @@ class Integration
                         'trigger_source' => $context['trigger_source'] ?? 'unknown'
                     ]
                 );
-            } else {
-                if (function_exists('wc_get_logger')) {
-                    wc_get_logger()->debug('Context exists but missing workflow_id or order_id', [
-                        'source' => 'zero-sense-flowmattic-email-tracking',
-                        'context' => $context
-                    ]);
-                }
             }
         } else {
             // No active context in memory - try to recover from transients
-            if (function_exists('wc_get_logger')) {
-                wc_get_logger()->debug('No active contexts - attempting transient recovery', [
-                    'source' => 'zero-sense-flowmattic-email-tracking'
-                ]);
-            }
-            
-            // Try to find a recent workflow context from transients
             // This handles cases where FlowMattic sends emails asynchronously
             $this->attemptTransientContextRecovery($atts);
         }
@@ -176,15 +142,6 @@ class Integration
             
             // Found a valid context - use it
             $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
-            
-            if (function_exists('wc_get_logger')) {
-                wc_get_logger()->debug('Email tracked from transient recovery', [
-                    'source' => 'zero-sense-flowmattic-email-tracking',
-                    'workflow_id' => $workflowId,
-                    'order_id' => $orderId,
-                    'status' => $status
-                ]);
-            }
             
             $this->logEmailToFlowmattic(
                 $workflowId,
@@ -689,31 +646,7 @@ class Integration
             $debugData['has_order_context'] = false;
         }
 
-        // Log workflow trigger attempt
-        if (function_exists('wc_get_logger')) {
-            wc_get_logger()->debug('Triggering FlowMattic workflow', [
-                'source' => 'zero-sense-flowmattic-trigger',
-                'workflow_id' => $workflowId,
-                'class_name' => $className,
-                'order_id' => $orderId,
-                'trigger_type' => $triggerType,
-                'debug_data' => wp_json_encode($debugData),
-                'action_hook' => 'flowmattic_trigger_workflow'
-            ]);
-        }
-        
         do_action('flowmattic_trigger_workflow', $workflowId, $debugData);
-        
-        // Verify if FlowMattic is active
-        if (function_exists('wc_get_logger')) {
-            $flowmatticActive = class_exists('FlowMattic_Admin') || class_exists('FlowMattic');
-            wc_get_logger()->debug('FlowMattic workflow triggered', [
-                'source' => 'zero-sense-flowmattic-trigger',
-                'workflow_id' => $workflowId,
-                'flowmattic_active' => $flowmatticActive ? 'yes' : 'no',
-                'has_listeners' => has_action('flowmattic_trigger_workflow') ? 'yes' : 'no'
-            ]);
-        }
 
         // Clean up context for both manual and automatic triggers
         if ($orderId > 0) {
