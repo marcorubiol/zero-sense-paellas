@@ -218,7 +218,7 @@ class AdminOrdersCsvExport implements FeatureInterface
                 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f0f1; margin: 0; padding: 40px 20px; }
                 .zs-csv-wrap { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 32px 36px; }
                 h1 { font-size: 20px; margin: 0 0 20px; color: #1d2327; }
-                h2 { font-size: 16px; margin: 24px 0 12px; color: #1d2327; border-bottom: 1px solid #dcdcde; padding-bottom: 8px; }
+                h2 { font-size: 16px; margin: 24px 0 12px; color: #1d2327; }
                 .zs-filters-section { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 2px solid #dcdcde; }
                 .zs-filter-group { margin-bottom: 20px; padding-top: 20px; border-top: 1px solid #dcdcde; }
                 .zs-filter-group > label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #1d2327; }
