@@ -89,13 +89,34 @@ class EventDetailsMetabox
         if (!$order instanceof WC_Order) {
             return;
         }
+        
+        // Check if we have preserved POST data from failed validation
+        $orderId = $order->get_id();
+        $postDataKey = 'zs_order_validation_data_' . get_current_user_id() . '_' . $orderId;
+        $preservedData = get_transient($postDataKey);
+        $hasPreservedData = is_array($preservedData) && !empty($preservedData);
+        
+        // Delete the transient after reading it
+        if ($hasPreservedData) {
+            delete_transient($postDataKey);
+        }
 
-        // Get values
-        $totalGuests = $this->getOrderMetaWithFallback($order, MetaKeys::TOTAL_GUESTS);
-        $adults = $this->getOrderMetaWithFallback($order, MetaKeys::ADULTS);
-        $children5to8 = $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_5_TO_8);
-        $children0to4 = $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_0_TO_4);
-        $serviceLocation = $this->getOrderMetaWithFallback($order, MetaKeys::SERVICE_LOCATION);
+        // Get values (prefer preserved POST data over saved meta)
+        $totalGuests = $hasPreservedData && isset($preservedData['event_total_guests']) 
+            ? sanitize_text_field($preservedData['event_total_guests']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::TOTAL_GUESTS);
+        $adults = $hasPreservedData && isset($preservedData['event_adults']) 
+            ? sanitize_text_field($preservedData['event_adults']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::ADULTS);
+        $children5to8 = $hasPreservedData && isset($preservedData['event_children_5_to_8']) 
+            ? sanitize_text_field($preservedData['event_children_5_to_8']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_5_TO_8);
+        $children0to4 = $hasPreservedData && isset($preservedData['event_children_0_to_4']) 
+            ? sanitize_text_field($preservedData['event_children_0_to_4']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::CHILDREN_0_TO_4);
+        $serviceLocation = $hasPreservedData && isset($preservedData['event_service_location']) 
+            ? absint($preservedData['event_service_location']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::SERVICE_LOCATION);
         $serviceLocationCanonicalId = is_numeric($serviceLocation) ? absint($serviceLocation) : 0;
         $serviceLocationSelectedId = $serviceLocationCanonicalId;
         if ($serviceLocationCanonicalId > 0 && defined('ICL_SITEPRESS_VERSION') && function_exists('apply_filters')) {
@@ -115,18 +136,42 @@ class EventDetailsMetabox
         if (is_wp_error($serviceAreaTerms) || !is_array($serviceAreaTerms)) {
             $serviceAreaTerms = [];
         }
-        $eventDateForInput = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
-        $teamArrivalTime = $this->getOrderMetaWithFallback($order, MetaKeys::TEAM_ARRIVAL_TIME);
-        $servingTime = $this->getOrderMetaWithFallback($order, MetaKeys::SERVING_TIME);
-        $startersServiceTime = $this->getOrderMetaWithFallback($order, MetaKeys::STARTERS_SERVICE_TIME);
-        $startTime = $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
-        $openBarStart = $this->getOrderMetaWithFallback($order, MetaKeys::OPEN_BAR_START);
-        $openBarEnd = $this->getOrderMetaWithFallback($order, MetaKeys::OPEN_BAR_END);
-        $cocktailStart = $this->getOrderMetaWithFallback($order, MetaKeys::COCKTAIL_START);
-        $cocktailEnd = $this->getOrderMetaWithFallback($order, MetaKeys::COCKTAIL_END);
-        $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
-        $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
-        $intolerances = $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
+        $eventDateForInput = $hasPreservedData && isset($preservedData['event_date']) 
+            ? sanitize_text_field($preservedData['event_date']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_DATE);
+        $teamArrivalTime = $hasPreservedData && isset($preservedData['event_team_arrival_time']) 
+            ? sanitize_text_field($preservedData['event_team_arrival_time']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::TEAM_ARRIVAL_TIME);
+        $servingTime = $hasPreservedData && isset($preservedData['event_serving_time']) 
+            ? sanitize_text_field($preservedData['event_serving_time']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::SERVING_TIME);
+        $startersServiceTime = $hasPreservedData && isset($preservedData['event_starters_service_time']) 
+            ? sanitize_text_field($preservedData['event_starters_service_time']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::STARTERS_SERVICE_TIME);
+        $startTime = $hasPreservedData && isset($preservedData['event_start_time']) 
+            ? sanitize_text_field($preservedData['event_start_time']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::START_TIME);
+        $openBarStart = $hasPreservedData && isset($preservedData['event_open_bar_start']) 
+            ? sanitize_text_field($preservedData['event_open_bar_start']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::OPEN_BAR_START);
+        $openBarEnd = $hasPreservedData && isset($preservedData['event_open_bar_end']) 
+            ? sanitize_text_field($preservedData['event_open_bar_end']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::OPEN_BAR_END);
+        $cocktailStart = $hasPreservedData && isset($preservedData['event_cocktail_start']) 
+            ? sanitize_text_field($preservedData['event_cocktail_start']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::COCKTAIL_START);
+        $cocktailEnd = $hasPreservedData && isset($preservedData['event_cocktail_end']) 
+            ? sanitize_text_field($preservedData['event_cocktail_end']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::COCKTAIL_END);
+        $eventType = $hasPreservedData && isset($preservedData['event_type']) 
+            ? sanitize_text_field($preservedData['event_type']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
+        $howFoundUs = $hasPreservedData && isset($preservedData['event_how_found_us']) 
+            ? sanitize_text_field($preservedData['event_how_found_us']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
+        $intolerances = $hasPreservedData && isset($preservedData['event_intolerances']) 
+            ? sanitize_textarea_field($preservedData['event_intolerances']) 
+            : $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
         wp_nonce_field('zs_event_details_save', 'zs_event_details_nonce');
         ?>
         
@@ -579,8 +624,13 @@ class EventDetailsMetabox
             return;
         }
 
+        // Save errors
         $transientKey = 'zs_order_validation_errors_' . get_current_user_id() . '_' . (int) $orderId;
         set_transient($transientKey, $errors, 60);
+        
+        // Save POST data to preserve user input
+        $postDataKey = 'zs_order_validation_data_' . get_current_user_id() . '_' . (int) $orderId;
+        set_transient($postDataKey, $_POST, 60);
 
         $redirectUrl = add_query_arg(
             ['post' => (int) $orderId, 'action' => 'edit', 'zs_validation_error' => '1'],
