@@ -1164,3 +1164,17 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     font-size: 16px;
     line-height: 1.5;
 }
+
+/* =================================================================
+   REQUIRED FIELD INDICATOR (Backend only)
+   ================================================================= */
+
+/* Asterisco rojo automático para campos obligatorios en el backend */
+/* Clase .zs-required añadida por JavaScript a los labels de campos required */
+.zs-mb-field label.zs-required::after,
+#order_data .form-field label.zs-required::after {
+    content: " *";
+    color: #dc3232;
+    font-weight: bold;
+    margin-left: 2px;
+}

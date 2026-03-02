@@ -68,6 +68,22 @@ class AdminSectionTitles implements FeatureInterface
         $ver    = file_exists($jsPath) ? (string) filemtime($jsPath) : ZERO_SENSE_VERSION;
 
         wp_enqueue_script('zs-admin-section-titles', $jsUrl, ['jquery'], $ver, true);
+        
+        // Enqueue required fields marker
+        $reqJsRel  = 'assets/js/admin-required-fields.js';
+        $reqJsPath = plugin_dir_path(ZERO_SENSE_FILE) . $reqJsRel;
+        $reqJsUrl  = plugin_dir_url(ZERO_SENSE_FILE) . $reqJsRel;
+        $reqVer    = file_exists($reqJsPath) ? (string) filemtime($reqJsPath) : ZERO_SENSE_VERSION;
+
+        wp_enqueue_script('zs-admin-required-fields', $reqJsUrl, ['jquery'], $reqVer, true);
+        
+        // Enqueue billing email indicator
+        $emailJsRel  = 'assets/js/admin-billing-email-indicator.js';
+        $emailJsPath = plugin_dir_path(ZERO_SENSE_FILE) . $emailJsRel;
+        $emailJsUrl  = plugin_dir_url(ZERO_SENSE_FILE) . $emailJsRel;
+        $emailVer    = file_exists($emailJsPath) ? (string) filemtime($emailJsPath) : ZERO_SENSE_VERSION;
+
+        wp_enqueue_script('zs-admin-billing-email-indicator', $emailJsUrl, ['jquery'], $emailVer, true);
     }
 
     /**

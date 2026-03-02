@@ -122,3 +122,74 @@
     font-size: 14px;
     font-weight: 600;
 }
+
+/* ==========================================================================
+   5. Required Fields Notice
+   ========================================================================== */
+
+.zs-required-notice {
+    display: block;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: #fff3cd;
+    border-left: 3px solid #dc3232;
+    color: #856404;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 3px;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   6. Billing Email and Phone Full Width
+   ========================================================================== */
+
+/* Make email and phone fields full width in billing section */
+#order_data .order_data_column ._billing_email_field,
+#order_data .order_data_column ._billing_phone_field {
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+}
+
+/* Add spacing above email field */
+#order_data .order_data_column ._billing_email_field {
+    padding-top: 12px !important;
+}
+
+/* ==========================================================================
+   7. Primary Email Indicator
+   ========================================================================== */
+
+/* Email icon in label */
+.zs-email-indicator {
+    display: inline-block;
+    font-size: 14px;
+    margin-left: 4px;
+    cursor: help;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.zs-email-indicator:hover {
+    opacity: 1;
+}
+
+/* Helper text below email field */
+.zs-email-helper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 4px 0 0 0 !important;
+    padding: 0;
+    font-size: 12px;
+    color: #646970;
+    line-height: 1.4;
+}
+
+.zs-email-helper .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #2271b1;
+}

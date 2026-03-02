@@ -1,0 +1,108 @@
+/* Data Exposure Metabox Styles */
+
+.zs-exposure-fields {
+    margin: -12px -12px 0;
+}
+
+.zs-exposure-field {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.zs-exposure-field:last-child {
+    border-bottom: none;
+}
+
+.zs-exposure-key {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.zs-exposure-value {
+    font-size: 13px;
+    color: #2c3338;
+    margin-bottom: 6px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.zs-exposure-value.is-truncated {
+    position: relative;
+}
+
+.zs-exposure-expand {
+    background: none;
+    border: none;
+    color: #2271b1;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0;
+    margin-left: 4px;
+    text-decoration: underline;
+}
+
+.zs-exposure-expand:hover {
+    color: #135e96;
+}
+
+.zs-exposure-value.is-expanded .expand-text {
+    display: none;
+}
+
+.zs-exposure-value.is-expanded .collapse-text {
+    display: inline !important;
+}
+
+.zs-exposure-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zs-exposure-tag code {
+    flex: 1;
+    font-size: 11px;
+    background: #f6f7f7;
+    padding: 3px 6px;
+    border-radius: 3px;
+    color: #50575e;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.zs-exposure-copy {
+    background: none;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.zs-exposure-copy:hover {
+    background: #f6f7f7;
+    border-color: #2271b1;
+}
+
+.zs-exposure-copy.copied {
+    background: #00a32a;
+    border-color: #00a32a;
+    color: white;
+}
+
+.zs-exposure-copy.copied::after {
+    content: '✓';
+    position: absolute;
+    margin-left: -14px;
+}
+
+/* Empty state */
+#zs_data_exposure .inside p {
+    margin: 0;
+    padding: 12px;
+}

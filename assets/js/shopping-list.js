@@ -96,7 +96,14 @@
         list.forEach(function (item) {
             html += '<div class="zs-sl__list-item">';
             html += '<span class="zs-sl__item-name">' + esc(item.name) + '</span>';
-            html += '<span class="zs-sl__item-qty-wrap"><span class="zs-sl__item-qty">' + formatQty(item.qty) + '</span><span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
+            // For c/n (cantidad necesaria), show count hint instead of quantity
+            if (item.unit === 'c/n') {
+                var count = Math.round(item.qty);
+                var hint = count > 1 ? ' (' + count + ')' : '';
+                html += '<span class="zs-sl__item-qty-wrap"><span class="zs-sl__item-unit">' + esc(item.unit) + hint + '</span></span>';
+            } else {
+                html += '<span class="zs-sl__item-qty-wrap"><span class="zs-sl__item-qty">' + formatQty(item.qty) + '</span><span class="zs-sl__item-unit">' + esc(item.unit) + '</span></span>';
+            }
             html += '</div>';
         });
         html += '</div></div>';
