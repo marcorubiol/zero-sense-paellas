@@ -674,20 +674,21 @@ class Flowmattic implements FeatureInterface
                         }
                         labelEl.textContent = originalText;
 
-                        const btn = this;
-                        const workflowId = btn.getAttribute('data-workflow-id');
-                        const orderId = btn.getAttribute('data-order-id');
+                        const finalWorkflowId = this.getAttribute('data-workflow-id');
+                        const finalOrderId = this.getAttribute('data-order-id');
                         const nonceCheck = document.getElementById('zs_manual_email_nonce').value;
 
                         let attempts = 0;
                         const maxAttempts = 8; // ~8s
                         const prependLatest = () => {
+                            if (attempts >= maxAttempts) return;
+                            attempts++;
                             fetch(ajaxurl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                                 body: new URLSearchParams({
                                     action: 'zs_flow_get_latest_email_log',
-                                    order_id: orderId,
+                                    order_id: finalOrderId,
                                     nonce: nonceCheck
                                 })
                             })
@@ -704,30 +705,82 @@ class Flowmattic implements FeatureInterface
                                             if (firstItem) {
                                                 box.insertBefore(newItem, firstItem);
                                             } else {
-                                                box.appendChild(newItem);
+                                                const logsContainer = document.getElementById('zs-email-logs-list');
+                                                if (logsContainer) {
+                                                    logsContainer.insertAdjacentHTML('afterbegin', res2.data.html);
+                                                }
+                                                
+                                                // Also try to check the status and update the button UI
+                                                fetch(ajaxurl, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                                    body: new URLSearchParams({
+                                                        action: 'zs_flow_check_email_status',
+                                                        workflow_id: finalWorkflowId,
+                                                        order_id: finalOrderId,
+                                                        nonce: nonceCheck
+                                                    })
+                                                })
+                                                .then(r => r.json())
+                                                .then(res => {
+                                                    const st = res && res.success ? (res.data?.status ?? null) : null;
+                                                    if (st === 'manual' || st === 'auto' || st === 'error' || st === 'skipped') {
+                                                        this.disabled = false;
+                                                        prependLatest();
+                                                        
+                                                        // Update button badge in real-time
+                                                        const wrapper = this.parentElement;
+                                                        let existingBadge = this.querySelector('.zs-badge');
+
+                                                        const badgeMap = {
+                                                            manual: ['zs-badge-manual', 'MAN'],
+                                                            auto:   ['zs-badge-auto',   'AUTO'],
+                                                            error:  ['zs-badge-error',  'ERROR'],
+                                                            skipped:['zs-badge-skipped','SKIP'],
+                                                        };
+                                                        const statusClassMap = {
+                                                            manual: 'zs-email-status-manual',
+                                                            auto:   'zs-email-status-auto',
+                                                            error:  'zs-email-status-error',
+                                                            skipped:'zs-email-status-skipped',
+                                                        };
+
+                                                        if (badgeMap[st]) {
+                                                            const [badgeClass, badgeText] = badgeMap[st];
+                                                            if (existingBadge) {
+                                                                existingBadge.className = 'zs-badge ' + badgeClass;
+                                                                existingBadge.textContent = badgeText;
+                                                            } else {
+                                                                const span = document.createElement('span');
+                                                                span.className = 'zs-badge ' + badgeClass;
+                                                                span.textContent = badgeText;
+                                                                this.appendChild(span);
+                                                            }
+                                                            // Update wrapper status class
+                                                            wrapper.className = wrapper.className
+                                                                .replace(/\bzs-email-status-\w+/g, '')
+                                                                .trim() + ' ' + statusClassMap[st];
+                                                        }
+                                                        
+                                                        return;
+                                                    }
+                                                    if (++attempts < maxAttempts) {
+                                                        return setTimeout(prependLatest, 1000);
+                                                    }
+                                                    this.disabled = false;
+                                                })
+                                                .catch(() => {
+                                                    if (++attempts < maxAttempts) {
+                                                        return setTimeout(prependLatest, 1000);
+                                                    }
+                                                    this.disabled = false;
+                                                });
                                             }
                                         }
                                     }
                                 }
                             });
                         };
-                        const poll = () => {
-                            fetch(ajaxurl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                body: new URLSearchParams({
-                                    action: 'zs_flow_check_email_status',
-                                    workflow_id: workflowId,
-                                    order_id: orderId,
-                                    nonce: nonceCheck
-                                })
-                            })
-                            .then(r => r.json())
-                            .then(res => {
-                                const st = res && res.success ? (res.data?.status ?? null) : null;
-                                if (st === 'manual' || st === 'auto' || st === 'error' || st === 'skipped') {
-                                    this.disabled = false;
-                                    prependLatest();
                                     
                                     // Update button badge in real-time
                                     const wrapper = btn.parentElement;
