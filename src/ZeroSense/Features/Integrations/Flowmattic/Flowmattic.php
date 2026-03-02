@@ -668,6 +668,10 @@ class Flowmattic implements FeatureInterface
                     })
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Flowmattic Manual Email Response for order ' + orderId + ':', data);
+                        if (!data.success) {
+                            console.error('Flowmattic Error:', data.data);
+                        }
                         labelEl.textContent = originalText;
 
                         const btn = this;
@@ -1023,29 +1027,39 @@ class Flowmattic implements FeatureInterface
      */
     public function ajaxSendManualEmail(): void
     {
+        error_log("--- zs_flow_send_manual_email START (Order {$_POST['order_id']}) ---");
+        error_log("POST DATA: " . print_r($_POST, true));
+
         if (!current_user_can('edit_shop_orders')) {
+            error_log("Failed: insufficient_permissions");
             wp_send_json_error('insufficient_permissions');
         }
         
         if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'zs_manual_email_nonce')) {
+            error_log("Failed: invalid_nonce");
             wp_send_json_error('invalid_nonce');
         }
         
         $workflowId = sanitize_text_field(wp_unslash($_POST['workflow_id'] ?? ''));
         $orderId = intval(wp_unslash($_POST['order_id'] ?? 0));
         
+        error_log("Parsed Workflow ID: {$workflowId}, Order ID: {$orderId}");
+
         if (!$workflowId || !$orderId) {
+            error_log("Failed: missing_parameters");
             wp_send_json_error('missing_parameters');
         }
         
         $order = wc_get_order($orderId);
         if (!$order instanceof \WC_Order) {
+            error_log("Failed: invalid_order (Order could not be loaded)");
             wp_send_json_error('invalid_order');
         }
         
         // Check if this is a valid email trigger
         $trigger = $this->getEmailTriggerByWorkflowId($workflowId);
         if (!$trigger) {
+            error_log("Failed: invalid_trigger (Trigger not found for Workflow {$workflowId})");
             wp_send_json_error('invalid_trigger');
         }
         
@@ -1055,14 +1069,19 @@ class Flowmattic implements FeatureInterface
         // Trigger the workflow manually
         $className = $trigger['class'] ?? '';
         if (!$className) {
+            error_log("Failed: missing_class in trigger config: " . print_r($trigger, true));
             wp_send_json_error('missing_class');
         }
         
+        error_log("Calling Integration->triggerClassWorkflow with Workflow: {$workflowId}, Class: {$className}");
+
         // Trigger workflow directly via Integration class method
         // This avoids modifying $_POST (security anti-pattern) and ensures clean JSON response
         $integration = new Integration();
         $integration->triggerClassWorkflow($workflowId, $className, $orderId, 'manual');
         
+        error_log("--- zs_flow_send_manual_email END SUCCESS ---");
+
         wp_send_json_success([
             'message' => 'Email sent successfully',
             'workflow_id' => $workflowId,
