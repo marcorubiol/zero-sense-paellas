@@ -139,6 +139,9 @@ function zero_sense_init()
     // Load text domain
     load_plugin_textdomain('zero-sense', false, dirname(plugin_basename(__FILE__)) . '/languages');
 
+    // Load WP Debug Helper
+    require_once ZERO_SENSE_PATH . 'src/ZeroSense/Utilities/WpDebugHelper.php';
+
     // Initialize main plugin class
     if (class_exists('ZeroSense\Core\Plugin')) {
         ZeroSense\Core\Plugin::getInstance();
