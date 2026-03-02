@@ -1932,8 +1932,8 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function normalizeUnit(float $qty, string $unit): array
     {
-        // c/n (cantidad necesaria) - qualitative unit, no quantity display
-        if ($unit === 'c/n') {
+        // cn (cantidad necesaria) - qualitative unit, no quantity display
+        if ($unit === 'cn') {
             return ['qty' => 0, 'unit' => 'c/n'];
         }
 
@@ -1943,7 +1943,7 @@ class BricksDynamicTags implements FeatureInterface
             'ml'  => 'ml',
             'l'   => 'lit',
             'u'   => 'pcs',
-            'c/n' => 'c/n',
+            'cn' => 'c/n',
         ];
 
         // Convert g to kg if >= 1000g

@@ -197,13 +197,13 @@
     $('#zs-recipe-add-row').on('click', addNewRow);
     $(document).on('click', '.zs-recipe-remove', function() { $(this).closest('tr').remove(); });
     
-    // Handle c/n unit selection - make qty field readonly (not disabled, so it submits)
+    // Handle cn unit selection - make qty field readonly (not disabled, so it submits)
     function handleUnitChange($unitSelect) {
         var $row = $unitSelect.closest('tr');
         var $qtyInput = $row.find('input[name="zs_recipe_ingredients[qty][]"]');
         var unit = $unitSelect.val();
         
-        if (unit === 'c/n') {
+        if (unit === 'cn') {
             $qtyInput.prop('readonly', true).css({'opacity': '0.5', 'background-color': '#f5f5f5'}).val('1');
         } else {
             $qtyInput.prop('readonly', false).css({'opacity': '1', 'background-color': ''});

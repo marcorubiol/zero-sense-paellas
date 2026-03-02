@@ -563,14 +563,14 @@ class ShoppingList implements FeatureInterface
 
     private function normalizeUnit(float $qty, string $unit): array
     {
-        // c/n (cantidad necesaria) - qualitative unit, return count for aggregation display
-        if ($unit === 'c/n') { return ['qty' => $qty, 'unit' => 'c/n']; }
+        // cn (cantidad necesaria) - qualitative unit, return count for aggregation display
+        if ($unit === 'cn') { return ['qty' => $qty, 'unit' => 'c/n']; }
         
         if ($unit === 'g'  && $qty >= 1000) { return ['qty' => $qty / 1000, 'unit' => 'kg']; }
         if ($unit === 'kg' && $qty < 1)     { return ['qty' => $qty * 1000, 'unit' => 'gr']; }
         if ($unit === 'ml' && $qty >= 1000) { return ['qty' => $qty / 1000, 'unit' => 'lit']; }
         if ($unit === 'l'  && $qty < 1)     { return ['qty' => $qty * 1000, 'unit' => 'ml']; }
-        $map = ['g' => 'gr', 'kg' => 'kg', 'ml' => 'ml', 'l' => 'lit', 'u' => 'pcs', 'c/n' => 'c/n'];
+        $map = ['g' => 'gr', 'kg' => 'kg', 'ml' => 'ml', 'l' => 'lit', 'u' => 'pcs', 'cn' => 'c/n'];
         return ['qty' => $qty, 'unit' => $map[$unit] ?? $unit];
     }
 
