@@ -197,6 +197,32 @@
     $('#zs-recipe-add-row').on('click', addNewRow);
     $(document).on('click', '.zs-recipe-remove', function() { $(this).closest('tr').remove(); });
     
+    // Handle c/n unit selection - hide/disable qty field
+    function handleUnitChange($unitSelect) {
+        var $row = $unitSelect.closest('tr');
+        var $qtyInput = $row.find('input[name="zs_recipe_ingredients[qty][]"]');
+        var unit = $unitSelect.val();
+        
+        if (unit === 'c/n') {
+            $qtyInput.prop('disabled', true).css('opacity', '0.5').val('1');
+        } else {
+            $qtyInput.prop('disabled', false).css('opacity', '1');
+            if ($qtyInput.val() === '1' || $qtyInput.val() === '') {
+                $qtyInput.val('');
+            }
+        }
+    }
+    
+    // Apply on page load for existing rows
+    $('#zs-recipe-rows select[name="zs_recipe_ingredients[unit][]"]').each(function() {
+        handleUnitChange($(this));
+    });
+    
+    // Apply on unit change
+    $(document).on('change', 'select[name="zs_recipe_ingredients[unit][]"]', function() {
+        handleUnitChange($(this));
+    });
+    
     $('#zs-utensil-add-row').on('click', addNewUtensilRow);
     $(document).on('click', '.zs-utensil-remove', function() { $(this).closest('tr').remove(); });
     

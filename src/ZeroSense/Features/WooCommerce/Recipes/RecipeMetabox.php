@@ -145,6 +145,7 @@ class RecipeMetabox
             'ml' => __('ml', 'zero-sense'),
             'l' => __('lit', 'zero-sense'),
             'u' => __('pcs', 'zero-sense'),
+            'c/n' => __('c/n', 'zero-sense'),
         ];
     }
 
@@ -637,12 +638,24 @@ class RecipeMetabox
             $qty = isset($qtys[$i]) ? (float) $qtys[$i] : 0.0;
             $unit = isset($units[$i]) ? sanitize_key((string) $units[$i]) : 'u';
 
-            if ($id <= 0 || $qty <= 0) {
+            // Skip if no ingredient selected
+            if ($id <= 0) {
+                continue;
+            }
+
+            // For c/n (cantidad necesaria), qty is not required (field is disabled)
+            // For other units, qty must be > 0
+            if ($unit !== 'c/n' && $qty <= 0) {
                 continue;
             }
 
             if (!in_array($unit, $allowedUnits, true)) {
                 $unit = 'u';
+            }
+
+            // Force qty to 1 for c/n units for consistency
+            if ($unit === 'c/n') {
+                $qty = 1.0;
             }
 
             $out[] = [
