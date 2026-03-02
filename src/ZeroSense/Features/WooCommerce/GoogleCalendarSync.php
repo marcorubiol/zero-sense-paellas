@@ -26,7 +26,7 @@ class GoogleCalendarSync implements FeatureInterface
 
     public function getCategory(): string
     {
-        return __('WooCommerce', 'zero-sense');
+        return 'WooCommerce';
     }
 
     public function isEnabled(): bool
