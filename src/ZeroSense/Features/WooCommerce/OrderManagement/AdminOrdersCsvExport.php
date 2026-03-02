@@ -234,12 +234,12 @@ class AdminOrdersCsvExport implements FeatureInterface
                 .zs-date-quick-buttons a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
                 .zs-date-month-nav { display: flex; align-items: center; gap: 8px; }
                 .zs-date-month-nav a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
-                .zs-date-month-nav .month-display { font-size: 13px; color: #1d2327; min-width: 120px; }
+                .zs-date-month-nav .month-display { font-size: 13px; color: #1d2327; min-width: 120px; text-align: center; }
                 .zs-cols { margin-bottom: 24px; }
                 .zs-col-group { margin-bottom: 20px; }
                 .zs-col-group-title { font-weight: 600; font-size: 13px; color: #1d2327; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #dcdcde; }
                 .zs-col-group-items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-                .zs-col-item { display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 8px; }
+                .zs-col-item { display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 4px; }
                 .zs-col-item input[type="checkbox"] { margin: 0; }
                 .zs-col-item label { cursor: pointer; font-size: 13px; color: #1d2327; }
                 .zs-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
@@ -272,6 +272,10 @@ class AdminOrdersCsvExport implements FeatureInterface
                     <!-- Status filter -->
                     <div class="zs-filter-group">
                         <label><?php esc_html_e('Order Status', 'zero-sense'); ?></label>
+                        <div class="zs-filter-actions">
+                            <a class="select-all-statuses"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
+                            <a class="deselect-all-statuses"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
+                        </div>
                         <div class="zs-status-checkboxes">
                             <?php 
                             $allStatuses = wc_get_order_statuses();
@@ -283,10 +287,6 @@ class AdminOrdersCsvExport implements FeatureInterface
                                     <?php echo esc_html($statusLabel); ?>
                                 </label>
                             <?php endforeach; ?>
-                        </div>
-                        <div class="zs-filter-actions">
-                            <a class="select-all-statuses"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
-                            <a class="deselect-all-statuses"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
                         </div>
                     </div>
                     
