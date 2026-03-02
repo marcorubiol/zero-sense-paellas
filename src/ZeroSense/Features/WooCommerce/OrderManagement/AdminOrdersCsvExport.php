@@ -132,7 +132,7 @@ class AdminOrdersCsvExport implements FeatureInterface
 
         // Pass filters through to the download action
         $filters = [];
-        foreach (['post_status', 's', '_customer_user', 'm'] as $key) {
+        foreach (['post_status', 'status', 's', '_customer_user', 'm'] as $key) {
             if (!empty($_GET[$key])) {
                 $filters[$key] = sanitize_text_field(wp_unslash($_GET[$key]));
             }
@@ -170,11 +170,21 @@ class AdminOrdersCsvExport implements FeatureInterface
             ? array_map('sanitize_text_field', wp_unslash($_GET['statuses'])) 
             : [];
         
-        // If no statuses selected yet, check for WooCommerce post_status filter
-        if (empty($preselectedStatuses) && !empty($_GET['post_status'])) {
-            $postStatus = sanitize_text_field(wp_unslash($_GET['post_status']));
-            if ($postStatus !== 'all') {
-                $preselectedStatuses = [$postStatus];
+        // If no statuses selected yet, check for WooCommerce filters
+        if (empty($preselectedStatuses)) {
+            // HPOS uses 'status' parameter
+            if (!empty($_GET['status'])) {
+                $status = sanitize_text_field(wp_unslash($_GET['status']));
+                if ($status !== 'all') {
+                    $preselectedStatuses = [$status];
+                }
+            }
+            // Classic uses 'post_status' parameter
+            elseif (!empty($_GET['post_status'])) {
+                $postStatus = sanitize_text_field(wp_unslash($_GET['post_status']));
+                if ($postStatus !== 'all') {
+                    $preselectedStatuses = [$postStatus];
+                }
             }
         }
         
@@ -217,7 +227,7 @@ class AdminOrdersCsvExport implements FeatureInterface
         <div class="zs-csv-wrap">
             <h1><?php esc_html_e('Select columns to export', 'zero-sense'); ?></h1>
             <form method="get" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <?php foreach (['action', '_wpnonce', 'post_status', 's', '_customer_user', 'm'] as $k): ?>
+                <?php foreach (['action', '_wpnonce', 'post_status', 'status', 's', '_customer_user', 'm'] as $k): ?>
                     <?php
                     $v = '';
                     if ($k === 'action') { $v = self::ACTION_DOWNLOAD; }
@@ -533,8 +543,15 @@ class AdminOrdersCsvExport implements FeatureInterface
             }, $statuses);
             $args['status'] = $cleanStatuses; // WC_Order_Query accepts array
         } else {
-            // Fallback to legacy single status filter from WooCommerce
-            $status = isset($_GET['post_status']) ? sanitize_text_field(wp_unslash($_GET['post_status'])) : '';
+            // Fallback to single status filter from WooCommerce
+            // HPOS uses 'status', classic uses 'post_status'
+            $status = '';
+            if (isset($_GET['status'])) {
+                $status = sanitize_text_field(wp_unslash($_GET['status']));
+            } elseif (isset($_GET['post_status'])) {
+                $status = sanitize_text_field(wp_unslash($_GET['post_status']));
+            }
+            
             if ($status !== '' && $status !== 'all') {
                 $args['status'] = str_replace('wc-', '', $status);
             }
@@ -591,7 +608,7 @@ class AdminOrdersCsvExport implements FeatureInterface
     private function getCurrentFilterParams(): array
     {
         $params = [];
-        $keys   = ['post_status', 's', '_customer_user', 'm'];
+        $keys   = ['post_status', 'status', 's', '_customer_user', 'm'];
 
         foreach ($keys as $key) {
             if (isset($_GET[$key]) && $_GET[$key] !== '') {
