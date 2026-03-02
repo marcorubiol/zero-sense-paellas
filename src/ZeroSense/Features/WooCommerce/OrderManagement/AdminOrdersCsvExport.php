@@ -227,21 +227,21 @@ class AdminOrdersCsvExport implements FeatureInterface
                 .zs-status-checkboxes input[type="checkbox"] { margin: 0; }
                 .zs-filter-actions { display: flex; gap: 10px; }
                 .zs-filter-actions a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
-                .zs-date-month-nav { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-                .zs-date-month-nav button { background: #f0f0f1; border: 1px solid #8c8f94; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 13px; color: #1d2327; }
-                .zs-date-month-nav button:hover { background: #dcdcde; }
-                .zs-date-month-nav .month-display { font-weight: 600; font-size: 14px; color: #1d2327; min-width: 140px; text-align: center; }
-                .zs-date-quick-buttons { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-                .zs-date-quick-buttons a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
-                .zs-date-inputs { display: flex; align-items: center; gap: 10px; }
+                .zs-date-inputs { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
                 .zs-date-inputs input[type="date"] { padding: 6px 10px; border: 1px solid #8c8f94; border-radius: 4px; font-size: 13px; }
                 .zs-date-inputs span { color: #646970; font-size: 13px; }
+                .zs-date-quick-buttons { display: flex; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+                .zs-date-quick-buttons a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
+                .zs-date-month-nav { display: flex; align-items: center; gap: 8px; }
+                .zs-date-month-nav a { font-size: 12px; color: #2271b1; text-decoration: underline; cursor: pointer; }
+                .zs-date-month-nav .month-display { font-size: 13px; color: #1d2327; min-width: 120px; }
                 .zs-cols { margin-bottom: 24px; }
                 .zs-col-group { margin-bottom: 20px; }
                 .zs-col-group-title { font-weight: 600; font-size: 13px; color: #1d2327; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #dcdcde; }
                 .zs-col-group-items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-                .zs-col-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
-                .zs-col-item label { cursor: pointer; font-size: 14px; color: #1d2327; }
+                .zs-col-item { display: flex; align-items: center; gap: 6px; padding: 0; margin-bottom: 8px; }
+                .zs-col-item input[type="checkbox"] { margin: 0; }
+                .zs-col-item label { cursor: pointer; font-size: 13px; color: #1d2327; }
                 .zs-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
                 .zs-actions a { font-size: 13px; color: #2271b1; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; }
                 .button-primary { background: #2271b1; color: #fff; border: none; padding: 10px 22px; border-radius: 4px; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
@@ -293,20 +293,20 @@ class AdminOrdersCsvExport implements FeatureInterface
                     <!-- Date range filter -->
                     <div class="zs-filter-group">
                         <label><?php esc_html_e('Date Range', 'zero-sense'); ?></label>
-                        <div class="zs-date-month-nav">
-                            <button type="button" class="month-nav-prev" title="<?php esc_attr_e('Previous month', 'zero-sense'); ?>">&larr;</button>
-                            <span class="month-display" id="current-month-display"></span>
-                            <button type="button" class="month-nav-next" title="<?php esc_attr_e('Next month', 'zero-sense'); ?>">&rarr;</button>
-                        </div>
-                        <div class="zs-date-quick-buttons">
-                            <a class="set-this-month"><?php esc_html_e('This month', 'zero-sense'); ?></a>
-                            <a class="set-last-month"><?php esc_html_e('Last month', 'zero-sense'); ?></a>
-                            <a class="set-last-30-days"><?php esc_html_e('Last 30 days', 'zero-sense'); ?></a>
-                        </div>
                         <div class="zs-date-inputs">
                             <input type="date" name="date_from" id="date_from" value="<?php echo esc_attr($dateFrom); ?>" placeholder="<?php esc_attr_e('From', 'zero-sense'); ?>">
                             <span><?php esc_html_e('to', 'zero-sense'); ?></span>
                             <input type="date" name="date_to" id="date_to" value="<?php echo esc_attr($dateTo); ?>" placeholder="<?php esc_attr_e('To', 'zero-sense'); ?>">
+                        </div>
+                        <div class="zs-date-quick-buttons">
+                            <a class="set-last-month"><?php esc_html_e('Last month', 'zero-sense'); ?></a>
+                            <a class="set-last-30-days"><?php esc_html_e('Last 30 days', 'zero-sense'); ?></a>
+                            <a class="set-this-month"><?php esc_html_e('This month', 'zero-sense'); ?></a>
+                        </div>
+                        <div class="zs-date-month-nav">
+                            <a class="month-nav-prev" title="<?php esc_attr_e('Previous month', 'zero-sense'); ?>">&larr;</a>
+                            <span class="month-display" id="current-month-display"></span>
+                            <a class="month-nav-next" title="<?php esc_attr_e('Next month', 'zero-sense'); ?>">&rarr;</a>
                         </div>
                     </div>
                 </div>
@@ -424,7 +424,7 @@ class AdminOrdersCsvExport implements FeatureInterface
             // Initialize display with current month
             updateMonthDisplay();
             
-            // Previous month button
+            // Previous month link
             var prevMonthBtn = document.querySelector('.month-nav-prev');
             if (prevMonthBtn) {
                 prevMonthBtn.onclick = function(e) {
@@ -436,10 +436,11 @@ class AdminOrdersCsvExport implements FeatureInterface
                         newYear--;
                     }
                     setMonthRange(newYear, newMonth);
+                    return false;
                 };
             }
             
-            // Next month button
+            // Next month link
             var nextMonthBtn = document.querySelector('.month-nav-next');
             if (nextMonthBtn) {
                 nextMonthBtn.onclick = function(e) {
@@ -451,6 +452,7 @@ class AdminOrdersCsvExport implements FeatureInterface
                         newYear++;
                     }
                     setMonthRange(newYear, newMonth);
+                    return false;
                 };
             }
             
