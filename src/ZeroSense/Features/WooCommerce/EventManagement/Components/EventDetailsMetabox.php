@@ -587,6 +587,15 @@ class EventDetailsMetabox
         }
 
         $errors = [];
+        
+        // Validate that order has at least one product (except for auto-draft)
+        $order = wc_get_order($orderId);
+        if ($order instanceof WC_Order) {
+            $orderStatus = $order->get_status();
+            if ($orderStatus !== 'auto-draft' && $order->get_item_count() === 0) {
+                $errors[] = __('<strong>Order items</strong> are required. Please add at least one product to the order.', 'zero-sense');
+            }
+        }
 
         $required = [
             'event_total_guests' => __('Total guests', 'zero-sense'),
