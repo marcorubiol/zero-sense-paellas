@@ -690,7 +690,16 @@ class Flowmattic implements FeatureInterface
                             ok: response.ok,
                             duration: Date.now() - requestStartTime + 'ms'
                         });
-                        return response.json();
+                        return response.text().then(text => {
+                            console.log('[ZS FlowMattic] Raw response text:', text);
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.error('[ZS FlowMattic] JSON parse error:', e);
+                                console.error('[ZS FlowMattic] First 500 chars of response:', text.substring(0, 500));
+                                throw new Error('Invalid JSON response: ' + e.message);
+                            }
+                        });
                     })
                     .then(data => {
                         console.log('[ZS FlowMattic] AJAX response parsed:', data);
