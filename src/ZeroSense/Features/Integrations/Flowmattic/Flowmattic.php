@@ -668,27 +668,22 @@ class Flowmattic implements FeatureInterface
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.log('Flowmattic Manual Email Response for order ' + orderId + ':', data);
-                        if (!data.success) {
-                            console.error('Flowmattic Error:', data.data);
-                        }
                         labelEl.textContent = originalText;
 
-                        const finalWorkflowId = btn.getAttribute('data-workflow-id');
-                        const finalOrderId = btn.getAttribute('data-order-id');
+                        const btn = this;
+                        const workflowId = btn.getAttribute('data-workflow-id');
+                        const orderId = btn.getAttribute('data-order-id');
                         const nonceCheck = document.getElementById('zs_manual_email_nonce').value;
 
                         let attempts = 0;
                         const maxAttempts = 8; // ~8s
                         const prependLatest = () => {
-                            if (attempts >= maxAttempts) return;
-                            attempts++;
                             fetch(ajaxurl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                                 body: new URLSearchParams({
                                     action: 'zs_flow_get_latest_email_log',
-                                    order_id: finalOrderId,
+                                    order_id: orderId,
                                     nonce: nonceCheck
                                 })
                             })
@@ -705,82 +700,30 @@ class Flowmattic implements FeatureInterface
                                             if (firstItem) {
                                                 box.insertBefore(newItem, firstItem);
                                             } else {
-                                                const logsContainer = document.getElementById('zs-email-logs-list');
-                                                if (logsContainer) {
-                                                    logsContainer.insertAdjacentHTML('afterbegin', res2.data.html);
-                                                }
-                                                
-                                                // Also try to check the status and update the button UI
-                                                fetch(ajaxurl, {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                                    body: new URLSearchParams({
-                                                        action: 'zs_flow_check_email_status',
-                                                        workflow_id: finalWorkflowId,
-                                                        order_id: finalOrderId,
-                                                        nonce: nonceCheck
-                                                    })
-                                                })
-                                                .then(r => r.json())
-                                                .then(res => {
-                                                    const st = res && res.success ? (res.data?.status ?? null) : null;
-                                                    if (st === 'manual' || st === 'auto' || st === 'error' || st === 'skipped') {
-                                                        this.disabled = false;
-                                                        prependLatest();
-                                                        
-                                                        // Update button badge in real-time
-                                                        const wrapper = this.parentElement;
-                                                        let existingBadge = this.querySelector('.zs-badge');
-
-                                                        const badgeMap = {
-                                                            manual: ['zs-badge-manual', 'MAN'],
-                                                            auto:   ['zs-badge-auto',   'AUTO'],
-                                                            error:  ['zs-badge-error',  'ERROR'],
-                                                            skipped:['zs-badge-skipped','SKIP'],
-                                                        };
-                                                        const statusClassMap = {
-                                                            manual: 'zs-email-status-manual',
-                                                            auto:   'zs-email-status-auto',
-                                                            error:  'zs-email-status-error',
-                                                            skipped:'zs-email-status-skipped',
-                                                        };
-
-                                                        if (badgeMap[st]) {
-                                                            const [badgeClass, badgeText] = badgeMap[st];
-                                                            if (existingBadge) {
-                                                                existingBadge.className = 'zs-badge ' + badgeClass;
-                                                                existingBadge.textContent = badgeText;
-                                                            } else {
-                                                                const span = document.createElement('span');
-                                                                span.className = 'zs-badge ' + badgeClass;
-                                                                span.textContent = badgeText;
-                                                                this.appendChild(span);
-                                                            }
-                                                            // Update wrapper status class
-                                                            wrapper.className = wrapper.className
-                                                                .replace(/\bzs-email-status-\w+/g, '')
-                                                                .trim() + ' ' + statusClassMap[st];
-                                                        }
-                                                        
-                                                        return;
-                                                    }
-                                                    if (++attempts < maxAttempts) {
-                                                        return setTimeout(prependLatest, 1000);
-                                                    }
-                                                    this.disabled = false;
-                                                })
-                                                .catch(() => {
-                                                    if (++attempts < maxAttempts) {
-                                                        return setTimeout(prependLatest, 1000);
-                                                    }
-                                                    this.disabled = false;
-                                                });
+                                                box.appendChild(newItem);
                                             }
                                         }
                                     }
                                 }
                             });
                         };
+                        const poll = () => {
+                            fetch(ajaxurl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: new URLSearchParams({
+                                    action: 'zs_flow_check_email_status',
+                                    workflow_id: workflowId,
+                                    order_id: orderId,
+                                    nonce: nonceCheck
+                                })
+                            })
+                            .then(r => r.json())
+                            .then(res => {
+                                const st = res && res.success ? (res.data?.status ?? null) : null;
+                                if (st === 'manual' || st === 'auto' || st === 'error' || st === 'skipped') {
+                                    this.disabled = false;
+                                    prependLatest();
                                     
                                     // Update button badge in real-time
                                     const wrapper = btn.parentElement;
@@ -1080,39 +1023,29 @@ class Flowmattic implements FeatureInterface
      */
     public function ajaxSendManualEmail(): void
     {
-        error_log("--- zs_flow_send_manual_email START (Order {$_POST['order_id']}) ---");
-        error_log("POST DATA: " . print_r($_POST, true));
-
         if (!current_user_can('edit_shop_orders')) {
-            error_log("Failed: insufficient_permissions");
             wp_send_json_error('insufficient_permissions');
         }
         
         if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'zs_manual_email_nonce')) {
-            error_log("Failed: invalid_nonce");
             wp_send_json_error('invalid_nonce');
         }
         
         $workflowId = sanitize_text_field(wp_unslash($_POST['workflow_id'] ?? ''));
         $orderId = intval(wp_unslash($_POST['order_id'] ?? 0));
         
-        error_log("Parsed Workflow ID: {$workflowId}, Order ID: {$orderId}");
-
         if (!$workflowId || !$orderId) {
-            error_log("Failed: missing_parameters");
             wp_send_json_error('missing_parameters');
         }
         
         $order = wc_get_order($orderId);
         if (!$order instanceof \WC_Order) {
-            error_log("Failed: invalid_order (Order could not be loaded)");
             wp_send_json_error('invalid_order');
         }
         
         // Check if this is a valid email trigger
         $trigger = $this->getEmailTriggerByWorkflowId($workflowId);
         if (!$trigger) {
-            error_log("Failed: invalid_trigger (Trigger not found for Workflow {$workflowId})");
             wp_send_json_error('invalid_trigger');
         }
         
@@ -1122,19 +1055,14 @@ class Flowmattic implements FeatureInterface
         // Trigger the workflow manually
         $className = $trigger['class'] ?? '';
         if (!$className) {
-            error_log("Failed: missing_class in trigger config: " . print_r($trigger, true));
             wp_send_json_error('missing_class');
         }
         
-        error_log("Calling Integration->triggerClassWorkflow with Workflow: {$workflowId}, Class: {$className}");
-
         // Trigger workflow directly via Integration class method
         // This avoids modifying $_POST (security anti-pattern) and ensures clean JSON response
         $integration = new Integration();
         $integration->triggerClassWorkflow($workflowId, $className, $orderId, 'manual');
         
-        error_log("--- zs_flow_send_manual_email END SUCCESS ---");
-
         wp_send_json_success([
             'message' => 'Email sent successfully',
             'workflow_id' => $workflowId,

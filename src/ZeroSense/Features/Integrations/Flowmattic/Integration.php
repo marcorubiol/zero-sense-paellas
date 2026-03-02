@@ -555,8 +555,6 @@ class Integration
      */
     public function triggerClassWorkflow(string $workflowId, string $className, int $orderId = 0, string $triggerType = 'auto'): void
     {
-        error_log("Integration::triggerClassWorkflow called. Workflow ID: {$workflowId}, Class: {$className}, Order ID: {$orderId}, Trigger Type: {$triggerType}");
-
         // Check if this is an email workflow and if send_once is enabled
         // Class actions never enforce send_once; status transitions are handled earlier.
 
@@ -574,7 +572,6 @@ class Integration
             // Persist context so it survives PHP requests when Flowmattic has a delay
             set_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId, $context, 10 * MINUTE_IN_SECONDS);
             set_transient('zs_wf_ctx_idx_' . $workflowId, $orderId, 10 * MINUTE_IN_SECONDS);
-            error_log("Set transients for workflow context: zs_wf_ctx_{$workflowId}_{$orderId}");
         }
 
         $debugData = [
@@ -587,23 +584,18 @@ class Integration
         if ($orderId > 0) {
             // Has Order ID context - include it
             $order = wc_get_order($orderId);
-            if ($order instanceof \WC_Order) {
+            if ($order instanceof WC_Order) {
                 $debugData['order_id'] = $orderId;
                 $debugData['has_order_context'] = true;
-                error_log("Order context found for ID {$orderId}");
             } else {
                 $debugData['has_order_context'] = false;
-                error_log("Order context NOT found (invalid order) for ID {$orderId}");
             }
         } else {
             // No Order ID context
             $debugData['has_order_context'] = false;
-            error_log("No Order ID context provided");
         }
 
-        error_log("Executing do_action('flowmattic_trigger_workflow') with debugData: " . print_r($debugData, true));
         do_action('flowmattic_trigger_workflow', $workflowId, $debugData);
-        error_log("Finished do_action('flowmattic_trigger_workflow')");
 
         // Clean up context for both manual and automatic triggers
         if ($orderId > 0) {
