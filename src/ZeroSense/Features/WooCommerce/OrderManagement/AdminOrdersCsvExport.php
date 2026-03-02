@@ -312,12 +312,12 @@ class AdminOrdersCsvExport implements FeatureInterface
                 </div>
 
                 <h2><?php esc_html_e('Columns', 'zero-sense'); ?></h2>
-                <div class="zs-actions">
-                    <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=true);return false;"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
-                    <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=false);return false;"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
-                </div>
 
                 <div class="zs-cols">
+                    <div class="zs-actions">
+                        <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=true);return false;"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
+                        <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=false);return false;"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
+                    </div>
                     <?php
                     // Group columns by category
                     $columnGroups = [
