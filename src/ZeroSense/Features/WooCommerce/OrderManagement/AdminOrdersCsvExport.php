@@ -185,7 +185,7 @@ class AdminOrdersCsvExport implements FeatureInterface
                 .zs-filters-section { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 2px solid #dcdcde; }
                 .zs-filter-group { margin-bottom: 20px; }
                 .zs-filter-group > label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #1d2327; }
-                .zs-status-checkboxes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+                .zs-status-checkboxes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
                 .zs-status-checkboxes label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #1d2327; cursor: pointer; }
                 .zs-status-checkboxes input[type="checkbox"] { margin: 0; }
                 .zs-filter-actions { display: flex; gap: 10px; }
@@ -248,9 +248,12 @@ class AdminOrdersCsvExport implements FeatureInterface
                     <div class="zs-filter-group">
                         <label><?php esc_html_e('Date Range', 'zero-sense'); ?></label>
                         <div class="zs-date-inputs">
-                            <input type="date" name="date_from" value="<?php echo esc_attr($dateFrom); ?>" placeholder="<?php esc_attr_e('From', 'zero-sense'); ?>">
+                            <input type="date" name="date_from" id="date_from" value="<?php echo esc_attr($dateFrom); ?>" placeholder="<?php esc_attr_e('From', 'zero-sense'); ?>">
                             <span><?php esc_html_e('to', 'zero-sense'); ?></span>
-                            <input type="date" name="date_to" value="<?php echo esc_attr($dateTo); ?>" placeholder="<?php esc_attr_e('To', 'zero-sense'); ?>">
+                            <input type="date" name="date_to" id="date_to" value="<?php echo esc_attr($dateTo); ?>" placeholder="<?php esc_attr_e('To', 'zero-sense'); ?>">
+                        </div>
+                        <div class="zs-filter-actions">
+                            <a class="set-past-month"><?php esc_html_e('Past month', 'zero-sense'); ?></a>
                         </div>
                     </div>
                 </div>
