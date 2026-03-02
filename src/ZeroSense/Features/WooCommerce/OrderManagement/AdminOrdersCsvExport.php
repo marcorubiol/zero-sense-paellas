@@ -175,16 +175,34 @@ class AdminOrdersCsvExport implements FeatureInterface
             // HPOS uses 'status' parameter
             if (!empty($_GET['status'])) {
                 $status = sanitize_text_field(wp_unslash($_GET['status']));
-                if ($status !== 'all') {
+                if ($status === 'all') {
+                    // When "All" is selected, pre-select all statuses except cancelled and not-available
+                    // This matches the behavior in OrderStatuses.php filterHposOrderList()
+                    $allStatuses = array_keys(wc_get_order_statuses());
+                    $excludedStatuses = ['wc-cancelled', 'wc-not-available'];
+                    $preselectedStatuses = array_diff($allStatuses, $excludedStatuses);
+                } else {
                     $preselectedStatuses = [$status];
                 }
             }
             // Classic uses 'post_status' parameter
             elseif (!empty($_GET['post_status'])) {
                 $postStatus = sanitize_text_field(wp_unslash($_GET['post_status']));
-                if ($postStatus !== 'all') {
+                if ($postStatus === 'all') {
+                    // When "All" is selected, pre-select all statuses except cancelled and not-available
+                    // This matches the behavior in OrderStatuses.php filterClassicOrdersList()
+                    $allStatuses = array_keys(wc_get_order_statuses());
+                    $excludedStatuses = ['wc-cancelled', 'wc-not-available'];
+                    $preselectedStatuses = array_diff($allStatuses, $excludedStatuses);
+                } else {
                     $preselectedStatuses = [$postStatus];
                 }
+            } else {
+                // No status filter at all (viewing "All" by default)
+                // Pre-select all statuses except cancelled and not-available
+                $allStatuses = array_keys(wc_get_order_statuses());
+                $excludedStatuses = ['wc-cancelled', 'wc-not-available'];
+                $preselectedStatuses = array_diff($allStatuses, $excludedStatuses);
             }
         }
         
