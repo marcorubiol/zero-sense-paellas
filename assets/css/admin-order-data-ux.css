@@ -141,7 +141,19 @@
 }
 
 /* ==========================================================================
-   6. Primary Email Indicator
+   6. Billing Email and Phone Full Width
+   ========================================================================== */
+
+/* Make email and phone fields full width in billing section */
+#order_data .order_data_column ._billing_email_field,
+#order_data .order_data_column ._billing_phone_field {
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+}
+
+/* ==========================================================================
+   7. Primary Email Indicator
    ========================================================================== */
 
 /* Email icon in label */
