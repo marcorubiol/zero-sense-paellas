@@ -160,7 +160,7 @@ class DepositsCalculatorMetabox
                 var newAmount = parseFloat($row.find('.zs-deposit-input').val());
                 var nonce = $row.find('.zs-deposit-nonce-hidden').val();
                 
-                console.log('Saving deposit:', {orderId: orderId, amount: newAmount, nonce: nonce});
+                if (window.wp_debug) console.log('Saving deposit:', {orderId: orderId, amount: newAmount, nonce: nonce});
                 
                 // Disable button during save
                 $btn.css('opacity', '0.5').css('pointer-events', 'none');
@@ -173,7 +173,7 @@ class DepositsCalculatorMetabox
                     mode: 'manual',
                     security: nonce
                 }, function(response) {
-                    console.log('Save response:', response);
+                    if (window.wp_debug) console.log('Save response:', response);
                     if (response.success) {
                         location.reload();
                     } else {
@@ -193,14 +193,14 @@ class DepositsCalculatorMetabox
                 var orderId = $(this).data('order-id');
                 var nonce = $('.zs-deposit-nonce-hidden').val();
                 
-                console.log('Resetting to auto:', {orderId: orderId});
+                if (window.wp_debug) console.log('Resetting to auto:', {orderId: orderId});
                 
                 $.post(ajaxurl, {
                     action: 'zs_deposits_reset_to_auto',
                     order_id: orderId,
                     security: nonce
                 }, function(response) {
-                    console.log('Reset response:', response);
+                    if (window.wp_debug) console.log('Reset response:', response);
                     if (response.success) {
                         location.reload();
                     } else {

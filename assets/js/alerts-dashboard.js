@@ -1,16 +1,16 @@
 (function ($) {
-    console.log('[ZS Alerts] Script loaded. zsAlerts:', typeof zsAlerts !== 'undefined' ? zsAlerts : 'NOT DEFINED');
+    if (window.wp_debug) console.log('[ZS Alerts] Script loaded. zsAlerts:', typeof zsAlerts !== 'undefined' ? zsAlerts : 'NOT DEFINED');
 
     $(document).on('click', '.zs-dismiss-alert', function (e) {
         e.preventDefault();
-        console.log('[ZS Alerts] Dismiss clicked');
+        if (window.wp_debug) console.log('[ZS Alerts] Dismiss clicked');
 
         var $badge = $(this).closest('.zs-alert-badge');
         var orderId = $badge.data('order');
         var materialKey = $badge.data('material');
 
-        console.log('[ZS Alerts] order_id:', orderId, '| material_key:', materialKey);
-        console.log('[ZS Alerts] Posting to:', zsAlerts.ajaxurl);
+        if (window.wp_debug) console.log('[ZS Alerts] order_id:', orderId, '| material_key:', materialKey);
+        if (window.wp_debug) console.log('[ZS Alerts] Posting to:', zsAlerts.ajaxurl);
 
         $badge.css('opacity', 0.4);
         $.post(zsAlerts.ajaxurl, {
@@ -19,7 +19,7 @@
             order_id: orderId,
             material_key: materialKey
         }, function (res) {
-            console.log('[ZS Alerts] AJAX response:', res);
+            if (window.wp_debug) console.log('[ZS Alerts] AJAX response:', res);
             if (res.success) {
                 var $row = $badge.closest('tr');
                 $badge.remove();

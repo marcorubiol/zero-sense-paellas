@@ -3687,11 +3687,11 @@ class BricksDynamicTags implements FeatureInterface
                 var pid = String($(this).data("pid"));
                 var choice = this.checked ? "without" : "with";
                 window.zsRabbitChoices[pid] = choice;
-                console.log("[ZS_RABBIT] toggle changed pid=" + pid + " choice=" + choice);
+                if (window.wp_debug) console.log("[ZS_RABBIT] toggle changed pid=" + pid + " choice=" + choice);
 
                 var $btn = $(".cart-circle-btn[data-product-id=\'" + pid + "\']");
                 if ($btn.hasClass("in-cart") && typeof zsCartHandler !== "undefined") {
-                    console.log("[ZS_RABBIT] auto-updating cart choice for pid=" + pid);
+                    if (window.wp_debug) console.log("[ZS_RABBIT] auto-updating cart choice for pid=" + pid);
                     $btn.addClass("loading zs-rabbit-updating");
                     if (typeof window.zsSetGlobalCartLock === "function") window.zsSetGlobalCartLock(true);
                     $.ajax({
@@ -3707,7 +3707,7 @@ class BricksDynamicTags implements FeatureInterface
                     }).done(function(response) {
                         if (response.success) {
                             $btn.attr("data-cart-item-key", response.data.cart_item_key || "");
-                            console.log("[ZS_RABBIT] cart updated with choice=" + choice);
+                            if (window.wp_debug) console.log("[ZS_RABBIT] cart updated with choice=" + choice);
                         }
                     }).always(function() {
                         $btn.removeClass("loading zs-rabbit-updating");
@@ -3720,7 +3720,7 @@ class BricksDynamicTags implements FeatureInterface
             $(document.body).on("added_to_cart", function(e, fragments, cartHash, $btn) {
                 var pid = $btn && $btn.data ? String($btn.data("product-id")) : null;
                 if (pid) {
-                    console.log("[ZS_RABBIT] added_to_cart event pid=" + pid);
+                    if (window.wp_debug) console.log("[ZS_RABBIT] added_to_cart event pid=" + pid);
                     syncToggleVisibility(pid, true);
                 }
             });
@@ -3728,7 +3728,7 @@ class BricksDynamicTags implements FeatureInterface
             $(document.body).on("removed_from_cart", function(e, fragments, cartHash, $btn) {
                 var pid = $btn && $btn.data ? String($btn.data("product-id")) : null;
                 if (pid) {
-                    console.log("[ZS_RABBIT] removed_from_cart event pid=" + pid);
+                    if (window.wp_debug) console.log("[ZS_RABBIT] removed_from_cart event pid=" + pid);
                     syncToggleVisibility(pid, false);
                 }
             });
