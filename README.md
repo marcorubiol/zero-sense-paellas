@@ -25,6 +25,13 @@ Modern, modular WordPress plugin for Paellas en Casa. PSR-4, auto-discovered fea
 - **Menu Organization**: New "Event Operations" top-level menu
 - **Auto-Integration**: FlowMattic and Bricks integration out of the box
 
+### 📅 Google Calendar Sync (NEW)
+- **Event ID Storage**: Stores Google Calendar event IDs in order meta (`zs_google_calendar_event_id`)
+- **Sync Logging**: Tracks creation, updates, and errors with timestamps
+- **Admin Metabox**: "Google Calendar Sync" metabox displays event ID, sync history, and direct calendar links
+- **FlowMattic Integration**: Global function `zs_save_calendar_event_id()` for easy workflow integration
+- **Toggleable Feature**: Can be enabled/disabled from plugin settings
+
 ### 🍳 Recipe System Enhancement
 - **Recipe Liquids**: New taxonomy for liquid ingredients with volume tracking
 - **Cassola Selection**: Automatic size selection (4.9L to 33.8L) based on total volume
@@ -738,14 +745,15 @@ public function getConfigurationFields(): array
 - **Shopping List Feature**: Complete ingredient management system
 - **Event Staff Management**: Full CPT with role-based assignment
 - **Recipe Liquids & Cassola**: Advanced recipe management with volume calculations
+- **Google Calendar Sync**: Event ID storage and sync logging with FlowMattic integration
 - **WPML Integration**: Comprehensive multilingual support
 - **Performance Optimization**: 50%+ faster admin interfaces
 
 ### 📈 System Metrics
-- **Features**: 25+ organized features across 6 categories
+- **Features**: 26+ organized features across 6 categories
 - **Payment Gateways**: 4 production-ready payment methods
-- **Dynamic Tags**: 50+ Bricks Builder dynamic tags
-- **Meta Fields**: 30+ registered fields with automatic integration
+- **Dynamic Tags**: 52+ Bricks Builder dynamic tags (includes Google Calendar tags)
+- **Meta Fields**: 31+ registered fields with automatic integration
 - **Performance**: Sub-2s shopping list generation, 60% faster recipe processing
 
 ### 🎯 Next Steps

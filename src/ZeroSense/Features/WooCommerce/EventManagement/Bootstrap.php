@@ -32,9 +32,6 @@ class Bootstrap
         (new DataExposer())->register();
         (new ServiceAreaAdminColumns())->register();
         
-        // Calendar sync
-        (new Calendar\CalendarLogMetabox())->register();
-        
         // Inventory system
         (new InventoryMetabox())->register();
         (new StockAdminPage())->register();
@@ -275,14 +272,6 @@ class Bootstrap
         $registry->register(MetaKeys::EVENT_STAFF, [
             'label' => $labels[MetaKeys::EVENT_STAFF] ?? 'Event staff',
             'type' => 'array',
-            'translatable' => false,
-            'legacy_keys' => [],
-            'feature' => 'EventManagement',
-        ]);
-
-        $registry->register(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, [
-            'label' => $labels[MetaKeys::GOOGLE_CALENDAR_EVENT_ID] ?? 'Google Calendar event ID',
-            'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
             'feature' => 'EventManagement',
