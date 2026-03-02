@@ -1170,13 +1170,11 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
    ================================================================= */
 
 /* Asterisco rojo automático para campos obligatorios en el backend */
-.zs-mb-field input[required] + label::after,
-.zs-mb-field select[required] + label::after,
-.zs-mb-field textarea[required] + label::after,
-.zs-mb-field label:has(+ input[required])::after,
-.zs-mb-field label:has(+ select[required])::after,
-.zs-mb-field label:has(+ textarea[required])::after {
+/* Clase .zs-required añadida por JavaScript a los labels de campos required */
+.zs-mb-field label.zs-required::after,
+#order_data .form-field label.zs-required::after {
     content: " *";
     color: #dc3232;
     font-weight: bold;
+    margin-left: 2px;
 }

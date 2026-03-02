@@ -145,6 +145,7 @@ class EventDetailsMetabox
                                name="event_total_guests" 
                                value="<?php echo esc_attr($totalGuests); ?>" 
                                min="0"
+                               required
                                class="short">
                         <div id="zs-guests-validation" class="zs-guest-validation">
                             <span class="zs-guest-validation-message"></span>
@@ -162,6 +163,7 @@ class EventDetailsMetabox
                                name="event_adults" 
                                value="<?php echo esc_attr($adults); ?>" 
                                min="0"
+                               required
                                class="short">
                     </div>
                     
@@ -206,7 +208,7 @@ class EventDetailsMetabox
                     <label for="event_service_location">
                         <?php esc_html_e('Service location', 'zero-sense'); ?>
                     </label>
-                    <select id="event_service_location" name="event_service_location">
+                    <select id="event_service_location" name="event_service_location" required>
                         <option value=""><?php esc_html_e('Select...', 'zero-sense'); ?></option>
                         <?php foreach ($serviceAreaTerms as $term) : ?>
                             <?php if ($term instanceof \WP_Term) : ?>
@@ -232,6 +234,7 @@ class EventDetailsMetabox
                                id="event_date" 
                                name="event_date" 
                                value="<?php echo esc_attr($eventDateForInput); ?>" 
+                               required
                                class="short">
                     </div>
                     
