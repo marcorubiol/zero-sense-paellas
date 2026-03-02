@@ -8,6 +8,8 @@ use ZeroSense\Core\MetaFieldRegistry;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions;
 use ZeroSense\Features\Integrations\Flowmattic\ApiExtension;
+use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys as DepositMetaKeys;
+use ZeroSense\Features\WooCommerce\Deposits\Support\Utils as DepositUtils;
 
 class DataExposureMetabox
 {
@@ -132,14 +134,102 @@ class DataExposureMetabox
         // 1. Registry Fields (Event data)
         $fields = array_merge($fields, $this->getRegistryFields($order));
 
-        // 2. Computed Fields
+        // 2. Deposit Fields
+        $fields = array_merge($fields, $this->getDepositFields($order));
+
+        // 3. Computed Fields
         $fields = array_merge($fields, $this->getComputedFields($order));
 
-        // 3. Billing/Shipping Fields
+        // 4. Billing/Shipping Fields
         $fields = array_merge($fields, $this->getBillingShippingFields($order));
 
-        // 4. Staff & Vehicles
+        // 5. Staff & Vehicles
         $fields = array_merge($fields, $this->getStaffVehicleFields($order));
+
+        return $fields;
+    }
+
+    private function getDepositFields(WC_Order $order): array
+    {
+        $fields = [];
+
+        // Check if order has deposits enabled
+        $hasDeposit = DepositMetaKeys::get($order, DepositMetaKeys::HAS_DEPOSIT);
+        if ($hasDeposit !== 'yes' && $hasDeposit !== '1') {
+            return $fields;
+        }
+
+        // Get deposit info
+        $depositInfo = DepositUtils::getDepositInfo($order);
+        
+        // Has deposit flag
+        $fields[] = $this->formatField('zs_deposits_has_deposit', 'yes');
+
+        // Deposit percentage
+        $depositPercentage = DepositMetaKeys::get($order, DepositMetaKeys::DEPOSIT_PERCENTAGE);
+        if ($depositPercentage !== '' && $depositPercentage !== null) {
+            $fields[] = $this->formatField('zs_deposits_deposit_percentage', $depositPercentage . '%');
+        }
+
+        // Deposit amount
+        $depositAmount = DepositMetaKeys::get($order, DepositMetaKeys::DEPOSIT_AMOUNT);
+        if ($depositAmount !== '' && $depositAmount !== null) {
+            $formatted = wc_price($depositAmount, ['currency' => $order->get_currency()]);
+            $fields[] = $this->formatField('zs_deposits_deposit_amount', strip_tags($formatted));
+        }
+
+        // Remaining amount
+        $remainingAmount = DepositMetaKeys::get($order, DepositMetaKeys::REMAINING_AMOUNT);
+        if ($remainingAmount !== '' && $remainingAmount !== null) {
+            $formatted = wc_price($remainingAmount, ['currency' => $order->get_currency()]);
+            $fields[] = $this->formatField('zs_deposits_remaining_amount', strip_tags($formatted));
+        }
+
+        // Balance amount
+        $balanceAmount = DepositMetaKeys::get($order, DepositMetaKeys::BALANCE_AMOUNT);
+        if ($balanceAmount !== '' && $balanceAmount !== null) {
+            $formatted = wc_price($balanceAmount, ['currency' => $order->get_currency()]);
+            $fields[] = $this->formatField('zs_deposits_balance_amount', strip_tags($formatted));
+        }
+
+        // Deposit paid status
+        $isDepositPaid = DepositMetaKeys::get($order, DepositMetaKeys::IS_DEPOSIT_PAID);
+        if ($isDepositPaid !== '' && $isDepositPaid !== null) {
+            $value = ($isDepositPaid === 'yes' || $isDepositPaid === '1') ? 'yes' : 'no';
+            $fields[] = $this->formatField('zs_deposits_is_deposit_paid', $value);
+        }
+
+        // Deposit payment date
+        $depositPaymentDate = DepositMetaKeys::get($order, DepositMetaKeys::DEPOSIT_PAYMENT_DATE);
+        if ($depositPaymentDate !== '' && $depositPaymentDate !== null) {
+            $fields[] = $this->formatField('zs_deposits_deposit_payment_date', $depositPaymentDate);
+        }
+
+        // Balance paid status
+        $isBalancePaid = DepositMetaKeys::get($order, DepositMetaKeys::IS_BALANCE_PAID);
+        if ($isBalancePaid !== '' && $isBalancePaid !== null) {
+            $value = ($isBalancePaid === 'yes' || $isBalancePaid === '1') ? 'yes' : 'no';
+            $fields[] = $this->formatField('zs_deposits_is_balance_paid', $value);
+        }
+
+        // Balance payment date
+        $balancePaymentDate = DepositMetaKeys::get($order, DepositMetaKeys::BALANCE_PAYMENT_DATE);
+        if ($balancePaymentDate !== '' && $balancePaymentDate !== null) {
+            $fields[] = $this->formatField('zs_deposits_balance_payment_date', $balancePaymentDate);
+        }
+
+        // Payment flow
+        $paymentFlow = DepositMetaKeys::get($order, DepositMetaKeys::PAYMENT_FLOW);
+        if ($paymentFlow !== '' && $paymentFlow !== null) {
+            $fields[] = $this->formatField('zs_deposits_payment_flow', $paymentFlow);
+        }
+
+        // Manual override
+        $isManualOverride = DepositMetaKeys::get($order, DepositMetaKeys::IS_MANUAL_OVERRIDE);
+        if ($isManualOverride !== '' && $isManualOverride !== null) {
+            $value = ($isManualOverride === 'yes' || $isManualOverride === '1') ? 'yes' : 'no';
+            $fields[] = $this->formatField('zs_deposits_is_manual_override', $value);
+        }
 
         return $fields;
     }
