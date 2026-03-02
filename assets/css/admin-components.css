@@ -1164,3 +1164,19 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     font-size: 16px;
     line-height: 1.5;
 }
+
+/* =================================================================
+   REQUIRED FIELD INDICATOR (Backend only)
+   ================================================================= */
+
+/* Asterisco rojo automático para campos obligatorios en el backend */
+.zs-mb-field input[required] + label::after,
+.zs-mb-field select[required] + label::after,
+.zs-mb-field textarea[required] + label::after,
+.zs-mb-field label:has(+ input[required])::after,
+.zs-mb-field label:has(+ select[required])::after,
+.zs-mb-field label:has(+ textarea[required])::after {
+    content: " *";
+    color: #dc3232;
+    font-weight: bold;
+}
