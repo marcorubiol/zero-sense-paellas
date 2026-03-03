@@ -697,10 +697,6 @@ class AdminDashboard
             }
         }
         
-        // Force feature manager reload to get fresh instances
-        $this->featureManager->clearCache();
-        $this->featureManager->discoverFeatures();
-        
         wp_send_json_success([
             'feature' => $featureName,
             'enabled' => $enabled,
