@@ -2280,7 +2280,7 @@ class Flowmattic implements FeatureInterface
         
         if (!empty($autoTriggers)) {
             echo '<div class="zs-email-section-sep">';
-            echo '<h4 class="zs-mb-subheader">' . esc_html__('Automatic Triggers', 'zero-sense') . '</h4>';
+            echo '<h4 class="zs-mb-subheader">' . esc_html__('Holded Logs', 'zero-sense') . '</h4>';
             foreach ($autoTriggers as $auto) {
                 $statusClass = 'zs-email-' . $auto['status'];
                 $badge = $this->getStatusBadge($auto['status']);

@@ -254,9 +254,6 @@ button.zs-mb-link {
     background: #f6f7f7;
     color: var(--zs-mb-label-color);
     border-color: var(--zs-mb-border-color);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .zs-btn.is-action:hover,
@@ -266,11 +263,18 @@ button.zs-mb-link {
     color: var(--zs-mb-label-color);
 }
 
-/* Badges inside action buttons should be inline and vertically centered */
-.zs-btn.is-action .zs-badge {
+/* Specific alignment for email/holded action buttons with badges */
+.zs-manual-email-btn,
+.zs-manual-holded-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zs-manual-email-btn .zs-badge,
+.zs-manual-holded-btn .zs-badge {
     position: static;
     margin: 0;
-    vertical-align: middle;
 }
 
 /* Destructive variant — red text by default, stronger on hover */
