@@ -82,20 +82,20 @@ class CalendarLogMetabox
                 // Update button - only if event_id exists and NOT reserved
                 echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
                 echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
-                echo '✅ <span class="zs-calendar-btn-label">' . esc_html__('Reservar Evento', 'zero-sense') . '</span>';
+                echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
                 echo '</button>';
             }
             
             // Delete button - only if event_id exists
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
             echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
-            echo '🗑️ <span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
             // Create button - only if NO event_id
             echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
             echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
-            echo '➕ <span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
         echo '</div>';
@@ -546,17 +546,17 @@ class CalendarLogMetabox
             if (!$isReserved) {
                 echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
                 echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
-                echo '✅ <span class="zs-calendar-btn-label">' . esc_html__('Reservar Evento', 'zero-sense') . '</span>';
+                echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
                 echo '</button>';
             }
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
             echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
-            echo '🗑️ <span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
             echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
             echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
-            echo '➕ <span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
         echo '</div>';
