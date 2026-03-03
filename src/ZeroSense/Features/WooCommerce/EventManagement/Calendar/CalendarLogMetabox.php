@@ -73,7 +73,7 @@ class CalendarLogMetabox
             echo '</button>';
         } else {
             // Create button - only if NO event_id
-            echo '<button type="button" class="zs-btn is-primary zs-calendar-create" ';
+            echo '<button type="button" class="zs-btn is-action zs-calendar-create" ';
             echo 'data-order-id="' . esc_attr($orderId) . '">';
             echo '➕ ' . esc_html__('Create Event', 'zero-sense');
             echo '</button>';
