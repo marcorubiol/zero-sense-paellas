@@ -534,6 +534,11 @@ class Flowmattic implements FeatureInterface
             }
         }
         
+        // Sort by timestamp descending (newest first) so getEmailSendStatus returns most recent status
+        usort($logs, function($a, $b) {
+            return $b['timestamp'] <=> $a['timestamp'];
+        });
+        
         return $logs;
     }
 

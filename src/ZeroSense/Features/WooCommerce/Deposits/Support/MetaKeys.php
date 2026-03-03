@@ -20,10 +20,19 @@ class MetaKeys
     
     // Deposit payment status
     public const IS_DEPOSIT_PAID = 'zs_deposits_is_deposit_paid';
+    
+    // Payment dates (new naming)
+    public const FIRST_PAYMENT_DATE = 'zs_first_payment_date';
+    public const SECOND_PAYMENT_DATE = 'zs_second_payment_date';
+    
+    // Legacy payment date keys (deprecated but maintained for compatibility)
+    /** @deprecated Use FIRST_PAYMENT_DATE instead */
     public const DEPOSIT_PAYMENT_DATE = 'zs_deposits_deposit_payment_date';
     
     // Balance payment status
     public const IS_BALANCE_PAID = 'zs_deposits_is_balance_paid';
+    
+    /** @deprecated Use SECOND_PAYMENT_DATE instead */
     public const BALANCE_PAYMENT_DATE = 'zs_deposits_balance_payment_date';
     
     // Payment flow metadata
@@ -52,6 +61,11 @@ class MetaKeys
         }
 
         $value = $order->get_meta($key, $single);
+
+        // Auto-migrate from legacy keys if current value is empty
+        if ($single && ($value === '' || $value === null)) {
+            $value = self::tryLegacyMigration($order, $key);
+        }
 
         if ($single) {
             self::remember($orderId, $key, $value);
@@ -106,5 +120,33 @@ class MetaKeys
                 unset(self::$cache[$orderId]);
             }
         }
+    }
+
+    /**
+     * Try to migrate value from legacy key if it exists.
+     * Returns the migrated value or null if no legacy value found.
+     */
+    private static function tryLegacyMigration(WC_Order $order, string $key)
+    {
+        $registry = \ZeroSense\Core\MetaFieldRegistry::getInstance();
+        $legacyKeys = $registry->getLegacyAliases($key);
+
+        if (empty($legacyKeys)) {
+            return null;
+        }
+
+        foreach ($legacyKeys as $legacyKey) {
+            $legacyValue = $order->get_meta($legacyKey, true);
+            
+            if ($legacyValue !== '' && $legacyValue !== null) {
+                // Migrate the value to the new key
+                self::update($order, $key, $legacyValue);
+                $order->save_meta_data();
+                
+                return $legacyValue;
+            }
+        }
+
+        return null;
     }
 }

@@ -133,11 +133,11 @@ class Bootstrap
             'feature' => 'Deposits',
         ]);
 
-        $registry->register(MetaKeys::DEPOSIT_PAYMENT_DATE, [
-            'label' => 'Deposit Payment Date',
+        $registry->register(MetaKeys::FIRST_PAYMENT_DATE, [
+            'label' => 'First Payment Date',
             'type' => 'date',
             'translatable' => false,
-            'legacy_keys' => [],
+            'legacy_keys' => ['zs_deposits_deposit_payment_date'],
             'feature' => 'Deposits',
         ]);
 
@@ -149,11 +149,11 @@ class Bootstrap
             'feature' => 'Deposits',
         ]);
 
-        $registry->register(MetaKeys::BALANCE_PAYMENT_DATE, [
-            'label' => 'Balance Payment Date',
+        $registry->register(MetaKeys::SECOND_PAYMENT_DATE, [
+            'label' => 'Second Payment Date',
             'type' => 'date',
             'translatable' => false,
-            'legacy_keys' => [],
+            'legacy_keys' => ['zs_deposits_balance_payment_date'],
             'feature' => 'Deposits',
         ]);
 

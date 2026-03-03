@@ -199,10 +199,10 @@ class DataExposureMetabox
             $fields[] = $this->formatField('zs_deposits_is_deposit_paid', $value);
         }
 
-        // Deposit payment date
-        $depositPaymentDate = DepositMetaKeys::get($order, DepositMetaKeys::DEPOSIT_PAYMENT_DATE);
-        if ($depositPaymentDate !== '' && $depositPaymentDate !== null) {
-            $fields[] = $this->formatField('zs_deposits_deposit_payment_date', $depositPaymentDate);
+        // First payment date
+        $firstPaymentDate = DepositMetaKeys::get($order, DepositMetaKeys::FIRST_PAYMENT_DATE);
+        if ($firstPaymentDate !== '' && $firstPaymentDate !== null) {
+            $fields[] = $this->formatField('zs_first_payment_date', $firstPaymentDate);
         }
 
         // Balance paid status
@@ -212,10 +212,10 @@ class DataExposureMetabox
             $fields[] = $this->formatField('zs_deposits_is_balance_paid', $value);
         }
 
-        // Balance payment date
-        $balancePaymentDate = DepositMetaKeys::get($order, DepositMetaKeys::BALANCE_PAYMENT_DATE);
-        if ($balancePaymentDate !== '' && $balancePaymentDate !== null) {
-            $fields[] = $this->formatField('zs_deposits_balance_payment_date', $balancePaymentDate);
+        // Second payment date
+        $secondPaymentDate = DepositMetaKeys::get($order, DepositMetaKeys::SECOND_PAYMENT_DATE);
+        if ($secondPaymentDate !== '' && $secondPaymentDate !== null) {
+            $fields[] = $this->formatField('zs_second_payment_date', $secondPaymentDate);
         }
 
         // Payment flow
