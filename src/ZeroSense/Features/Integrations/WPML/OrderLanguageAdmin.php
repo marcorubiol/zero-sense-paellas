@@ -131,6 +131,8 @@ class OrderLanguageAdmin
         <script type="text/javascript">
             jQuery(function($) {
                 const $container = $('.zs-wpml-language');
+                const orderId = <?php echo (int) $order->get_id(); ?>;
+                
                 $container.on('click', '.wpml-language-edit', function(e) {
                     e.preventDefault();
                     $container.find('.wpml-language-display').hide();
@@ -144,24 +146,59 @@ class OrderLanguageAdmin
 
                 $container.on('click', '.wpml-language-save', function() {
                     var selectedCode = $('#wpml_language').val();
-                    var $hidden = $('#zs_wpml_language_field');
+                    var $saveBtn = $(this);
+                    var $cancelBtn = $('.wpml-language-cancel');
+                    
+                    $saveBtn.prop('disabled', true);
+                    $cancelBtn.prop('disabled', true);
 
-                    if (!$hidden.length) {
-                        $hidden = $('<input>', { type: 'hidden', id: 'zs_wpml_language_field', name: 'wpml_language' });
-                        $('form#post').append($hidden);
-                    }
-
-                    $hidden.val(selectedCode);
-
-                    var notice = $(
-                        '<div class="notice notice-info"><p>' +
+                    var $notice = $(
+                        '<div class="notice notice-info zs-wpml-notice"><p>' +
                         '<span class="spinner is-active" style="float: none; margin: 0 5px 0 0;"></span>' +
                         '<?php echo esc_js(function_exists('icl_t') ? icl_t('zero-sense', 'admin_updating_language', 'Updating order language and saving changes...') : __('Updating order language and saving changes...', 'zero-sense')); ?>' +
                         '</p></div>'
                     );
-                    $container.prepend(notice);
+                    $container.prepend($notice);
 
-                    $('form#post').submit();
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'zs_update_order_language',
+                            security: $('#wpml_language_nonce').val(),
+                            order_id: orderId,
+                            language: selectedCode
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $notice.removeClass('notice-info').addClass('notice-success');
+                                $notice.find('p').html(
+                                    '<span class="dashicons dashicons-yes" style="color: #46b450;"></span> ' +
+                                    response.data
+                                );
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 800);
+                            } else {
+                                $notice.removeClass('notice-info').addClass('notice-error');
+                                $notice.find('p').html(
+                                    '<span class="dashicons dashicons-warning" style="color: #dc3232;"></span> ' +
+                                    (response.data || '<?php echo esc_js(__('Error updating language', 'zero-sense')); ?>')
+                                );
+                                $saveBtn.prop('disabled', false);
+                                $cancelBtn.prop('disabled', false);
+                            }
+                        },
+                        error: function() {
+                            $notice.removeClass('notice-info').addClass('notice-error');
+                            $notice.find('p').html(
+                                '<span class="dashicons dashicons-warning" style="color: #dc3232;"></span> ' +
+                                '<?php echo esc_js(__('AJAX error. Please try again.', 'zero-sense')); ?>'
+                            );
+                            $saveBtn.prop('disabled', false);
+                            $cancelBtn.prop('disabled', false);
+                        }
+                    });
                 });
             });
         </script>
@@ -338,41 +375,12 @@ class OrderLanguageAdmin
             wp_send_json_error(__('Order not found', 'zero-sense'));
         }
 
-        global $wpdb;
         $languages = $this->getAvailableLanguages();
         $languageName = $languages[$language] ?? $language;
         $previousLanguage = $order->get_meta('wpml_language', true);
         $previousLanguageName = $previousLanguage ? ($languages[$previousLanguage] ?? $previousLanguage) : __('Not set', 'zero-sense');
 
         $order->update_meta_data('wpml_language', $language);
-
-        $metaId = $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT meta_id FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s",
-                $orderId,
-                'wpml_language'
-            )
-        );
-
-        if ($metaId) {
-            $wpdb->update(
-                $wpdb->postmeta,
-                ['meta_value' => $language],
-                ['meta_id' => $metaId],
-                ['%s'],
-                ['%d']
-            );
-        } else {
-            $wpdb->insert(
-                $wpdb->postmeta,
-                [
-                    'post_id' => $orderId,
-                    'meta_key' => 'wpml_language',
-                    'meta_value' => $language,
-                ],
-                ['%d', '%s', '%s']
-            );
-        }
 
         if ($previousLanguage !== $language) {
             $note = sprintf(
@@ -384,11 +392,6 @@ class OrderLanguageAdmin
         }
 
         $order->save();
-
-        $savedLanguage = get_post_meta($orderId, 'wpml_language', true);
-        if ($savedLanguage !== $language) {
-            update_post_meta($orderId, 'wpml_language', $language);
-        }
 
         $this->recalculateLanguageDependentData($order, $language);
 
