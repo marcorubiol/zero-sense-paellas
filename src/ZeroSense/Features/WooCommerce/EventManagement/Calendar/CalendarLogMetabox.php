@@ -192,12 +192,11 @@ class CalendarLogMetabox
                         : <?php echo wp_json_encode(__('Create Google Calendar event for this order?', 'zero-sense')); ?>;
                     
                     if (!confirm(confirmMsg)) return;
+                    
                     labelEl.textContent = action === 'delete' 
                         ? <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>
                         : action === 'update'
                         ? <?php echo wp_json_encode(__('Updating...', 'zero-sense')); ?>
-                        : <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
-                        ? <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>
                         : <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
                     
                     const btn = this;
