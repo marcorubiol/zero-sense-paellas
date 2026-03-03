@@ -315,8 +315,8 @@ class AdminOrdersCsvExport implements FeatureInterface
 
                 <div class="zs-cols">
                     <div class="zs-actions">
-                        <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=true);return false;"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
-                        <a onclick="document.querySelectorAll('.zs-col-check').forEach(c=>c.checked=false);return false;"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
+                        <a id="select-all-columns"><?php esc_html_e('Select all', 'zero-sense'); ?></a>
+                        <a id="deselect-all-columns"><?php esc_html_e('Deselect all', 'zero-sense'); ?></a>
                     </div>
                     <?php
                     // Group columns by category
@@ -363,6 +363,82 @@ class AdminOrdersCsvExport implements FeatureInterface
         </div>
         <script>
         (function() {
+            // Column selection memory with localStorage
+            var STORAGE_KEY = 'zs_csv_selected_columns';
+            
+            // Load saved column selection
+            function loadColumnSelection() {
+                try {
+                    var saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        var selectedColumns = JSON.parse(saved);
+                        var allCheckboxes = document.querySelectorAll('.zs-col-check');
+                        
+                        // First, uncheck all
+                        allCheckboxes.forEach(function(cb) {
+                            cb.checked = false;
+                        });
+                        
+                        // Then check only saved ones
+                        selectedColumns.forEach(function(colKey) {
+                            var checkbox = document.getElementById('col_' + colKey);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    // If error, keep default (all checked)
+                }
+            }
+            
+            // Save column selection
+            function saveColumnSelection() {
+                try {
+                    var selectedColumns = [];
+                    document.querySelectorAll('.zs-col-check:checked').forEach(function(cb) {
+                        selectedColumns.push(cb.value);
+                    });
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedColumns));
+                } catch (e) {
+                    // Silently fail if localStorage not available
+                }
+            }
+            
+            // Attach change listeners to all column checkboxes
+            document.querySelectorAll('.zs-col-check').forEach(function(checkbox) {
+                checkbox.addEventListener('change', saveColumnSelection);
+            });
+            
+            // Load saved selection on page load
+            loadColumnSelection();
+            
+            // Select/Deselect all columns
+            var selectAllColumns = document.getElementById('select-all-columns');
+            var deselectAllColumns = document.getElementById('deselect-all-columns');
+            
+            if (selectAllColumns) {
+                selectAllColumns.onclick = function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.zs-col-check').forEach(function(c) {
+                        c.checked = true;
+                    });
+                    saveColumnSelection();
+                    return false;
+                };
+            }
+            
+            if (deselectAllColumns) {
+                deselectAllColumns.onclick = function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.zs-col-check').forEach(function(c) {
+                        c.checked = false;
+                    });
+                    saveColumnSelection();
+                    return false;
+                };
+            }
+            
             // Select/Deselect all statuses
             var selectAllStatuses = document.querySelector('.select-all-statuses');
             var deselectAllStatuses = document.querySelector('.deselect-all-statuses');
