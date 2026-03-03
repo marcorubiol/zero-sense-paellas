@@ -656,6 +656,11 @@ button.zs-mb-link {
     background: color-mix(in srgb, var(--zs-color-reserved) 25%, white 75%);
 }
 
+/* Calendar metabox specific badge positioning */
+#zs_calendar_sync .zs-badge.zs-badge-reserved {
+    top: 0;
+}
+
 /* =================================================================
    COLUMN STYLES (Orders list badges)
    ================================================================= */
