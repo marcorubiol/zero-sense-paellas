@@ -60,14 +60,16 @@ function zero_sense_autoloader_error()
  * @param string|int $order_id Order ID
  * @param string $event_id Google Calendar Event ID
  * @param string $event_title Event title (optional)
+ * @param string $calendar_id Google Calendar ID (optional)
  * @return array Response with success status and message
  */
-function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = ''): array
+function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '', $calendar_id = ''): array
 {
     try {
         $orderId = absint($order_id);
         $eventId = sanitize_text_field($event_id);
         $eventTitle = sanitize_text_field($event_title);
+        $calendarId = sanitize_text_field($calendar_id);
 
         if ($orderId === 0) {
             return [
@@ -91,8 +93,11 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '')
             ];
         }
 
-        // Save event ID
+        // Save event ID and calendar ID
         $order->update_meta_data('zs_google_calendar_event_id', $eventId);
+        if ($calendarId !== '') {
+            $order->update_meta_data('zs_google_calendar_id', $calendarId);
+        }
         $order->save_meta_data();
 
         // Add log entry if CalendarLogs class is available
@@ -104,6 +109,10 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '')
             
             if ($eventTitle !== '') {
                 $logData['event_title'] = $eventTitle;
+            }
+            
+            if ($calendarId !== '') {
+                $logData['calendar_id'] = $calendarId;
             }
 
             \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
@@ -118,6 +127,7 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '')
             'message' => 'Event ID saved successfully',
             'order_id' => $orderId,
             'event_id' => $eventId,
+            'calendar_id' => $calendarId,
         ];
 
     } catch (\Throwable $e) {

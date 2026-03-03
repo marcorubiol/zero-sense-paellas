@@ -122,7 +122,10 @@ class DataExposer
             'staff_all_formatted' => self::getAllStaffFormatted($order),
             'vehicles'            => self::getVehiclesFormatted($order),
             'google_calendar_event_id' => $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
-            'google_calendar_event_url' => self::getCalendarEventUrl($order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true)),
+            'google_calendar_event_url' => self::getCalendarEventUrl(
+                $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
+                $order->get_meta('zs_google_calendar_id', true)
+            ),
         ];
     }
 
@@ -225,13 +228,21 @@ class DataExposer
     /**
      * Get Google Calendar event URL from event ID
      */
-    private static function getCalendarEventUrl($eventId): string
+    private static function getCalendarEventUrl($eventId, $calendarId = ''): string
     {
         if (!is_string($eventId) || $eventId === '') {
             return '';
         }
-        // Use the direct event URL format instead of eid (which requires base64 encoding)
-        // This format works with the simple event ID from Google Calendar API
+        
+        // Sanitize calendar ID if provided
+        $calendarId = is_string($calendarId) ? $calendarId : '';
+        
+        // If calendar ID is provided, use the full URL format with calendar parameter
+        if ($calendarId !== '') {
+            return 'https://calendar.google.com/calendar/u/0/r/eventedit/' . urlencode($eventId) . '/' . urlencode($calendarId);
+        }
+        
+        // Fallback to simple event URL (works for primary calendar)
         return 'https://calendar.google.com/calendar/r/eventedit/' . urlencode($eventId);
     }
 }

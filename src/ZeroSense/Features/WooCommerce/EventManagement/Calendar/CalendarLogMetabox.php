@@ -45,6 +45,7 @@ class CalendarLogMetabox
         }
 
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        $calendarId = $order->get_meta('zs_google_calendar_id', true);
         $logs = CalendarLogs::getForOrder($order);
         $noLogs = empty($logs);
 
@@ -52,7 +53,7 @@ class CalendarLogMetabox
 
         // Header: Event ID and status
         if ($eventId && is_string($eventId) && $eventId !== '') {
-            $eventUrl = $this->getCalendarEventUrl($eventId);
+            $eventUrl = $this->getCalendarEventUrl($eventId, $calendarId);
             echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
             echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
             echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
@@ -237,11 +238,16 @@ class CalendarLogMetabox
         ];
     }
 
-    private function getCalendarEventUrl(string $eventId): string
+    private function getCalendarEventUrl(string $eventId, string $calendarId = ''): string
     {
         if ($eventId === '') return '';
-        // Use the direct event URL format instead of eid (which requires base64 encoding)
-        // This format works with the simple event ID from Google Calendar API
+        
+        // If calendar ID is provided, use the full URL format with calendar parameter
+        if ($calendarId !== '') {
+            return 'https://calendar.google.com/calendar/u/0/r/eventedit/' . urlencode($eventId) . '/' . urlencode($calendarId);
+        }
+        
+        // Fallback to simple event URL (works for primary calendar)
         return 'https://calendar.google.com/calendar/r/eventedit/' . urlencode($eventId);
     }
 }
