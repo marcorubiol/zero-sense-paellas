@@ -385,9 +385,6 @@ class Flowmattic implements FeatureInterface
             return;
         }
 
-        $sends = $this->getEmailSends();
-        $logId = uniqid('email_', true);
-        
         // Auto-annotate current user if available
         if (!isset($emailData['_by']) && function_exists('is_user_logged_in') && is_user_logged_in()) {
             $u = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
@@ -400,6 +397,22 @@ class Flowmattic implements FeatureInterface
             }
         }
 
+        // Save to NEW generic system (primary)
+        $this->logWorkflowExecution($workflowId, $orderId, $status, [
+            'category' => 'email',
+            'trigger_source' => $emailData['trigger_source'] ?? 'unknown',
+            'metadata' => [
+                'email_to' => $emailData['to'] ?? '',
+                'email_subject' => $emailData['subject'] ?? '',
+            ],
+            'error' => $emailData['error'] ?? null,
+            '_by' => $emailData['_by'] ?? null,
+        ]);
+
+        // Also save to OLD system for backwards compatibility (can be removed later)
+        $sends = $this->getEmailSends();
+        $logId = uniqid('email_', true);
+        
         $sends[$logId] = [
             'workflow_id' => $workflowId,
             'order_id' => $orderId,
@@ -409,13 +422,11 @@ class Flowmattic implements FeatureInterface
             'email_subject' => $emailData['subject'] ?? '',
             'error_message' => $emailData['error'] ?? null,
             'trigger_source' => $emailData['trigger_source'] ?? 'unknown',
-            // Store author info if present
             'by_id' => isset($emailData['_by']['id']) ? (int) $emailData['_by']['id'] : 0,
             'by_name' => isset($emailData['_by']['name']) ? (string) $emailData['_by']['name'] : '',
             'by_login' => isset($emailData['_by']['login']) ? (string) $emailData['_by']['login'] : '',
         ];
 
-        // Keep only last 500 entries to prevent database bloat
         if (count($sends) > 500) {
             $sends = array_slice($sends, -500, null, true);
         }
