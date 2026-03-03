@@ -173,6 +173,9 @@ class CalendarLogMetabox
     private function renderInlineScript(int $orderId): void
     {
         $nonce = wp_create_nonce('zs_calendar_action');
+        
+        // Debug marker
+        echo '<!-- ZS Calendar Script Start -->';
         ?>
         <script>
         console.log('[Calendar] Script loaded');
@@ -333,6 +336,7 @@ class CalendarLogMetabox
         })();
         </script>
         <?php
+        echo '<!-- ZS Calendar Script End -->';
     }
 
     private function renderLogItem(array $log): void
