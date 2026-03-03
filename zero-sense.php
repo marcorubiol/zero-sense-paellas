@@ -138,6 +138,68 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '',
     }
 }
 
+/**
+ * Global helper function for FlowMattic to delete Google Calendar Event ID
+ * 
+ * @param string|int $order_id Order ID
+ * @return array Response with success status and message
+ */
+function zs_delete_calendar_event_id($order_id): array
+{
+    try {
+        $orderId = absint($order_id);
+
+        if ($orderId === 0) {
+            return [
+                'success' => false,
+                'message' => 'Invalid order ID',
+            ];
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return [
+                'success' => false,
+                'message' => 'Order not found',
+            ];
+        }
+
+        // Get event ID before deleting (for log)
+        $eventId = $order->get_meta('zs_google_calendar_event_id', true);
+
+        // Delete event ID and calendar ID
+        $order->delete_meta_data('zs_google_calendar_event_id');
+        $order->delete_meta_data('zs_google_calendar_id');
+        $order->save_meta_data();
+
+        // Add log entry if CalendarLogs class is available
+        if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+            $logData = [
+                'event_id' => $eventId,
+                'trigger_source' => 'manual',
+            ];
+
+            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
+                $order,
+                'deleted',
+                $logData
+            );
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Event ID deleted successfully',
+            'order_id' => $orderId,
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+        ];
+    }
+}
+
 // Initialize plugin
 add_action('plugins_loaded', 'zero_sense_init');
 

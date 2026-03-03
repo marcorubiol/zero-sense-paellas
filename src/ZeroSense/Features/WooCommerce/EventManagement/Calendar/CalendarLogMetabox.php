@@ -45,7 +45,6 @@ class CalendarLogMetabox
         }
 
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
-        $calendarId = $order->get_meta('zs_google_calendar_id', true);
         $logs = CalendarLogs::getForOrder($order);
         $noLogs = empty($logs);
 
@@ -53,19 +52,33 @@ class CalendarLogMetabox
 
         // Header: Event ID and status
         if ($eventId && is_string($eventId) && $eventId !== '') {
-            $eventUrl = $this->getCalendarEventUrl($eventId, $calendarId);
             echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
             echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
             echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
-            if ($eventUrl !== '') {
-                echo ' <a href="' . esc_url($eventUrl) . '" target="_blank" style="text-decoration:none;">🔗</a>';
-            }
             echo '</div>';
         } else {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#999; font-style:italic;">';
             echo esc_html__('No Google Calendar event linked yet.', 'zero-sense');
             echo '</div>';
         }
+
+        // Action buttons
+        echo '<div class="zs-calendar-actions" style="margin:10px 0;">';
+        if ($eventId !== '') {
+            // Delete button - only if event_id exists
+            echo '<button type="button" class="zs-btn is-destructive zs-calendar-delete" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '" ';
+            echo 'onclick="if(!confirm(\'' . esc_js(__('¿Eliminar evento de Google Calendar? Esta acción no se puede deshacer.', 'zero-sense')) . '\')) return false;">';
+            echo '🗑️ ' . esc_html__('Delete Event', 'zero-sense');
+            echo '</button>';
+        } else {
+            // Create button - only if NO event_id
+            echo '<button type="button" class="zs-btn is-primary zs-calendar-create" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '">';
+            echo '➕ ' . esc_html__('Create Event', 'zero-sense');
+            echo '</button>';
+        }
+        echo '</div>';
 
         // Last sync info
         if (!$noLogs) {
@@ -229,6 +242,15 @@ class CalendarLogMetabox
             ];
         }
         
+        if ($type === 'deleted') {
+            return [
+                'class' => 'zs-badge-manual',
+                'item_class' => 'zs-manual',
+                'label' => __('MAN', 'zero-sense'),
+                'title' => __('Event deleted manually', 'zero-sense'),
+            ];
+        }
+        
         // Default
         return [
             'class' => 'zs-badge-auto',
@@ -238,16 +260,4 @@ class CalendarLogMetabox
         ];
     }
 
-    private function getCalendarEventUrl(string $eventId, string $calendarId = ''): string
-    {
-        if ($eventId === '') return '';
-        
-        // If calendar ID is provided, use the full URL format with calendar parameter
-        if ($calendarId !== '') {
-            return 'https://calendar.google.com/calendar/u/0/r/eventedit/' . urlencode($eventId) . '/' . urlencode($calendarId);
-        }
-        
-        // Fallback to simple event URL (works for primary calendar)
-        return 'https://calendar.google.com/calendar/r/eventedit/' . urlencode($eventId);
-    }
 }
