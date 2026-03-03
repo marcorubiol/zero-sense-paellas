@@ -77,33 +77,8 @@
                         .then(function(r) { return r.json(); })
                         .then(function(res) {
                             if (res.success && res.data && res.data.changed) {
-                                // Status changed, refresh header
-                                fetch(config.ajaxUrl, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                    body: new URLSearchParams({
-                                        action: 'zs_calendar_get_header',
-                                        order_id: orderId,
-                                        nonce: config.nonce
-                                    })
-                                })
-                                .then(function(r) { return r.json(); })
-                                .then(function(headerRes) {
-                                    if (headerRes.success && headerRes.data && headerRes.data.html) {
-                                        // Replace header + buttons
-                                        const container = document.querySelector('.zs-calendar-logs-metabox');
-                                        if (container) {
-                                            const temp = document.createElement('div');
-                                            temp.innerHTML = headerRes.data.html;
-                                            const oldHeader = container.querySelector('.zs-calendar-header-section');
-                                            if (oldHeader && temp.firstElementChild) {
-                                                oldHeader.replaceWith(temp.firstElementChild);
-                                            }
-                                        }
-                                    }
-                                    // Re-attach event listeners to new buttons
-                                    attachButtonListeners();
-                                });
+                                // Status changed, reload the page to show new logs
+                                location.reload();
                             } else if (attempts < maxAttempts) {
                                 attempts++;
                                 setTimeout(poll, 1000);
