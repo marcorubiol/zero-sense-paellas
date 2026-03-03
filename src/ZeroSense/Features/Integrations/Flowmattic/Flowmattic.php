@@ -2059,12 +2059,13 @@ class Flowmattic implements FeatureInterface
         $logs = [];
         
         foreach ($executions as $exec) {
+            // getWorkflowExecutionsForOrder already returns timestamp as Unix timestamp
             $logs[] = [
                 'workflow_id' => $exec['workflow_id'],
                 'status' => $exec['status'],
-                'description' => $this->getWorkflowDescription($exec['workflow_id'], 'email'),
-                'timestamp' => strtotime($exec['timestamp']),
-                'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($exec['timestamp'])),
+                'description' => $exec['description'], // Already computed by getWorkflowExecutionsForOrder
+                'timestamp' => $exec['timestamp'], // Already Unix timestamp
+                'formatted_time' => $exec['formatted_time'], // Already formatted
                 'email_to' => $exec['metadata']['email_to'] ?? '',
                 'email_subject' => $exec['metadata']['email_subject'] ?? '',
                 'error_message' => $exec['error_message'] ?? null,
@@ -2161,11 +2162,6 @@ class Flowmattic implements FeatureInterface
             echo '<p>' . esc_html__('No email logs found for this order.', 'zero-sense') . '</p>';
             return;
         }
-
-        // Sort by timestamp (newest first)
-        usort($emailLogs, function($a, $b) {
-            return $b['timestamp'] <=> $a['timestamp'];
-        });
         
         $totalLogs = count($emailLogs);
         $listId = 'zs-email-logs-' . $orderId;
