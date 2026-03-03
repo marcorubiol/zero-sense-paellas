@@ -175,9 +175,15 @@ class CalendarLogMetabox
         $nonce = wp_create_nonce('zs_calendar_action');
         ?>
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+        (function() {
+            function attachButtonListeners() {
+                document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
+                    // Remove existing listener if any
+                    btn.replaceWith(btn.cloneNode(true));
+                });
+                
+                document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
                     if (this.disabled) return;
 
                     const action = this.getAttribute('data-action');
@@ -252,9 +258,13 @@ class CalendarLogMetabox
                                                 const oldHeader = container.querySelector('.zs-calendar-header-section');
                                                 if (oldHeader && temp.firstElementChild) {
                                                     oldHeader.replaceWith(temp.firstElementChild);
+                                                    // Re-attach event listeners to new buttons
+                                                    attachButtonListeners();
                                                 }
                                             }
                                         }
+                                        // Reload page to show logs
+                                        location.reload();
                                     });
                                 } else if (attempts < maxAttempts) {
                                     attempts++;
@@ -284,8 +294,11 @@ class CalendarLogMetabox
                         alert('Error: ' + err.message);
                     });
                 });
-            });
-        });
+            }
+            
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', attachButtonListeners);
+        })();
         </script>
         <?php
     }
