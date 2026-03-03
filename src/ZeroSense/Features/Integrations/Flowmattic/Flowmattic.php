@@ -330,6 +330,14 @@ class Flowmattic implements FeatureInterface
 
             // Removed reference blocks (status ordered/manual/custom). All control is via the editable list above.
 
+            // Migration button
+            $html .= '<div style="margin-top:24px;padding:16px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;">';
+            $html .= '<h5 style="margin:0 0 8px;color:#856404;">' . esc_html__('⚠️ One-Time Migration', 'zero-sense') . '</h5>';
+            $html .= '<p style="margin:0 0 12px;color:#856404;font-size:13px;">' . esc_html__('Migrate email logs from old system to new generic logging system. This is safe to run multiple times (skips duplicates).', 'zero-sense') . '</p>';
+            $html .= '<button type="button" id="zs-migrate-email-logs" class="zs-btn-primary" style="background:#856404;border-color:#856404;">' . esc_html__('Migrate Email Logs', 'zero-sense') . '</button>';
+            $html .= '<span id="zs-migrate-result" style="margin-left:12px;font-weight:600;"></span>';
+            $html .= '</div>';
+
             $html .= '</div>';
         } catch (\Throwable $e) {
             $html = '<p>' . esc_html__('Unable to load Flowmattic workflows.', 'zero-sense') . '</p>';
@@ -456,6 +464,66 @@ class Flowmattic implements FeatureInterface
     private function saveWorkflowExecutions(array $executions): void
     {
         update_option(self::WORKFLOW_EXECUTIONS_OPTION, $executions, false);
+    }
+
+    /**
+     * Migrate email logs from old system to new generic system
+     * ONE-TIME MIGRATION - Run manually via WP-CLI or admin action
+     */
+    public function migrateEmailLogsToGenericSystem(): array
+    {
+        $emailSends = $this->getEmailSends();
+        $executions = $this->getWorkflowExecutions();
+        $migrated = 0;
+        $skipped = 0;
+        
+        foreach ($emailSends as $logId => $send) {
+            // Check if already migrated (avoid duplicates)
+            $exists = false;
+            foreach ($executions as $exec) {
+                if ($exec['workflow_id'] === $send['workflow_id'] &&
+                    $exec['order_id'] === $send['order_id'] &&
+                    isset($exec['timestamp']) && $exec['timestamp'] === $send['timestamp']) {
+                    $exists = true;
+                    break;
+                }
+            }
+            
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+            
+            // Migrate to new system with category 'email'
+            $newLogId = 'email_' . uniqid('', true);
+            $executions[$newLogId] = [
+                'workflow_id' => $send['workflow_id'],
+                'order_id' => $send['order_id'],
+                'status' => $send['status'],
+                'timestamp' => $send['timestamp'],
+                'category' => 'email',
+                'trigger_source' => $send['trigger_source'] ?? 'unknown',
+                'metadata' => [
+                    'email_to' => $send['email_to'] ?? '',
+                    'email_subject' => $send['email_subject'] ?? '',
+                ],
+                'error_message' => $send['error_message'] ?? null,
+                'by_id' => $send['by_id'] ?? 0,
+                'by_name' => $send['by_name'] ?? '',
+                'by_login' => $send['by_login'] ?? '',
+            ];
+            $migrated++;
+        }
+        
+        if ($migrated > 0) {
+            $this->saveWorkflowExecutions($executions);
+        }
+        
+        return [
+            'migrated' => $migrated,
+            'skipped' => $skipped,
+            'total' => count($emailSends)
+        ];
     }
 
     public function logWorkflowExecution(string $workflowId, int $orderId, string $status, array $data = []): void
@@ -1363,6 +1431,9 @@ class Flowmattic implements FeatureInterface
         add_action('add_meta_boxes', [$this, 'addHoldedActionsMetabox']);
         add_action('add_meta_boxes', [$this, 'addHoldedLogsMetabox']);
         add_action('wp_ajax_zs_flow_trigger_holded_sync', [$this, 'ajaxTriggerHoldedSync']);
+        
+        // Migration endpoint
+        add_action('wp_ajax_zs_flow_migrate_email_logs', [$this, 'ajaxMigrateEmailLogs']);
     }
 
     public function ajaxAddTrigger(): void
@@ -1973,30 +2044,26 @@ class Flowmattic implements FeatureInterface
     }
 
     /**
-     * Get email logs for a specific order
+     * Get email logs for a specific order (using new generic system)
      */
     private function getEmailLogsForOrder(int $orderId): array
     {
-        $sends = $this->getEmailSends();
+        $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
         $logs = [];
         
-        foreach ($sends as $send) {
-            if ((int) ($send['order_id'] ?? 0) === $orderId) {
-                $logs[] = [
-                    'workflow_id' => $send['workflow_id'],
-                    'status' => $send['status'],
-                    'description' => $this->getWorkflowDescription($send['workflow_id']),
-                    'timestamp' => strtotime($send['timestamp']),
-                    // send['timestamp'] is stored in site local time via current_time('mysql')
-                    // Format it directly with wp_date to respect WP timezone without double-offset
-                    'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($send['timestamp'])),
-                    'email_to' => $send['email_to'] ?? '',
-                    'email_subject' => $send['email_subject'] ?? '',
-                    'error_message' => $send['error_message'] ?? null,
-                    'by_name' => $send['by_name'] ?? '',
-                    'by_login' => $send['by_login'] ?? '',
-                ];
-            }
+        foreach ($executions as $exec) {
+            $logs[] = [
+                'workflow_id' => $exec['workflow_id'],
+                'status' => $exec['status'],
+                'description' => $this->getWorkflowDescription($exec['workflow_id'], 'email'),
+                'timestamp' => strtotime($exec['timestamp']),
+                'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($exec['timestamp'])),
+                'email_to' => $exec['metadata']['email_to'] ?? '',
+                'email_subject' => $exec['metadata']['email_subject'] ?? '',
+                'error_message' => $exec['error_message'] ?? null,
+                'by_name' => $exec['by_name'] ?? '',
+                'by_login' => $exec['by_login'] ?? '',
+            ];
         }
         
         return $logs;
@@ -2519,6 +2586,35 @@ class Flowmattic implements FeatureInterface
         }
         
         echo '</div>';
+    }
+
+    /**
+     * AJAX: Migrate email logs to generic system
+     */
+    public function ajaxMigrateEmailLogs(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('forbidden');
+        }
+        
+        $nonce = sanitize_text_field(wp_unslash($_POST['nonce'] ?? ''));
+        if (!wp_verify_nonce($nonce, 'zs_admin_nonce')) {
+            wp_send_json_error('bad_nonce');
+        }
+        
+        $result = $this->migrateEmailLogsToGenericSystem();
+        
+        wp_send_json_success([
+            'message' => sprintf(
+                __('Migration completed: %d logs migrated, %d skipped (already existed), %d total email logs.', 'zero-sense'),
+                $result['migrated'],
+                $result['skipped'],
+                $result['total']
+            ),
+            'migrated' => $result['migrated'],
+            'skipped' => $result['skipped'],
+            'total' => $result['total']
+        ]);
     }
 
     /**
