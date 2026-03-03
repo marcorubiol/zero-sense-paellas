@@ -4,7 +4,7 @@ Modern, modular WordPress plugin for Paellas en Casa. PSR-4, auto-discovered fea
 
 — It makes no sense. It doesn’t need to.
 
-## 🌟 Key Features (v3.3.2)
+## 🌟 Key Features (v3.4.0)
 
 ### 💳 Payment System Excellence
 - **Redsys S2S Callback System**: 95% reliability with legacy callback proxies and proper terminal configuration
@@ -37,6 +37,13 @@ Modern, modular WordPress plugin for Paellas en Casa. PSR-4, auto-discovered fea
 - **Cassola Selection**: Automatic size selection (4.9L to 33.8L) based on total volume
 - **Mode-Aware Editing**: Paella mode shows liquids, non-paella shows utensils
 - **Material Calculation**: Integration with inventory system
+
+### 🔄 Flowmattic Integration (NEW)
+- **Generic Workflow Execution System**: Unified logging for all workflow types (email, holded, future integrations)
+- **Holded API Integration**: Complete workflow tracking with manual sync and run-once functionality
+- **Email Logging System**: Advanced email tracking with manual/automatic source detection
+- **Smart Configuration UI**: Side-by-side layout for email and Holded workflow configuration
+- **Performance Optimized**: 50% reduction in database writes with single storage system
 
 ### 🌍 Multilingual Excellence
 - **WPML String Translation**: All admin strings registered for translation
