@@ -132,8 +132,8 @@ class CalendarLogMetabox
                 echo '</button>';
             } else {
                 // Show RESERVED badge
-                echo '<span class="zs-badge zs-badge-reserved" style="background:#10b981;color:#fff;padding:6px 12px;border-radius:4px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">';
-                echo esc_html__('Reserved', 'zero-sense');
+                echo '<span class="zs-badge zs-badge-reserved">';
+                echo esc_html__('RESERVED', 'zero-sense');
                 echo '</span>';
             }
             
