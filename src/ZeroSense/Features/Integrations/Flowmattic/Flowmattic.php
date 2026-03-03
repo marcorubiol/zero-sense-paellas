@@ -1339,8 +1339,8 @@ class Flowmattic implements FeatureInterface
         add_action('wp_ajax_zs_flow_check_email_status', [$this, 'ajaxCheckEmailStatus']);
         add_action('wp_ajax_zs_flow_get_latest_email_log', [$this, 'ajaxGetLatestEmailLog']);
         
-        // Add Holded sync metaboxes to order admin
-        add_action('add_meta_boxes', [$this, 'addHoldedSyncMetabox']);
+        // Add Holded metaboxes to order admin
+        add_action('add_meta_boxes', [$this, 'addHoldedActionsMetabox']);
         add_action('add_meta_boxes', [$this, 'addHoldedLogsMetabox']);
         add_action('wp_ajax_zs_flow_trigger_holded_sync', [$this, 'ajaxTriggerHoldedSync']);
     }
@@ -2177,18 +2177,18 @@ class Flowmattic implements FeatureInterface
     // ========================================================================
 
     /**
-     * Add Holded Sync metabox to order admin
+     * Add Holded Actions metabox to order admin
      */
-    public function addHoldedSyncMetabox(): void
+    public function addHoldedActionsMetabox(): void
     {
         $screen = get_current_screen();
         if ($screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
             $screen_id = $screen->id === 'woocommerce_page_wc-orders' ? wc_get_page_screen_id('shop-order') : 'shop_order';
             
             add_meta_box(
-                'zs_holded_sync',
-                __('Holded Integration', 'zero-sense'),
-                [$this, 'renderHoldedSyncMetabox'],
+                'zs_holded_actions',
+                __('Holded Actions', 'zero-sense'),
+                [$this, 'renderHoldedActionsMetabox'],
                 $screen_id,
                 'side',
                 'default'
@@ -2197,9 +2197,9 @@ class Flowmattic implements FeatureInterface
     }
 
     /**
-     * Render Holded Sync metabox
+     * Render Holded Actions metabox (manual buttons only)
      */
-    public function renderHoldedSyncMetabox($postOrOrder): void
+    public function renderHoldedActionsMetabox($postOrOrder): void
     {
         $orderId = 0;
         if ($postOrOrder instanceof \WP_Post) {
@@ -2234,7 +2234,7 @@ class Flowmattic implements FeatureInterface
         }
         
         if (empty($holdedTriggers)) {
-            echo '<p style="color:#666;font-size:12px;">' . esc_html__('No Holded sync configured', 'zero-sense') . '</p>';
+            echo '<p style="color:#666;font-size:12px;">' . esc_html__('No Holded actions configured', 'zero-sense') . '</p>';
             return;
         }
         
@@ -2249,7 +2249,9 @@ class Flowmattic implements FeatureInterface
             }
         }
         
-        if (!empty($manualButtons)) {
+        if (empty($manualButtons)) {
+            echo '<p style="color:#666;font-size:12px;">' . esc_html__('No manual actions available for this order status', 'zero-sense') . '</p>';
+        } else {
             foreach ($manualButtons as $trigger) {
                 $workflowId = $trigger['workflow_id'];
                 $description = $trigger['workflow_config']['description'] ?? $trigger['title'];
@@ -2261,40 +2263,6 @@ class Flowmattic implements FeatureInterface
                 echo $badge;
                 echo '</button>';
             }
-        }
-        
-        // Automatic syncs section
-        $autoTriggers = [];
-        foreach ($holdedTriggers as $trigger) {
-            $status = $this->getWorkflowExecutionStatus($trigger['workflow_id'], $orderId);
-            if ($status) {
-                $autoTriggers[] = [
-                    'workflow_id' => $trigger['workflow_id'],
-                    'description' => $trigger['workflow_config']['description'] ?? $trigger['title'],
-                    'status' => $status,
-                    'from_status' => $trigger['from_status'] ?? '',
-                    'to_status' => $trigger['to_status'] ?? ''
-                ];
-            }
-        }
-        
-        if (!empty($autoTriggers)) {
-            echo '<div class="zs-email-section-sep">';
-            echo '<h4 class="zs-mb-subheader">' . esc_html__('Holded Logs', 'zero-sense') . '</h4>';
-            foreach ($autoTriggers as $auto) {
-                $statusClass = 'zs-' . $auto['status'];
-                $badge = $this->getStatusBadge($auto['status']);
-                $transition = $auto['from_status'] && $auto['to_status'] 
-                    ? ' (' . $auto['from_status'] . ' → ' . $auto['to_status'] . ')'
-                    : '';
-                
-                echo '<div class="zs-log-item ' . esc_attr($statusClass) . '">';
-                echo $badge;
-                echo '<div class="zs-log-title"><strong>' . esc_html($auto['description']) . '</strong></div>';
-                echo '<div class="zs-log-details">' . esc_html($transition) . '</div>';
-                echo '</div>';
-            }
-            echo '</div>';
         }
         
         echo '</div>';
