@@ -662,7 +662,7 @@ button.zs-mb-link {
 .column-zs_email_logs .zs-title > .zs-badge,
 .column-zs_email_logs .zs-list li > .zs-badge {
     position: absolute;
-    top: 0;
+    top: -1px;
     right: 0;
     z-index: 2;
     box-shadow: -8px 0 8px rgba(255,255,255,0.96);
