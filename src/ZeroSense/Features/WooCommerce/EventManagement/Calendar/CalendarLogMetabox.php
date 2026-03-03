@@ -77,7 +77,7 @@ class CalendarLogMetabox
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
         echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
-        if ($eventId !== ''') {
+        if ($eventId !== '') {
             if (!$isReserved) {
                 // Update button - only if event_id exists and NOT reserved
                 echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
@@ -496,9 +496,9 @@ class CalendarLogMetabox
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         
         $changed = false;
-        if ($checkAction === 'create' && $eventId !== ''') {
+        if ($checkAction === 'create' && $eventId !== '') {
             $changed = true; // Event ID now exists
-        } elseif ($checkAction === 'delete' && $eventId === ''') {
+        } elseif ($checkAction === 'delete' && $eventId === '') {
             $changed = true; // Event ID was deleted
         } elseif ($checkAction === 'update') {
             // Check if zs_event_reserved changed to 'yes'
@@ -544,7 +544,7 @@ class CalendarLogMetabox
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
         echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
-        if ($eventId !== ''') {
+        if ($eventId !== '') {
             if (!$isReserved) {
                 echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
                 echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
