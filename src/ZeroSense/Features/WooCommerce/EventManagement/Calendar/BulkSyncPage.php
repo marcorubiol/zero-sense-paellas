@@ -120,13 +120,15 @@ class BulkSyncPage
                 continue;
             }
             
-            $result = do_action('zs_calendar_create_event_trigger', $orderId, 'automatic');
+            // Trigger FlowMattic workflow
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-create', $orderId);
             
             echo '<li>' . sprintf(__('Order #%d: Triggered calendar creation', 'zero-sense'), $orderId) . '</li>';
             $synced++;
             flush();
             
-            usleep(500000);
+            // Wait 1 second between each order to avoid overwhelming the API
+            sleep(1);
         }
         
         echo '</ul>';
