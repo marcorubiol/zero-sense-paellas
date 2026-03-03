@@ -166,8 +166,12 @@ class CalendarLogMetabox
 
         echo '</div>';
         
+        echo '<!-- BEFORE renderInlineScript -->';
+        
         // Add inline JavaScript for AJAX handling
         $this->renderInlineScript($orderId);
+        
+        echo '<!-- AFTER renderInlineScript -->';
     }
     
     private function renderInlineScript(int $orderId): void
@@ -207,8 +211,7 @@ class CalendarLogMetabox
                         body: new URLSearchParams({
                             action: 'zs_calendar_' + action + '_event',
                             order_id: orderId,
-                            nonce: <?php echo wp_json_encode($nonce); ?>
-                        })
+                            nonce: <?php echo wp_json_encode($nonce); ?>})
                     })
                     .then(r => r.json())
                     .then(data => {
@@ -224,8 +227,7 @@ class CalendarLogMetabox
                                     action: 'zs_calendar_check_status',
                                     order_id: orderId,
                                     check_action: action,
-                                    nonce: <?php echo wp_json_encode($nonce); ?>
-                                })
+                                    nonce: <?php echo wp_json_encode($nonce); ?>})
                             })
                             .then(r => r.json())
                             .then(res => {
@@ -237,8 +239,7 @@ class CalendarLogMetabox
                                         body: new URLSearchParams({
                                             action: 'zs_calendar_get_header',
                                             order_id: orderId,
-                                            nonce: <?php echo wp_json_encode($nonce); ?>
-                                        })
+                                            nonce: <?php echo wp_json_encode($nonce); ?>})
                                     })
                                     .then(r => r.json())
                                     .then(headerRes => {
