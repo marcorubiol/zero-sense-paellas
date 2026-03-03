@@ -179,6 +179,12 @@ class CalendarLogMetabox
         (function() {
             console.log('[Calendar] IIFE executing');
             
+            // Ensure ajaxurl is defined
+            if (typeof ajaxurl === 'undefined') {
+                var ajaxurl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
+                console.log('[Calendar] ajaxurl defined:', ajaxurl);
+            }
+            
             function attachButtonListeners() {
                 const buttons = document.querySelectorAll('.zs-calendar-action-btn');
                 console.log('[Calendar] Attaching listeners to', buttons.length, 'buttons');
