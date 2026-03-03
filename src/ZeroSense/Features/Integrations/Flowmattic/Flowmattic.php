@@ -7,12 +7,19 @@ use ZeroSense\Core\Logger;
 class Flowmattic implements FeatureInterface
 {
     private const EMAIL_SENDS_OPTION = 'zs_flowmattic_email_sends';
+    private const WORKFLOW_EXECUTIONS_OPTION = 'zs_flowmattic_workflow_executions';
     
     // Email send status constants (public so runtime can reference them)
     public const EMAIL_STATUS_AUTO = 'auto';     // Automatically sent via status transition
     public const EMAIL_STATUS_MANUAL = 'manual'; // Manually sent via button
     public const EMAIL_STATUS_ERROR = 'error';   // Workflow triggered but email failed
     public const EMAIL_STATUS_SKIPPED = 'skipped'; // Not sent because send_once rule prevented it
+    
+    // Workflow execution status constants (generic, reusable)
+    public const WORKFLOW_STATUS_AUTO = 'auto';
+    public const WORKFLOW_STATUS_MANUAL = 'manual';
+    public const WORKFLOW_STATUS_ERROR = 'error';
+    public const WORKFLOW_STATUS_SKIPPED = 'skipped';
 
     public function getName(): string
     {
@@ -136,8 +143,11 @@ class Flowmattic implements FeatureInterface
                 . '<div id="zs-flow-class-container" style="display:none;grid-column:span 2;"><label class="zs-config-label">' . esc_html__('Class (no dot)', 'zero-sense') . '</label><input type="text" class="zs-config-input" id="zs-flow-class" placeholder="class_name" /></div>'
                 . '</div>'
                 
+                // Container for Email and Holded configs (side by side)
+                . '<div style="display:flex;gap:12px;margin-top:12px;">'
+                
                 // Email configuration section
-                . '<div class="zs-flow-email-config" style="margin-top:12px;padding:12px;background:#f9f9f9;border-radius:4px;">'
+                . '<div class="zs-flow-email-config" style="flex:1;padding:12px;background:#f9f9f9;border-radius:4px;">'
                 . '<h6 style="margin:0 0 8px;color:#666;">' . esc_html__('Email Configuration (Optional)', 'zero-sense') . '</h6>'
                 . '<label style="display:block;margin-bottom:12px;"><input type="checkbox" id="zs-flow-is-email" style="margin-right:6px;" /> ' . esc_html__('Enable Email Features', 'zero-sense') . '</label>'
                 . '<div id="zs-email-fields" style="display:none;max-width:350px;">'
@@ -162,6 +172,33 @@ class Flowmattic implements FeatureInterface
                 . '</div>'
                 . '<p id="zs-flow-email-help" style="margin:8px 0 0;font-size:11px;color:#666;">' . esc_html__('Status Transitions: Email description and send-once option. Class Actions: Button name and optional order states.', 'zero-sense') . '</p>'
                 . '</div>'
+                . '</div>'
+                
+                // Holded configuration section
+                . '<div class="zs-flow-holded-config" style="flex:1;padding:12px;background:#f0f9ff;border-radius:4px;">'
+                . '<h6 style="margin:0 0 8px;color:#666;">' . esc_html__('Holded Integration (Optional)', 'zero-sense') . '</h6>'
+                . '<label style="display:block;margin-bottom:12px;"><input type="checkbox" id="zs-flow-is-holded" style="margin-right:6px;" /> ' . esc_html__('Enable Holded Integration', 'zero-sense') . '</label>'
+                . '<div id="zs-holded-fields" style="display:none;">'
+                . '<div style="display:flex;flex-direction:column;gap:12px;">'
+                . '<div>'
+                . '<label class="zs-config-label">' . esc_html__('Integration Description', 'zero-sense') . '</label>'
+                . '<input type="text" class="zs-config-input" id="zs-flow-holded-desc" placeholder="' . esc_attr__('e.g., Send invoice to Holded', 'zero-sense') . '" />'
+                . '</div>'
+                . '<div id="zs-flow-holded-run-once-container" style="display:none;">'
+                . '<label class="zs-config-label"><input type="checkbox" id="zs-flow-holded-run-once" style="margin-right:6px;" /> ' . esc_html__('Run only once per order', 'zero-sense') . '</label>'
+                . '</div>'
+                . '<div id="zs-flow-holded-manual-states-container" style="display:none;">'
+                . '<label class="zs-config-label">' . esc_html__('Show manual trigger button in these order states (optional)', 'zero-sense') . '</label>'
+                . '<select class="zs-config-input" id="zs-flow-holded-manual-states" multiple style="height:80px;" title="' . esc_attr__('Hold Ctrl/Cmd to select multiple states', 'zero-sense') . '">'
+                . implode('', array_map(function($k) use ($statusOptions){ return '<option value="' . esc_attr($k) . '">' . esc_html($statusOptions[$k]) . '</option>'; }, array_keys($statusOptions)))
+                . '</select>'
+                . '</div>'
+                . '</div>'
+                . '<p id="zs-flow-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">' . esc_html__('Only for Status Transitions. Configure automatic trigger to Holded with optional manual re-trigger button.', 'zero-sense') . '</p>'
+                . '</div>'
+                . '</div>'
+                
+                // Close flex container
                 . '</div>'
                 
                 // Add button at the end
@@ -263,6 +300,20 @@ class Flowmattic implements FeatureInterface
                         }
                     }
                     
+                    // Holded workflow config data
+                    if (!empty($row['workflow_config']) && $row['workflow_config']['category'] === 'holded') {
+                        $editData[] = 'data-is-holded="true"';
+                        if (!empty($row['workflow_config']['description'])) {
+                            $editData[] = 'data-holded-desc="' . esc_attr($row['workflow_config']['description']) . '"';
+                        }
+                        if (!empty($row['workflow_config']['run_once'])) {
+                            $editData[] = 'data-run-once="true"';
+                        }
+                        if (!empty($row['workflow_config']['manual_states']) && is_array($row['workflow_config']['manual_states'])) {
+                            $editData[] = 'data-holded-manual-states="' . esc_attr(implode(',', $row['workflow_config']['manual_states'])) . '"';
+                        }
+                    }
+                    
                     $out .= '<li ' . implode(' ', $editData) . '><button type="button" class="zs-btn-icon zs-flow-play" data-workflow-id="' . $wid . '" title="Run workflow">▶</button> '
                          . '<span class="zs-flow-title">' . $label . '</span> · '
                          . $emailIndicator . $extra . '<code class="zs-flow-id">' . $wid . '</code> '
@@ -278,6 +329,14 @@ class Flowmattic implements FeatureInterface
             $html .= $renderGroup(__('Class Actions', 'zero-sense'), 'zs-flow-custom-list-class', $groups['class']);
 
             // Removed reference blocks (status ordered/manual/custom). All control is via the editable list above.
+
+            // Migration button
+            $html .= '<div style="margin-top:24px;padding:16px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;">';
+            $html .= '<h5 style="margin:0 0 8px;color:#856404;">' . esc_html__('⚠️ One-Time Migration', 'zero-sense') . '</h5>';
+            $html .= '<p style="margin:0 0 12px;color:#856404;font-size:13px;">' . esc_html__('Migrate email logs from old system to new generic logging system. This is safe to run multiple times (skips duplicates).', 'zero-sense') . '</p>';
+            $html .= '<button type="button" id="zs-migrate-email-logs" class="zs-btn-primary" style="background:#856404;border-color:#856404;">' . esc_html__('Migrate Email Logs', 'zero-sense') . '</button>';
+            $html .= '<span id="zs-migrate-result" style="margin-left:12px;font-weight:600;"></span>';
+            $html .= '</div>';
 
             $html .= '</div>';
         } catch (\Throwable $e) {
@@ -326,9 +385,6 @@ class Flowmattic implements FeatureInterface
             return;
         }
 
-        $sends = $this->getEmailSends();
-        $logId = uniqid('email_', true);
-        
         // Auto-annotate current user if available
         if (!isset($emailData['_by']) && function_exists('is_user_logged_in') && is_user_logged_in()) {
             $u = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
@@ -341,6 +397,22 @@ class Flowmattic implements FeatureInterface
             }
         }
 
+        // Save to NEW generic system (primary)
+        $this->logWorkflowExecution($workflowId, $orderId, $status, [
+            'category' => 'email',
+            'trigger_source' => $emailData['trigger_source'] ?? 'unknown',
+            'metadata' => [
+                'email_to' => $emailData['to'] ?? '',
+                'email_subject' => $emailData['subject'] ?? '',
+            ],
+            'error' => $emailData['error'] ?? null,
+            '_by' => $emailData['_by'] ?? null,
+        ]);
+
+        // Also save to OLD system for backwards compatibility (can be removed later)
+        $sends = $this->getEmailSends();
+        $logId = uniqid('email_', true);
+        
         $sends[$logId] = [
             'workflow_id' => $workflowId,
             'order_id' => $orderId,
@@ -350,13 +422,11 @@ class Flowmattic implements FeatureInterface
             'email_subject' => $emailData['subject'] ?? '',
             'error_message' => $emailData['error'] ?? null,
             'trigger_source' => $emailData['trigger_source'] ?? 'unknown',
-            // Store author info if present
             'by_id' => isset($emailData['_by']['id']) ? (int) $emailData['_by']['id'] : 0,
             'by_name' => isset($emailData['_by']['name']) ? (string) $emailData['_by']['name'] : '',
             'by_login' => isset($emailData['_by']['login']) ? (string) $emailData['_by']['login'] : '',
         ];
 
-        // Keep only last 500 entries to prevent database bloat
         if (count($sends) > 500) {
             $sends = array_slice($sends, -500, null, true);
         }
@@ -390,6 +460,215 @@ class Flowmattic implements FeatureInterface
         }
         
         return null;
+    }
+
+    // ========================================================================
+    // GENERIC WORKFLOW EXECUTION LOGGING (for Holded and future integrations)
+    // ========================================================================
+
+    private function getWorkflowExecutions(): array
+    {
+        $raw = get_option(self::WORKFLOW_EXECUTIONS_OPTION, []);
+        return is_array($raw) ? $raw : [];
+    }
+
+    private function saveWorkflowExecutions(array $executions): void
+    {
+        update_option(self::WORKFLOW_EXECUTIONS_OPTION, $executions, false);
+    }
+
+    /**
+     * Migrate email logs from old system to new generic system
+     * ONE-TIME MIGRATION - Run manually via WP-CLI or admin action
+     */
+    public function migrateEmailLogsToGenericSystem(): array
+    {
+        $emailSends = $this->getEmailSends();
+        $executions = $this->getWorkflowExecutions();
+        $migrated = 0;
+        $skipped = 0;
+        
+        foreach ($emailSends as $logId => $send) {
+            // Check if already migrated (avoid duplicates)
+            $exists = false;
+            foreach ($executions as $exec) {
+                if ($exec['workflow_id'] === $send['workflow_id'] &&
+                    $exec['order_id'] === $send['order_id'] &&
+                    isset($exec['timestamp']) && $exec['timestamp'] === $send['timestamp']) {
+                    $exists = true;
+                    break;
+                }
+            }
+            
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+            
+            // Migrate to new system with category 'email'
+            $newLogId = 'email_' . uniqid('', true);
+            $executions[$newLogId] = [
+                'workflow_id' => $send['workflow_id'],
+                'order_id' => $send['order_id'],
+                'status' => $send['status'],
+                'timestamp' => $send['timestamp'],
+                'category' => 'email',
+                'trigger_source' => $send['trigger_source'] ?? 'unknown',
+                'metadata' => [
+                    'email_to' => $send['email_to'] ?? '',
+                    'email_subject' => $send['email_subject'] ?? '',
+                ],
+                'error_message' => $send['error_message'] ?? null,
+                'by_id' => $send['by_id'] ?? 0,
+                'by_name' => $send['by_name'] ?? '',
+                'by_login' => $send['by_login'] ?? '',
+            ];
+            $migrated++;
+        }
+        
+        if ($migrated > 0) {
+            $this->saveWorkflowExecutions($executions);
+        }
+        
+        return [
+            'migrated' => $migrated,
+            'skipped' => $skipped,
+            'total' => count($emailSends)
+        ];
+    }
+
+    public function logWorkflowExecution(string $workflowId, int $orderId, string $status, array $data = []): void
+    {
+        if ($workflowId === '' || $orderId <= 0) {
+            return;
+        }
+
+        $executions = $this->getWorkflowExecutions();
+        $logId = uniqid('wf_', true);
+        
+        // Auto-annotate current user if available
+        if (!isset($data['_by']) && function_exists('is_user_logged_in') && is_user_logged_in()) {
+            $u = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
+            if ($u && isset($u->ID) && (int) $u->ID > 0) {
+                $data['_by'] = [
+                    'id' => (int) $u->ID,
+                    'name' => isset($u->display_name) ? (string) $u->display_name : '',
+                    'login' => isset($u->user_login) ? (string) $u->user_login : '',
+                ];
+            }
+        }
+
+        $executions[$logId] = [
+            'workflow_id' => $workflowId,
+            'order_id' => $orderId,
+            'category' => $data['category'] ?? 'generic',
+            'status' => $status,
+            'timestamp' => current_time('mysql'),
+            'trigger_source' => $data['trigger_source'] ?? 'unknown',
+            'metadata' => $data['metadata'] ?? [],
+            'error_message' => $data['error'] ?? null,
+            'by_id' => isset($data['_by']['id']) ? (int) $data['_by']['id'] : 0,
+            'by_name' => isset($data['_by']['name']) ? (string) $data['_by']['name'] : '',
+            'by_login' => isset($data['_by']['login']) ? (string) $data['_by']['login'] : '',
+        ];
+
+        // Keep only last 500 entries to prevent database bloat
+        if (count($executions) > 500) {
+            $executions = array_slice($executions, -500, null, true);
+        }
+
+        $this->saveWorkflowExecutions($executions);
+    }
+
+    public function hasWorkflowExecuted(string $workflowId, int $orderId, ?string $category = null): bool
+    {
+        $executions = $this->getWorkflowExecutions();
+        
+        foreach ($executions as $execution) {
+            if ($execution['workflow_id'] === $workflowId && 
+                $execution['order_id'] === $orderId && 
+                $execution['status'] !== self::WORKFLOW_STATUS_ERROR) {
+                
+                // If category specified, must match
+                if ($category !== null && ($execution['category'] ?? 'generic') !== $category) {
+                    continue;
+                }
+                
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public function getWorkflowExecutionStatus(string $workflowId, int $orderId): ?string
+    {
+        $executions = $this->getWorkflowExecutions();
+        
+        foreach (array_reverse($executions, true) as $execution) {
+            if ($execution['workflow_id'] === $workflowId && $execution['order_id'] === $orderId) {
+                return $execution['status'];
+            }
+        }
+        
+        return null;
+    }
+
+    private function getWorkflowExecutionsForOrder(int $orderId, ?string $category = null): array
+    {
+        $executions = $this->getWorkflowExecutions();
+        $logs = [];
+        
+        foreach ($executions as $execution) {
+            if ((int) ($execution['order_id'] ?? 0) === $orderId) {
+                // Filter by category if specified
+                if ($category !== null && ($execution['category'] ?? 'generic') !== $category) {
+                    continue;
+                }
+                
+                $logs[] = [
+                    'workflow_id' => $execution['workflow_id'],
+                    'category' => $execution['category'] ?? 'generic',
+                    'status' => $execution['status'],
+                    'description' => $this->getWorkflowDescription($execution['workflow_id'], $execution['category'] ?? 'generic'),
+                    'timestamp' => strtotime($execution['timestamp']),
+                    'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($execution['timestamp'])),
+                    'metadata' => $execution['metadata'] ?? [],
+                    'error_message' => $execution['error_message'] ?? null,
+                    'by_name' => $execution['by_name'] ?? '',
+                    'by_login' => $execution['by_login'] ?? '',
+                ];
+            }
+        }
+        
+        return $logs;
+    }
+
+    /**
+     * Get workflow description from trigger configuration
+     */
+    private function getWorkflowDescription(string $workflowId, string $category = 'generic'): string
+    {
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        
+        foreach ($stored as $trigger) {
+            if (($trigger['workflow_id'] ?? '') === $workflowId) {
+                // For Holded workflows
+                if ($category === 'holded' && !empty($trigger['workflow_config']['description'])) {
+                    return $trigger['workflow_config']['description'];
+                }
+                
+                // For email workflows
+                if (!empty($trigger['email_config']['description'])) {
+                    return $trigger['email_config']['description'];
+                }
+                
+                // Fallback to title
+                return $trigger['title'] ?? $workflowId;
+            }
+        }
+        
+        return $workflowId;
     }
 
     /**
@@ -1154,6 +1433,14 @@ class Flowmattic implements FeatureInterface
         add_action('wp_ajax_zs_flow_send_manual_email', [$this, 'ajaxSendManualEmail']);
         add_action('wp_ajax_zs_flow_check_email_status', [$this, 'ajaxCheckEmailStatus']);
         add_action('wp_ajax_zs_flow_get_latest_email_log', [$this, 'ajaxGetLatestEmailLog']);
+        
+        // Add Holded metaboxes to order admin
+        add_action('add_meta_boxes', [$this, 'addHoldedActionsMetabox']);
+        add_action('add_meta_boxes', [$this, 'addHoldedLogsMetabox']);
+        add_action('wp_ajax_zs_flow_trigger_holded_sync', [$this, 'ajaxTriggerHoldedSync']);
+        
+        // Migration endpoint
+        add_action('wp_ajax_zs_flow_migrate_email_logs', [$this, 'ajaxMigrateEmailLogs']);
     }
 
     public function ajaxAddTrigger(): void
@@ -1214,6 +1501,33 @@ class Flowmattic implements FeatureInterface
             ];
             if ($sendOnce) {
                 $entry['email_config']['send_once'] = true;
+            }
+        }
+        
+        // Process Holded workflow configuration (only for status transitions)
+        $isHolded = !empty($_POST['is_holded']) && sanitize_text_field(wp_unslash($_POST['is_holded'])) === 'true';
+        if ($isHolded && $tag === 'status') {
+            $holdedDesc = sanitize_text_field(wp_unslash($_POST['holded_description'] ?? ''));
+            $runOnce = !empty($_POST['holded_run_once']) && sanitize_text_field(wp_unslash($_POST['holded_run_once'])) === 'true';
+            $holdedManualStates = [];
+            
+            if (!empty($_POST['holded_manual_states']) && is_array($_POST['holded_manual_states'])) {
+                $holdedManualStatesRaw = array_map('sanitize_text_field', wp_unslash($_POST['holded_manual_states']));
+                foreach ($holdedManualStatesRaw as $state) {
+                    $cleanState = $state;
+                    if ($cleanState !== '') {
+                        $holdedManualStates[] = $cleanState;
+                    }
+                }
+            }
+            
+            $entry['workflow_config'] = [
+                'category' => 'holded',
+                'description' => $holdedDesc,
+                'manual_states' => $holdedManualStates
+            ];
+            if ($runOnce) {
+                $entry['workflow_config']['run_once'] = true;
             }
         }
         
@@ -1317,6 +1631,36 @@ class Flowmattic implements FeatureInterface
                 } else {
                     // Remove email config if not an email workflow
                     unset($items[$idx]['email_config']);
+                }
+                
+                // Process Holded workflow configuration (only for status transitions)
+                $isHolded = !empty($_POST['is_holded']) && sanitize_text_field(wp_unslash($_POST['is_holded'])) === 'true';
+                if ($isHolded && $tag === 'status') {
+                    $holdedDesc = sanitize_text_field(wp_unslash($_POST['holded_description'] ?? ''));
+                    $runOnce = !empty($_POST['holded_run_once']) && sanitize_text_field(wp_unslash($_POST['holded_run_once'])) === 'true';
+                    $holdedManualStates = [];
+                    
+                    if (!empty($_POST['holded_manual_states']) && is_array($_POST['holded_manual_states'])) {
+                        $holdedManualStatesRaw = array_map('sanitize_text_field', wp_unslash($_POST['holded_manual_states']));
+                        foreach ($holdedManualStatesRaw as $state) {
+                            $cleanState = $state;
+                            if ($cleanState !== '') {
+                                $holdedManualStates[] = $cleanState;
+                            }
+                        }
+                    }
+                    
+                    $items[$idx]['workflow_config'] = [
+                        'category' => 'holded',
+                        'description' => $holdedDesc,
+                        'manual_states' => $holdedManualStates
+                    ];
+                    if ($runOnce) {
+                        $items[$idx]['workflow_config']['run_once'] = true;
+                    }
+                } else {
+                    // Remove workflow config if not a Holded workflow
+                    unset($items[$idx]['workflow_config']);
                 }
                 
                 // Title: use provided one if given, otherwise auto-generate based on action type
@@ -1707,55 +2051,34 @@ class Flowmattic implements FeatureInterface
     }
 
     /**
-     * Get email logs for a specific order
+     * Get email logs for a specific order (using new generic system)
      */
     private function getEmailLogsForOrder(int $orderId): array
     {
-        $sends = $this->getEmailSends();
+        $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
         $logs = [];
         
-        foreach ($sends as $send) {
-            if ((int) ($send['order_id'] ?? 0) === $orderId) {
-                $logs[] = [
-                    'workflow_id' => $send['workflow_id'],
-                    'status' => $send['status'],
-                    'description' => $this->getWorkflowDescription($send['workflow_id']),
-                    'timestamp' => strtotime($send['timestamp']),
-                    // send['timestamp'] is stored in site local time via current_time('mysql')
-                    // Format it directly with wp_date to respect WP timezone without double-offset
-                    'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($send['timestamp'])),
-                    'email_to' => $send['email_to'] ?? '',
-                    'email_subject' => $send['email_subject'] ?? '',
-                    'error_message' => $send['error_message'] ?? null,
-                    'by_name' => $send['by_name'] ?? '',
-                    'by_login' => $send['by_login'] ?? '',
-                ];
-            }
+        foreach ($executions as $exec) {
+            $logs[] = [
+                'workflow_id' => $exec['workflow_id'],
+                'status' => $exec['status'],
+                'description' => $this->getWorkflowDescription($exec['workflow_id'], 'email'),
+                'timestamp' => strtotime($exec['timestamp']),
+                'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($exec['timestamp'])),
+                'email_to' => $exec['metadata']['email_to'] ?? '',
+                'email_subject' => $exec['metadata']['email_subject'] ?? '',
+                'error_message' => $exec['error_message'] ?? null,
+                'by_name' => $exec['by_name'] ?? '',
+                'by_login' => $exec['by_login'] ?? '',
+            ];
         }
+        
+        // Sort by timestamp descending (newest first)
+        usort($logs, function($a, $b) {
+            return $b['timestamp'] - $a['timestamp'];
+        });
         
         return $logs;
-    }
-
-    /**
-     * Get workflow description by workflow ID
-     */
-    private function getWorkflowDescription(string $workflowId): string
-    {
-        $stored = get_option('zs_flowmattic_custom_triggers', []);
-        if (!is_array($stored)) {
-            return $workflowId;
-        }
-        
-        foreach ($stored as $trigger) {
-            if (($trigger['workflow_id'] ?? '') === $workflowId) {
-                if (!empty($trigger['email_config']['description'])) {
-                    return $trigger['email_config']['description'];
-                }
-                return $trigger['title'] ?? $workflowId;
-            }
-        }
-        
-        return $workflowId;
     }
 
     /**
@@ -1948,5 +2271,437 @@ class Flowmattic implements FeatureInterface
         }
         
         echo '</div>';
+    }
+
+    // ========================================================================
+    // HOLDED SYNC METABOXES
+    // ========================================================================
+
+    /**
+     * Add Holded Actions metabox to order admin (only if there are manual actions)
+     */
+    public function addHoldedActionsMetabox(): void
+    {
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+        
+        // Get current order
+        global $post;
+        $orderId = 0;
+        
+        if ($post instanceof \WP_Post) {
+            $orderId = $post->ID;
+        } elseif (isset($_GET['id'])) {
+            $orderId = absint($_GET['id']);
+        }
+        
+        if ($orderId <= 0) {
+            return;
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof \WC_Order) {
+            return;
+        }
+        
+        $orderStatus = $order->get_status();
+        
+        // Check if there are any manual actions available for this order status
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        $hasManualActions = false;
+        
+        foreach ($stored as $trigger) {
+            if (!empty($trigger['workflow_config']['category']) && 
+                $trigger['workflow_config']['category'] === 'holded' &&
+                ($trigger['tag'] ?? '') === 'status') {
+                
+                $manualStates = $trigger['workflow_config']['manual_states'] ?? [];
+                if (!empty($manualStates) && in_array($orderStatus, $manualStates, true)) {
+                    $hasManualActions = true;
+                    break;
+                }
+            }
+        }
+        
+        // Only add metabox if there are manual actions
+        if ($hasManualActions) {
+            $screen_id = $screen->id === 'woocommerce_page_wc-orders' ? wc_get_page_screen_id('shop-order') : 'shop_order';
+            
+            add_meta_box(
+                'zs_holded_actions',
+                __('Holded Actions', 'zero-sense'),
+                [$this, 'renderHoldedActionsMetabox'],
+                $screen_id,
+                'side',
+                'default'
+            );
+        }
+    }
+
+    /**
+     * Render Holded Actions metabox (manual buttons only)
+     */
+    public function renderHoldedActionsMetabox($postOrOrder): void
+    {
+        $orderId = 0;
+        if ($postOrOrder instanceof \WP_Post) {
+            $orderId = $postOrOrder->ID;
+        } elseif (method_exists($postOrOrder, 'get_id')) {
+            $orderId = $postOrOrder->get_id();
+        }
+        
+        if ($orderId <= 0) {
+            echo '<p>' . esc_html__('Invalid order', 'zero-sense') . '</p>';
+            return;
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof \WC_Order) {
+            echo '<p>' . esc_html__('Order not found', 'zero-sense') . '</p>';
+            return;
+        }
+        
+        $orderStatus = $order->get_status();
+        
+        // Get Holded triggers
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        $holdedTriggers = [];
+        
+        foreach ($stored as $trigger) {
+            if (!empty($trigger['workflow_config']['category']) && 
+                $trigger['workflow_config']['category'] === 'holded' &&
+                ($trigger['tag'] ?? '') === 'status') {
+                $holdedTriggers[] = $trigger;
+            }
+        }
+        
+        if (empty($holdedTriggers)) {
+            echo '<p style="color:#666;font-size:12px;">' . esc_html__('No Holded actions configured', 'zero-sense') . '</p>';
+            return;
+        }
+        
+        echo '<div class="zs-manual-email-actions">';
+        
+        // Manual buttons (filtered by manual_states)
+        $manualButtons = [];
+        foreach ($holdedTriggers as $trigger) {
+            $manualStates = $trigger['workflow_config']['manual_states'] ?? [];
+            if (!empty($manualStates) && in_array($orderStatus, $manualStates, true)) {
+                $manualButtons[] = $trigger;
+            }
+        }
+        
+        if (empty($manualButtons)) {
+            echo '<p style="color:#666;font-size:12px;">' . esc_html__('No manual actions available for this order status', 'zero-sense') . '</p>';
+        } else {
+            foreach ($manualButtons as $trigger) {
+                $workflowId = $trigger['workflow_id'];
+                $description = $trigger['workflow_config']['description'] ?? $trigger['title'];
+                $status = $this->getWorkflowExecutionStatus($workflowId, $orderId);
+                $badge = $status ? $this->getStatusBadge($status) : '';
+                
+                echo '<button type="button" class="zs-btn is-action zs-manual-holded-btn" data-workflow-id="' . esc_attr($workflowId) . '" data-order-id="' . esc_attr($orderId) . '" style="width:100%;margin-bottom:6px;position:relative;">';
+                echo '<span class="zs-email-btn-label">' . esc_html($description) . '</span>';
+                echo $badge;
+                echo '</button>';
+            }
+        }
+        
+        echo '</div>';
+        
+        // Add JavaScript for AJAX handling
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.zs-manual-holded-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var workflowId = this.getAttribute('data-workflow-id');
+                    var orderId = this.getAttribute('data-order-id');
+                    var originalText = this.querySelector('.zs-email-btn-label').textContent;
+                    
+                    this.disabled = true;
+                    this.querySelector('.zs-email-btn-label').textContent = '<?php echo esc_js(__('Syncing...', 'zero-sense')); ?>';
+                    
+                    var data = {
+                        action: 'zs_flow_trigger_holded_sync',
+                        nonce: '<?php echo esc_js(wp_create_nonce('zs_holded_sync_nonce')); ?>',
+                        workflow_id: workflowId,
+                        order_id: orderId
+                    };
+                    
+                    var self = this;
+                    jQuery.post(ajaxurl, data, function(response) {
+                        if (response.success) {
+                            self.querySelector('.zs-email-btn-label').textContent = originalText;
+                            // Update badge
+                            var existingBadge = self.querySelector('.zs-badge');
+                            if (existingBadge) {
+                                existingBadge.remove();
+                            }
+                            var badge = document.createElement('span');
+                            badge.className = 'zs-badge zs-badge-manual';
+                            badge.textContent = 'MAN';
+                            self.appendChild(badge);
+                            
+                            alert('<?php echo esc_js(__('Holded sync triggered successfully', 'zero-sense')); ?>');
+                        } else {
+                            alert('<?php echo esc_js(__('Error triggering sync', 'zero-sense')); ?>: ' + (response.data || 'unknown'));
+                        }
+                        self.disabled = false;
+                    }).fail(function() {
+                        alert('<?php echo esc_js(__('AJAX error', 'zero-sense')); ?>');
+                        self.disabled = false;
+                        self.querySelector('.zs-email-btn-label').textContent = originalText;
+                    });
+                });
+            });
+        });
+        </script>
+        <?php
+    }
+
+    /**
+     * Add Holded Logs metabox to order admin
+     */
+    public function addHoldedLogsMetabox(): void
+    {
+        $screen = get_current_screen();
+        if ($screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            $screen_id = $screen->id === 'woocommerce_page_wc-orders' ? wc_get_page_screen_id('shop-order') : 'shop_order';
+            
+            add_meta_box(
+                'zs_holded_logs',
+                __('Holded Logs', 'zero-sense'),
+                [$this, 'renderHoldedLogsMetabox'],
+                $screen_id,
+                'normal',
+                'default'
+            );
+        }
+    }
+
+    /**
+     * Render Holded Logs metabox
+     */
+    public function renderHoldedLogsMetabox($postOrOrder): void
+    {
+        $orderId = 0;
+        if ($postOrOrder instanceof \WP_Post) {
+            $orderId = $postOrOrder->ID;
+        } elseif (method_exists($postOrOrder, 'get_id')) {
+            $orderId = $postOrOrder->get_id();
+        }
+        
+        if ($orderId <= 0) {
+            echo '<p>' . esc_html__('Invalid order', 'zero-sense') . '</p>';
+            return;
+        }
+        
+        $logs = $this->getWorkflowExecutionsForOrder($orderId, 'holded');
+        
+        if (empty($logs)) {
+            echo '<p style="color:#666;font-size:12px;">' . esc_html__('No Holded sync logs yet', 'zero-sense') . '</p>';
+            return;
+        }
+        
+        // Sort by timestamp descending
+        usort($logs, function($a, $b) {
+            return $b['timestamp'] - $a['timestamp'];
+        });
+        
+        echo '<div class="zs-email-logs-metabox">';
+        
+        // Show first 3 logs
+        $visible = array_slice($logs, 0, 3);
+        $hidden = array_slice($logs, 3);
+        
+        foreach ($visible as $log) {
+            $this->renderSingleWorkflowLog($log);
+        }
+        
+        if (!empty($hidden)) {
+            $listId = 'zs-holded-hidden-logs-' . $orderId;
+            echo '<div class="zs-show-more">';
+            echo '<button type="button" class="zs-toggle-logs" data-target="' . esc_attr($listId) . '" data-total="' . esc_attr(count($hidden)) . '">';
+            echo esc_html(sprintf(__('Show %d more', 'zero-sense'), count($hidden)));
+            echo '</button>';
+            echo '</div>';
+            
+            echo '<div id="' . esc_attr($listId) . '" class="zs-hidden-logs" style="display:none;">';
+            foreach ($hidden as $log) {
+                $this->renderSingleWorkflowLog($log);
+            }
+            echo '</div>';
+            
+            // Add toggle JavaScript
+            echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var toggleBtn = document.querySelector(".zs-toggle-logs[data-target=\"' . esc_js($listId) . '\"]");
+                if (!toggleBtn) return;
+                
+                toggleBtn.addEventListener("click", function() {
+                    var hiddenLogs = document.getElementById("' . esc_js($listId) . '");
+                    var total = parseInt(this.getAttribute("data-total"));
+                    
+                    if (hiddenLogs.style.display === "block") {
+                        hiddenLogs.style.display = "none";
+                        this.textContent = "' . esc_js(__('Show', 'zero-sense')) . ' " + total + " ' . esc_js(__('more', 'zero-sense')) . '";
+                    } else {
+                        hiddenLogs.style.display = "block";
+                        this.textContent = "' . esc_js(__('Hide', 'zero-sense')) . '";
+                    }
+                });
+            });
+            </script>';
+        }
+        
+        echo '</div>';
+    }
+
+    /**
+     * Render a single workflow log item (for Holded logs)
+     */
+    private function renderSingleWorkflowLog(array $log): void
+    {
+        $statusClass = 'zs-' . $log['status'];
+        $badge = $this->getStatusBadge($log['status']);
+        
+        echo '<div class="zs-log-item ' . esc_attr($statusClass) . '">';
+        echo $badge;
+        echo '<div class="zs-log-title">';
+        echo '<strong>' . esc_html($log['description']) . '</strong>';
+        echo '</div>';
+        
+        $by = '';
+        if (!empty($log['by_name']) || !empty($log['by_login'])) {
+            $label = $log['by_name'] !== ''
+                ? ($log['by_login'] !== '' ? ($log['by_name'] . ' (' . $log['by_login'] . ')') : $log['by_name'])
+                : $log['by_login'];
+            if ($label !== '') {
+                $by = ' · ' . sprintf(__('By: %s', 'zero-sense'), esc_html($label));
+            }
+        }
+        echo '<div class="zs-log-time">' . esc_html($log['formatted_time']) . $by . '</div>';
+        
+        // Show metadata if available
+        if (!empty($log['metadata']['old_status']) && !empty($log['metadata']['new_status'])) {
+            echo '<div class="zs-log-details"><strong>' . esc_html__('Transition:', 'zero-sense') . '</strong> ' . 
+                esc_html($log['metadata']['old_status']) . ' → ' . esc_html($log['metadata']['new_status']) . '</div>';
+        }
+        
+        if (!empty($log['error_message'])) {
+            if (($log['status'] ?? '') === self::WORKFLOW_STATUS_SKIPPED) {
+                echo '<div class="zs-log-note">' . esc_html($log['error_message']) . '</div>';
+            } else {
+                echo '<div class="zs-log-error"><strong>' . esc_html__('Error:', 'zero-sense') . '</strong> ' . esc_html($log['error_message']) . '</div>';
+            }
+        }
+        
+        echo '</div>';
+    }
+
+    /**
+     * AJAX: Migrate email logs to generic system
+     */
+    public function ajaxMigrateEmailLogs(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('forbidden');
+        }
+        
+        $nonce = sanitize_text_field(wp_unslash($_POST['nonce'] ?? ''));
+        if (!wp_verify_nonce($nonce, 'zs_admin_nonce')) {
+            wp_send_json_error('bad_nonce');
+        }
+        
+        $result = $this->migrateEmailLogsToGenericSystem();
+        
+        wp_send_json_success([
+            'message' => sprintf(
+                __('Migration completed: %d logs migrated, %d skipped (already existed), %d total email logs.', 'zero-sense'),
+                $result['migrated'],
+                $result['skipped'],
+                $result['total']
+            ),
+            'migrated' => $result['migrated'],
+            'skipped' => $result['skipped'],
+            'total' => $result['total']
+        ]);
+    }
+
+    /**
+     * AJAX: Trigger Holded sync manually
+     */
+    public function ajaxTriggerHoldedSync(): void
+    {
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error('forbidden');
+        }
+        
+        $nonce = sanitize_text_field(wp_unslash($_POST['nonce'] ?? ''));
+        if (!wp_verify_nonce($nonce, 'zs_holded_sync_nonce')) {
+            wp_send_json_error('bad_nonce');
+        }
+        
+        $workflowId = sanitize_text_field(wp_unslash($_POST['workflow_id'] ?? ''));
+        $orderId = intval(wp_unslash($_POST['order_id'] ?? 0));
+        
+        if (!$workflowId || !$orderId) {
+            wp_send_json_error('missing_parameters');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof \WC_Order) {
+            wp_send_json_error('invalid_order');
+        }
+        
+        // Verify this is a valid Holded trigger
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        $validTrigger = false;
+        
+        foreach ($stored as $trigger) {
+            if (($trigger['workflow_id'] ?? '') === $workflowId &&
+                !empty($trigger['workflow_config']['category']) &&
+                $trigger['workflow_config']['category'] === 'holded') {
+                $validTrigger = true;
+                break;
+            }
+        }
+        
+        if (!$validTrigger) {
+            wp_send_json_error('invalid_trigger');
+        }
+        
+        // Log manual execution
+        $this->logWorkflowExecution(
+            $workflowId,
+            $orderId,
+            self::WORKFLOW_STATUS_MANUAL,
+            [
+                'category' => 'holded',
+                'trigger_source' => 'manual_button'
+            ]
+        );
+        
+        // Trigger workflow
+        try {
+            do_action('flowmattic_trigger_workflow', $workflowId, [
+                'order_id' => $orderId,
+                'trigger_source' => 'manual_holded_sync'
+            ]);
+        } catch (\Throwable $e) {
+            wp_send_json_error([
+                'code' => 'workflow_exception',
+                'message' => $e->getMessage()
+            ]);
+        }
+        
+        wp_send_json_success([
+            'message' => 'Holded sync triggered successfully',
+            'workflow_id' => $workflowId,
+            'order_id' => $orderId
+        ]);
     }
 }

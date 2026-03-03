@@ -87,16 +87,55 @@ const ZeroSenseFlowmattic = {
             }
         });
         
+        // Handle Holded checkbox toggle
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'zs-flow-is-holded') {
+                const isChecked = e.target.checked;
+                const holdedDescEl = document.getElementById('zs-flow-holded-desc');
+                const runOnceEl = document.getElementById('zs-flow-holded-run-once');
+                const holdedManualStatesEl = document.getElementById('zs-flow-holded-manual-states');
+                
+                const tagEl = document.getElementById('zs-flow-tag');
+                const isStatus = tagEl?.value === 'status';
+                const holdedFieldsContainer = document.getElementById('zs-holded-fields');
+                const holdedHelpEl = document.getElementById('zs-flow-holded-help');
+                
+                // Toggle entire Holded fields container
+                if (holdedFieldsContainer) {
+                    holdedFieldsContainer.style.display = isChecked ? 'block' : 'none';
+                }
+                
+                // Show/hide help text
+                if (holdedHelpEl) {
+                    holdedHelpEl.style.display = isChecked ? 'block' : 'none';
+                }
+                
+                // Update field visibility based on action type
+                ZeroSenseFlowmattic.updateHoldedFieldsForActionType(isStatus, isChecked);
+                
+                // Clear values when disabling
+                if (!isChecked) {
+                    if (holdedDescEl) holdedDescEl.value = '';
+                    if (runOnceEl) runOnceEl.checked = false;
+                    if (holdedManualStatesEl) {
+                        Array.from(holdedManualStatesEl.options).forEach(opt => opt.selected = false);
+                    }
+                }
+            }
+        });
+        
         // Handle action type change to show/hide fields conditionally
         document.addEventListener('change', function(e) {
             if (e.target.id === 'zs-flow-tag') {
                 const isClass = e.target.value === 'class';
                 const isStatus = e.target.value === 'status';
                 const isEmailChecked = document.getElementById('zs-flow-is-email')?.checked;
+                const isHoldedChecked = document.getElementById('zs-flow-is-holded')?.checked;
                 
                 const manualStatesEl = document.getElementById('zs-flow-manual-states');
                 const emailDescEl = document.getElementById('zs-flow-email-desc');
                 const sendOnceEl = document.getElementById('zs-flow-send-once');
+                const runOnceEl = document.getElementById('zs-flow-holded-run-once');
                 
                 // Clear values when switching action types
                 if (!isClass && manualStatesEl) {
@@ -108,8 +147,16 @@ const ZeroSenseFlowmattic = {
                     sendOnceEl.checked = false;
                 }
                 
+                // Reset run-once when leaving Status context
+                if (!isStatus && runOnceEl) {
+                    runOnceEl.checked = false;
+                }
+                
                 // Update email fields for new action type
                 ZeroSenseFlowmattic.updateEmailFieldsForActionType(isClass, isStatus, isEmailChecked);
+                
+                // Update Holded fields for new action type
+                ZeroSenseFlowmattic.updateHoldedFieldsForActionType(isStatus, isHoldedChecked);
                 
                 // Update generated class for Class Actions
                 if (isClass && isEmailChecked) {
@@ -179,6 +226,23 @@ const ZeroSenseFlowmattic = {
     },
 
     /**
+     * Update Holded fields based on action type (only Status Transitions supported)
+     */
+    updateHoldedFieldsForActionType: function(isStatus, isHoldedChecked) {
+        const runOnceContainer = document.getElementById('zs-flow-holded-run-once-container');
+        const holdedManualStatesContainer = document.getElementById('zs-flow-holded-manual-states-container');
+        
+        // Only show Holded fields for Status Transitions
+        if (runOnceContainer) {
+            runOnceContainer.style.display = (isHoldedChecked && isStatus) ? 'block' : 'none';
+        }
+        
+        if (holdedManualStatesContainer) {
+            holdedManualStatesContainer.style.display = (isHoldedChecked && isStatus) ? 'block' : 'none';
+        }
+    },
+
+    /**
      * Create comprehensive edit form with email fields
      */
     createEditForm: function(li, currentTag, currentWid) {
@@ -213,8 +277,11 @@ const ZeroSenseFlowmattic = {
                       '<button type="button" class="zs-btn-secondary zs-flow-cancel" style="height:36px;padding:8px 12px;">Cancel</button></div>';
         }
         
+        // Container for Email and Holded configs (side by side)
+        let configContainerHtml = '<div style="display:flex;gap:12px;margin-top:12px;grid-column:1 / -1;">';
+        
         // Email configuration section (same as main form)
-        let emailSectionHtml = '<div class="zs-flow-email-config" style="margin-top:12px;padding:12px;background:#f9f9f9;border-radius:4px;grid-column:1 / -1;">' +
+        let emailSectionHtml = '<div class="zs-flow-email-config" style="flex:1;padding:12px;background:#f9f9f9;border-radius:4px;">' +
             '<h6 style="margin:0 0 8px;color:#666;">Email Configuration (Optional)</h6>' +
             '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-email" style="margin-right:6px;"' + (isEmail ? ' checked' : '') + ' /> Enable Email Features</label>' +
             '<div class="zs-flow-edit-email-fields" style="' + (isEmail ? '' : 'display:none;') + 'max-width:350px;">' +
@@ -248,7 +315,33 @@ const ZeroSenseFlowmattic = {
             '</div>' +
             '</div>';
         
-        form.innerHTML = formHtml + emailSectionHtml;
+        // Holded configuration section (only for Status Transitions)
+        let holdedSectionHtml = '';
+        if (currentTag === 'status') {
+            const isHolded = li.getAttribute('data-is-holded') === 'true';
+            const holdedDesc = li.getAttribute('data-holded-desc') || '';
+            const runOnce = li.getAttribute('data-run-once') === 'true';
+            const holdedManualStates = li.getAttribute('data-holded-manual-states')?.split(',') || [];
+            
+            holdedSectionHtml = '<div class="zs-flow-holded-config" style="flex:1;padding:12px;background:#f0f4ff;border-radius:4px;">' +
+                '<h6 style="margin:0 0 8px;color:#666;">Holded Integration (Optional)</h6>' +
+                '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-holded" style="margin-right:6px;"' + (isHolded ? ' checked' : '') + ' /> Enable Holded Integration</label>' +
+                '<div class="zs-flow-edit-holded-fields" style="' + (isHolded ? '' : 'display:none;') + ';">' +
+                '<div style="display:flex;flex-direction:column;gap:12px;">' +
+                '<div><label class="zs-config-label">Integration Description</label>' +
+                '<input type="text" class="zs-config-input zs-flow-edit-holded-desc" placeholder="e.g., Send invoice to Holded" value="' + holdedDesc + '" /></div>' +
+                '<div class="zs-flow-edit-run-once-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label"><input type="checkbox" class="zs-flow-edit-run-once" style="margin-right:6px;"' + (runOnce ? ' checked' : '') + ' /> Send only once per order</label></div>' +
+                '<div class="zs-flow-edit-holded-manual-states-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label">Show manual trigger button in these order states (optional)</label><select class="zs-config-input zs-flow-edit-holded-manual-states" multiple style="height:80px;">' + (document.getElementById('zs-flow-holded-manual-states')?.innerHTML || '') + '</select></div>' +
+                '</div>' +
+                '<p class="zs-flow-edit-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">Status Transitions: Holded integration description, send-once option, and manual trigger states.</p>' +
+                '</div>' +
+                '</div>';
+        }
+        
+        // Close flex container
+        let configsHtml = configContainerHtml + emailSectionHtml + holdedSectionHtml + '</div>';
+        
+        form.innerHTML = formHtml + configsHtml;
         form.style.display = 'grid';
         form.style.gridTemplateColumns = currentTag === 'status' ? '1fr 1fr 1fr 1fr auto' : '1fr 1fr 1fr auto';
         form.style.gap = '6px';
@@ -282,6 +375,19 @@ const ZeroSenseFlowmattic = {
             }
         }
         
+        // Populate Holded manual states
+        if (currentTag === 'status') {
+            const holdedManualStates = li.getAttribute('data-holded-manual-states')?.split(',') || [];
+            if (holdedManualStates.length > 0) {
+                const holdedStatesEl = form.querySelector('.zs-flow-edit-holded-manual-states');
+                if (holdedStatesEl) {
+                    Array.from(holdedStatesEl.options).forEach(opt => {
+                        opt.selected = holdedManualStates.includes(opt.value);
+                    });
+                }
+            }
+        }
+        
         // Add event listener for email checkbox
         const emailCheckbox = form.querySelector('.zs-flow-edit-is-email');
         const emailFields = form.querySelector('.zs-flow-edit-email-fields');
@@ -307,6 +413,30 @@ const ZeroSenseFlowmattic = {
             if (emailDescEl) {
                 emailDescEl.addEventListener('input', function() {
                     ZeroSenseFlowmattic.updateGeneratedClass(form, currentTag);
+                });
+            }
+        }
+        
+        // Add event listener for Holded checkbox (Status Transitions only)
+        if (currentTag === 'status') {
+            const holdedCheckbox = form.querySelector('.zs-flow-edit-is-holded');
+            const holdedFields = form.querySelector('.zs-flow-edit-holded-fields');
+            const runOnceContainer = form.querySelector('.zs-flow-edit-run-once-container');
+            const runOnceCheckbox = form.querySelector('.zs-flow-edit-run-once');
+            const holdedManualStatesContainer = form.querySelector('.zs-flow-edit-holded-manual-states-container');
+            
+            if (holdedCheckbox && holdedFields) {
+                holdedCheckbox.addEventListener('change', function() {
+                    holdedFields.style.display = this.checked ? 'block' : 'none';
+                    if (runOnceContainer) {
+                        runOnceContainer.style.display = this.checked ? 'block' : 'none';
+                        if (!this.checked && runOnceCheckbox) {
+                            runOnceCheckbox.checked = false;
+                        }
+                    }
+                    if (holdedManualStatesContainer) {
+                        holdedManualStatesContainer.style.display = this.checked ? 'block' : 'none';
+                    }
                 });
             }
         }
@@ -431,6 +561,36 @@ const ZeroSenseFlowmattic = {
                 }
             }
             
+            // Holded configuration (only for status transitions)
+            const isHoldedEl = document.getElementById('zs-flow-is-holded');
+            const holdedDescEl = document.getElementById('zs-flow-holded-desc');
+            const runOnceEl = document.getElementById('zs-flow-holded-run-once');
+            const holdedManualStatesEl = document.getElementById('zs-flow-holded-manual-states');
+            
+            if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
+                fd.append('is_holded', 'true');
+                
+                if (holdedDescEl) {
+                    const holdedDescValue = holdedDescEl.value.trim();
+                    if (!holdedDescValue) {
+                        alert('Holded sync description is required');
+                        addBtn.disabled = false;
+                        addBtn.textContent = originalText;
+                        return;
+                    }
+                    fd.append('holded_description', holdedDescValue);
+                }
+                
+                if (runOnceEl && runOnceEl.checked) {
+                    fd.append('holded_run_once', 'true');
+                }
+                
+                if (holdedManualStatesEl) {
+                    const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                    selectedStates.forEach(state => fd.append('holded_manual_states[]', state));
+                }
+            }
+            
             if (tag === 'status') {
                 const fromEl = document.getElementById('zs-flow-from');
                 const toEl = document.getElementById('zs-flow-to');
@@ -478,6 +638,7 @@ const ZeroSenseFlowmattic = {
                         
                         let extraHtml = '';
                         let emailIndicator = '';
+                        let holdedIndicator = '';
                         
                         if (isEmailEl && isEmailEl.checked) {
                             const emailDesc = emailDescEl ? emailDescEl.value.trim() : '';
@@ -485,6 +646,14 @@ const ZeroSenseFlowmattic = {
                             const emailTitle = emailDesc || 'Email workflow';
                             const sendOnceText = sendOnce ? ' (once)' : '';
                             emailIndicator = '<span class="zs-flow-email" title="' + emailTitle + sendOnceText + '" style="color:#0073aa;font-weight:bold;">📧</span> ';
+                        }
+                        
+                        if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
+                            const holdedDesc = holdedDescEl ? holdedDescEl.value.trim() : '';
+                            const runOnce = (runOnceEl && runOnceEl.checked);
+                            const holdedTitle = holdedDesc || 'Holded integration';
+                            const runOnceText = runOnce ? ' (once)' : '';
+                            holdedIndicator = '<span class="zs-flow-holded" title="' + holdedTitle + runOnceText + '" style="color:#7C3AED;font-weight:bold;">🔗</span> ';
                         }
                         
                         if (tag === 'status') {
@@ -503,7 +672,7 @@ const ZeroSenseFlowmattic = {
                         
                         li.innerHTML = '<button type="button" class="zs-btn-icon zs-flow-play" data-workflow-id="' + safeWid + '" title="Run workflow">▶</button> '
                                      + '<span class="zs-flow-title">' + safeTitle + '</span> · '
-                                     + emailIndicator + extraHtml + '<code class="zs-flow-id">' + safeWid + '</code> · '
+                                     + emailIndicator + holdedIndicator + extraHtml + '<code class="zs-flow-id">' + safeWid + '</code> · '
                                      + '<button type="button" class="button-link zs-flow-edit">Edit</button> · '
                                      + '<button type="button" class="button-link zs-flow-delete">Delete</button>';
                         
@@ -524,6 +693,23 @@ const ZeroSenseFlowmattic = {
                                 const selectedStates = Array.from(manualStatesEl.selectedOptions).map(opt => opt.value);
                                 if (selectedStates.length > 0) {
                                     li.setAttribute('data-manual-states', selectedStates.join(','));
+                                }
+                            }
+                        }
+                        
+                        // Add Holded data attributes
+                        if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
+                            li.setAttribute('data-is-holded', 'true');
+                            if (holdedDescEl && holdedDescEl.value.trim()) {
+                                li.setAttribute('data-holded-desc', holdedDescEl.value.trim());
+                            }
+                            if (runOnceEl && runOnceEl.checked) {
+                                li.setAttribute('data-run-once', 'true');
+                            }
+                            if (holdedManualStatesEl) {
+                                const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                                if (selectedStates.length > 0) {
+                                    li.setAttribute('data-holded-manual-states', selectedStates.join(','));
                                 }
                             }
                         }
@@ -736,6 +922,33 @@ const ZeroSenseFlowmattic = {
                     }
                 }
                 
+                // Holded configuration (only for status transitions)
+                const isHoldedEl = form.querySelector('.zs-flow-edit-is-holded');
+                const holdedDescEl = form.querySelector('.zs-flow-edit-holded-desc');
+                const runOnceEl = form.querySelector('.zs-flow-edit-run-once');
+                const holdedManualStatesEl = form.querySelector('.zs-flow-edit-holded-manual-states');
+                
+                if (isHoldedEl && isHoldedEl.checked && currentTag === 'status') {
+                    fd.append('is_holded', 'true');
+                    if (holdedDescEl) {
+                        const holdedDescValue = holdedDescEl.value.trim();
+                        if (!holdedDescValue) {
+                            alert('Holded integration description is required');
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = originalText;
+                            return;
+                        }
+                        fd.append('holded_description', holdedDescValue);
+                    }
+                    if (runOnceEl && runOnceEl.checked) {
+                        fd.append('holded_run_once', 'true');
+                    }
+                    if (holdedManualStatesEl) {
+                        const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                        selectedStates.forEach(state => fd.append('holded_manual_states[]', state));
+                    }
+                }
+                
                 if (currentTag === 'status') {
                     const from = form.querySelector('.zs-flow-edit-from').value;
                     const to = form.querySelector('.zs-flow-edit-to').value;
@@ -770,6 +983,7 @@ const ZeroSenseFlowmattic = {
                         
                         let extraHtml = '';
                         let emailIndicator = '';
+                        let holdedIndicator = '';
                         const updatedDataAttrs = {};
                         
                         if (isEmailEl && isEmailEl.checked) {
@@ -792,6 +1006,28 @@ const ZeroSenseFlowmattic = {
                             li.removeAttribute('data-email-desc');
                             li.removeAttribute('data-send-once');
                             li.removeAttribute('data-manual-states');
+                        }
+                        
+                        if (isHoldedEl && isHoldedEl.checked && currentTag === 'status') {
+                            const holdedDesc = holdedDescEl ? holdedDescEl.value.trim() : '';
+                            const runOnce = (runOnceEl && runOnceEl.checked);
+                            const holdedTitle = holdedDesc || 'Holded integration';
+                            const runOnceText = runOnce ? ' (once)' : '';
+                            holdedIndicator = '<span class="zs-flow-holded" title="' + holdedTitle + runOnceText + '" style="color:#7C3AED;font-weight:bold;">🔗</span> ';
+                            updatedDataAttrs['data-is-holded'] = 'true';
+                            if (holdedDesc) updatedDataAttrs['data-holded-desc'] = holdedDesc;
+                            if (runOnce) updatedDataAttrs['data-run-once'] = 'true';
+                            if (holdedManualStatesEl) {
+                                const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                                if (selectedStates.length > 0) {
+                                    updatedDataAttrs['data-holded-manual-states'] = selectedStates.join(',');
+                                }
+                            }
+                        } else {
+                            li.removeAttribute('data-is-holded');
+                            li.removeAttribute('data-holded-desc');
+                            li.removeAttribute('data-run-once');
+                            li.removeAttribute('data-holded-manual-states');
                         }
                         
                         if (currentTag === 'status') {
@@ -818,7 +1054,7 @@ const ZeroSenseFlowmattic = {
                         }
                         
                         const safeTitle = (titleVal || (li.querySelector('.zs-flow-title')?.textContent || 'Untitled')).replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                        li.innerHTML = playBtn.outerHTML + ' ' + '<span class="zs-flow-title">' + safeTitle + '</span> · ' + emailIndicator + extraHtml + '<code class="zs-flow-id">' + wid + '</code> · '
+                        li.innerHTML = playBtn.outerHTML + ' ' + '<span class="zs-flow-title">' + safeTitle + '</span> · ' + emailIndicator + holdedIndicator + extraHtml + '<code class="zs-flow-id">' + wid + '</code> · '
                                      + '<button type="button" class="button-link zs-flow-edit">Edit</button> · '
                                      + '<button type="button" class="button-link zs-flow-delete">Delete</button>';
                         
@@ -853,6 +1089,55 @@ const ZeroSenseFlowmattic = {
                 return;
             }
         });
+
+        // Migration button
+        const migrateBtn = document.getElementById('zs-migrate-email-logs');
+        if (migrateBtn) {
+            migrateBtn.addEventListener('click', function() {
+                if (!confirm('This will migrate all email logs from the old system to the new generic system. Continue?')) {
+                    return;
+                }
+                
+                const resultSpan = document.getElementById('zs-migrate-result');
+                migrateBtn.disabled = true;
+                migrateBtn.textContent = 'Migrating...';
+                if (resultSpan) resultSpan.textContent = '';
+                
+                const fd = new FormData();
+                fd.append('action', 'zs_flow_migrate_email_logs');
+                fd.append('nonce', zsAdmin.nonce);
+                
+                fetch(zsAdmin.ajaxUrl, { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        migrateBtn.disabled = false;
+                        migrateBtn.textContent = 'Migrate Email Logs';
+                        
+                        if (data && data.success) {
+                            if (resultSpan) {
+                                resultSpan.style.color = '#28a745';
+                                resultSpan.textContent = data.data.message || 'Migration completed!';
+                            }
+                            alert(data.data.message || 'Migration completed successfully!');
+                        } else {
+                            if (resultSpan) {
+                                resultSpan.style.color = '#dc3545';
+                                resultSpan.textContent = 'Error: ' + (data.data || 'unknown');
+                            }
+                            alert('Migration failed: ' + (data.data || 'unknown error'));
+                        }
+                    })
+                    .catch(err => {
+                        migrateBtn.disabled = false;
+                        migrateBtn.textContent = 'Migrate Email Logs';
+                        if (resultSpan) {
+                            resultSpan.style.color = '#dc3545';
+                            resultSpan.textContent = 'Network error';
+                        }
+                        alert('Network error: ' + err.message);
+                    });
+            });
+        }
     }
 };
 

@@ -263,6 +263,14 @@ button.zs-mb-link {
     color: var(--zs-mb-label-color);
 }
 
+/* Specific alignment for email/holded action buttons with badges */
+.zs-manual-email-btn,
+.zs-manual-holded-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 /* Destructive variant — red text by default, stronger on hover */
 .zs-btn.is-destructive {
     color: var(--zs-btn-destructive-color);
@@ -559,19 +567,8 @@ button.zs-mb-link {
     text-transform: uppercase;
     line-height: 1;
     position: absolute;
-    right: 0;
-    top: 0;
-}
-
-/* Badge base styling for metaboxes (absolute positioning in log wrappers) */
-.zs-deposits-logs-metabox .zs-badge,
-.zs-email-logs-metabox .zs-badge,
-.zs-email-logs-metabox .zs-badge-type,
-.zs-status-logs-metabox .zs-badge,
-.zs-deposits-calculator-wrapper .zs-badge {
-    position: absolute;
-    top: 8px;
     right: 8px;
+    top: 8px;
 }
 
 /* Adjust calculator wrapper for badge positioning */
