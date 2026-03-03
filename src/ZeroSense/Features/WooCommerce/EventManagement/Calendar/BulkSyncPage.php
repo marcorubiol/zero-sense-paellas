@@ -141,20 +141,8 @@ class BulkSyncPage implements FeatureInterface
         });
         
         document.getElementById('zs-bulk-delete-form').addEventListener('submit', function(e) {
-            if (!confirm('<?php esc_js(_e('⚠️ WARNING: This will DELETE ALL calendar events. This cannot be undone. Are you absolutely sure?', 'zero-sense')); ?>')) {
+            if (!confirm('<?php esc_js(_e('⚠️ WARNING: This will DELETE ALL calendar events. This cannot be undone. Are you sure?', 'zero-sense')); ?>')) {
                 e.preventDefault();
-                return;
-            }
-            
-            if (!confirm('<?php esc_js(_e('This is your last chance. Type YES in the next prompt to confirm deletion.', 'zero-sense')); ?>')) {
-                e.preventDefault();
-                return;
-            }
-            
-            var confirmation = prompt('<?php esc_js(_e('Type YES in capital letters to confirm deletion:', 'zero-sense')); ?>');
-            if (confirmation !== 'YES') {
-                e.preventDefault();
-                alert('<?php esc_js(_e('Deletion cancelled.', 'zero-sense')); ?>');
                 return;
             }
             
