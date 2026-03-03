@@ -122,7 +122,7 @@ class CalendarLogMetabox
 
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
+        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">';
         if ($eventId !== '') {
             if (!$isReserved) {
                 // Update button - only if event_id exists and NOT reserved
@@ -130,6 +130,11 @@ class CalendarLogMetabox
                 echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
                 echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
                 echo '</button>';
+            } else {
+                // Show RESERVED badge
+                echo '<span class="zs-badge zs-badge-reserved" style="background:#10b981;color:#fff;padding:6px 12px;border-radius:4px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">';
+                echo esc_html__('Reserved', 'zero-sense');
+                echo '</span>';
             }
             
             // Delete button - only if event_id exists
@@ -306,14 +311,14 @@ class CalendarLogMetabox
                     'class' => 'zs-badge-manual',
                     'item_class' => 'zs-manual',
                     'label' => __('MAN', 'zero-sense'),
-                    'title' => __('Event updated manually', 'zero-sense'),
+                    'title' => __('Google Calendar Event Reserved', 'zero-sense'),
                 ];
             }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Event updated', 'zero-sense'),
+                'title' => __('Google Calendar Event Reserved', 'zero-sense'),
             ];
         }
         
