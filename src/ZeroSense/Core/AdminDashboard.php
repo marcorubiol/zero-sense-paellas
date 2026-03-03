@@ -666,6 +666,24 @@ class AdminDashboard
         $result = update_option($optionName, $enabled ? 1 : 0);
         error_log("AdminDashboard: update_option result = " . var_export($result, true));
         
+        // If update_option failed, try direct DB insertion
+        if (!$result) {
+            error_log("AdminDashboard: update_option failed, trying direct DB insertion");
+            $direct_result = $wpdb->query($wpdb->prepare(
+                "INSERT INTO $wpdb->options (option_name, option_value, autoload) 
+                 VALUES (%s, %s, 'yes') 
+                 ON DUPLICATE KEY UPDATE option_value = %s",
+                $optionName, $enabled ? '1' : '0', $enabled ? '1' : '0'
+            ));
+            error_log("AdminDashboard: direct DB insertion result = " . var_export($direct_result, true));
+            
+            // Clear WordPress options cache
+            wp_cache_delete($optionName, 'options');
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+            }
+        }
+        
         // Check DB value immediately after update
         $after_db = $wpdb->get_var($wpdb->prepare(
             "SELECT option_value FROM $wpdb->options WHERE option_name = %s",
