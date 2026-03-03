@@ -173,6 +173,9 @@ class CalendarLogMetabox
     private function renderInlineScript(int $orderId): void
     {
         $nonce = wp_create_nonce('zs_calendar_action');
+        
+        // Force cache bust
+        echo '<!-- ZS Calendar v2.0 -->';
         ?>
         <script>
         (function() {
