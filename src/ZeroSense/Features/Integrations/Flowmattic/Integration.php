@@ -152,11 +152,16 @@ class Integration
             
             $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
             if (!is_array($context)) {
+                error_log('❌ Context not found for workflow ' . $workflowId . ' order ' . $orderId);
                 continue;
             }
             
+            error_log('✅ Found valid transient context: ' . json_encode($context));
+            
             // Found a valid context - use it
             $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
+            
+            error_log('💾 Logging email from transient with workflow_id: ' . $workflowId . ', status: ' . $status);
             
             $this->logEmailToFlowmattic(
                 $workflowId,
