@@ -652,7 +652,7 @@ class AdminDashboard
             return;
         }
 
-        // Update the option - use update_option for reliability with boolean values
+        // Update the option - use add_option to force creation in database
         error_log("AdminDashboard: Updating {$optionName} to " . ($enabled ? '1' : '0'));
         
         // Check if option exists before update
@@ -663,8 +663,10 @@ class AdminDashboard
         ));
         error_log("AdminDashboard: Before update DB value = " . var_export($before_db, true));
         
-        $result = update_option($optionName, $enabled ? 1 : 0);
-        error_log("AdminDashboard: update_option result = " . var_export($result, true));
+        // Delete option first to clear any cache issues, then add it fresh
+        delete_option($optionName);
+        $result = add_option($optionName, $enabled ? 1 : 0, '', 'no');
+        error_log("AdminDashboard: add_option result = " . var_export($result, true));
         
         // Check DB value immediately after update
         $after_db = $wpdb->get_var($wpdb->prepare(
