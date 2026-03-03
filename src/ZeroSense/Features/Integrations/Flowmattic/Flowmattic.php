@@ -928,12 +928,6 @@ class Flowmattic implements FeatureInterface
                     const orderId = this.getAttribute('data-order-id');
                     const nonce = document.getElementById('zs_manual_email_nonce').value;
                     
-                    console.log('🔵 Manual Email Button Clicked:', {
-                        workflowId: workflowId,
-                        orderId: orderId,
-                        buttonText: workflowLabel
-                    });
-                    
                     this.disabled = true;
                     const labelEl = this.querySelector('.zs-email-btn-label') || this;
                     const originalText = labelEl.textContent;
@@ -941,21 +935,17 @@ class Flowmattic implements FeatureInterface
                     
                     const requestStartTime = Date.now();
                     
-                    const requestData = {
-                        action: 'zs_flow_send_manual_email',
-                        workflow_id: workflowId,
-                        order_id: orderId,
-                        nonce: nonce
-                    };
-                    
-                    console.log('📤 Sending AJAX request:', requestData);
-                    
                     fetch(ajaxurl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                         },
-                        body: new URLSearchParams(requestData)
+                        body: new URLSearchParams({
+                            action: 'zs_flow_send_manual_email',
+                            workflow_id: workflowId,
+                            order_id: orderId,
+                            nonce: nonce
+                        })
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -1326,8 +1316,6 @@ class Flowmattic implements FeatureInterface
         $workflowId = sanitize_text_field(wp_unslash($_POST['workflow_id'] ?? ''));
         $orderId = intval(wp_unslash($_POST['order_id'] ?? 0));
         
-        error_log('🔵 Manual Email AJAX received: workflow_id=' . $workflowId . ', order_id=' . $orderId);
-        
         if (!$workflowId || !$orderId) {
             wp_send_json_error('missing_parameters');
         }
@@ -1339,10 +1327,6 @@ class Flowmattic implements FeatureInterface
         
         // Check if this is a valid email trigger
         $trigger = $this->getEmailTriggerByWorkflowId($workflowId);
-        
-        error_log('🔍 Looking for trigger with workflow_id: ' . $workflowId);
-        error_log('📋 Trigger found: ' . ($trigger ? json_encode($trigger) : 'NULL'));
-        
         if (!$trigger) {
             wp_send_json_error('invalid_trigger');
         }
@@ -2075,23 +2059,14 @@ class Flowmattic implements FeatureInterface
      */
     private function getEmailLogsForOrder(int $orderId): array
     {
-        error_log('📊 getEmailLogsForOrder called for order: ' . $orderId);
-        
         $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
-        
-        error_log('📊 Found ' . count($executions) . ' email executions for order ' . $orderId);
-        error_log('📊 Raw executions: ' . json_encode($executions));
-        
         $logs = [];
         
         foreach ($executions as $exec) {
-            $description = $this->getWorkflowDescription($exec['workflow_id'], 'email');
-            error_log('📊 Processing execution - workflow_id: ' . $exec['workflow_id'] . ', description: ' . $description);
-            
             $logs[] = [
                 'workflow_id' => $exec['workflow_id'],
                 'status' => $exec['status'],
-                'description' => $description,
+                'description' => $this->getWorkflowDescription($exec['workflow_id'], 'email'),
                 'timestamp' => strtotime($exec['timestamp']),
                 'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($exec['timestamp'])),
                 'email_to' => $exec['metadata']['email_to'] ?? '',
@@ -2102,7 +2077,10 @@ class Flowmattic implements FeatureInterface
             ];
         }
         
-        error_log('📊 Returning ' . count($logs) . ' formatted logs');
+        // Sort by timestamp descending (newest first)
+        usort($logs, function($a, $b) {
+            return $b['timestamp'] - $a['timestamp'];
+        });
         
         return $logs;
     }
