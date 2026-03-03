@@ -10,6 +10,7 @@ class CalendarLogMetabox
     {
         if (!is_admin()) { return; }
         add_action('add_meta_boxes', [$this, 'addMetabox']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
         
         // AJAX handlers
         add_action('wp_ajax_zs_calendar_create_event', [$this, 'ajaxCreateEvent']);
@@ -17,6 +18,51 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_calendar_check_status', [$this, 'ajaxCheckStatus']);
         add_action('wp_ajax_zs_calendar_get_header', [$this, 'ajaxGetHeader']);
         add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
+    }
+    
+    public function enqueueScripts($hook): void
+    {
+        // Only load on order edit pages
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+        
+        // Get order ID
+        $orderId = 0;
+        if (isset($_GET['id'])) {
+            $orderId = absint($_GET['id']);
+        } elseif (isset($_GET['post'])) {
+            $orderId = absint($_GET['post']);
+        }
+        
+        if (!$orderId) {
+            return;
+        }
+        
+        // Enqueue script
+        wp_enqueue_script(
+            'zs-calendar-metabox',
+            plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/js/calendar-metabox.js',
+            ['jquery'],
+            '1.0.0',
+            true
+        );
+        
+        // Pass configuration to JavaScript
+        wp_localize_script('zs-calendar-metabox', 'zsCalendarConfig', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('zs_calendar_action'),
+            'orderId' => $orderId,
+            'i18n' => [
+                'confirmDelete' => __('Delete Google Calendar event? This cannot be undone.', 'zero-sense'),
+                'confirmUpdate' => __('Mark event as reserved?', 'zero-sense'),
+                'confirmCreate' => __('Create Google Calendar event for this order?', 'zero-sense'),
+                'loadingDelete' => __('Deleting...', 'zero-sense'),
+                'loadingUpdate' => __('Updating...', 'zero-sense'),
+                'loadingCreate' => __('Creating...', 'zero-sense'),
+            ]
+        ]);
     }
 
     public function addMetabox(): void
@@ -165,133 +211,6 @@ class CalendarLogMetabox
         }
 
         echo '</div>';
-        
-        echo '<!-- BEFORE renderInlineScript -->';
-        
-        // Add inline JavaScript for AJAX handling
-        $this->renderInlineScript($orderId);
-        
-        echo '<!-- AFTER renderInlineScript -->';
-    }
-    
-    private function renderInlineScript(int $orderId): void
-    {
-        $nonce = wp_create_nonce('zs_calendar_action');
-        
-        // Force cache bust
-        echo '<!-- ZS Calendar v2.0 -->';
-        ?>
-        <script>
-        (function() {
-            function attachButtonListeners() {
-                document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                    if (this.disabled) return;
-
-                    var action = this.getAttribute('data-action');
-                    var orderId = this.getAttribute('data-order-id');
-                    var labelEl = this.querySelector('.zs-calendar-btn-label');
-                    var originalText = labelEl.textContent;
-                    var btn = this;
-                    
-                    var msgs = {
-                        'delete': ['Delete Google Calendar event? This cannot be undone.', 'Deleting...'],
-                        'update': ['Mark event as reserved?', 'Updating...'],
-                        'create': ['Create Google Calendar event for this order?', 'Creating...']
-                    };
-                    
-                    if (!confirm(msgs[action][0])) return;
-                    
-                    labelEl.textContent = msgs[action][1];
-                    
-                    // Trigger workflow via AJAX
-                    fetch(ajaxurl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: new URLSearchParams({
-                            action: 'zs_calendar_' + action + '_event',
-                            order_id: orderId,
-                            nonce: <?php echo wp_json_encode($nonce); ?>})
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        // Start polling for changes
-                        let attempts = 0;
-                        const maxAttempts = 10;
-                        
-                        const poll = () => {
-                            fetch(ajaxurl, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                body: new URLSearchParams({
-                                    action: 'zs_calendar_check_status',
-                                    order_id: orderId,
-                                    check_action: action,
-                                    nonce: <?php echo wp_json_encode($nonce); ?>})
-                            })
-                            .then(r => r.json())
-                            .then(res => {
-                                if (res.success && res.data && res.data.changed) {
-                                    // Status changed, refresh header
-                                    fetch(ajaxurl, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                        body: new URLSearchParams({
-                                            action: 'zs_calendar_get_header',
-                                            order_id: orderId,
-                                            nonce: <?php echo wp_json_encode($nonce); ?>})
-                                    })
-                                    .then(r => r.json())
-                                    .then(headerRes => {
-                                        if (headerRes.success && headerRes.data && headerRes.data.html) {
-                                            // Replace header + buttons
-                                            const container = document.querySelector('.zs-calendar-logs-metabox');
-                                            if (container) {
-                                                const temp = document.createElement('div');
-                                                temp.innerHTML = headerRes.data.html;
-                                                const oldHeader = container.querySelector('.zs-calendar-header-section');
-                                                if (oldHeader && temp.firstElementChild) {
-                                                    oldHeader.replaceWith(temp.firstElementChild);
-                                                }
-                                            }
-                                        }
-                                        // Re-attach event listeners to new buttons
-                                        attachButtonListeners();
-                                    });
-                                } else if (attempts < maxAttempts) {
-                                    attempts++;
-                                    setTimeout(poll, 1000);
-                                } else {
-                                    btn.disabled = false;
-                                    labelEl.textContent = originalText;
-                                }
-                            })
-                            .catch(err => {
-                                attempts++;
-                                if (attempts < maxAttempts) {
-                                    setTimeout(poll, 1000);
-                                } else {
-                                    btn.disabled = false;
-                                    labelEl.textContent = originalText;
-                                }
-                            });
-                        };
-                        
-                        setTimeout(poll, 1000);
-                    })
-                    .catch(err => {
-                        btn.disabled = false;
-                        labelEl.textContent = originalText;
-                        alert('Error: ' + err.message);
-                    });
-                });
-            }
-            
-            // Initialize on page load
-            document.addEventListener('DOMContentLoaded', attachButtonListeners);
-        })();
-        </script>
-        <?php
     }
 
     private function renderLogItem(array $log): void
