@@ -220,8 +220,6 @@ class CalendarLogMetabox
                 echo '}});});</script>';
             }
         }
-
-        echo '</div>';
     }
 
     private function renderLogItem(array $log): void
