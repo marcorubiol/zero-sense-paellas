@@ -173,51 +173,18 @@ class CalendarLogMetabox
     private function renderInlineScript(int $orderId): void
     {
         $nonce = wp_create_nonce('zs_calendar_action');
-        
-        // Debug marker
-        echo '<!-- ZS Calendar Script Start -->';
         ?>
         <script>
-        try {
-            console.log('[Calendar] Script loaded');
-        } catch(e) {
-            console.error('[Calendar] Error at script start:', e);
-        }
-        
         (function() {
-            try {
-                console.log('[Calendar] IIFE executing');
-            
-            // Ensure ajaxurl is defined
-            if (typeof ajaxurl === 'undefined') {
-                var ajaxurl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
-                console.log('[Calendar] ajaxurl defined:', ajaxurl);
-            }
-            
             function attachButtonListeners() {
-                const buttons = document.querySelectorAll('.zs-calendar-action-btn');
-                console.log('[Calendar] Attaching listeners to', buttons.length, 'buttons');
-                
-                buttons.forEach(function(btn) {
-                    // Remove existing listener if any
-                    btn.replaceWith(btn.cloneNode(true));
-                });
-                
                 document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                    console.log('[Calendar] Button clicked:', this.getAttribute('data-action'));
-                    
-                    if (this.disabled) {
-                        console.log('[Calendar] Button is disabled, ignoring');
-                        return;
-                    }
+                    if (this.disabled) return;
 
                     const action = this.getAttribute('data-action');
                     const orderId = this.getAttribute('data-order-id');
                     const labelEl = this.querySelector('.zs-calendar-btn-label');
                     const originalText = labelEl.textContent;
-                    
-                    console.log('[Calendar] Action:', action, 'Order:', orderId);
                     
                     let confirmMsg, loadingText;
                     if (action === 'delete') {
@@ -237,8 +204,6 @@ class CalendarLogMetabox
                     
                     const btn = this;
                     
-                    console.log('[Calendar] Triggering AJAX for action:', action);
-                    
                     // Trigger workflow via AJAX
                     fetch(ajaxurl, {
                         method: 'POST',
@@ -251,14 +216,11 @@ class CalendarLogMetabox
                     })
                     .then(r => r.json())
                     .then(data => {
-                        console.log('[Calendar] AJAX response:', data);
                         // Start polling for changes
                         let attempts = 0;
-                        const maxAttempts = 10; // 10 seconds
+                        const maxAttempts = 10;
                         
                         const poll = () => {
-                            console.log('[Calendar] Polling attempt', attempts + 1, '/', maxAttempts);
-                            
                             fetch(ajaxurl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -271,10 +233,7 @@ class CalendarLogMetabox
                             })
                             .then(r => r.json())
                             .then(res => {
-                                console.log('[Calendar] Poll response:', res);
-                                
                                 if (res.success && res.data && res.data.changed) {
-                                    console.log('[Calendar] Status changed! Refreshing header...');
                                     // Status changed, refresh header
                                     fetch(ajaxurl, {
                                         method: 'POST',
@@ -304,17 +263,13 @@ class CalendarLogMetabox
                                     });
                                 } else if (attempts < maxAttempts) {
                                     attempts++;
-                                    console.log('[Calendar] Not changed yet, polling again...');
                                     setTimeout(poll, 1000);
                                 } else {
-                                    // Timeout, restore button
-                                    console.log('[Calendar] Polling timeout reached');
                                     btn.disabled = false;
                                     labelEl.textContent = originalText;
                                 }
                             })
                             .catch(err => {
-                                console.error('[Calendar] Poll error:', err);
                                 attempts++;
                                 if (attempts < maxAttempts) {
                                     setTimeout(poll, 1000);
@@ -325,11 +280,9 @@ class CalendarLogMetabox
                             });
                         };
                         
-                        console.log('[Calendar] Starting polling in 1 second...');
                         setTimeout(poll, 1000);
                     })
                     .catch(err => {
-                        console.error('[Calendar] AJAX error:', err);
                         btn.disabled = false;
                         labelEl.textContent = originalText;
                         alert('Error: ' + err.message);
@@ -339,15 +292,9 @@ class CalendarLogMetabox
             
             // Initialize on page load
             document.addEventListener('DOMContentLoaded', attachButtonListeners);
-            
-            } catch(e) {
-                console.error('[Calendar] Fatal error in IIFE:', e);
-                console.error('[Calendar] Stack:', e.stack);
-            }
         })();
         </script>
         <?php
-        echo '<!-- ZS Calendar Script End -->';
     }
 
     private function renderLogItem(array $log): void
