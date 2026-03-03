@@ -2062,7 +2062,9 @@ class Flowmattic implements FeatureInterface
         error_log('🔍 Raw executions count: ' . count($executions));
         
         foreach ($executions as $exec) {
+            error_log('🔍 Raw timestamp from exec: ' . var_export($exec['timestamp'], true) . ' (type: ' . gettype($exec['timestamp']) . ')');
             $timestamp = strtotime($exec['timestamp']);
+            error_log('🔍 After strtotime: ' . var_export($timestamp, true));
             $logs[] = [
                 'workflow_id' => $exec['workflow_id'],
                 'status' => $exec['status'],
