@@ -356,22 +356,54 @@ class Integration
 
         $delay = 0;
         foreach ($ids as $workflowId) {
-            // Check if this is an email workflow and if send_once is enabled (status transitions only)
-            if ($this->shouldSkipEmailWorkflow($workflowId, $orderId)) {
-                // Log skipped due to send_once
-                $this->logEmailToFlowmattic(
-                    $workflowId,
-                    $orderId,
-                    \ZeroSense\Features\Integrations\Flowmattic\Flowmattic::EMAIL_STATUS_SKIPPED,
-                    [
-                        'error' => sprintf(
-                            'Not sent: already sent once automatically (send_once). From: %s → To: %s',
-                            $oldStatus,
-                            $newStatus
-                        ),
-                        'trigger_source' => 'zero_sense_status_transition'
-                    ]
-                );
+            // Check if this workflow should be skipped (emails with send_once or Holded with run_once)
+            if ($this->shouldSkipWorkflow($workflowId, $orderId)) {
+                // Determine workflow type for appropriate logging
+                $stored = get_option('zs_flowmattic_custom_triggers', []);
+                $isEmail = false;
+                $isHolded = false;
+                
+                foreach ($stored as $trigger) {
+                    if (($trigger['workflow_id'] ?? '') === $workflowId) {
+                        $isEmail = !empty($trigger['email_config']['is_email']);
+                        $isHolded = !empty($trigger['workflow_config']['category']) && $trigger['workflow_config']['category'] === 'holded';
+                        break;
+                    }
+                }
+                
+                if ($isEmail) {
+                    // Log skipped email
+                    $this->logEmailToFlowmattic(
+                        $workflowId,
+                        $orderId,
+                        \ZeroSense\Features\Integrations\Flowmattic\Flowmattic::EMAIL_STATUS_SKIPPED,
+                        [
+                            'error' => sprintf(
+                                'Not sent: already sent once automatically (send_once). From: %s → To: %s',
+                                $oldStatus,
+                                $newStatus
+                            ),
+                            'trigger_source' => 'zero_sense_status_transition'
+                        ]
+                    );
+                } elseif ($isHolded) {
+                    // Log skipped Holded workflow
+                    $flowmatticFeature = new \ZeroSense\Features\Integrations\Flowmattic\Flowmattic();
+                    $flowmatticFeature->logWorkflowExecution(
+                        $workflowId,
+                        $orderId,
+                        \ZeroSense\Features\Integrations\Flowmattic\Flowmattic::WORKFLOW_STATUS_SKIPPED,
+                        [
+                            'category' => 'holded',
+                            'error' => sprintf(
+                                'Not executed: already run once automatically (run_once). From: %s → To: %s',
+                                $oldStatus,
+                                $newStatus
+                            ),
+                            'trigger_source' => 'zero_sense_status_transition'
+                        ]
+                    );
+                }
                 continue;
             }
             // Prepare debug data for async or direct execution
@@ -468,6 +500,36 @@ class Integration
             set_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId, $context, 10 * MINUTE_IN_SECONDS);
             set_transient('zs_wf_ctx_idx_' . $workflowId, $orderId, 10 * MINUTE_IN_SECONDS);
         }
+        
+        // Check if this is a Holded workflow and log automatic execution
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        $isHolded = false;
+        foreach ($stored as $trigger) {
+            if (($trigger['workflow_id'] ?? '') === $workflowId && 
+                !empty($trigger['workflow_config']['category']) && 
+                $trigger['workflow_config']['category'] === 'holded') {
+                $isHolded = true;
+                break;
+            }
+        }
+        
+        if ($isHolded && $orderId > 0) {
+            $flowmatticFeature = new \ZeroSense\Features\Integrations\Flowmattic\Flowmattic();
+            $flowmatticFeature->logWorkflowExecution(
+                $workflowId,
+                $orderId,
+                \ZeroSense\Features\Integrations\Flowmattic\Flowmattic::WORKFLOW_STATUS_AUTO,
+                [
+                    'category' => 'holded',
+                    'trigger_source' => 'zero_sense_status_transition',
+                    'metadata' => [
+                        'old_status' => $debugData['old_status'] ?? '',
+                        'new_status' => $debugData['new_status'] ?? ''
+                    ]
+                ]
+            );
+        }
+        
         do_action('flowmattic_trigger_workflow', $workflowId, $debugData);
 
         // Clean up context after a short delay
@@ -486,30 +548,49 @@ class Integration
     }
 
     /**
-     * Check if email workflow should be skipped due to send_once setting
+     * Check if workflow should be skipped due to run_once/send_once setting (generic)
      */
-    private function shouldSkipEmailWorkflow(string $workflowId, int $orderId): bool
+    private function shouldSkipWorkflow(string $workflowId, int $orderId): bool
     {
         $stored = get_option('zs_flowmattic_custom_triggers', []);
         if (!is_array($stored)) {
             return false;
         }
 
-        foreach ($stored as $trigger) {
-            if (
-                ($trigger['workflow_id'] ?? '') === $workflowId &&
-                ($trigger['tag'] ?? '') === 'status' &&
-                !empty($trigger['email_config']['is_email']) &&
-                !empty($trigger['email_config']['send_once'])
-            ) {
+        $flowmatticFeature = new \ZeroSense\Features\Integrations\Flowmattic\Flowmattic();
 
-                // Check if email was already sent for this order
-                $flowmatticFeature = new \ZeroSense\Features\Integrations\Flowmattic\Flowmattic();
+        foreach ($stored as $trigger) {
+            if (($trigger['workflow_id'] ?? '') !== $workflowId) {
+                continue;
+            }
+            
+            if (($trigger['tag'] ?? '') !== 'status') {
+                continue;
+            }
+
+            // Check email workflows with send_once
+            if (!empty($trigger['email_config']['is_email']) && !empty($trigger['email_config']['send_once'])) {
                 return $flowmatticFeature->hasEmailBeenSent($workflowId, $orderId);
+            }
+
+            // Check Holded workflows with run_once
+            if (!empty($trigger['workflow_config']['category']) && 
+                $trigger['workflow_config']['category'] === 'holded' && 
+                !empty($trigger['workflow_config']['run_once'])) {
+                return $flowmatticFeature->hasWorkflowExecuted($workflowId, $orderId, 'holded');
             }
         }
 
         return false;
+    }
+
+    /**
+     * Check if email workflow should be skipped due to send_once setting
+     * @deprecated Use shouldSkipWorkflow() instead
+     */
+    private function shouldSkipEmailWorkflow(string $workflowId, int $orderId): bool
+    {
+        return $this->shouldSkipWorkflow($workflowId, $orderId);
     }
 
     private function resolveWorkflowsForTransition(string $from, string $to)

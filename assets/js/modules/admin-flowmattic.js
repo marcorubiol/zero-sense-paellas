@@ -87,16 +87,55 @@ const ZeroSenseFlowmattic = {
             }
         });
         
+        // Handle Holded checkbox toggle
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'zs-flow-is-holded') {
+                const isChecked = e.target.checked;
+                const holdedDescEl = document.getElementById('zs-flow-holded-desc');
+                const runOnceEl = document.getElementById('zs-flow-holded-run-once');
+                const holdedManualStatesEl = document.getElementById('zs-flow-holded-manual-states');
+                
+                const tagEl = document.getElementById('zs-flow-tag');
+                const isStatus = tagEl?.value === 'status';
+                const holdedFieldsContainer = document.getElementById('zs-holded-fields');
+                const holdedHelpEl = document.getElementById('zs-flow-holded-help');
+                
+                // Toggle entire Holded fields container
+                if (holdedFieldsContainer) {
+                    holdedFieldsContainer.style.display = isChecked ? 'block' : 'none';
+                }
+                
+                // Show/hide help text
+                if (holdedHelpEl) {
+                    holdedHelpEl.style.display = isChecked ? 'block' : 'none';
+                }
+                
+                // Update field visibility based on action type
+                ZeroSenseFlowmattic.updateHoldedFieldsForActionType(isStatus, isChecked);
+                
+                // Clear values when disabling
+                if (!isChecked) {
+                    if (holdedDescEl) holdedDescEl.value = '';
+                    if (runOnceEl) runOnceEl.checked = false;
+                    if (holdedManualStatesEl) {
+                        Array.from(holdedManualStatesEl.options).forEach(opt => opt.selected = false);
+                    }
+                }
+            }
+        });
+        
         // Handle action type change to show/hide fields conditionally
         document.addEventListener('change', function(e) {
             if (e.target.id === 'zs-flow-tag') {
                 const isClass = e.target.value === 'class';
                 const isStatus = e.target.value === 'status';
                 const isEmailChecked = document.getElementById('zs-flow-is-email')?.checked;
+                const isHoldedChecked = document.getElementById('zs-flow-is-holded')?.checked;
                 
                 const manualStatesEl = document.getElementById('zs-flow-manual-states');
                 const emailDescEl = document.getElementById('zs-flow-email-desc');
                 const sendOnceEl = document.getElementById('zs-flow-send-once');
+                const runOnceEl = document.getElementById('zs-flow-holded-run-once');
                 
                 // Clear values when switching action types
                 if (!isClass && manualStatesEl) {
@@ -108,8 +147,16 @@ const ZeroSenseFlowmattic = {
                     sendOnceEl.checked = false;
                 }
                 
+                // Reset run-once when leaving Status context
+                if (!isStatus && runOnceEl) {
+                    runOnceEl.checked = false;
+                }
+                
                 // Update email fields for new action type
                 ZeroSenseFlowmattic.updateEmailFieldsForActionType(isClass, isStatus, isEmailChecked);
+                
+                // Update Holded fields for new action type
+                ZeroSenseFlowmattic.updateHoldedFieldsForActionType(isStatus, isHoldedChecked);
                 
                 // Update generated class for Class Actions
                 if (isClass && isEmailChecked) {
@@ -175,6 +222,23 @@ const ZeroSenseFlowmattic = {
         
         if (generatedClassContainer) {
             generatedClassContainer.style.display = (isClass && isEmailChecked) ? 'block' : 'none';
+        }
+    },
+
+    /**
+     * Update Holded fields based on action type (only Status Transitions supported)
+     */
+    updateHoldedFieldsForActionType: function(isStatus, isHoldedChecked) {
+        const runOnceContainer = document.getElementById('zs-flow-holded-run-once-container');
+        const holdedManualStatesContainer = document.getElementById('zs-flow-holded-manual-states-container');
+        
+        // Only show Holded fields for Status Transitions
+        if (runOnceContainer) {
+            runOnceContainer.style.display = (isHoldedChecked && isStatus) ? 'block' : 'none';
+        }
+        
+        if (holdedManualStatesContainer) {
+            holdedManualStatesContainer.style.display = (isHoldedChecked && isStatus) ? 'block' : 'none';
         }
     },
 
@@ -431,6 +495,36 @@ const ZeroSenseFlowmattic = {
                 }
             }
             
+            // Holded configuration (only for status transitions)
+            const isHoldedEl = document.getElementById('zs-flow-is-holded');
+            const holdedDescEl = document.getElementById('zs-flow-holded-desc');
+            const runOnceEl = document.getElementById('zs-flow-holded-run-once');
+            const holdedManualStatesEl = document.getElementById('zs-flow-holded-manual-states');
+            
+            if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
+                fd.append('is_holded', 'true');
+                
+                if (holdedDescEl) {
+                    const holdedDescValue = holdedDescEl.value.trim();
+                    if (!holdedDescValue) {
+                        alert('Holded sync description is required');
+                        addBtn.disabled = false;
+                        addBtn.textContent = originalText;
+                        return;
+                    }
+                    fd.append('holded_description', holdedDescValue);
+                }
+                
+                if (runOnceEl && runOnceEl.checked) {
+                    fd.append('holded_run_once', 'true');
+                }
+                
+                if (holdedManualStatesEl) {
+                    const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                    selectedStates.forEach(state => fd.append('holded_manual_states[]', state));
+                }
+            }
+            
             if (tag === 'status') {
                 const fromEl = document.getElementById('zs-flow-from');
                 const toEl = document.getElementById('zs-flow-to');
@@ -478,6 +572,7 @@ const ZeroSenseFlowmattic = {
                         
                         let extraHtml = '';
                         let emailIndicator = '';
+                        let holdedIndicator = '';
                         
                         if (isEmailEl && isEmailEl.checked) {
                             const emailDesc = emailDescEl ? emailDescEl.value.trim() : '';
@@ -485,6 +580,14 @@ const ZeroSenseFlowmattic = {
                             const emailTitle = emailDesc || 'Email workflow';
                             const sendOnceText = sendOnce ? ' (once)' : '';
                             emailIndicator = '<span class="zs-flow-email" title="' + emailTitle + sendOnceText + '" style="color:#0073aa;font-weight:bold;">📧</span> ';
+                        }
+                        
+                        if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
+                            const holdedDesc = holdedDescEl ? holdedDescEl.value.trim() : '';
+                            const runOnce = (runOnceEl && runOnceEl.checked);
+                            const holdedTitle = holdedDesc || 'Holded sync';
+                            const runOnceText = runOnce ? ' (once)' : '';
+                            holdedIndicator = '<span class="zs-flow-holded" title="' + holdedTitle + runOnceText + '" style="color:#7C3AED;font-weight:bold;">🔗</span> ';
                         }
                         
                         if (tag === 'status') {
@@ -503,7 +606,7 @@ const ZeroSenseFlowmattic = {
                         
                         li.innerHTML = '<button type="button" class="zs-btn-icon zs-flow-play" data-workflow-id="' + safeWid + '" title="Run workflow">▶</button> '
                                      + '<span class="zs-flow-title">' + safeTitle + '</span> · '
-                                     + emailIndicator + extraHtml + '<code class="zs-flow-id">' + safeWid + '</code> · '
+                                     + emailIndicator + holdedIndicator + extraHtml + '<code class="zs-flow-id">' + safeWid + '</code> · '
                                      + '<button type="button" class="button-link zs-flow-edit">Edit</button> · '
                                      + '<button type="button" class="button-link zs-flow-delete">Delete</button>';
                         
@@ -524,6 +627,23 @@ const ZeroSenseFlowmattic = {
                                 const selectedStates = Array.from(manualStatesEl.selectedOptions).map(opt => opt.value);
                                 if (selectedStates.length > 0) {
                                     li.setAttribute('data-manual-states', selectedStates.join(','));
+                                }
+                            }
+                        }
+                        
+                        // Add Holded data attributes
+                        if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
+                            li.setAttribute('data-is-holded', 'true');
+                            if (holdedDescEl && holdedDescEl.value.trim()) {
+                                li.setAttribute('data-holded-desc', holdedDescEl.value.trim());
+                            }
+                            if (runOnceEl && runOnceEl.checked) {
+                                li.setAttribute('data-run-once', 'true');
+                            }
+                            if (holdedManualStatesEl) {
+                                const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                                if (selectedStates.length > 0) {
+                                    li.setAttribute('data-holded-manual-states', selectedStates.join(','));
                                 }
                             }
                         }
