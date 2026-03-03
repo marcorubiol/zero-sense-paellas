@@ -77,30 +77,30 @@
                         .then(function(r) { return r.json(); })
                         .then(function(res) {
                             if (res.success && res.data && res.data.changed) {
-                                // If it was an update (reserve) action, show RESERVED badge immediately
-                                if (action === 'update') {
-                                    const actionsDiv = button.closest('.zs-calendar-actions');
-                                    if (actionsDiv) {
-                                        // Remove the Reserve button
-                                        button.remove();
-                                        
-                                        // Add RESERVED badge
-                                        const badge = document.createElement('span');
-                                        badge.className = 'zs-badge zs-badge-reserved';
-                                        badge.textContent = 'RESERVED';
-                                        
-                                        // Insert badge before delete button
-                                        const deleteBtn = actionsDiv.querySelector('[data-action="delete"]');
-                                        if (deleteBtn) {
-                                            actionsDiv.insertBefore(badge, deleteBtn);
-                                        }
-                                    }
-                                }
-                                
-                                // Reload the page to show new logs
+                                // Refresh metabox content via AJAX
                                 // Wait 2 seconds to ensure FlowMattic has created the log
                                 setTimeout(function() {
-                                    location.reload();
+                                    fetch(config.ajaxUrl, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                        body: new URLSearchParams({
+                                            action: 'zs_calendar_get_content',
+                                            order_id: orderId,
+                                            nonce: config.nonce
+                                        })
+                                    })
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(contentRes) {
+                                        if (contentRes.success && contentRes.data && contentRes.data.html) {
+                                            // Replace entire metabox content
+                                            const metabox = document.querySelector('.zs-calendar-logs-metabox');
+                                            if (metabox) {
+                                                metabox.innerHTML = contentRes.data.html;
+                                                // Re-attach event listeners to new buttons
+                                                attachButtonListeners();
+                                            }
+                                        }
+                                    });
                                 }, 2000);
                             } else if (attempts < maxAttempts) {
                                 attempts++;

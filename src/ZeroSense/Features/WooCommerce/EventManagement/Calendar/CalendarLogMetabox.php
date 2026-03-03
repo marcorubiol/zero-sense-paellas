@@ -17,6 +17,7 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_calendar_delete_event', [$this, 'ajaxDeleteEvent']);
         add_action('wp_ajax_zs_calendar_check_status', [$this, 'ajaxCheckStatus']);
         add_action('wp_ajax_zs_calendar_get_header', [$this, 'ajaxGetHeader']);
+        add_action('wp_ajax_zs_calendar_get_content', [$this, 'ajaxGetContent']);
         add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
     }
     
@@ -97,13 +98,18 @@ class CalendarLogMetabox
             return;
         }
 
-        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
-        $logs = CalendarLogs::getForOrder($order);
-        $noLogs = empty($logs);
-
         wp_nonce_field('zs_calendar_action', 'zs_calendar_nonce');
         
         echo '<div class="zs-calendar-logs-metabox">';
+        $this->renderMetaboxContent($order, $orderId);
+        echo '</div>';
+    }
+    
+    private function renderMetaboxContent(WC_Order $order, int $orderId): void
+    {
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        $logs = CalendarLogs::getForOrder($order);
+        $noLogs = empty($logs);
 
         // Header section (wrapped for AJAX replacement)
         echo '<div class="zs-calendar-header-section">';
@@ -434,6 +440,28 @@ class CalendarLogMetabox
         wp_send_json_success(['changed' => $changed]);
     }
 
+    /**
+     * AJAX handler to get full metabox content (header + logs)
+     */
+    public function ajaxGetContent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        $order = wc_get_order($orderId);
+        
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Render full metabox content
+        ob_start();
+        $this->renderMetaboxContent($order, $orderId);
+        $html = ob_get_clean();
+        
+        wp_send_json_success(['html' => $html]);
+    }
+    
     /**
      * AJAX handler to get updated header HTML
      */
