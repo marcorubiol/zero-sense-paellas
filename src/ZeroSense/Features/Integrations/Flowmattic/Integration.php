@@ -85,11 +85,18 @@ class Integration
      */
     public function trackEmailSend(array $atts): array
     {
+        error_log('📧 trackEmailSend called - Subject: ' . ($atts['subject'] ?? 'N/A'));
+        error_log('📧 Active contexts count: ' . count(self::$activeWorkflowContexts));
+        
         if (!empty(self::$activeWorkflowContexts)) {
             $context = end(self::$activeWorkflowContexts);
+            error_log('✅ Using active context: ' . json_encode($context));
+            
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
                 // Determine status based on trigger source
                 $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
+
+                error_log('💾 Logging email with workflow_id: ' . $context['workflow_id'] . ', status: ' . $status);
 
                 // Log successful email send
                 $this->logEmailToFlowmattic(
@@ -104,6 +111,7 @@ class Integration
                 );
             }
         } else {
+            error_log('⚠️ No active context - attempting transient recovery');
             // No active context in memory - try to recover from transients
             // This handles cases where FlowMattic sends emails asynchronously
             $this->attemptTransientContextRecovery($atts);
@@ -117,11 +125,16 @@ class Integration
      */
     private function attemptTransientContextRecovery(array $atts): void
     {
+        error_log('🔄 Attempting transient context recovery for email subject: ' . ($atts['subject'] ?? 'N/A'));
+        
         // Get all stored workflow triggers to find potential matches
         $stored = get_option('zs_flowmattic_custom_triggers', []);
         if (!is_array($stored)) {
+            error_log('❌ No stored triggers found');
             return;
         }
+        
+        error_log('🔍 Checking ' . count($stored) . ' stored triggers for transient context');
         
         // Look for recently active workflow contexts
         foreach ($stored as $trigger) {
@@ -131,6 +144,8 @@ class Integration
             }
             
             $orderId = (int) get_transient('zs_wf_ctx_idx_' . $workflowId);
+            error_log('🔎 Checking workflow ' . $workflowId . ' - transient order_id: ' . $orderId);
+            
             if ($orderId <= 0) {
                 continue;
             }
