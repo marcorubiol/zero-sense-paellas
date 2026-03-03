@@ -654,7 +654,31 @@ class AdminDashboard
 
         // Update the option - use update_option for reliability with boolean values
         error_log("AdminDashboard: Updating {$optionName} to " . ($enabled ? '1' : '0'));
-        update_option($optionName, $enabled ? 1 : 0);
+        
+        // Check if option exists before update
+        global $wpdb;
+        $before_db = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_value FROM $wpdb->options WHERE option_name = %s",
+            $optionName
+        ));
+        error_log("AdminDashboard: Before update DB value = " . var_export($before_db, true));
+        
+        $result = update_option($optionName, $enabled ? 1 : 0);
+        error_log("AdminDashboard: update_option result = " . var_export($result, true));
+        
+        // Check DB value immediately after update
+        $after_db = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_value FROM $wpdb->options WHERE option_name = %s",
+            $optionName
+        ));
+        error_log("AdminDashboard: After update DB value = " . var_export($after_db, true));
+        
+        // Clear all caches to ensure fresh read
+        wp_cache_delete($optionName, 'options');
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+        
         error_log("AdminDashboard: After update, value = " . var_export(get_option($optionName), true));
         
         // Re-initialize the specific feature to apply the change immediately
@@ -670,6 +694,10 @@ class AdminDashboard
                 break;
             }
         }
+        
+        // Force feature manager reload to get fresh instances
+        $this->featureManager->clearCache();
+        $this->featureManager->discoverFeatures();
         
         wp_send_json_success([
             'feature' => $featureName,
