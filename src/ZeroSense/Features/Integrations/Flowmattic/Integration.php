@@ -46,6 +46,9 @@ class Integration
         // Hook for Class Actions triggered by button clicks
         add_action('wp_ajax_zs_trigger_class_action', [$this, 'handleClassActionAjax']);
         add_action('wp_ajax_nopriv_zs_trigger_class_action', [$this, 'handleClassActionAjax']);
+        
+        // Hook for programmatic class action triggering (used by calendar AJAX handlers)
+        add_action('zs_trigger_class_action_direct', [$this, 'handleDirectClassAction'], 10, 2);
 
         // Add JavaScript for Class Action detection
         add_action('wp_enqueue_scripts', [$this, 'enqueueClassActionScript']);
@@ -680,6 +683,26 @@ class Integration
             : "Workflow triggered for class '{$className}' (no order context)";
 
         wp_send_json_success(['message' => $message]);
+    }
+
+    /**
+     * Handle direct class action triggering (programmatic, not AJAX)
+     * Used by calendar AJAX handlers and other internal code
+     */
+    public function handleDirectClassAction(string $className, int $orderId): void
+    {
+        if (!isset(self::$manualTriggers[$className])) {
+            return;
+        }
+
+        $workflowIds = self::$manualTriggers[$className];
+        if (is_array($workflowIds)) {
+            foreach ($workflowIds as $workflowId) {
+                $this->triggerClassWorkflow($workflowId, $className, $orderId, 'manual');
+            }
+        } else {
+            $this->triggerClassWorkflow($workflowIds, $className, $orderId, 'manual');
+        }
     }
 
     /**

@@ -10,6 +10,12 @@ class CalendarLogMetabox
     {
         if (!is_admin()) { return; }
         add_action('add_meta_boxes', [$this, 'addMetabox']);
+        
+        // AJAX handlers
+        add_action('wp_ajax_zs_calendar_create_event', [$this, 'ajaxCreateEvent']);
+        add_action('wp_ajax_zs_calendar_delete_event', [$this, 'ajaxDeleteEvent']);
+        add_action('wp_ajax_zs_calendar_check_status', [$this, 'ajaxCheckStatus']);
+        add_action('wp_ajax_zs_calendar_get_header', [$this, 'ajaxGetHeader']);
     }
 
     public function addMetabox(): void
@@ -48,9 +54,14 @@ class CalendarLogMetabox
         $logs = CalendarLogs::getForOrder($order);
         $noLogs = empty($logs);
 
+        wp_nonce_field('zs_calendar_action', 'zs_calendar_nonce');
+        
         echo '<div class="zs-calendar-logs-metabox">';
 
-        // Header: Event ID and status
+        // Header section (wrapped for AJAX replacement)
+        echo '<div class="zs-calendar-header-section">';
+        
+        // Event ID display
         if ($eventId && is_string($eventId) && $eventId !== '') {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
             echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
@@ -66,18 +77,20 @@ class CalendarLogMetabox
         echo '<div class="zs-calendar-actions" style="margin:10px 0;">';
         if ($eventId !== '') {
             // Delete button - only if event_id exists
-            echo '<button type="button" class="zs-btn is-destructive zs-calendar-delete" ';
-            echo 'data-order-id="' . esc_attr($orderId) . '">';
-            echo '🗑️ ' . esc_html__('Delete Google Calendar Event', 'zero-sense');
+            echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
+            echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
+            echo '🗑️ <span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
             // Create button - only if NO event_id
-            echo '<button type="button" class="zs-btn is-action zs-calendar-create" ';
-            echo 'data-order-id="' . esc_attr($orderId) . '">';
-            echo '➕ ' . esc_html__('Create Google Calendar Event', 'zero-sense');
+            echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
+            echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
+            echo '➕ <span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
         echo '</div>';
+        
+        echo '</div>'; // .zs-calendar-header-section
 
         // Last sync info
         if (!$noLogs) {
@@ -142,6 +155,126 @@ class CalendarLogMetabox
         }
 
         echo '</div>';
+        
+        // Add inline JavaScript for AJAX handling
+        $this->renderInlineScript($orderId);
+    }
+    
+    private function renderInlineScript(int $orderId): void
+    {
+        $nonce = wp_create_nonce('zs_calendar_action');
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (this.disabled) return;
+
+                    const action = this.getAttribute('data-action');
+                    const orderId = this.getAttribute('data-order-id');
+                    const labelEl = this.querySelector('.zs-calendar-btn-label');
+                    const originalText = labelEl.textContent;
+                    
+                    const confirmMsg = action === 'delete' 
+                        ? <?php echo wp_json_encode(__('Delete Google Calendar event? This cannot be undone.', 'zero-sense')); ?>
+                        : <?php echo wp_json_encode(__('Create Google Calendar event for this order?', 'zero-sense')); ?>;
+                    
+                    if (!confirm(confirmMsg)) return;
+
+                    this.disabled = true;
+                    labelEl.textContent = action === 'delete' 
+                        ? <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>
+                        : <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
+                    
+                    const btn = this;
+                    
+                    // Trigger workflow via AJAX
+                    fetch(ajaxurl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            action: 'zs_calendar_' + action + '_event',
+                            order_id: orderId,
+                            nonce: <?php echo wp_json_encode($nonce); ?>
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        // Start polling for changes
+                        let attempts = 0;
+                        const maxAttempts = 10; // 10 seconds
+                        
+                        const poll = () => {
+                            fetch(ajaxurl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: new URLSearchParams({
+                                    action: 'zs_calendar_check_status',
+                                    order_id: orderId,
+                                    check_action: action,
+                                    nonce: <?php echo wp_json_encode($nonce); ?>
+                                })
+                            })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success && res.data && res.data.changed) {
+                                    // Status changed, refresh header
+                                    fetch(ajaxurl, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                        body: new URLSearchParams({
+                                            action: 'zs_calendar_get_header',
+                                            order_id: orderId,
+                                            nonce: <?php echo wp_json_encode($nonce); ?>
+                                        })
+                                    })
+                                    .then(r => r.json())
+                                    .then(headerRes => {
+                                        if (headerRes.success && headerRes.data && headerRes.data.html) {
+                                            // Replace header + buttons
+                                            const container = document.querySelector('.zs-calendar-logs-metabox');
+                                            if (container) {
+                                                const temp = document.createElement('div');
+                                                temp.innerHTML = headerRes.data.html;
+                                                const oldHeader = container.querySelector('.zs-calendar-header-section');
+                                                if (oldHeader && temp.firstElementChild) {
+                                                    oldHeader.replaceWith(temp.firstElementChild);
+                                                }
+                                            }
+                                        }
+                                    });
+                                } else if (attempts < maxAttempts) {
+                                    attempts++;
+                                    setTimeout(poll, 1000);
+                                } else {
+                                    // Timeout, restore button
+                                    btn.disabled = false;
+                                    labelEl.textContent = originalText;
+                                }
+                            })
+                            .catch(err => {
+                                attempts++;
+                                if (attempts < maxAttempts) {
+                                    setTimeout(poll, 1000);
+                                } else {
+                                    btn.disabled = false;
+                                    labelEl.textContent = originalText;
+                                }
+                            });
+                        };
+                        
+                        setTimeout(poll, 1000);
+                    })
+                    .catch(err => {
+                        btn.disabled = false;
+                        labelEl.textContent = originalText;
+                        alert('Error: ' + err.message);
+                    });
+                });
+            });
+        });
+        </script>
+        <?php
     }
 
     private function renderLogItem(array $log): void
@@ -257,6 +390,122 @@ class CalendarLogMetabox
             'label' => __('AUTO', 'zero-sense'),
             'title' => __('Calendar sync', 'zero-sense'),
         ];
+    }
+
+    /**
+     * AJAX handler to create calendar event
+     */
+    public function ajaxCreateEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        // Trigger FlowMattic workflow via class action
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-create', $orderId);
+        
+        wp_send_json_success(['message' => 'Workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to delete calendar event
+     */
+    public function ajaxDeleteEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        // Trigger FlowMattic workflow via class action
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-delete', $orderId);
+        
+        wp_send_json_success(['message' => 'Workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to check if event status changed
+     */
+    public function ajaxCheckStatus(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        $checkAction = sanitize_text_field($_POST['check_action'] ?? '');
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        
+        $changed = false;
+        if ($checkAction === 'create' && $eventId !== '') {
+            $changed = true; // Event ID now exists
+        } elseif ($checkAction === 'delete' && $eventId === '') {
+            $changed = true; // Event ID was deleted
+        }
+        
+        wp_send_json_success(['changed' => $changed]);
+    }
+
+    /**
+     * AJAX handler to get updated header HTML
+     */
+    public function ajaxGetHeader(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        $order = wc_get_order($orderId);
+        
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        
+        // Render header HTML
+        ob_start();
+        echo '<div class="zs-calendar-header-section">';
+        
+        // Event ID display
+        if ($eventId && is_string($eventId) && $eventId !== '') {
+            echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
+            echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
+            echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
+            echo '</div>';
+        } else {
+            echo '<div style="margin-bottom:10px; font-size:12px; color:#999; font-style:italic;">';
+            echo esc_html__('No Google Calendar event linked yet.', 'zero-sense');
+            echo '</div>';
+        }
+        
+        // Action buttons
+        echo '<div class="zs-calendar-actions" style="margin:10px 0;">';
+        if ($eventId !== '') {
+            echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
+            echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
+            echo '🗑️ <span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
+            echo '</button>';
+        } else {
+            echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
+            echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
+            echo '➕ <span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
+            echo '</button>';
+        }
+        echo '</div>';
+        
+        echo '</div>';
+        
+        $html = ob_get_clean();
+        wp_send_json_success(['html' => $html]);
     }
 
 }
