@@ -28,7 +28,12 @@ class BulkSyncPage implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return (bool) get_option('zero_sense_feature_calendar_bulk_operations', 0);
+        return (bool) get_option($this->getOptionName(), true);
+    }
+
+    public function getOptionName(): string
+    {
+        return 'zs_utilities_calendar_bulk_operations_enable';
     }
 
     public function init(): void
