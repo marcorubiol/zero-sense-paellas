@@ -77,8 +77,30 @@
                         .then(function(r) { return r.json(); })
                         .then(function(res) {
                             if (res.success && res.data && res.data.changed) {
-                                // Status changed, reload the page to show new logs
-                                location.reload();
+                                // If it was an update (reserve) action, show RESERVED badge immediately
+                                if (action === 'update') {
+                                    const actionsDiv = button.closest('.zs-calendar-actions');
+                                    if (actionsDiv) {
+                                        // Remove the Reserve button
+                                        button.remove();
+                                        
+                                        // Add RESERVED badge
+                                        const badge = document.createElement('span');
+                                        badge.className = 'zs-badge zs-badge-reserved';
+                                        badge.textContent = 'RESERVED';
+                                        
+                                        // Insert badge before delete button
+                                        const deleteBtn = actionsDiv.querySelector('[data-action="delete"]');
+                                        if (deleteBtn) {
+                                            actionsDiv.insertBefore(badge, deleteBtn);
+                                        }
+                                    }
+                                }
+                                
+                                // Reload the page to show new logs
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 500);
                             } else if (attempts < maxAttempts) {
                                 attempts++;
                                 setTimeout(poll, 1000);
