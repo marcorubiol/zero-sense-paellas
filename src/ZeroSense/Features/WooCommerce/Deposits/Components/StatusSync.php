@@ -75,6 +75,12 @@ class StatusSync
             MetaKeys::update($order, MetaKeys::IS_BALANCE_PAID, 'yes');
             MetaKeys::update($order, MetaKeys::BALANCE_PAYMENT_DATE, current_time('mysql'));
         } else {
+            // Direct full payment: register as first payment if not already set
+            if (!$order->get_meta(MetaKeys::DEPOSIT_PAYMENT_DATE, true)) {
+                MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
+                MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
+            }
+            
             // Ensure we do NOT mark balance paid for direct full payments
             MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
             MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);

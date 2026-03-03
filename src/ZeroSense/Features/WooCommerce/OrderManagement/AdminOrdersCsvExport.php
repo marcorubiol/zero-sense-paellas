@@ -676,7 +676,7 @@ class AdminOrdersCsvExport implements FeatureInterface
         $totalPaid = '';
         if ($remainingAmount !== '') {
             $totalPaidValue = (float) $order->get_total() - (float) $remainingAmount;
-            $totalPaid = number_format($totalPaidValue, 2, '.', '');
+            $totalPaid = number_format($totalPaidValue, 2, ',', '');
         }
 
         // Format deposit paid as Yes/No
@@ -710,12 +710,12 @@ class AdminOrdersCsvExport implements FeatureInterface
             'event_type'          => (string) $order->get_meta('zs_event_type', true),
             'location'            => $serviceLocationName,
             'city'                => $order->get_shipping_city() ?: (string) $order->get_meta('zs_event_city', true),
-            'order_total'         => number_format((float) $order->get_total(), 2, '.', ''),
-            'deposit_amount'      => $depositAmount !== '' ? number_format((float) $depositAmount, 2, '.', '') : '',
-            'deposit_pct'         => $depositPct !== '' ? number_format((float) $depositPct, 2, '.', '') : '',
+            'order_total'         => number_format((float) $order->get_total(), 2, ',', ''),
+            'deposit_amount'      => $depositAmount !== '' ? number_format((float) $depositAmount, 2, ',', '') : '',
+            'deposit_pct'         => $depositPct !== '' ? number_format((float) $depositPct, 2, ',', '') : '',
             'deposit_paid'        => $depositPaidFormatted,
             'first_payment_date'  => $firstPaymentDateFormatted,
-            'remaining'           => $remainingAmount !== '' ? number_format((float) $remainingAmount, 2, '.', '') : '',
+            'remaining'           => $remainingAmount !== '' ? number_format((float) $remainingAmount, 2, ',', '') : '',
             'second_payment_date' => $secondPaymentDateFormatted,
             'total_paid'          => $totalPaid,
             'payment_method'      => $order->get_payment_method_title(),
