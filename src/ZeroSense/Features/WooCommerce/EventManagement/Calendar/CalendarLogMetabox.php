@@ -69,13 +69,13 @@ class CalendarLogMetabox
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-delete" ';
             echo 'data-order-id="' . esc_attr($orderId) . '" ';
             echo 'onclick="if(!confirm(\'' . esc_js(__('¿Eliminar evento de Google Calendar? Esta acción no se puede deshacer.', 'zero-sense')) . '\')) return false;">';
-            echo '🗑️ ' . esc_html__('Delete Event', 'zero-sense');
+            echo '🗑️ ' . esc_html__('Delete Google Calendar Event', 'zero-sense');
             echo '</button>';
         } else {
             // Create button - only if NO event_id
             echo '<button type="button" class="zs-btn is-action zs-calendar-create" ';
             echo 'data-order-id="' . esc_attr($orderId) . '">';
-            echo '➕ ' . esc_html__('Create Event', 'zero-sense');
+            echo '➕ ' . esc_html__('Create Google Calendar Event', 'zero-sense');
             echo '</button>';
         }
         echo '</div>';
