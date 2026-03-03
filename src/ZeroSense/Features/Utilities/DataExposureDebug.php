@@ -45,6 +45,11 @@ class DataExposureDebug implements FeatureInterface
 
     public function isEnabled(): bool
     {
+        return self::isEnabledStatic();
+    }
+
+    public static function isEnabledStatic(): bool
+    {
         // Clear cache before reading to ensure fresh value
         wp_cache_delete('zs_utilities_dataexposuredebug', 'options');
         $value = get_option('zs_utilities_dataexposuredebug', false);
