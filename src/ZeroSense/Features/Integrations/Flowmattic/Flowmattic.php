@@ -294,6 +294,20 @@ class Flowmattic implements FeatureInterface
                         }
                     }
                     
+                    // Holded workflow config data
+                    if (!empty($row['workflow_config']) && $row['workflow_config']['category'] === 'holded') {
+                        $editData[] = 'data-is-holded="true"';
+                        if (!empty($row['workflow_config']['description'])) {
+                            $editData[] = 'data-holded-desc="' . esc_attr($row['workflow_config']['description']) . '"';
+                        }
+                        if (!empty($row['workflow_config']['run_once'])) {
+                            $editData[] = 'data-run-once="true"';
+                        }
+                        if (!empty($row['workflow_config']['manual_states']) && is_array($row['workflow_config']['manual_states'])) {
+                            $editData[] = 'data-holded-manual-states="' . esc_attr(implode(',', $row['workflow_config']['manual_states'])) . '"';
+                        }
+                    }
+                    
                     $out .= '<li ' . implode(' ', $editData) . '><button type="button" class="zs-btn-icon zs-flow-play" data-workflow-id="' . $wid . '" title="Run workflow">▶</button> '
                          . '<span class="zs-flow-title">' . $label . '</span> · '
                          . $emailIndicator . $extra . '<code class="zs-flow-id">' . $wid . '</code> '
