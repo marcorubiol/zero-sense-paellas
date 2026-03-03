@@ -242,15 +242,10 @@ class BulkSyncPage implements FeatureInterface
 
         set_time_limit(0);
         
+        // Get ALL orders without any status or meta filtering
         $args = [
             'limit' => -1,
             'return' => 'ids',
-            'meta_query' => [
-                [
-                    'key' => MetaKeys::GOOGLE_CALENDAR_EVENT_ID,
-                    'compare' => 'EXISTS',
-                ],
-            ],
         ];
         
         $orderIds = wc_get_orders($args);
@@ -258,7 +253,9 @@ class BulkSyncPage implements FeatureInterface
         $skipped = 0;
         
         echo '<div class="wrap"><h1>' . esc_html__('Bulk Delete Results', 'zero-sense') . '</h1>';
-        echo '<div class="card" style="max-width: 800px;"><ul>';
+        echo '<div class="card" style="max-width: 800px;">';
+        echo '<p>' . sprintf(__('Scanning %d orders...', 'zero-sense'), count($orderIds)) . '</p>';
+        echo '<ul>';
         
         foreach ($orderIds as $orderId) {
             $order = wc_get_order($orderId);
@@ -268,17 +265,16 @@ class BulkSyncPage implements FeatureInterface
             
             $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
             
+            // Skip if no event ID
             if (!$eventId || $eventId === '') {
-                echo '<li>' . sprintf(__('Order #%d: Skipped (no event ID)', 'zero-sense'), $orderId) . '</li>';
                 $skipped++;
-                flush();
                 continue;
             }
             
             // Trigger FlowMattic workflow for deletion
             do_action('zs_trigger_class_action_direct', 'zs-calendar-delete', $orderId);
             
-            echo '<li>' . sprintf(__('Order #%d: Triggered calendar deletion', 'zero-sense'), $orderId) . '</li>';
+            echo '<li>' . sprintf(__('Order #%d: Triggered calendar deletion (Event ID: %s)', 'zero-sense'), $orderId, esc_html($eventId)) . '</li>';
             $deleted++;
             flush();
             
@@ -288,8 +284,9 @@ class BulkSyncPage implements FeatureInterface
         
         echo '</ul>';
         echo '<h3>' . esc_html__('Summary', 'zero-sense') . '</h3>';
-        echo '<p>' . sprintf(__('Deleted: %d', 'zero-sense'), $deleted) . '</p>';
-        echo '<p>' . sprintf(__('Skipped: %d', 'zero-sense'), $skipped) . '</p>';
+        echo '<p>' . sprintf(__('Total orders scanned: %d', 'zero-sense'), count($orderIds)) . '</p>';
+        echo '<p>' . sprintf(__('Events deleted: %d', 'zero-sense'), $deleted) . '</p>';
+        echo '<p>' . sprintf(__('Orders without events: %d', 'zero-sense'), $skipped) . '</p>';
         echo '<p><a href="' . esc_url(admin_url('admin.php?page=zs-calendar-bulk-sync')) . '" class="button">' . esc_html__('Back', 'zero-sense') . '</a></p>';
         echo '</div></div>';
     }
