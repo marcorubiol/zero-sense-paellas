@@ -254,6 +254,9 @@ button.zs-mb-link {
     background: #f6f7f7;
     color: var(--zs-mb-label-color);
     border-color: var(--zs-mb-border-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .zs-btn.is-action:hover,
@@ -261,6 +264,13 @@ button.zs-mb-link {
     background: #e8e9ea;
     border-color: var(--zs-btn-hover-border);
     color: var(--zs-mb-label-color);
+}
+
+/* Badges inside action buttons should be inline and vertically centered */
+.zs-btn.is-action .zs-badge {
+    position: static;
+    margin: 0;
+    vertical-align: middle;
 }
 
 /* Destructive variant — red text by default, stronger on hover */
