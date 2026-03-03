@@ -271,12 +271,6 @@ button.zs-mb-link {
     gap: 6px;
 }
 
-.zs-manual-email-btn .zs-badge,
-.zs-manual-holded-btn .zs-badge {
-    position: static;
-    margin: 0;
-}
-
 /* Destructive variant — red text by default, stronger on hover */
 .zs-btn.is-destructive {
     color: var(--zs-btn-destructive-color);
