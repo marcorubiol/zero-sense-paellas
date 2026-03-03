@@ -738,6 +738,7 @@ class Integration
             'workflow_id' => $workflowId,
             'class_name' => $className,
             'trigger_source' => $triggerType === 'manual' ? 'zero_sense_class_action_manual' : 'zero_sense_class_action',
+            'trigger_type' => $triggerType, // Simple 'manual' or 'automatic' for use in workflows
             'timestamp' => current_time('mysql')
         ];
 
