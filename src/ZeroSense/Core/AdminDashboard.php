@@ -660,11 +660,13 @@ class AdminDashboard
         // Re-initialize the specific feature to apply the change immediately
         foreach ($this->featureManager->getFeatures() as $feature) {
             if ($this->getFeatureOptionName($feature) === $optionName) {
+                error_log("AdminDashboard: Before re-init, value = " . var_export(get_option($optionName), true));
                 try {
                     $feature->init();
                 } catch (\Exception $e) {
                     Logger::error("Error re-initializing feature {$feature->getName()}", $e->getMessage());
                 }
+                error_log("AdminDashboard: After re-init, value = " . var_export(get_option($optionName), true));
                 break;
             }
         }
