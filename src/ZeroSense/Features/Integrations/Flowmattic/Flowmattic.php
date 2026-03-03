@@ -2075,14 +2075,23 @@ class Flowmattic implements FeatureInterface
      */
     private function getEmailLogsForOrder(int $orderId): array
     {
+        error_log('📊 getEmailLogsForOrder called for order: ' . $orderId);
+        
         $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
+        
+        error_log('📊 Found ' . count($executions) . ' email executions for order ' . $orderId);
+        error_log('📊 Raw executions: ' . json_encode($executions));
+        
         $logs = [];
         
         foreach ($executions as $exec) {
+            $description = $this->getWorkflowDescription($exec['workflow_id'], 'email');
+            error_log('📊 Processing execution - workflow_id: ' . $exec['workflow_id'] . ', description: ' . $description);
+            
             $logs[] = [
                 'workflow_id' => $exec['workflow_id'],
                 'status' => $exec['status'],
-                'description' => $this->getWorkflowDescription($exec['workflow_id'], 'email'),
+                'description' => $description,
                 'timestamp' => strtotime($exec['timestamp']),
                 'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), strtotime($exec['timestamp'])),
                 'email_to' => $exec['metadata']['email_to'] ?? '',
@@ -2092,6 +2101,8 @@ class Flowmattic implements FeatureInterface
                 'by_login' => $exec['by_login'] ?? '',
             ];
         }
+        
+        error_log('📊 Returning ' . count($logs) . ' formatted logs');
         
         return $logs;
     }
