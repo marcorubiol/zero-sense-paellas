@@ -99,8 +99,6 @@ class CalendarLogMetabox
             echo '</button>';
         }
         echo '</div>';
-
-        echo '</div>';
         
         echo '</div>'; // .zs-calendar-header-section
 
