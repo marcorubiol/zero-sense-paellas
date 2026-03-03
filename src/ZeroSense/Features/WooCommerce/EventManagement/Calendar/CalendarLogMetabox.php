@@ -331,11 +331,36 @@ class CalendarLogMetabox
         $triggerSource = $data['trigger_source'] ?? 'automatic';
         
         if ($type === 'created') {
+            if ($triggerSource === 'manual') {
+                return [
+                    'class' => 'zs-badge-manual',
+                    'item_class' => 'zs-manual',
+                    'label' => __('MAN', 'zero-sense'),
+                    'title' => __('Google Calendar Event Created', 'zero-sense'),
+                ];
+            }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Event created', 'zero-sense'),
+                'title' => __('Google Calendar Event Created', 'zero-sense'),
+            ];
+        }
+        
+        if ($type === 'deleted') {
+            if ($triggerSource === 'manual') {
+                return [
+                    'class' => 'zs-badge-manual',
+                    'item_class' => 'zs-manual',
+                    'label' => __('MAN', 'zero-sense'),
+                    'title' => __('Google Calendar Event Deleted', 'zero-sense'),
+                ];
+            }
+            return [
+                'class' => 'zs-badge-auto',
+                'item_class' => 'zs-auto',
+                'label' => __('AUTO', 'zero-sense'),
+                'title' => __('Google Calendar Event Deleted', 'zero-sense'),
             ];
         }
         
@@ -371,15 +396,6 @@ class CalendarLogMetabox
                 'item_class' => 'zs-auto',
                 'label' => __('SYNCED', 'zero-sense'),
                 'title' => __('Manual sync', 'zero-sense'),
-            ];
-        }
-        
-        if ($type === 'deleted') {
-            return [
-                'class' => 'zs-badge-manual',
-                'item_class' => 'zs-manual',
-                'label' => __('MAN', 'zero-sense'),
-                'title' => __('Event deleted manually', 'zero-sense'),
             ];
         }
         
