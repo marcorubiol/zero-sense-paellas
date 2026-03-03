@@ -210,19 +210,21 @@ class CalendarLogMetabox
                     
                     console.log('[Calendar] Action:', action, 'Order:', orderId);
                     
-                    const confirmMsg = action === 'delete' 
-                        ? <?php echo wp_json_encode(__('Delete Google Calendar event? This cannot be undone.', 'zero-sense')); ?>
-                        : action === 'update'
-                        ? <?php echo wp_json_encode(__('Mark event as reserved?', 'zero-sense')); ?>
-                        : <?php echo wp_json_encode(__('Create Google Calendar event for this order?', 'zero-sense')); ?>;
+                    let confirmMsg, loadingText;
+                    if (action === 'delete') {
+                        confirmMsg = <?php echo wp_json_encode(__('Delete Google Calendar event? This cannot be undone.', 'zero-sense')); ?>;
+                        loadingText = <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>;
+                    } else if (action === 'update') {
+                        confirmMsg = <?php echo wp_json_encode(__('Mark event as reserved?', 'zero-sense')); ?>;
+                        loadingText = <?php echo wp_json_encode(__('Updating...', 'zero-sense')); ?>;
+                    } else {
+                        confirmMsg = <?php echo wp_json_encode(__('Create Google Calendar event for this order?', 'zero-sense')); ?>;
+                        loadingText = <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
+                    }
                     
                     if (!confirm(confirmMsg)) return;
                     
-                    labelEl.textContent = action === 'delete' 
-                        ? <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>
-                        : action === 'update'
-                        ? <?php echo wp_json_encode(__('Updating...', 'zero-sense')); ?>
-                        : <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
+                    labelEl.textContent = loadingText;
                     
                     const btn = this;
                     
