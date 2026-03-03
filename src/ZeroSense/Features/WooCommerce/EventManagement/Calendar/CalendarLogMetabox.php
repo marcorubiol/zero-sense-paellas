@@ -175,7 +175,10 @@ class CalendarLogMetabox
         $nonce = wp_create_nonce('zs_calendar_action');
         ?>
         <script>
+        console.log('[Calendar] Script loaded');
         (function() {
+            console.log('[Calendar] IIFE executing');
+            
             function attachButtonListeners() {
                 const buttons = document.querySelectorAll('.zs-calendar-action-btn');
                 console.log('[Calendar] Attaching listeners to', buttons.length, 'buttons');
