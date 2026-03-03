@@ -653,7 +653,9 @@ class AdminDashboard
         }
 
         // Update the option - use update_option for reliability with boolean values
+        error_log("AdminDashboard: Updating {$optionName} to " . ($enabled ? '1' : '0'));
         update_option($optionName, $enabled ? 1 : 0);
+        error_log("AdminDashboard: After update, value = " . var_export(get_option($optionName), true));
         
         // Re-initialize the specific feature to apply the change immediately
         foreach ($this->featureManager->getFeatures() as $feature) {

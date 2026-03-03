@@ -45,7 +45,9 @@ class DataExposureDebug implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return (bool) get_option('zs_utilities_dataexposuredebug', false);
+        $value = get_option('zs_utilities_dataexposuredebug', false);
+        error_log('DataExposureDebug: option value = ' . var_export($value, true));
+        return (bool) $value;
     }
 
     public function init(): void
