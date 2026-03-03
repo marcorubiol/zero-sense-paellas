@@ -1854,7 +1854,9 @@ class Flowmattic implements FeatureInterface
         echo '<div class="zs-email-logs-metabox">';
         
         // Header actions (right-aligned): SMTP Logs
-        $smtp_url = 'https://paellasencasa.com/wp-admin/options-general.php?page=fluent-mail#/logs?per_page=10&page=1&status=&search=';
+        $order = wc_get_order($orderId);
+        $billing_email = $order ? $order->get_billing_email() : '';
+        $smtp_url = 'https://paellasencasa.com/wp-admin/options-general.php?page=fluent-mail#/logs?per_page=10&page=1&status=&search=' . urlencode($billing_email);
         echo '<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">'
             . '<a href="' . esc_url($smtp_url) . '" target="_blank" rel="noopener" class="button-link" style="font-size:12px; color:#2271b1; text-decoration:underline;">'
             . esc_html__('SMTP Logs', 'zero-sense')
