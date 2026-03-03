@@ -731,10 +731,6 @@ class Flowmattic implements FeatureInterface
         echo '<div class="zs-manual-email-actions">';
         
         // Section 1: Manual Email Actions (Class Actions)
-        if (!empty($emailTriggers)) {
-            echo '<h4 class="zs-mb-subheader" style="margin-bottom:12px;">' . esc_html__('Manual Email Actions', 'zero-sense') . '</h4>';
-        }
-        
         foreach ($emailTriggers as $trigger) {
             $workflowId = $trigger['workflow_id'];
             $buttonText = $trigger['email_config']['description'] ?? $trigger['title'];
@@ -2177,7 +2173,9 @@ class Flowmattic implements FeatureInterface
         echo '<div class="zs-email-logs-metabox">';
         
         // Header actions (right-aligned): SMTP Logs
-        $smtp_url = 'https://paellasencasa.com/wp-admin/options-general.php?page=fluent-mail#/logs?per_page=10&page=1&status=&search=';
+        $order = wc_get_order($orderId);
+        $billing_email = $order ? $order->get_billing_email() : '';
+        $smtp_url = 'https://paellasencasa.com/wp-admin/options-general.php?page=fluent-mail#/logs?per_page=10&page=1&status=&search=' . urlencode($billing_email);
         echo '<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">'
             . '<a href="' . esc_url($smtp_url) . '" target="_blank" rel="noopener" class="button-link" style="font-size:12px; color:#2271b1; text-decoration:underline;">'
             . esc_html__('SMTP Logs', 'zero-sense')
