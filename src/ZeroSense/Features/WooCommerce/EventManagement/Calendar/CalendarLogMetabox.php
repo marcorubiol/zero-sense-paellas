@@ -258,13 +258,11 @@ class CalendarLogMetabox
                                                 const oldHeader = container.querySelector('.zs-calendar-header-section');
                                                 if (oldHeader && temp.firstElementChild) {
                                                     oldHeader.replaceWith(temp.firstElementChild);
-                                                    // Re-attach event listeners to new buttons
-                                                    attachButtonListeners();
                                                 }
                                             }
                                         }
-                                        // Reload page to show logs
-                                        location.reload();
+                                        // Re-attach event listeners to new buttons
+                                        attachButtonListeners();
                                     });
                                 } else if (attempts < maxAttempts) {
                                     attempts++;
