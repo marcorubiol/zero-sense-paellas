@@ -177,19 +177,29 @@ class CalendarLogMetabox
         <script>
         (function() {
             function attachButtonListeners() {
-                document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
+                const buttons = document.querySelectorAll('.zs-calendar-action-btn');
+                console.log('[Calendar] Attaching listeners to', buttons.length, 'buttons');
+                
+                buttons.forEach(function(btn) {
                     // Remove existing listener if any
                     btn.replaceWith(btn.cloneNode(true));
                 });
                 
                 document.querySelectorAll('.zs-calendar-action-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                    if (this.disabled) return;
+                    console.log('[Calendar] Button clicked:', this.getAttribute('data-action'));
+                    
+                    if (this.disabled) {
+                        console.log('[Calendar] Button is disabled, ignoring');
+                        return;
+                    }
 
                     const action = this.getAttribute('data-action');
                     const orderId = this.getAttribute('data-order-id');
                     const labelEl = this.querySelector('.zs-calendar-btn-label');
                     const originalText = labelEl.textContent;
+                    
+                    console.log('[Calendar] Action:', action, 'Order:', orderId);
                     
                     const confirmMsg = action === 'delete' 
                         ? <?php echo wp_json_encode(__('Delete Google Calendar event? This cannot be undone.', 'zero-sense')); ?>
@@ -207,6 +217,8 @@ class CalendarLogMetabox
                     
                     const btn = this;
                     
+                    console.log('[Calendar] Triggering AJAX for action:', action);
+                    
                     // Trigger workflow via AJAX
                     fetch(ajaxurl, {
                         method: 'POST',
@@ -219,11 +231,14 @@ class CalendarLogMetabox
                     })
                     .then(r => r.json())
                     .then(data => {
+                        console.log('[Calendar] AJAX response:', data);
                         // Start polling for changes
                         let attempts = 0;
                         const maxAttempts = 10; // 10 seconds
                         
                         const poll = () => {
+                            console.log('[Calendar] Polling attempt', attempts + 1, '/', maxAttempts);
+                            
                             fetch(ajaxurl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -236,7 +251,10 @@ class CalendarLogMetabox
                             })
                             .then(r => r.json())
                             .then(res => {
+                                console.log('[Calendar] Poll response:', res);
+                                
                                 if (res.success && res.data && res.data.changed) {
+                                    console.log('[Calendar] Status changed! Refreshing header...');
                                     // Status changed, refresh header
                                     fetch(ajaxurl, {
                                         method: 'POST',
@@ -266,14 +284,17 @@ class CalendarLogMetabox
                                     });
                                 } else if (attempts < maxAttempts) {
                                     attempts++;
+                                    console.log('[Calendar] Not changed yet, polling again...');
                                     setTimeout(poll, 1000);
                                 } else {
                                     // Timeout, restore button
+                                    console.log('[Calendar] Polling timeout reached');
                                     btn.disabled = false;
                                     labelEl.textContent = originalText;
                                 }
                             })
                             .catch(err => {
+                                console.error('[Calendar] Poll error:', err);
                                 attempts++;
                                 if (attempts < maxAttempts) {
                                     setTimeout(poll, 1000);
@@ -284,9 +305,11 @@ class CalendarLogMetabox
                             });
                         };
                         
+                        console.log('[Calendar] Starting polling in 1 second...');
                         setTimeout(poll, 1000);
                     })
                     .catch(err => {
+                        console.error('[Calendar] AJAX error:', err);
                         btn.disabled = false;
                         labelEl.textContent = originalText;
                         alert('Error: ' + err.message);
