@@ -33,7 +33,7 @@ class BulkSyncPage
                 <h2><?php esc_html_e('Sync All Orders to Google Calendar', 'zero-sense'); ?></h2>
                 <p><?php esc_html_e('This will trigger the FlowMattic workflow to create Google Calendar events for all orders that:', 'zero-sense'); ?></p>
                 <ul>
-                    <li><?php esc_html_e('Are in "Processing" or "Completed" status', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Are in "Pending", "Deposit Paid", "Fully Paid", "Processing" or "Completed" status', 'zero-sense'); ?></li>
                     <li><?php esc_html_e('Do NOT have a Google Calendar event ID yet', 'zero-sense'); ?></li>
                     <li><?php esc_html_e('Have a valid event date', 'zero-sense'); ?></li>
                 </ul>
@@ -85,7 +85,7 @@ class BulkSyncPage
         
         $args = [
             'limit' => -1,
-            'status' => ['processing', 'completed'],
+            'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
             'return' => 'ids',
         ];
         
