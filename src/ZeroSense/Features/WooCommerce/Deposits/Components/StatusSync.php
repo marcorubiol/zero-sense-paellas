@@ -37,14 +37,14 @@ class StatusSync
     {
         // Set flags for deposit paid
         MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
-        if (!$order->get_meta(MetaKeys::DEPOSIT_PAYMENT_DATE, true)) {
-            MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
+        if (!$order->get_meta(MetaKeys::FIRST_PAYMENT_DATE, true)) {
+            MetaKeys::update($order, MetaKeys::FIRST_PAYMENT_DATE, current_time('mysql'));
         }
 
         // Ensure deposit flow flags are consistent
         MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'deposit_manual');
         MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
-        MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);
+        MetaKeys::delete($order, MetaKeys::SECOND_PAYMENT_DATE);
 
         // Remaining amount may be present already. If deposit amount exists, ensure remaining meta is non-negative.
         $orderTotal     = (float) $order->get_total();
@@ -73,17 +73,17 @@ class StatusSync
         // Only set BALANCE_PAID if coming from deposit-paid (i.e., second payment)
         if ($fromStatus === 'deposit-paid') {
             MetaKeys::update($order, MetaKeys::IS_BALANCE_PAID, 'yes');
-            MetaKeys::update($order, MetaKeys::BALANCE_PAYMENT_DATE, current_time('mysql'));
+            MetaKeys::update($order, MetaKeys::SECOND_PAYMENT_DATE, current_time('mysql'));
         } else {
             // Direct full payment: register as first payment if not already set
-            if (!$order->get_meta(MetaKeys::DEPOSIT_PAYMENT_DATE, true)) {
-                MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
+            if (!$order->get_meta(MetaKeys::FIRST_PAYMENT_DATE, true)) {
+                MetaKeys::update($order, MetaKeys::FIRST_PAYMENT_DATE, current_time('mysql'));
                 MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
             }
             
             // Ensure we do NOT mark balance paid for direct full payments
             MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
-            MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);
+            MetaKeys::delete($order, MetaKeys::SECOND_PAYMENT_DATE);
         }
 
         // If coming from deposit-paid, mark type accordingly; else direct full

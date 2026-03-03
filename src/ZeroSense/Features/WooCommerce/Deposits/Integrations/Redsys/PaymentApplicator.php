@@ -24,10 +24,10 @@ trait PaymentApplicator
             $remaining = max(0.0, $orderTotal - $depositAmountMeta);
 
             MetaKeys::update($order, MetaKeys::IS_DEPOSIT_PAID, 'yes');
-            MetaKeys::update($order, MetaKeys::DEPOSIT_PAYMENT_DATE, current_time('mysql'));
+            MetaKeys::update($order, MetaKeys::FIRST_PAYMENT_DATE, current_time('mysql'));
             MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'deposit');
             MetaKeys::delete($order, MetaKeys::IS_BALANCE_PAID);
-            MetaKeys::delete($order, MetaKeys::BALANCE_PAYMENT_DATE);
+            MetaKeys::delete($order, MetaKeys::SECOND_PAYMENT_DATE);
             MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, $remaining);
             MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $remaining);
 

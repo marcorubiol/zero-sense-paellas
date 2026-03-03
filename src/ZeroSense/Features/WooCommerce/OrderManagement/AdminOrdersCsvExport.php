@@ -666,8 +666,8 @@ class AdminOrdersCsvExport implements FeatureInterface
         $depositPct          = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PERCENTAGE, true);
         $remainingAmount     = (string) $order->get_meta(DepositMetaKeys::REMAINING_AMOUNT, true);
         $isDepositPaid       = (string) $order->get_meta(DepositMetaKeys::IS_DEPOSIT_PAID, true);
-        $depositPaymentDate  = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PAYMENT_DATE, true);
-        $balancePaymentDate  = (string) $order->get_meta(DepositMetaKeys::BALANCE_PAYMENT_DATE, true);
+        $depositPaymentDate  = (string) $order->get_meta(DepositMetaKeys::FIRST_PAYMENT_DATE, true);
+        $balancePaymentDate  = (string) $order->get_meta(DepositMetaKeys::SECOND_PAYMENT_DATE, true);
 
         $createdDate = $order->get_date_created();
         $eventTs     = $eventDate !== '' ? strtotime($eventDate) : false;
