@@ -178,9 +178,15 @@ class CalendarLogMetabox
         echo '<!-- ZS Calendar Script Start -->';
         ?>
         <script>
-        console.log('[Calendar] Script loaded');
+        try {
+            console.log('[Calendar] Script loaded');
+        } catch(e) {
+            console.error('[Calendar] Error at script start:', e);
+        }
+        
         (function() {
-            console.log('[Calendar] IIFE executing');
+            try {
+                console.log('[Calendar] IIFE executing');
             
             // Ensure ajaxurl is defined
             if (typeof ajaxurl === 'undefined') {
@@ -333,6 +339,11 @@ class CalendarLogMetabox
             
             // Initialize on page load
             document.addEventListener('DOMContentLoaded', attachButtonListeners);
+            
+            } catch(e) {
+                console.error('[Calendar] Fatal error in IIFE:', e);
+                console.error('[Calendar] Stack:', e.stack);
+            }
         })();
         </script>
         <?php
