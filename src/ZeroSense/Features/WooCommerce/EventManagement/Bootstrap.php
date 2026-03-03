@@ -13,6 +13,8 @@ use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database\Schema;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\InventoryMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\StockAdminPage;
+use ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogMetabox;
+use ZeroSense\Features\WooCommerce\EventManagement\Calendar\BulkSyncPage;
 
 /**
  * Bootstrap for Event Management module
@@ -35,6 +37,10 @@ class Bootstrap
         // Inventory system
         (new InventoryMetabox())->register();
         (new StockAdminPage())->register();
+        
+        // Calendar system
+        (new CalendarLogMetabox())->register();
+        (new BulkSyncPage())->register();
     }
     
     private function initializeInventorySystem(): void
