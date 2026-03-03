@@ -1089,55 +1089,6 @@ const ZeroSenseFlowmattic = {
                 return;
             }
         });
-
-        // Migration button
-        const migrateBtn = document.getElementById('zs-migrate-email-logs');
-        if (migrateBtn) {
-            migrateBtn.addEventListener('click', function() {
-                if (!confirm('This will migrate all email logs from the old system to the new generic system. Continue?')) {
-                    return;
-                }
-                
-                const resultSpan = document.getElementById('zs-migrate-result');
-                migrateBtn.disabled = true;
-                migrateBtn.textContent = 'Migrating...';
-                if (resultSpan) resultSpan.textContent = '';
-                
-                const fd = new FormData();
-                fd.append('action', 'zs_flow_migrate_email_logs');
-                fd.append('nonce', zsAdmin.nonce);
-                
-                fetch(zsAdmin.ajaxUrl, { method: 'POST', body: fd })
-                    .then(r => r.json())
-                    .then(data => {
-                        migrateBtn.disabled = false;
-                        migrateBtn.textContent = 'Migrate Email Logs';
-                        
-                        if (data && data.success) {
-                            if (resultSpan) {
-                                resultSpan.style.color = '#28a745';
-                                resultSpan.textContent = data.data.message || 'Migration completed!';
-                            }
-                            alert(data.data.message || 'Migration completed successfully!');
-                        } else {
-                            if (resultSpan) {
-                                resultSpan.style.color = '#dc3545';
-                                resultSpan.textContent = 'Error: ' + (data.data || 'unknown');
-                            }
-                            alert('Migration failed: ' + (data.data || 'unknown error'));
-                        }
-                    })
-                    .catch(err => {
-                        migrateBtn.disabled = false;
-                        migrateBtn.textContent = 'Migrate Email Logs';
-                        if (resultSpan) {
-                            resultSpan.style.color = '#dc3545';
-                            resultSpan.textContent = 'Network error';
-                        }
-                        alert('Network error: ' + err.message);
-                    });
-            });
-        }
     }
 };
 
