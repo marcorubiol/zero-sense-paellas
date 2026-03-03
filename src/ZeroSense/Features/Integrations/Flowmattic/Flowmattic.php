@@ -452,10 +452,6 @@ class Flowmattic implements FeatureInterface
         echo '<div class="zs-manual-email-actions">';
         
         // Section 1: Manual Email Actions (Class Actions)
-        if (!empty($emailTriggers)) {
-            echo '<h4 class="zs-mb-subheader" style="margin-bottom:12px;">' . esc_html__('Manual Email Actions', 'zero-sense') . '</h4>';
-        }
-        
         foreach ($emailTriggers as $trigger) {
             $workflowId = $trigger['workflow_id'];
             $buttonText = $trigger['email_config']['description'] ?? $trigger['title'];
