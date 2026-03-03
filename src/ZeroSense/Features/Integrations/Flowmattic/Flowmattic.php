@@ -2058,19 +2058,14 @@ class Flowmattic implements FeatureInterface
         $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
         $logs = [];
         
-        error_log('🔍 getEmailLogsForOrder - Order: ' . $orderId);
-        error_log('🔍 Raw executions count: ' . count($executions));
-        
         foreach ($executions as $exec) {
-            error_log('🔍 Raw timestamp from exec: ' . var_export($exec['timestamp'], true) . ' (type: ' . gettype($exec['timestamp']) . ')');
-            $timestamp = strtotime($exec['timestamp']);
-            error_log('🔍 After strtotime: ' . var_export($timestamp, true));
+            // getWorkflowExecutionsForOrder already returns timestamp as Unix timestamp
             $logs[] = [
                 'workflow_id' => $exec['workflow_id'],
                 'status' => $exec['status'],
-                'description' => $this->getWorkflowDescription($exec['workflow_id'], 'email'),
-                'timestamp' => $timestamp,
-                'formatted_time' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), $timestamp),
+                'description' => $exec['description'], // Already computed by getWorkflowExecutionsForOrder
+                'timestamp' => $exec['timestamp'], // Already Unix timestamp
+                'formatted_time' => $exec['formatted_time'], // Already formatted
                 'email_to' => $exec['metadata']['email_to'] ?? '',
                 'email_subject' => $exec['metadata']['email_subject'] ?? '',
                 'error_message' => $exec['error_message'] ?? null,
@@ -2079,20 +2074,10 @@ class Flowmattic implements FeatureInterface
             ];
         }
         
-        error_log('🔍 Before sort - First 3 logs:');
-        for ($i = 0; $i < min(3, count($logs)); $i++) {
-            error_log('  [' . $i . '] ' . $logs[$i]['description'] . ' - timestamp: ' . $logs[$i]['timestamp'] . ' (' . $logs[$i]['formatted_time'] . ')');
-        }
-        
         // Sort by timestamp descending (newest first)
         usort($logs, function($a, $b) {
             return $b['timestamp'] - $a['timestamp'];
         });
-        
-        error_log('🔍 After sort - First 3 logs:');
-        for ($i = 0; $i < min(3, count($logs)); $i++) {
-            error_log('  [' . $i . '] ' . $logs[$i]['description'] . ' - timestamp: ' . $logs[$i]['timestamp'] . ' (' . $logs[$i]['formatted_time'] . ')');
-        }
         
         return $logs;
     }
