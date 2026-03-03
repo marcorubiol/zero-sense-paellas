@@ -48,7 +48,10 @@ class DataExposureDebug implements FeatureInterface
         // Clear cache before reading to ensure fresh value
         wp_cache_delete('zs_utilities_dataexposuredebug', 'options');
         $value = get_option('zs_utilities_dataexposuredebug', false);
-        error_log('DataExposureDebug: option value = ' . var_export($value, true));
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $caller = $backtrace[1]['function'] ?? 'unknown';
+        $class = $backtrace[1]['class'] ?? 'unknown';
+        error_log('DataExposureDebug: option value = ' . var_export($value, true) . ' (called from ' . $class . '::' . $caller . ')');
         return (bool) $value;
     }
 
