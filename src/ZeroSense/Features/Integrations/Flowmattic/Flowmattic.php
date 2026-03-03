@@ -2282,15 +2282,16 @@ class Flowmattic implements FeatureInterface
             echo '<div class="zs-email-section-sep">';
             echo '<h4 class="zs-mb-subheader">' . esc_html__('Holded Logs', 'zero-sense') . '</h4>';
             foreach ($autoTriggers as $auto) {
-                $statusClass = 'zs-email-' . $auto['status'];
+                $statusClass = 'zs-' . $auto['status'];
                 $badge = $this->getStatusBadge($auto['status']);
                 $transition = $auto['from_status'] && $auto['to_status'] 
                     ? ' (' . $auto['from_status'] . ' → ' . $auto['to_status'] . ')'
                     : '';
                 
-                echo '<div class="zs-email-item ' . esc_attr($statusClass) . '">';
+                echo '<div class="zs-log-item ' . esc_attr($statusClass) . '">';
                 echo $badge;
-                echo '<div class="zs-auto-action-title">' . esc_html($auto['description']) . esc_html($transition) . '</div>';
+                echo '<div class="zs-log-title"><strong>' . esc_html($auto['description']) . '</strong></div>';
+                echo '<div class="zs-log-details">' . esc_html($transition) . '</div>';
                 echo '</div>';
             }
             echo '</div>';
