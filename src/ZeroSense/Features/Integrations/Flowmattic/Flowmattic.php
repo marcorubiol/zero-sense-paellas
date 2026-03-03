@@ -2161,11 +2161,6 @@ class Flowmattic implements FeatureInterface
             echo '<p>' . esc_html__('No email logs found for this order.', 'zero-sense') . '</p>';
             return;
         }
-
-        // Sort by timestamp (newest first)
-        usort($emailLogs, function($a, $b) {
-            return $b['timestamp'] <=> $a['timestamp'];
-        });
         
         $totalLogs = count($emailLogs);
         $listId = 'zs-email-logs-' . $orderId;
