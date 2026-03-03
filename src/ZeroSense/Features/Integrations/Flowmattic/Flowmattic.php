@@ -2177,12 +2177,55 @@ class Flowmattic implements FeatureInterface
     // ========================================================================
 
     /**
-     * Add Holded Actions metabox to order admin
+     * Add Holded Actions metabox to order admin (only if there are manual actions)
      */
     public function addHoldedActionsMetabox(): void
     {
         $screen = get_current_screen();
-        if ($screen && in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+        
+        // Get current order
+        global $post;
+        $orderId = 0;
+        
+        if ($post instanceof \WP_Post) {
+            $orderId = $post->ID;
+        } elseif (isset($_GET['id'])) {
+            $orderId = absint($_GET['id']);
+        }
+        
+        if ($orderId <= 0) {
+            return;
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof \WC_Order) {
+            return;
+        }
+        
+        $orderStatus = $order->get_status();
+        
+        // Check if there are any manual actions available for this order status
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        $hasManualActions = false;
+        
+        foreach ($stored as $trigger) {
+            if (!empty($trigger['workflow_config']['category']) && 
+                $trigger['workflow_config']['category'] === 'holded' &&
+                ($trigger['tag'] ?? '') === 'status') {
+                
+                $manualStates = $trigger['workflow_config']['manual_states'] ?? [];
+                if (!empty($manualStates) && in_array($orderStatus, $manualStates, true)) {
+                    $hasManualActions = true;
+                    break;
+                }
+            }
+        }
+        
+        // Only add metabox if there are manual actions
+        if ($hasManualActions) {
             $screen_id = $screen->id === 'woocommerce_page_wc-orders' ? wc_get_page_screen_id('shop-order') : 'shop_order';
             
             add_meta_box(
