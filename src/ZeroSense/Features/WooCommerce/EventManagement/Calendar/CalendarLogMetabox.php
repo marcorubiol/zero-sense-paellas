@@ -181,28 +181,21 @@ class CalendarLogMetabox
                     btn.addEventListener('click', function() {
                     if (this.disabled) return;
 
-                    const action = this.getAttribute('data-action');
-                    const orderId = this.getAttribute('data-order-id');
-                    const labelEl = this.querySelector('.zs-calendar-btn-label');
-                    const originalText = labelEl.textContent;
+                    var action = this.getAttribute('data-action');
+                    var orderId = this.getAttribute('data-order-id');
+                    var labelEl = this.querySelector('.zs-calendar-btn-label');
+                    var originalText = labelEl.textContent;
+                    var btn = this;
                     
-                    let confirmMsg, loadingText;
-                    if (action === 'delete') {
-                        confirmMsg = <?php echo wp_json_encode(__('Delete Google Calendar event? This cannot be undone.', 'zero-sense')); ?>;
-                        loadingText = <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>;
-                    } else if (action === 'update') {
-                        confirmMsg = <?php echo wp_json_encode(__('Mark event as reserved?', 'zero-sense')); ?>;
-                        loadingText = <?php echo wp_json_encode(__('Updating...', 'zero-sense')); ?>;
-                    } else {
-                        confirmMsg = <?php echo wp_json_encode(__('Create Google Calendar event for this order?', 'zero-sense')); ?>;
-                        loadingText = <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
-                    }
+                    var msgs = {
+                        'delete': ['Delete Google Calendar event? This cannot be undone.', 'Deleting...'],
+                        'update': ['Mark event as reserved?', 'Updating...'],
+                        'create': ['Create Google Calendar event for this order?', 'Creating...']
+                    };
                     
-                    if (!confirm(confirmMsg)) return;
+                    if (!confirm(msgs[action][0])) return;
                     
-                    labelEl.textContent = loadingText;
-                    
-                    const btn = this;
+                    labelEl.textContent = msgs[action][1];
                     
                     // Trigger workflow via AJAX
                     fetch(ajaxurl, {
