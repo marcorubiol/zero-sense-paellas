@@ -48,7 +48,7 @@ class Integration
         add_action('wp_ajax_nopriv_zs_trigger_class_action', [$this, 'handleClassActionAjax']);
         
         // Hook for programmatic class action triggering (used by calendar AJAX handlers)
-        add_action('zs_trigger_class_action_direct', [$this, 'handleDirectClassAction'], 10, 2);
+        add_action('zs_trigger_class_action_direct', [$this, 'handleDirectClassAction'], 10, 3);
 
         // Add JavaScript for Class Action detection
         add_action('wp_enqueue_scripts', [$this, 'enqueueClassActionScript']);
@@ -688,8 +688,12 @@ class Integration
     /**
      * Handle direct class action triggering (programmatic, not AJAX)
      * Used by calendar AJAX handlers and other internal code
+     * 
+     * @param string $className Class action name
+     * @param int $orderId Order ID
+     * @param string $triggerSource 'manual' or 'automatic' (default: 'manual')
      */
-    public function handleDirectClassAction(string $className, int $orderId): void
+    public function handleDirectClassAction(string $className, int $orderId, string $triggerSource = 'manual'): void
     {
         if (!isset(self::$manualTriggers[$className])) {
             return;
@@ -698,10 +702,10 @@ class Integration
         $workflowIds = self::$manualTriggers[$className];
         if (is_array($workflowIds)) {
             foreach ($workflowIds as $workflowId) {
-                $this->triggerClassWorkflow($workflowId, $className, $orderId, 'manual');
+                $this->triggerClassWorkflow($workflowId, $className, $orderId, $triggerSource);
             }
         } else {
-            $this->triggerClassWorkflow($workflowIds, $className, $orderId, 'manual');
+            $this->triggerClassWorkflow($workflowIds, $className, $orderId, $triggerSource);
         }
     }
 

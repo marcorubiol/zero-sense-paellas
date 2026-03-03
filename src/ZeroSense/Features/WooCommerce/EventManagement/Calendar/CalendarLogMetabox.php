@@ -470,8 +470,8 @@ class CalendarLogMetabox
             wp_send_json_error('Invalid order ID');
         }
         
-        // Trigger FlowMattic workflow via class action
-        do_action('zs_trigger_class_action_direct', 'zs-calendar-update', $orderId);
+        // Trigger FlowMattic workflow via class action with 'manual' trigger source
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-update', $orderId, 'manual');
         
         wp_send_json_success(['message' => 'Workflow triggered']);
     }
