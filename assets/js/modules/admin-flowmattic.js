@@ -322,15 +322,15 @@ const ZeroSenseFlowmattic = {
             
             holdedSectionHtml = '<div class="zs-flow-holded-config" style="margin-top:12px;padding:12px;background:#f0f4ff;border-radius:4px;grid-column:1 / -1;">' +
                 '<h6 style="margin:0 0 8px;color:#666;">Holded Integration (Optional)</h6>' +
-                '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-holded" style="margin-right:6px;"' + (isHolded ? ' checked' : '') + ' /> Enable Holded Sync</label>' +
+                '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-holded" style="margin-right:6px;"' + (isHolded ? ' checked' : '') + ' /> Enable Holded Integration</label>' +
                 '<div class="zs-flow-edit-holded-fields" style="' + (isHolded ? '' : 'display:none;') + 'max-width:350px;">' +
                 '<div style="display:flex;flex-direction:column;gap:12px;">' +
-                '<div><label class="zs-config-label">Sync Description</label>' +
-                '<input type="text" class="zs-config-input zs-flow-edit-holded-desc" placeholder="e.g., Create invoice in Holded" value="' + holdedDesc + '" /></div>' +
-                '<div class="zs-flow-edit-run-once-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label"><input type="checkbox" class="zs-flow-edit-run-once" style="margin-right:6px;"' + (runOnce ? ' checked' : '') + ' /> Run only once per order</label></div>' +
-                '<div class="zs-flow-edit-holded-manual-states-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label">Show manual sync button in these order states (optional)</label><select class="zs-config-input zs-flow-edit-holded-manual-states" multiple style="height:80px;">' + (document.getElementById('zs-flow-holded-manual-states')?.innerHTML || '') + '</select></div>' +
+                '<div><label class="zs-config-label">Integration Description</label>' +
+                '<input type="text" class="zs-config-input zs-flow-edit-holded-desc" placeholder="e.g., Send invoice to Holded" value="' + holdedDesc + '" /></div>' +
+                '<div class="zs-flow-edit-run-once-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label"><input type="checkbox" class="zs-flow-edit-run-once" style="margin-right:6px;"' + (runOnce ? ' checked' : '') + ' /> Send only once per order</label></div>' +
+                '<div class="zs-flow-edit-holded-manual-states-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label">Show manual trigger button in these order states (optional)</label><select class="zs-config-input zs-flow-edit-holded-manual-states" multiple style="height:80px;">' + (document.getElementById('zs-flow-holded-manual-states')?.innerHTML || '') + '</select></div>' +
                 '</div>' +
-                '<p class="zs-flow-edit-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">Status Transitions: Holded sync description, run-once option, and manual button states.</p>' +
+                '<p class="zs-flow-edit-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">Status Transitions: Holded integration description, send-once option, and manual trigger states.</p>' +
                 '</div>' +
                 '</div>';
         }
@@ -645,7 +645,7 @@ const ZeroSenseFlowmattic = {
                         if (isHoldedEl && isHoldedEl.checked && tag === 'status') {
                             const holdedDesc = holdedDescEl ? holdedDescEl.value.trim() : '';
                             const runOnce = (runOnceEl && runOnceEl.checked);
-                            const holdedTitle = holdedDesc || 'Holded sync';
+                            const holdedTitle = holdedDesc || 'Holded integration';
                             const runOnceText = runOnce ? ' (once)' : '';
                             holdedIndicator = '<span class="zs-flow-holded" title="' + holdedTitle + runOnceText + '" style="color:#7C3AED;font-weight:bold;">🔗</span> ';
                         }
@@ -927,7 +927,7 @@ const ZeroSenseFlowmattic = {
                     if (holdedDescEl) {
                         const holdedDescValue = holdedDescEl.value.trim();
                         if (!holdedDescValue) {
-                            alert('Holded sync description is required');
+                            alert('Holded integration description is required');
                             saveBtn.disabled = false;
                             saveBtn.textContent = originalText;
                             return;
@@ -1005,7 +1005,7 @@ const ZeroSenseFlowmattic = {
                         if (isHoldedEl && isHoldedEl.checked && currentTag === 'status') {
                             const holdedDesc = holdedDescEl ? holdedDescEl.value.trim() : '';
                             const runOnce = (runOnceEl && runOnceEl.checked);
-                            const holdedTitle = holdedDesc || 'Holded sync';
+                            const holdedTitle = holdedDesc || 'Holded integration';
                             const runOnceText = runOnce ? ' (once)' : '';
                             holdedIndicator = '<span class="zs-flow-holded" title="' + holdedTitle + runOnceText + '" style="color:#7C3AED;font-weight:bold;">🔗</span> ';
                             updatedDataAttrs['data-is-holded'] = 'true';

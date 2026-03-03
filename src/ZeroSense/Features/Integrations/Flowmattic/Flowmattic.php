@@ -174,24 +174,24 @@ class Flowmattic implements FeatureInterface
                 // Holded configuration section
                 . '<div class="zs-flow-holded-config" style="margin-top:12px;padding:12px;background:#f0f9ff;border-radius:4px;">'
                 . '<h6 style="margin:0 0 8px;color:#666;">' . esc_html__('Holded Integration (Optional)', 'zero-sense') . '</h6>'
-                . '<label style="display:block;margin-bottom:12px;"><input type="checkbox" id="zs-flow-is-holded" style="margin-right:6px;" /> ' . esc_html__('Enable Holded Sync', 'zero-sense') . '</label>'
+                . '<label style="display:block;margin-bottom:12px;"><input type="checkbox" id="zs-flow-is-holded" style="margin-right:6px;" /> ' . esc_html__('Enable Holded Integration', 'zero-sense') . '</label>'
                 . '<div id="zs-holded-fields" style="display:none;max-width:350px;">'
                 . '<div style="display:flex;flex-direction:column;gap:12px;">'
                 . '<div>'
-                . '<label class="zs-config-label">' . esc_html__('Sync Description', 'zero-sense') . '</label>'
-                . '<input type="text" class="zs-config-input" id="zs-flow-holded-desc" placeholder="' . esc_attr__('e.g., Invoice sync to Holded', 'zero-sense') . '" />'
+                . '<label class="zs-config-label">' . esc_html__('Integration Description', 'zero-sense') . '</label>'
+                . '<input type="text" class="zs-config-input" id="zs-flow-holded-desc" placeholder="' . esc_attr__('e.g., Send invoice to Holded', 'zero-sense') . '" />'
                 . '</div>'
                 . '<div id="zs-flow-holded-run-once-container" style="display:none;">'
                 . '<label class="zs-config-label"><input type="checkbox" id="zs-flow-holded-run-once" style="margin-right:6px;" /> ' . esc_html__('Run only once per order', 'zero-sense') . '</label>'
                 . '</div>'
                 . '<div id="zs-flow-holded-manual-states-container" style="display:none;">'
-                . '<label class="zs-config-label">' . esc_html__('Show manual button in these order states (optional)', 'zero-sense') . '</label>'
+                . '<label class="zs-config-label">' . esc_html__('Show manual trigger button in these order states (optional)', 'zero-sense') . '</label>'
                 . '<select class="zs-config-input" id="zs-flow-holded-manual-states" multiple style="height:80px;" title="' . esc_attr__('Hold Ctrl/Cmd to select multiple states', 'zero-sense') . '">'
                 . implode('', array_map(function($k) use ($statusOptions){ return '<option value="' . esc_attr($k) . '">' . esc_html($statusOptions[$k]) . '</option>'; }, array_keys($statusOptions)))
                 . '</select>'
                 . '</div>'
                 . '</div>'
-                . '<p id="zs-flow-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">' . esc_html__('Only for Status Transitions. Configure automatic sync to Holded with optional manual re-sync button.', 'zero-sense') . '</p>'
+                . '<p id="zs-flow-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">' . esc_html__('Only for Status Transitions. Configure automatic trigger to Holded with optional manual re-trigger button.', 'zero-sense') . '</p>'
                 . '</div>'
                 . '</div>'
                 
@@ -2187,7 +2187,7 @@ class Flowmattic implements FeatureInterface
             
             add_meta_box(
                 'zs_holded_sync',
-                __('Holded Sync', 'zero-sense'),
+                __('Holded Integration', 'zero-sense'),
                 [$this, 'renderHoldedSyncMetabox'],
                 $screen_id,
                 'side',
@@ -2280,7 +2280,7 @@ class Flowmattic implements FeatureInterface
         
         if (!empty($autoTriggers)) {
             echo '<div class="zs-email-section-sep">';
-            echo '<h4 class="zs-mb-subheader">' . esc_html__('Automatic Syncs', 'zero-sense') . '</h4>';
+            echo '<h4 class="zs-mb-subheader">' . esc_html__('Automatic Triggers', 'zero-sense') . '</h4>';
             foreach ($autoTriggers as $auto) {
                 $statusClass = 'zs-email-' . $auto['status'];
                 $badge = $this->getStatusBadge($auto['status']);
