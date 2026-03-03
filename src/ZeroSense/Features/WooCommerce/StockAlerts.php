@@ -30,7 +30,7 @@ class StockAlerts implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return (bool) get_option('zs_stock_alerts_enabled', true);
+        return (bool) get_option($this->getOptionName(), true);
     }
 
     public function init(): void

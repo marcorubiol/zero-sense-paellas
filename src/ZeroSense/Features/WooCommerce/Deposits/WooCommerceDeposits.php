@@ -54,7 +54,7 @@ class WooCommerceDeposits implements FeatureInterface
      */
     public function isEnabled(): bool
     {
-        return (bool) get_option(self::OPTION_NAME, true);
+        return (bool) get_option($this->getOptionName(), true);
     }
 
     /**
@@ -102,9 +102,17 @@ class WooCommerceDeposits implements FeatureInterface
     }
 
     /**
-     * Convenience accessor for other components.
+     * Instance method for feature interface consistency
      */
-    public static function getOptionName(): string
+    public function getOptionName(): string
+    {
+        return self::OPTION_NAME;
+    }
+
+    /**
+     * Static convenience accessor for other components.
+     */
+    public static function getOptionNameStatic(): string
     {
         return self::OPTION_NAME;
     }
@@ -183,7 +191,7 @@ class WooCommerceDeposits implements FeatureInterface
                     __('Feature: src/ZeroSense/Features/WooCommerce/Deposits/WooCommerceDeposits.php', 'zero-sense'),
                     __('Settings::bootstrap() / OPTION_DEPOSIT_PERCENTAGE', 'zero-sense'),
                     __('Bootstrap()->boot() → wires checkout UI, status changes, flows (see Deposits sub-namespace)', 'zero-sense'),
-                    __('Toggle option: ' . WooCommerceDeposits::getOptionName(), 'zero-sense'),
+                    __('Toggle option: ' . WooCommerceDeposits::getOptionNameStatic(), 'zero-sense'),
                 ],
             ],
             [
