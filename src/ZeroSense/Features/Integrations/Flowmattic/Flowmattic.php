@@ -6,7 +6,6 @@ use ZeroSense\Core\Logger;
 
 class Flowmattic implements FeatureInterface
 {
-    private const EMAIL_SENDS_OPTION = 'zs_flowmattic_email_sends';
     private const WORKFLOW_EXECUTIONS_OPTION = 'zs_flowmattic_workflow_executions';
     
     // Email send status constants (public so runtime can reference them)
@@ -328,16 +327,6 @@ class Flowmattic implements FeatureInterface
             $html .= $renderGroup(__('Status Transitions', 'zero-sense'), 'zs-flow-custom-list-status', $groups['status']);
             $html .= $renderGroup(__('Class Actions', 'zero-sense'), 'zs-flow-custom-list-class', $groups['class']);
 
-            // Removed reference blocks (status ordered/manual/custom). All control is via the editable list above.
-
-            // Migration button
-            $html .= '<div style="margin-top:24px;padding:16px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;">';
-            $html .= '<h5 style="margin:0 0 8px;color:#856404;">' . esc_html__('⚠️ One-Time Migration', 'zero-sense') . '</h5>';
-            $html .= '<p style="margin:0 0 12px;color:#856404;font-size:13px;">' . esc_html__('Migrate email logs from old system to new generic logging system. This is safe to run multiple times (skips duplicates).', 'zero-sense') . '</p>';
-            $html .= '<button type="button" id="zs-migrate-email-logs" class="zs-btn-primary" style="background:#856404;border-color:#856404;">' . esc_html__('Migrate Email Logs', 'zero-sense') . '</button>';
-            $html .= '<span id="zs-migrate-result" style="margin-left:12px;font-weight:600;"></span>';
-            $html .= '</div>';
-
             $html .= '</div>';
         } catch (\Throwable $e) {
             $html = '<p>' . esc_html__('Unable to load Flowmattic workflows.', 'zero-sense') . '</p>';
@@ -368,17 +357,6 @@ class Flowmattic implements FeatureInterface
 
     // Runs counter removed
 
-    private function getEmailSends(): array
-    {
-        $raw = get_option(self::EMAIL_SENDS_OPTION, []);
-        return is_array($raw) ? $raw : [];
-    }
-
-    private function saveEmailSends(array $sends): void
-    {
-        update_option(self::EMAIL_SENDS_OPTION, $sends, false);
-    }
-
     public function logEmailSend(string $workflowId, int $orderId, string $status, array $emailData = []): void
     {
         if ($workflowId === '' || $orderId <= 0) {
@@ -397,7 +375,7 @@ class Flowmattic implements FeatureInterface
             }
         }
 
-        // Save to NEW generic system (primary)
+        // Save to generic workflow execution system
         $this->logWorkflowExecution($workflowId, $orderId, $status, [
             'category' => 'email',
             'trigger_source' => $emailData['trigger_source'] ?? 'unknown',
@@ -408,40 +386,15 @@ class Flowmattic implements FeatureInterface
             'error' => $emailData['error'] ?? null,
             '_by' => $emailData['_by'] ?? null,
         ]);
-
-        // Also save to OLD system for backwards compatibility (can be removed later)
-        $sends = $this->getEmailSends();
-        $logId = uniqid('email_', true);
-        
-        $sends[$logId] = [
-            'workflow_id' => $workflowId,
-            'order_id' => $orderId,
-            'status' => $status,
-            'timestamp' => current_time('mysql'),
-            'email_to' => $emailData['to'] ?? '',
-            'email_subject' => $emailData['subject'] ?? '',
-            'error_message' => $emailData['error'] ?? null,
-            'trigger_source' => $emailData['trigger_source'] ?? 'unknown',
-            'by_id' => isset($emailData['_by']['id']) ? (int) $emailData['_by']['id'] : 0,
-            'by_name' => isset($emailData['_by']['name']) ? (string) $emailData['_by']['name'] : '',
-            'by_login' => isset($emailData['_by']['login']) ? (string) $emailData['_by']['login'] : '',
-        ];
-
-        if (count($sends) > 500) {
-            $sends = array_slice($sends, -500, null, true);
-        }
-
-        $this->saveEmailSends($sends);
     }
 
     public function hasEmailBeenSent(string $workflowId, int $orderId): bool
     {
-        $sends = $this->getEmailSends();
+        $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
         
-        foreach ($sends as $send) {
-            if ($send['workflow_id'] === $workflowId && 
-                $send['order_id'] === $orderId && 
-                $send['status'] !== self::EMAIL_STATUS_ERROR) {
+        foreach ($executions as $exec) {
+            if ($exec['workflow_id'] === $workflowId && 
+                $exec['status'] !== self::EMAIL_STATUS_ERROR) {
                 return true;
             }
         }
@@ -451,11 +404,11 @@ class Flowmattic implements FeatureInterface
 
     public function getEmailSendStatus(string $workflowId, int $orderId): ?string
     {
-        $sends = $this->getEmailSends();
+        $executions = $this->getWorkflowExecutionsForOrder($orderId, 'email');
         
-        foreach (array_reverse($sends, true) as $send) {
-            if ($send['workflow_id'] === $workflowId && $send['order_id'] === $orderId) {
-                return $send['status'];
+        foreach ($executions as $exec) {
+            if ($exec['workflow_id'] === $workflowId) {
+                return $exec['status'];
             }
         }
         
@@ -475,66 +428,6 @@ class Flowmattic implements FeatureInterface
     private function saveWorkflowExecutions(array $executions): void
     {
         update_option(self::WORKFLOW_EXECUTIONS_OPTION, $executions, false);
-    }
-
-    /**
-     * Migrate email logs from old system to new generic system
-     * ONE-TIME MIGRATION - Run manually via WP-CLI or admin action
-     */
-    public function migrateEmailLogsToGenericSystem(): array
-    {
-        $emailSends = $this->getEmailSends();
-        $executions = $this->getWorkflowExecutions();
-        $migrated = 0;
-        $skipped = 0;
-        
-        foreach ($emailSends as $logId => $send) {
-            // Check if already migrated (avoid duplicates)
-            $exists = false;
-            foreach ($executions as $exec) {
-                if ($exec['workflow_id'] === $send['workflow_id'] &&
-                    $exec['order_id'] === $send['order_id'] &&
-                    isset($exec['timestamp']) && $exec['timestamp'] === $send['timestamp']) {
-                    $exists = true;
-                    break;
-                }
-            }
-            
-            if ($exists) {
-                $skipped++;
-                continue;
-            }
-            
-            // Migrate to new system with category 'email'
-            $newLogId = 'email_' . uniqid('', true);
-            $executions[$newLogId] = [
-                'workflow_id' => $send['workflow_id'],
-                'order_id' => $send['order_id'],
-                'status' => $send['status'],
-                'timestamp' => $send['timestamp'],
-                'category' => 'email',
-                'trigger_source' => $send['trigger_source'] ?? 'unknown',
-                'metadata' => [
-                    'email_to' => $send['email_to'] ?? '',
-                    'email_subject' => $send['email_subject'] ?? '',
-                ],
-                'error_message' => $send['error_message'] ?? null,
-                'by_id' => $send['by_id'] ?? 0,
-                'by_name' => $send['by_name'] ?? '',
-                'by_login' => $send['by_login'] ?? '',
-            ];
-            $migrated++;
-        }
-        
-        if ($migrated > 0) {
-            $this->saveWorkflowExecutions($executions);
-        }
-        
-        return [
-            'migrated' => $migrated,
-            'skipped' => $skipped,
-            'total' => count($emailSends)
-        ];
     }
 
     public function logWorkflowExecution(string $workflowId, int $orderId, string $status, array $data = []): void
@@ -1438,9 +1331,6 @@ class Flowmattic implements FeatureInterface
         add_action('add_meta_boxes', [$this, 'addHoldedActionsMetabox']);
         add_action('add_meta_boxes', [$this, 'addHoldedLogsMetabox']);
         add_action('wp_ajax_zs_flow_trigger_holded_sync', [$this, 'ajaxTriggerHoldedSync']);
-        
-        // Migration endpoint
-        add_action('wp_ajax_zs_flow_migrate_email_logs', [$this, 'ajaxMigrateEmailLogs']);
     }
 
     public function ajaxAddTrigger(): void
@@ -2598,34 +2488,6 @@ class Flowmattic implements FeatureInterface
         echo '</div>';
     }
 
-    /**
-     * AJAX: Migrate email logs to generic system
-     */
-    public function ajaxMigrateEmailLogs(): void
-    {
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('forbidden');
-        }
-        
-        $nonce = sanitize_text_field(wp_unslash($_POST['nonce'] ?? ''));
-        if (!wp_verify_nonce($nonce, 'zs_admin_nonce')) {
-            wp_send_json_error('bad_nonce');
-        }
-        
-        $result = $this->migrateEmailLogsToGenericSystem();
-        
-        wp_send_json_success([
-            'message' => sprintf(
-                __('Migration completed: %d logs migrated, %d skipped (already existed), %d total email logs.', 'zero-sense'),
-                $result['migrated'],
-                $result['skipped'],
-                $result['total']
-            ),
-            'migrated' => $result['migrated'],
-            'skipped' => $result['skipped'],
-            'total' => $result['total']
-        ]);
-    }
 
     /**
      * AJAX: Trigger Holded sync manually
