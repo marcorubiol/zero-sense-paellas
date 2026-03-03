@@ -18,7 +18,7 @@ class BulkSyncPage implements FeatureInterface
 
     public function getCategory(): string
     {
-        return 'WooCommerce';
+        return 'Utilities';
     }
 
     public function isToggleable(): bool
