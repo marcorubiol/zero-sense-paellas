@@ -16,7 +16,6 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_calendar_delete_event', [$this, 'ajaxDeleteEvent']);
         add_action('wp_ajax_zs_calendar_check_status', [$this, 'ajaxCheckStatus']);
         add_action('wp_ajax_zs_calendar_get_header', [$this, 'ajaxGetHeader']);
-        add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
     }
 
     public function addMetabox(): void
@@ -75,17 +74,8 @@ class CalendarLogMetabox
         }
 
         // Action buttons
-        $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
-        if ($eventId !== ''') {
-            if (!$isReserved) {
-                // Update button - only if event_id exists and NOT reserved
-                echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
-                echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
-                echo '✅ <span class="zs-calendar-btn-label">' . esc_html__('Reservar Evento', 'zero-sense') . '</span>';
-                echo '</button>';
-            }
-            
+        echo '<div class="zs-calendar-actions" style="margin:10px 0;">';
+        if ($eventId !== '') {
             // Delete button - only if event_id exists
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
             echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
@@ -98,8 +88,6 @@ class CalendarLogMetabox
             echo '➕ <span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
-        echo '</div>';
-
         echo '</div>';
         
         echo '</div>'; // .zs-calendar-header-section
@@ -189,16 +177,12 @@ class CalendarLogMetabox
                     
                     const confirmMsg = action === 'delete' 
                         ? <?php echo wp_json_encode(__('Delete Google Calendar event? This cannot be undone.', 'zero-sense')); ?>
-                        : action === 'update'
-                        ? <?php echo wp_json_encode(__('Mark event as reserved?', 'zero-sense')); ?>
                         : <?php echo wp_json_encode(__('Create Google Calendar event for this order?', 'zero-sense')); ?>;
                     
                     if (!confirm(confirmMsg)) return;
+
+                    this.disabled = true;
                     labelEl.textContent = action === 'delete' 
-                        ? <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>
-                        : action === 'update'
-                        ? <?php echo wp_json_encode(__('Updating...', 'zero-sense')); ?>
-                        : <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
                         ? <?php echo wp_json_encode(__('Deleting...', 'zero-sense')); ?>
                         : <?php echo wp_json_encode(__('Creating...', 'zero-sense')); ?>;
                     
@@ -461,24 +445,6 @@ class CalendarLogMetabox
     }
 
     /**
-     * AJAX handler to update calendar event
-     */
-    public function ajaxUpdateEvent(): void
-    {
-        check_ajax_referer('zs_calendar_action', 'nonce');
-        
-        $orderId = absint($_POST['order_id'] ?? 0);
-        if ($orderId === 0) {
-            wp_send_json_error('Invalid order ID');
-        }
-        
-        // Trigger FlowMattic workflow via class action
-        do_action('zs_trigger_class_action_direct', 'zs-calendar-update', $orderId);
-        
-        wp_send_json_success(['message' => 'Workflow triggered']);
-    }
-
-    /**
      * AJAX handler to check if event status changed
      */
     public function ajaxCheckStatus(): void
@@ -496,14 +462,10 @@ class CalendarLogMetabox
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         
         $changed = false;
-        if ($checkAction === 'create' && $eventId !== ''') {
+        if ($checkAction === 'create' && $eventId !== '') {
             $changed = true; // Event ID now exists
-        } elseif ($checkAction === 'delete' && $eventId === ''') {
+        } elseif ($checkAction === 'delete' && $eventId === '') {
             $changed = true; // Event ID was deleted
-        } elseif ($checkAction === 'update') {
-            // Check if zs_event_reserved changed to 'yes'
-            $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-            $changed = $isReserved;
         }
         
         wp_send_json_success(['changed' => $changed]);
@@ -542,15 +504,8 @@ class CalendarLogMetabox
         }
         
         // Action buttons
-        $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
-        if ($eventId !== ''') {
-            if (!$isReserved) {
-                echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
-                echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
-                echo '✅ <span class="zs-calendar-btn-label">' . esc_html__('Reservar Evento', 'zero-sense') . '</span>';
-                echo '</button>';
-            }
+        echo '<div class="zs-calendar-actions" style="margin:10px 0;">';
+        if ($eventId !== '') {
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
             echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
             echo '🗑️ <span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
@@ -562,7 +517,6 @@ class CalendarLogMetabox
             echo '</button>';
         }
         echo '</div>';
-
         
         echo '</div>';
         

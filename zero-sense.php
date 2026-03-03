@@ -170,6 +170,7 @@ function zs_delete_calendar_event_id($order_id): array
         // Delete event ID and calendar ID
         $order->delete_meta_data('zs_google_calendar_event_id');
         $order->delete_meta_data('zs_google_calendar_id');
+        $order->delete_meta_data(\ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys::EVENT_RESERVED);
         $order->save_meta_data();
 
         // Add log entry if CalendarLogs class is available
@@ -262,3 +263,57 @@ function zero_sense_uninstall()
 register_activation_hook(__FILE__, 'zero_sense_activate');
 register_deactivation_hook(__FILE__, 'zero_sense_deactivate');
 register_uninstall_hook(__FILE__, 'zero_sense_uninstall');
+
+/**
+ * Global helper function for FlowMattic to log calendar event update
+ * 
+ * @param string|int $order_id Order ID
+ * @param string $event_id Event ID
+ * @param string $trigger_source 'manual' or 'automatic'
+ * @return array Response with success status
+ */
+function zs_log_calendar_update($order_id, $event_id = '', $trigger_source = 'automatic'): array
+{
+    try {
+        $orderId = absint($order_id);
+        if ($orderId === 0) {
+            return ['success' => false, 'message' => 'Invalid order ID'];
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return ['success' => false, 'message' => 'Order not found'];
+        }
+
+        // Mark event as reserved
+        $order->update_meta_data(\ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys::EVENT_RESERVED, 'yes');
+        $order->save_meta_data();
+
+        // Add log entry if CalendarLogs class is available
+        if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+            $logData = [
+                'event_id' => $event_id,
+                'trigger_source' => $trigger_source,
+                'action' => 'title_change'
+            ];
+
+            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
+                $order,
+                'updated',
+                $logData
+            );
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Event marked as reserved',
+            'order_id' => $orderId,
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+        ];
+    }
+}

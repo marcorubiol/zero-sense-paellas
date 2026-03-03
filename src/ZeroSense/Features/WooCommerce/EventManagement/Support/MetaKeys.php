@@ -46,6 +46,7 @@ class MetaKeys
     
     // Google Calendar Integration
     public const GOOGLE_CALENDAR_EVENT_ID = 'zs_google_calendar_event_id';
+    public const EVENT_RESERVED = 'zs_event_reserved';
     
     // Customer Preferences
     public const MARKETING_CONSENT = 'zs_marketing_consent';
@@ -79,6 +80,7 @@ class MetaKeys
             'event_staff'    => self::EVENT_STAFF,
             'event_vehicles' => self::EVENT_VEHICLES,
             'google_calendar_event_id' => self::GOOGLE_CALENDAR_EVENT_ID,
+            'event_reserved' => self::EVENT_RESERVED,
         ];
     }
     
@@ -114,6 +116,7 @@ class MetaKeys
             self::EVENT_STAFF    => __('Event staff', 'zero-sense'),
             self::EVENT_VEHICLES => __('Event vehicles', 'zero-sense'),
             self::GOOGLE_CALENDAR_EVENT_ID => __('Google Calendar event ID', 'zero-sense'),
+            self::EVENT_RESERVED => __('Event reserved', 'zero-sense'),
         ];
     }
 }

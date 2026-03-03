@@ -80,5 +80,13 @@ class GoogleCalendarSync implements FeatureInterface
             'legacy_keys' => [],
             'feature' => 'GoogleCalendarSync',
         ]);
+        
+        $registry->register(MetaKeys::EVENT_RESERVED, [
+            'label' => __('Event reserved', 'zero-sense'),
+            'type' => 'text',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'GoogleCalendarSync',
+        ]);
     }
 }

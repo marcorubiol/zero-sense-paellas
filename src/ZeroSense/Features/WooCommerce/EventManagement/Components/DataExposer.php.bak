@@ -122,7 +122,6 @@ class DataExposer
             'staff_tallador_pernil' => self::getStaffByRole($order, 'tallador-pernil'),
             'staff_all_formatted' => self::getAllStaffFormatted($order),
             'vehicles'            => self::getVehiclesFormatted($order),
-            'event_reserved' => $order->get_meta(MetaKeys::EVENT_RESERVED, true),
             'google_calendar_event_id' => $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
         ];
     }
