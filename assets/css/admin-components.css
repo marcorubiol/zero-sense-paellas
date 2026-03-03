@@ -649,7 +649,7 @@ button.zs-mb-link {
    ================================================================= */
 
 /* Email Logs Column (Orders list) */
-.column-zs_email_logs .zs-badge-type {
+.column-zs_email_logs .zs-badge {
     display: inline-block;
     margin-left: 0;
     padding: 2px 4px;
@@ -659,8 +659,8 @@ button.zs-mb-link {
     line-height: 1;
 }
 /* Position badge at the end of truncated titles and list items */
-.column-zs_email_logs .zs-title > .zs-badge-type,
-.column-zs_email_logs .zs-list li > .zs-badge-type {
+.column-zs_email_logs .zs-title > .zs-badge,
+.column-zs_email_logs .zs-list li > .zs-badge {
     position: absolute;
     top: 0;
     right: 0;
