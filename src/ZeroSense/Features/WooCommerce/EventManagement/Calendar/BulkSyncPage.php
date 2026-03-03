@@ -1,15 +1,55 @@
 <?php
 namespace ZeroSense\Features\WooCommerce\EventManagement\Calendar;
 
+use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 
-class BulkSyncPage
+class BulkSyncPage implements FeatureInterface
 {
-    public function register(): void
+    public function getName(): string
     {
+        return __('Calendar Bulk Operations', 'zero-sense');
+    }
+
+    public function getDescription(): string
+    {
+        return __('Provides bulk create and delete operations for Google Calendar events. Allows mass syncing of orders to calendar.', 'zero-sense');
+    }
+
+    public function getCategory(): string
+    {
+        return 'WooCommerce';
+    }
+
+    public function isToggleable(): bool
+    {
+        return true;
+    }
+
+    public function isEnabled(): bool
+    {
+        return (bool) get_option('zero_sense_feature_calendar_bulk_operations', 0);
+    }
+
+    public function init(): void
+    {
+        if (!$this->isEnabled()) {
+            return;
+        }
+
         add_action('admin_menu', [$this, 'addAdminPage']);
         add_action('admin_post_zs_bulk_sync_calendar', [$this, 'handleBulkSync']);
         add_action('admin_post_zs_bulk_delete_calendar', [$this, 'handleBulkDelete']);
+    }
+
+    public function getPriority(): int
+    {
+        return 10;
+    }
+
+    public function getConditions(): array
+    {
+        return ['is_admin', 'class_exists:WooCommerce'];
     }
 
     public function addAdminPage(): void
