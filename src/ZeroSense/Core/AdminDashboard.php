@@ -652,47 +652,22 @@ class AdminDashboard
             return;
         }
 
-        // Update the option - use add_option to force creation in database
-        error_log("AdminDashboard: Updating {$optionName} to " . ($enabled ? '1' : '0'));
-        
-        // Check if option exists before update
-        global $wpdb;
-        $before_db = $wpdb->get_var($wpdb->prepare(
-            "SELECT option_value FROM $wpdb->options WHERE option_name = %s",
-            $optionName
-        ));
-        error_log("AdminDashboard: Before update DB value = " . var_export($before_db, true));
-        
-        // Delete option first to clear any cache issues, then add it fresh
+        // Update the option - use delete + add to force creation in database
+        // This avoids cache issues with Redis/Memcached
         delete_option($optionName);
-        $result = add_option($optionName, $enabled ? 1 : 0, '', 'no');
-        error_log("AdminDashboard: add_option result = " . var_export($result, true));
+        add_option($optionName, $enabled ? 1 : 0, '', 'no');
         
-        // Check DB value immediately after update
-        $after_db = $wpdb->get_var($wpdb->prepare(
-            "SELECT option_value FROM $wpdb->options WHERE option_name = %s",
-            $optionName
-        ));
-        error_log("AdminDashboard: After update DB value = " . var_export($after_db, true));
-        
-        // Clear all caches to ensure fresh read
+        // Clear cache to ensure fresh read
         wp_cache_delete($optionName, 'options');
-        if (function_exists('wp_cache_flush')) {
-            wp_cache_flush();
-        }
-        
-        error_log("AdminDashboard: After update, value = " . var_export(get_option($optionName), true));
         
         // Re-initialize the specific feature to apply the change immediately
         foreach ($this->featureManager->getFeatures() as $feature) {
             if ($this->getFeatureOptionName($feature) === $optionName) {
-                error_log("AdminDashboard: Before re-init, value = " . var_export(get_option($optionName), true));
                 try {
                     $feature->init();
                 } catch (\Exception $e) {
                     Logger::error("Error re-initializing feature {$feature->getName()}", $e->getMessage());
                 }
-                error_log("AdminDashboard: After re-init, value = " . var_export(get_option($optionName), true));
                 break;
             }
         }

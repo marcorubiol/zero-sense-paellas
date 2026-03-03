@@ -45,30 +45,7 @@ class DataExposureDebug implements FeatureInterface
 
     public function isEnabled(): bool
     {
-        return self::isEnabledStatic();
-    }
-
-    public static function isEnabledStatic(): bool
-    {
-        // Clear cache before reading to ensure fresh value
-        wp_cache_delete('zs_utilities_dataexposuredebug', 'options');
-        
-        // Debug: Check if option exists in database directly
-        global $wpdb;
-        $db_value = $wpdb->get_var($wpdb->prepare(
-            "SELECT option_value FROM $wpdb->options WHERE option_name = %s",
-            'zs_utilities_dataexposuredebug'
-        ));
-        
-        $value = get_option('zs_utilities_dataexposuredebug', false);
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-        $caller = $backtrace[1]['function'] ?? 'unknown';
-        $class = $backtrace[1]['class'] ?? 'unknown';
-        
-        error_log('DataExposureDebug: DB value = ' . var_export($db_value, true));
-        error_log('DataExposureDebug: get_option value = ' . var_export($value, true) . ' (called from ' . $class . '::' . $caller . ')');
-        
-        return (bool) $value;
+        return (bool) get_option('zs_utilities_dataexposuredebug', false);
     }
 
     public function init(): void
