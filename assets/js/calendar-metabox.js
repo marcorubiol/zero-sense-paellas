@@ -77,31 +77,8 @@
                         .then(function(r) { return r.json(); })
                         .then(function(res) {
                             if (res.success && res.data && res.data.changed) {
-                                // Refresh metabox content via AJAX
-                                // Wait 2 seconds to ensure FlowMattic has created the log
-                                setTimeout(function() {
-                                    fetch(config.ajaxUrl, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                        body: new URLSearchParams({
-                                            action: 'zs_calendar_get_content',
-                                            order_id: orderId,
-                                            nonce: config.nonce
-                                        })
-                                    })
-                                    .then(function(r) { return r.json(); })
-                                    .then(function(contentRes) {
-                                        if (contentRes.success && contentRes.data && contentRes.data.html) {
-                                            // Replace entire metabox content
-                                            const metabox = document.querySelector('.zs-calendar-logs-metabox');
-                                            if (metabox) {
-                                                metabox.innerHTML = contentRes.data.html;
-                                                // Re-attach event listeners to new buttons
-                                                attachButtonListeners();
-                                            }
-                                        }
-                                    });
-                                }, 2000);
+                                // Reload page when change detected
+                                location.reload();
                             } else if (attempts < maxAttempts) {
                                 attempts++;
                                 setTimeout(poll, 1000);
