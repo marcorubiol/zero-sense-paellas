@@ -277,8 +277,11 @@ const ZeroSenseFlowmattic = {
                       '<button type="button" class="zs-btn-secondary zs-flow-cancel" style="height:36px;padding:8px 12px;">Cancel</button></div>';
         }
         
+        // Container for Email and Holded configs (side by side)
+        let configContainerHtml = '<div style="display:flex;gap:12px;margin-top:12px;grid-column:1 / -1;">';
+        
         // Email configuration section (same as main form)
-        let emailSectionHtml = '<div class="zs-flow-email-config" style="margin-top:12px;padding:12px;background:#f9f9f9;border-radius:4px;grid-column:1 / -1;">' +
+        let emailSectionHtml = '<div class="zs-flow-email-config" style="flex:1;padding:12px;background:#f9f9f9;border-radius:4px;">' +
             '<h6 style="margin:0 0 8px;color:#666;">Email Configuration (Optional)</h6>' +
             '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-email" style="margin-right:6px;"' + (isEmail ? ' checked' : '') + ' /> Enable Email Features</label>' +
             '<div class="zs-flow-edit-email-fields" style="' + (isEmail ? '' : 'display:none;') + 'max-width:350px;">' +
@@ -320,10 +323,10 @@ const ZeroSenseFlowmattic = {
             const runOnce = li.getAttribute('data-run-once') === 'true';
             const holdedManualStates = li.getAttribute('data-holded-manual-states')?.split(',') || [];
             
-            holdedSectionHtml = '<div class="zs-flow-holded-config" style="margin-top:12px;padding:12px;background:#f0f4ff;border-radius:4px;grid-column:1 / -1;">' +
+            holdedSectionHtml = '<div class="zs-flow-holded-config" style="flex:1;padding:12px;background:#f0f4ff;border-radius:4px;">' +
                 '<h6 style="margin:0 0 8px;color:#666;">Holded Integration (Optional)</h6>' +
                 '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-holded" style="margin-right:6px;"' + (isHolded ? ' checked' : '') + ' /> Enable Holded Integration</label>' +
-                '<div class="zs-flow-edit-holded-fields" style="' + (isHolded ? '' : 'display:none;') + 'max-width:350px;">' +
+                '<div class="zs-flow-edit-holded-fields" style="' + (isHolded ? '' : 'display:none;') + ';">' +
                 '<div style="display:flex;flex-direction:column;gap:12px;">' +
                 '<div><label class="zs-config-label">Integration Description</label>' +
                 '<input type="text" class="zs-config-input zs-flow-edit-holded-desc" placeholder="e.g., Send invoice to Holded" value="' + holdedDesc + '" /></div>' +
@@ -335,7 +338,10 @@ const ZeroSenseFlowmattic = {
                 '</div>';
         }
         
-        form.innerHTML = formHtml + emailSectionHtml + holdedSectionHtml;
+        // Close flex container
+        let configsHtml = configContainerHtml + emailSectionHtml + holdedSectionHtml + '</div>';
+        
+        form.innerHTML = formHtml + configsHtml;
         form.style.display = 'grid';
         form.style.gridTemplateColumns = currentTag === 'status' ? '1fr 1fr 1fr 1fr auto' : '1fr 1fr 1fr auto';
         form.style.gap = '6px';

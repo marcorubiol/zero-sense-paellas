@@ -143,8 +143,11 @@ class Flowmattic implements FeatureInterface
                 . '<div id="zs-flow-class-container" style="display:none;grid-column:span 2;"><label class="zs-config-label">' . esc_html__('Class (no dot)', 'zero-sense') . '</label><input type="text" class="zs-config-input" id="zs-flow-class" placeholder="class_name" /></div>'
                 . '</div>'
                 
+                // Container for Email and Holded configs (side by side)
+                . '<div style="display:flex;gap:12px;margin-top:12px;">'
+                
                 // Email configuration section
-                . '<div class="zs-flow-email-config" style="margin-top:12px;padding:12px;background:#f9f9f9;border-radius:4px;">'
+                . '<div class="zs-flow-email-config" style="flex:1;padding:12px;background:#f9f9f9;border-radius:4px;">'
                 . '<h6 style="margin:0 0 8px;color:#666;">' . esc_html__('Email Configuration (Optional)', 'zero-sense') . '</h6>'
                 . '<label style="display:block;margin-bottom:12px;"><input type="checkbox" id="zs-flow-is-email" style="margin-right:6px;" /> ' . esc_html__('Enable Email Features', 'zero-sense') . '</label>'
                 . '<div id="zs-email-fields" style="display:none;max-width:350px;">'
@@ -172,10 +175,10 @@ class Flowmattic implements FeatureInterface
                 . '</div>'
                 
                 // Holded configuration section
-                . '<div class="zs-flow-holded-config" style="margin-top:12px;padding:12px;background:#f0f9ff;border-radius:4px;">'
+                . '<div class="zs-flow-holded-config" style="flex:1;padding:12px;background:#f0f9ff;border-radius:4px;">'
                 . '<h6 style="margin:0 0 8px;color:#666;">' . esc_html__('Holded Integration (Optional)', 'zero-sense') . '</h6>'
                 . '<label style="display:block;margin-bottom:12px;"><input type="checkbox" id="zs-flow-is-holded" style="margin-right:6px;" /> ' . esc_html__('Enable Holded Integration', 'zero-sense') . '</label>'
-                . '<div id="zs-holded-fields" style="display:none;max-width:350px;">'
+                . '<div id="zs-holded-fields" style="display:none;">'
                 . '<div style="display:flex;flex-direction:column;gap:12px;">'
                 . '<div>'
                 . '<label class="zs-config-label">' . esc_html__('Integration Description', 'zero-sense') . '</label>'
@@ -193,6 +196,9 @@ class Flowmattic implements FeatureInterface
                 . '</div>'
                 . '<p id="zs-flow-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">' . esc_html__('Only for Status Transitions. Configure automatic trigger to Holded with optional manual re-trigger button.', 'zero-sense') . '</p>'
                 . '</div>'
+                . '</div>'
+                
+                // Close flex container
                 . '</div>'
                 
                 // Add button at the end
