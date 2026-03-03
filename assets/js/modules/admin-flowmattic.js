@@ -312,7 +312,30 @@ const ZeroSenseFlowmattic = {
             '</div>' +
             '</div>';
         
-        form.innerHTML = formHtml + emailSectionHtml;
+        // Holded configuration section (only for Status Transitions)
+        let holdedSectionHtml = '';
+        if (currentTag === 'status') {
+            const isHolded = li.getAttribute('data-is-holded') === 'true';
+            const holdedDesc = li.getAttribute('data-holded-desc') || '';
+            const runOnce = li.getAttribute('data-run-once') === 'true';
+            const holdedManualStates = li.getAttribute('data-holded-manual-states')?.split(',') || [];
+            
+            holdedSectionHtml = '<div class="zs-flow-holded-config" style="margin-top:12px;padding:12px;background:#f0f4ff;border-radius:4px;grid-column:1 / -1;">' +
+                '<h6 style="margin:0 0 8px;color:#666;">Holded Integration (Optional)</h6>' +
+                '<label style="display:block;margin-bottom:12px;"><input type="checkbox" class="zs-flow-edit-is-holded" style="margin-right:6px;"' + (isHolded ? ' checked' : '') + ' /> Enable Holded Sync</label>' +
+                '<div class="zs-flow-edit-holded-fields" style="' + (isHolded ? '' : 'display:none;') + 'max-width:350px;">' +
+                '<div style="display:flex;flex-direction:column;gap:12px;">' +
+                '<div><label class="zs-config-label">Sync Description</label>' +
+                '<input type="text" class="zs-config-input zs-flow-edit-holded-desc" placeholder="e.g., Create invoice in Holded" value="' + holdedDesc + '" /></div>' +
+                '<div class="zs-flow-edit-run-once-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label"><input type="checkbox" class="zs-flow-edit-run-once" style="margin-right:6px;"' + (runOnce ? ' checked' : '') + ' /> Run only once per order</label></div>' +
+                '<div class="zs-flow-edit-holded-manual-states-container" style="display:' + (isHolded ? 'block' : 'none') + ';"><label class="zs-config-label">Show manual sync button in these order states (optional)</label><select class="zs-config-input zs-flow-edit-holded-manual-states" multiple style="height:80px;">' + (document.getElementById('zs-flow-holded-manual-states')?.innerHTML || '') + '</select></div>' +
+                '</div>' +
+                '<p class="zs-flow-edit-holded-help" style="margin:8px 0 0;font-size:11px;color:#666;">Status Transitions: Holded sync description, run-once option, and manual button states.</p>' +
+                '</div>' +
+                '</div>';
+        }
+        
+        form.innerHTML = formHtml + emailSectionHtml + holdedSectionHtml;
         form.style.display = 'grid';
         form.style.gridTemplateColumns = currentTag === 'status' ? '1fr 1fr 1fr 1fr auto' : '1fr 1fr 1fr auto';
         form.style.gap = '6px';
@@ -346,6 +369,19 @@ const ZeroSenseFlowmattic = {
             }
         }
         
+        // Populate Holded manual states
+        if (currentTag === 'status') {
+            const holdedManualStates = li.getAttribute('data-holded-manual-states')?.split(',') || [];
+            if (holdedManualStates.length > 0) {
+                const holdedStatesEl = form.querySelector('.zs-flow-edit-holded-manual-states');
+                if (holdedStatesEl) {
+                    Array.from(holdedStatesEl.options).forEach(opt => {
+                        opt.selected = holdedManualStates.includes(opt.value);
+                    });
+                }
+            }
+        }
+        
         // Add event listener for email checkbox
         const emailCheckbox = form.querySelector('.zs-flow-edit-is-email');
         const emailFields = form.querySelector('.zs-flow-edit-email-fields');
@@ -371,6 +407,30 @@ const ZeroSenseFlowmattic = {
             if (emailDescEl) {
                 emailDescEl.addEventListener('input', function() {
                     ZeroSenseFlowmattic.updateGeneratedClass(form, currentTag);
+                });
+            }
+        }
+        
+        // Add event listener for Holded checkbox (Status Transitions only)
+        if (currentTag === 'status') {
+            const holdedCheckbox = form.querySelector('.zs-flow-edit-is-holded');
+            const holdedFields = form.querySelector('.zs-flow-edit-holded-fields');
+            const runOnceContainer = form.querySelector('.zs-flow-edit-run-once-container');
+            const runOnceCheckbox = form.querySelector('.zs-flow-edit-run-once');
+            const holdedManualStatesContainer = form.querySelector('.zs-flow-edit-holded-manual-states-container');
+            
+            if (holdedCheckbox && holdedFields) {
+                holdedCheckbox.addEventListener('change', function() {
+                    holdedFields.style.display = this.checked ? 'block' : 'none';
+                    if (runOnceContainer) {
+                        runOnceContainer.style.display = this.checked ? 'block' : 'none';
+                        if (!this.checked && runOnceCheckbox) {
+                            runOnceCheckbox.checked = false;
+                        }
+                    }
+                    if (holdedManualStatesContainer) {
+                        holdedManualStatesContainer.style.display = this.checked ? 'block' : 'none';
+                    }
                 });
             }
         }
@@ -856,6 +916,33 @@ const ZeroSenseFlowmattic = {
                     }
                 }
                 
+                // Holded configuration (only for status transitions)
+                const isHoldedEl = form.querySelector('.zs-flow-edit-is-holded');
+                const holdedDescEl = form.querySelector('.zs-flow-edit-holded-desc');
+                const runOnceEl = form.querySelector('.zs-flow-edit-run-once');
+                const holdedManualStatesEl = form.querySelector('.zs-flow-edit-holded-manual-states');
+                
+                if (isHoldedEl && isHoldedEl.checked && currentTag === 'status') {
+                    fd.append('is_holded', 'true');
+                    if (holdedDescEl) {
+                        const holdedDescValue = holdedDescEl.value.trim();
+                        if (!holdedDescValue) {
+                            alert('Holded sync description is required');
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = originalText;
+                            return;
+                        }
+                        fd.append('holded_description', holdedDescValue);
+                    }
+                    if (runOnceEl && runOnceEl.checked) {
+                        fd.append('holded_run_once', 'true');
+                    }
+                    if (holdedManualStatesEl) {
+                        const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                        selectedStates.forEach(state => fd.append('holded_manual_states[]', state));
+                    }
+                }
+                
                 if (currentTag === 'status') {
                     const from = form.querySelector('.zs-flow-edit-from').value;
                     const to = form.querySelector('.zs-flow-edit-to').value;
@@ -890,6 +977,7 @@ const ZeroSenseFlowmattic = {
                         
                         let extraHtml = '';
                         let emailIndicator = '';
+                        let holdedIndicator = '';
                         const updatedDataAttrs = {};
                         
                         if (isEmailEl && isEmailEl.checked) {
@@ -912,6 +1000,28 @@ const ZeroSenseFlowmattic = {
                             li.removeAttribute('data-email-desc');
                             li.removeAttribute('data-send-once');
                             li.removeAttribute('data-manual-states');
+                        }
+                        
+                        if (isHoldedEl && isHoldedEl.checked && currentTag === 'status') {
+                            const holdedDesc = holdedDescEl ? holdedDescEl.value.trim() : '';
+                            const runOnce = (runOnceEl && runOnceEl.checked);
+                            const holdedTitle = holdedDesc || 'Holded sync';
+                            const runOnceText = runOnce ? ' (once)' : '';
+                            holdedIndicator = '<span class="zs-flow-holded" title="' + holdedTitle + runOnceText + '" style="color:#7C3AED;font-weight:bold;">🔗</span> ';
+                            updatedDataAttrs['data-is-holded'] = 'true';
+                            if (holdedDesc) updatedDataAttrs['data-holded-desc'] = holdedDesc;
+                            if (runOnce) updatedDataAttrs['data-run-once'] = 'true';
+                            if (holdedManualStatesEl) {
+                                const selectedStates = Array.from(holdedManualStatesEl.selectedOptions).map(opt => opt.value);
+                                if (selectedStates.length > 0) {
+                                    updatedDataAttrs['data-holded-manual-states'] = selectedStates.join(',');
+                                }
+                            }
+                        } else {
+                            li.removeAttribute('data-is-holded');
+                            li.removeAttribute('data-holded-desc');
+                            li.removeAttribute('data-run-once');
+                            li.removeAttribute('data-holded-manual-states');
                         }
                         
                         if (currentTag === 'status') {
@@ -938,7 +1048,7 @@ const ZeroSenseFlowmattic = {
                         }
                         
                         const safeTitle = (titleVal || (li.querySelector('.zs-flow-title')?.textContent || 'Untitled')).replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                        li.innerHTML = playBtn.outerHTML + ' ' + '<span class="zs-flow-title">' + safeTitle + '</span> · ' + emailIndicator + extraHtml + '<code class="zs-flow-id">' + wid + '</code> · '
+                        li.innerHTML = playBtn.outerHTML + ' ' + '<span class="zs-flow-title">' + safeTitle + '</span> · ' + emailIndicator + holdedIndicator + extraHtml + '<code class="zs-flow-id">' + wid + '</code> · '
                                      + '<button type="button" class="button-link zs-flow-edit">Edit</button> · '
                                      + '<button type="button" class="button-link zs-flow-delete">Delete</button>';
                         
