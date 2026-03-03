@@ -41,9 +41,10 @@ class CalendarLogMetabox
         }
         
         // Enqueue script
+        $plugin_url = plugin_dir_url(dirname(dirname(dirname(dirname(dirname(__FILE__))))));
         wp_enqueue_script(
             'zs-calendar-metabox',
-            plugin_dir_url(dirname(dirname(dirname(dirname(__FILE__))))) . 'assets/js/calendar-metabox.js',
+            $plugin_url . 'assets/js/calendar-metabox.js',
             ['jquery'],
             '1.0.0',
             true
