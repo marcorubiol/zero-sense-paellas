@@ -240,6 +240,8 @@ class CalendarLogMetabox
     private function getCalendarEventUrl(string $eventId): string
     {
         if ($eventId === '') return '';
-        return 'https://calendar.google.com/calendar/event?eid=' . urlencode($eventId);
+        // Use the direct event URL format instead of eid (which requires base64 encoding)
+        // This format works with the simple event ID from Google Calendar API
+        return 'https://calendar.google.com/calendar/r/eventedit/' . urlencode($eventId);
     }
 }
