@@ -98,9 +98,10 @@
                                 }
                                 
                                 // Reload the page to show new logs
+                                // Wait 2 seconds to ensure FlowMattic has created the log
                                 setTimeout(function() {
                                     location.reload();
-                                }, 500);
+                                }, 2000);
                             } else if (attempts < maxAttempts) {
                                 attempts++;
                                 setTimeout(poll, 1000);
