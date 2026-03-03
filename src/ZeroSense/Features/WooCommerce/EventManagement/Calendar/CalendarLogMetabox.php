@@ -67,8 +67,7 @@ class CalendarLogMetabox
         if ($eventId !== '') {
             // Delete button - only if event_id exists
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-delete" ';
-            echo 'data-order-id="' . esc_attr($orderId) . '" ';
-            echo 'onclick="if(!confirm(\'' . esc_js(__('¿Eliminar evento de Google Calendar? Esta acción no se puede deshacer.', 'zero-sense')) . '\')) return false;">';
+            echo 'data-order-id="' . esc_attr($orderId) . '">';
             echo '🗑️ ' . esc_html__('Delete Google Calendar Event', 'zero-sense');
             echo '</button>';
         } else {
