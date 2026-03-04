@@ -284,6 +284,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_rabbit_toggle}',               'label' => 'Rabbit Toggle (shop switch)',                    'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_deposit_percentage}',    'label' => 'Order Deposit Percentage (real calculated %)',   'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_effective_recipes}',     'label' => 'Order Effective Recipes (qty × pax ratio)',       'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_staff_kitchen_names}',         'label' => 'Staff: Kitchen Team Names (Jefe, Cocineros, Ayudantes)', 'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -460,6 +461,9 @@ class BricksDynamicTags implements FeatureInterface
         if ($tag === '{zs_order_effective_recipes}') {
             return $this->getOrderEffectiveRecipes($post);
         }
+        if ($tag === '{zs_staff_kitchen_names}') {
+            return $this->getStaffKitchenNames($post);
+        }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -543,6 +547,7 @@ class BricksDynamicTags implements FeatureInterface
         if (str_contains($content, '{zs_rabbit_toggle}'))                { $content = str_replace('{zs_rabbit_toggle}',                $this->getRabbitToggle($post),                 $content); }
         if (str_contains($content, '{zs_order_deposit_percentage}'))     { $content = str_replace('{zs_order_deposit_percentage}',     $this->getOrderDepositPercentage($post),       $content); }
         if (str_contains($content, '{zs_order_effective_recipes}'))      { $content = str_replace('{zs_order_effective_recipes}',      $this->getOrderEffectiveRecipes($post),        $content); }
+        if (str_contains($content, '{zs_staff_kitchen_names}'))          { $content = str_replace('{zs_staff_kitchen_names}',          $this->getStaffKitchenNames($post),            $content); }
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -3798,6 +3803,43 @@ class BricksDynamicTags implements FeatureInterface
 
         $shoppingList = new \ZeroSense\Features\WooCommerce\ShoppingList();
         return $shoppingList->buildSignedUrl($eventDate, $eventDate, $loc, [$orderId]);
+    }
+
+    private function getStaffKitchenNames($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return $this->builderPlaceholder('staff_kitchen_names');
+        }
+
+        $order = $this->getOrder($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $staffAssignments = $order->get_meta('zs_event_staff', true);
+        if (!is_array($staffAssignments)) {
+            return '';
+        }
+
+        $kitchenRoles = ['cap-de-bolo', 'cuiner-a', 'ajudant-a-de-cuina'];
+        $staffNames = [];
+
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+            
+            if (in_array($assignment['role'], $kitchenRoles, true)) {
+                $staffId = (int) $assignment['staff_id'];
+                $staffPost = get_post($staffId);
+                if ($staffPost) {
+                    $staffNames[] = $staffPost->post_title;
+                }
+            }
+        }
+
+        return implode(', ', $staffNames);
     }
 
     private function getOrderEffectiveRecipes($post): string

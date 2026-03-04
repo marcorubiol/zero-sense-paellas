@@ -47,13 +47,13 @@ class DataExposer
                 'marketing_consent' => __('Marketing Consent', 'zero-sense'),
                 'staff_jefe_voluntarios' => __('Staff: Jefe de voluntarios', 'zero-sense'),
                 'staff_cocineros' => __('Staff: Cocineros', 'zero-sense'),
-                'staff_cocineros_names' => __('Staff: Cocineros (Names Only)', 'zero-sense'),
                 'staff_ayudantes' => __('Staff: Ayudantes', 'zero-sense'),
                 'staff_camareros' => __('Staff: Camareros', 'zero-sense'),
                 'staff_barra' => __('Staff: Barra', 'zero-sense'),
                 'staff_coqueteles' => __('Staff: Coqueteles', 'zero-sense'),
                 'staff_tallador_pernil' => __('Staff: Tallador de pernil', 'zero-sense'),
                 'staff_all_formatted' => __('Staff: All (Formatted)', 'zero-sense'),
+                'staff_kitchen_names' => __('Staff: Kitchen Team Names (Jefe, Cocineros, Ayudantes)', 'zero-sense'),
                 'google_calendar_event_id' => __('Google Calendar Event ID', 'zero-sense'),
                 'event_reserved' => __('Event Reserved (yes/no)', 'zero-sense'),
                 'google_calendar_event_url' => __('Google Calendar Event URL', 'zero-sense'),
@@ -117,13 +117,13 @@ class DataExposer
             'marketing_consent' => $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no',
             'staff_jefe_voluntarios' => self::getStaffByRole($order, 'jefe-voluntarios'),
             'staff_cocineros' => self::getStaffByRole($order, 'cocineros'),
-            'staff_cocineros_names' => self::getStaffNamesByRole($order, 'cocineros'),
             'staff_ayudantes' => self::getStaffByRole($order, 'ayudantes'),
             'staff_camareros' => self::getStaffByRole($order, 'camareros'),
             'staff_barra' => self::getStaffByRole($order, 'barra'),
             'staff_coqueteles' => self::getStaffByRole($order, 'coqueteles'),
             'staff_tallador_pernil' => self::getStaffByRole($order, 'tallador-pernil'),
             'staff_all_formatted' => self::getAllStaffFormatted($order),
+            'staff_kitchen_names' => self::getKitchenStaffNames($order),
             'vehicles'            => self::getVehiclesFormatted($order),
             'event_reserved' => $order->get_meta(MetaKeys::EVENT_RESERVED, true),
             'google_calendar_event_id' => $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
@@ -179,34 +179,6 @@ class DataExposer
     }
 
     /**
-     * Get staff names only by role for an order
-     */
-    private static function getStaffNamesByRole(WC_Order $order, string $role): string
-    {
-        $staffAssignments = $order->get_meta(MetaKeys::EVENT_STAFF, true);
-        if (!is_array($staffAssignments)) {
-            return '';
-        }
-
-        $staffNames = [];
-        foreach ($staffAssignments as $assignment) {
-            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
-                continue;
-            }
-            
-            if ($assignment['role'] === $role) {
-                $staffId = (int) $assignment['staff_id'];
-                $staffPost = get_post($staffId);
-                if ($staffPost) {
-                    $staffNames[] = $staffPost->post_title;
-                }
-            }
-        }
-
-        return implode(', ', $staffNames);
-    }
-
-    /**
      * Get vehicles assigned to an order
      */
     private static function getVehiclesFormatted(WC_Order $order): string
@@ -227,6 +199,37 @@ class DataExposer
         }
 
         return implode(', ', $parts);
+    }
+
+    /**
+     * Get kitchen staff names only (Jefe de voluntarios, Cocineros, Ayudantes)
+     * Returns only the names without email or phone
+     */
+    private static function getKitchenStaffNames(WC_Order $order): string
+    {
+        $staffAssignments = $order->get_meta(MetaKeys::EVENT_STAFF, true);
+        if (!is_array($staffAssignments)) {
+            return '';
+        }
+
+        $kitchenRoles = ['cap-de-bolo', 'cuiner-a', 'ajudant-a-de-cuina'];
+        $staffNames = [];
+
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+            
+            if (in_array($assignment['role'], $kitchenRoles, true)) {
+                $staffId = (int) $assignment['staff_id'];
+                $staffPost = get_post($staffId);
+                if ($staffPost) {
+                    $staffNames[] = $staffPost->post_title;
+                }
+            }
+        }
+
+        return implode(', ', $staffNames);
     }
 
     /**
