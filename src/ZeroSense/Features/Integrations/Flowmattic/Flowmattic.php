@@ -2161,15 +2161,6 @@ class Flowmattic implements FeatureInterface
             }
         }
         
-        // Delete button
-        echo '<button type="button" class="zs-log-delete" ';
-        echo 'data-log-type="email" ';
-        echo 'data-order-id="' . esc_attr($orderId) . '" ';
-        echo 'data-log-id="' . esc_attr($log['id'] ?? '') . '" ';
-        echo 'title="' . esc_attr__('Delete this log', 'zero-sense') . '">';
-        echo '×';
-        echo '</button>';
-        
         echo '</div>';
     }
 
@@ -2498,15 +2489,6 @@ class Flowmattic implements FeatureInterface
                 echo '<div class="zs-log-error"><strong>' . esc_html__('Error:', 'zero-sense') . '</strong> ' . esc_html($log['error_message']) . '</div>';
             }
         }
-        
-        // Delete button
-        echo '<button type="button" class="zs-log-delete" ';
-        echo 'data-log-type="holded" ';
-        echo 'data-order-id="' . esc_attr($orderId) . '" ';
-        echo 'data-log-id="' . esc_attr($log['id'] ?? '') . '" ';
-        echo 'title="' . esc_attr__('Delete this log', 'zero-sense') . '">';
-        echo '×';
-        echo '</button>';
         
         echo '</div>';
     }

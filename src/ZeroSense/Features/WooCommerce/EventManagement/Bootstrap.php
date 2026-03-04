@@ -14,7 +14,6 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database\Schema;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\InventoryMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Components\StockAdminPage;
 use ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogMetabox;
-use ZeroSense\Features\WooCommerce\LogDeletion;
 
 /**
  * Bootstrap for Event Management module
@@ -40,9 +39,6 @@ class Bootstrap
         
         // Calendar system
         (new CalendarLogMetabox())->register();
-        
-        // Log deletion system
-        (new LogDeletion())->register();
     }
     
     private function initializeInventorySystem(): void
