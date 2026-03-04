@@ -5,6 +5,8 @@
 (function() {
     'use strict';
     
+    console.log('[Calendar] Script loading...');
+    
     // Wait for DOM and config to be ready
     if (typeof zsCalendarConfig === 'undefined') {
         console.error('[Calendar] zsCalendarConfig not found');
@@ -12,6 +14,7 @@
     }
     
     const config = zsCalendarConfig;
+    console.log('[Calendar] Config loaded:', config);
     
     function attachSaveNotesListener() {
         const saveBtn = document.querySelector('.zs-save-calendar-notes-btn');
@@ -69,21 +72,40 @@
     function attachButtonListeners() {
         // Sync buttons (Create, Reserve, Sync) - all trigger zs-calendar-sync
         const syncButtons = document.querySelectorAll('.zs-calendar-sync');
+        console.log('[Calendar] Found sync buttons:', syncButtons.length);
+        
         syncButtons.forEach(function(btn) {
             btn.addEventListener('click', function(e) {
+                console.log('[Calendar] Sync button clicked');
                 e.preventDefault();
-                if (this.disabled) return;
+                
+                if (this.disabled) {
+                    console.log('[Calendar] Button is disabled, ignoring click');
+                    return;
+                }
                 
                 const orderId = this.getAttribute('data-order-id');
                 const labelEl = this.querySelector('.zs-calendar-btn-label');
-                const originalText = labelEl.textContent;
+                const originalText = labelEl ? labelEl.textContent : '';
                 const button = this;
                 
-                const confirmMsg = 'Sync event to Google Calendar?';
-                if (!confirm(confirmMsg)) return;
+                console.log('[Calendar] Order ID:', orderId);
+                console.log('[Calendar] Label element:', labelEl);
+                console.log('[Calendar] Original text:', originalText);
                 
+                const confirmMsg = 'Sync event to Google Calendar?';
+                if (!confirm(confirmMsg)) {
+                    console.log('[Calendar] User cancelled confirmation');
+                    return;
+                }
+                
+                console.log('[Calendar] User confirmed, disabling button and changing text');
                 button.disabled = true;
-                labelEl.textContent = 'Processing...';
+                if (labelEl) {
+                    labelEl.textContent = 'Processing...';
+                }
+                
+                console.log('[Calendar] Sending AJAX request to:', config.ajaxUrl);
                 
                 // Trigger AJAX to execute FlowMattic workflow
                 fetch(config.ajaxUrl, {
@@ -95,17 +117,25 @@
                         nonce: config.nonce
                     })
                 })
-                .then(function(r) { return r.json(); })
+                .then(function(r) {
+                    console.log('[Calendar] AJAX response received:', r);
+                    return r.json();
+                })
                 .then(function(data) {
+                    console.log('[Calendar] AJAX data:', data);
                     // Reload page after 2 seconds to show changes
                     setTimeout(function() {
+                        console.log('[Calendar] Reloading page...');
                         location.reload();
                     }, 2000);
                 })
                 .catch(function(err) {
+                    console.error('[Calendar] AJAX error:', err);
                     alert('Error: ' + err.message);
                     button.disabled = false;
-                    labelEl.textContent = originalText;
+                    if (labelEl) {
+                        labelEl.textContent = originalText;
+                    }
                 });
             });
         });
@@ -156,12 +186,17 @@
     
     // Initialize on page load
     if (document.readyState === 'loading') {
+        console.log('[Calendar] Document still loading, waiting for DOMContentLoaded...');
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Calendar] DOMContentLoaded fired, attaching listeners...');
             attachButtonListeners();
             attachSaveNotesListener();
+            console.log('[Calendar] All listeners attached');
         });
     } else {
+        console.log('[Calendar] Document already loaded, attaching listeners immediately...');
         attachButtonListeners();
         attachSaveNotesListener();
+        console.log('[Calendar] All listeners attached');
     }
 })();
