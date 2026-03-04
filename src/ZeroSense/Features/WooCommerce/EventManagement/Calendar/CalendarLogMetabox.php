@@ -149,7 +149,7 @@ class CalendarLogMetabox
             
             if (!$isReserved) {
                 // Reserve button - triggers master workflow
-                echo '<button type="button" class="zs-btn is-action zs-calendar-sync-btn" ';
+                echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
                 echo 'data-order-id="' . esc_attr($orderId) . '">';
                 echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
                 echo '</button>';
@@ -162,21 +162,21 @@ class CalendarLogMetabox
             
             // Sync button - only if needs sync flag is set (manual fallback)
             if ($needsSync) {
-                echo '<button type="button" class="zs-btn is-action zs-calendar-sync-btn" ';
+                echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
                 echo 'data-order-id="' . esc_attr($orderId) . '">';
                 echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync to Calendar', 'zero-sense') . '</span>';
                 echo '</button>';
             }
             
             // Delete button - only if event_id exists (styled as red link)
-            echo '<button type="button" class="zs-calendar-delete-btn" ';
+            echo '<button type="button" class="zs-calendar-delete" ';
             echo 'data-order-id="' . esc_attr($orderId) . '" ';
             echo 'style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">';
             echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
             // Create button - triggers master workflow
-            echo '<button type="button" class="zs-btn is-action zs-calendar-sync-btn" ';
+            echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
             echo 'data-order-id="' . esc_attr($orderId) . '">';
             echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';

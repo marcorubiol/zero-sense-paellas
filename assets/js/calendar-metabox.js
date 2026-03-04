@@ -68,7 +68,7 @@
     
     function attachButtonListeners() {
         // Sync buttons (Create, Reserve, Sync) - all trigger zs-calendar-sync
-        const syncButtons = document.querySelectorAll('.zs-calendar-sync-btn');
+        const syncButtons = document.querySelectorAll('.zs-calendar-sync');
         syncButtons.forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -93,7 +93,7 @@
         });
         
         // Delete button - triggers zs-calendar-delete
-        const deleteButtons = document.querySelectorAll('.zs-calendar-delete-btn');
+        const deleteButtons = document.querySelectorAll('.zs-calendar-delete');
         deleteButtons.forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
