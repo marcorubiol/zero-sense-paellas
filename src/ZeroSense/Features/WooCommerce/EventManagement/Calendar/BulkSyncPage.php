@@ -374,10 +374,14 @@ class BulkSyncPage implements FeatureInterface
                 continue;
             }
             
-            // Trigger FlowMattic workflow for reservation
-            do_action('zs_trigger_class_action_direct', 'zs-calendar-update', $orderId);
+            // Mark as reserved BEFORE triggering workflow
+            $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
+            $order->save_meta_data();
             
-            echo '<li>' . sprintf(__('Order #%d: Triggered calendar reservation (Event ID: %s)', 'zero-sense'), $orderId, esc_html($eventId)) . '</li>';
+            // Trigger FlowMattic workflow to update calendar (remove "PRE |" from title)
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
+            
+            echo '<li>' . sprintf(__('Order #%d: Marked as reserved and triggered sync (Event ID: %s)', 'zero-sense'), $orderId, esc_html($eventId)) . '</li>';
             $reserved++;
             flush();
             

@@ -38,6 +38,11 @@ class CalendarAutoSync
     {
         add_action('updated_post_meta', [$this, 'onMetaUpdated'], 10, 4);
         add_action('added_post_meta', [$this, 'onMetaAdded'], 10, 4);
+        
+        // Auto-mark as reserved when order is paid
+        add_action('woocommerce_order_status_deposit-paid', [$this, 'markAsReserved'], 10, 1);
+        add_action('woocommerce_order_status_fully-paid', [$this, 'markAsReserved'], 10, 1);
+        add_action('woocommerce_order_status_completed', [$this, 'markAsReserved'], 10, 1);
     }
 
     /**
@@ -97,5 +102,34 @@ class CalendarAutoSync
 
         // Trigger FlowMattic workflow
         do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $objectId, 'automatic');
+    }
+
+    /**
+     * Mark event as reserved when order status changes to paid
+     */
+    public function markAsReserved(int $orderId): void
+    {
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+
+        // Only process if order has a calendar event
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        if (!$eventId || $eventId === '') {
+            return;
+        }
+
+        // Skip if already marked as reserved (idempotent)
+        if ($order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes') {
+            return;
+        }
+
+        // Mark as reserved
+        $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
+        $order->save_meta_data();
+
+        // Trigger sync workflow to update calendar title (remove "PRE |")
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
     }
 }
