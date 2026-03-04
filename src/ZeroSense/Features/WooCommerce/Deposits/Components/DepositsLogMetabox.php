@@ -5,13 +5,16 @@ use WC_Order;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Logs;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Settings;
+use ZeroSense\Utilities\LogDeletionTrait;
 
 class DepositsLogMetabox
 {
+    use LogDeletionTrait;
     public function register(): void
     {
         if (!is_admin()) { return; }
         add_action('add_meta_boxes', [$this, 'addMetabox']);
+        add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
     }
 
     public function addMetabox(): void
@@ -224,6 +227,7 @@ class DepositsLogMetabox
                 if ($actionPretty !== '') { $details[] = sprintf(__('Action: %s', 'zero-sense'), esc_html($actionPretty)); }
 
                 echo '<div class="zs-log-item ' . esc_attr($itemClass) . '">';
+                $this->renderLogDeleteButton($index, 'zs_deposits_logs', $orderId);
                 echo '<div class="zs-log-title"><strong>' . esc_html($title) . '</strong></div>';
                 echo '<div class="zs-log-time">' . esc_html($ts) . ' · ' . sprintf(__('Order status: %s', 'zero-sense'), $status) . $by . '</div>';
                 if ($details) {
@@ -290,6 +294,7 @@ class DepositsLogMetabox
                     if ($actionPretty !== '') { $details[] = sprintf(__('Action: %s', 'zero-sense'), esc_html($actionPretty)); }
 
                     echo '<div class="zs-log-item ' . esc_attr($itemClass) . '">';
+                    $this->renderLogDeleteButton($index, 'zs_deposits_logs', $orderId);
                     echo '<div class="zs-log-title"><strong>' . esc_html($title) . '</strong></div>';
                     echo '<div class="zs-log-time">' . esc_html($ts) . ' · ' . sprintf(__('Order status: %s', 'zero-sense'), $status) . $by . '</div>';
                     if ($details) {
@@ -307,5 +312,7 @@ class DepositsLogMetabox
         }
 
         echo '</div>';
+        
+        $this->enqueueLogDeletionScript();
     }
 }

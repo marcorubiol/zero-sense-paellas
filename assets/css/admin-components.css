@@ -429,6 +429,38 @@ button.zs-mb-link {
     line-height: 1.4;
 }
 
+/* Log delete button - hidden by default, visible on hover */
+.zs-log-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #646970;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    font-weight: 400;
+}
+
+.zs-log-item:hover .zs-log-delete-btn {
+    opacity: 1;
+}
+
+.zs-log-delete-btn:hover {
+    color: #2c3338;
+}
+
+.zs-log-delete-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 /* Log titles - identical for all */
 .zs-log-title {
     display: flex;

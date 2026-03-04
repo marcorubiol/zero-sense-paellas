@@ -3,9 +3,11 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Calendar;
 
 use WC_Order;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
+use ZeroSense\Utilities\LogDeletionTrait;
 
 class CalendarLogMetabox
 {
+    use LogDeletionTrait;
     public function register(): void
     {
         if (!is_admin()) { return; }
@@ -19,6 +21,7 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_calendar_get_header', [$this, 'ajaxGetHeader']);
         add_action('wp_ajax_zs_calendar_get_content', [$this, 'ajaxGetContent']);
         add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
+        add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
     }
     
     public function enqueueScripts($hook): void
@@ -187,7 +190,7 @@ class CalendarLogMetabox
             // Show first 3 logs
             foreach ($logs as $index => $log) {
                 if ($index >= $max) break;
-                $this->renderLogItem($log);
+                $this->renderLogItem($log, $index, $orderId);
             }
             
             // Show remaining logs (hidden)
@@ -195,7 +198,7 @@ class CalendarLogMetabox
                 echo '<div id="zs-calendar-logs-hidden" style="display:none;">';
                 foreach ($logs as $index => $log) {
                     if ($index < $max) continue;
-                    $this->renderLogItem($log);
+                    $this->renderLogItem($log, $index, $orderId);
                 }
                 echo '</div>';
                 
@@ -221,9 +224,11 @@ class CalendarLogMetabox
                 echo '}});});</script>';
             }
         }
+        
+        $this->enqueueLogDeletionScript();
     }
 
-    private function renderLogItem(array $log): void
+    private function renderLogItem(array $log, int $logIndex, int $orderId): void
     {
         $type = sanitize_key($log['type'] ?? 'unknown');
         $data = is_array($log['data'] ?? null) ? $log['data'] : [];
@@ -263,6 +268,7 @@ class CalendarLogMetabox
         }
 
         echo '<div class="zs-log-item ' . esc_attr($itemClass) . '">';
+        $this->renderLogDeleteButton($logIndex, 'zs_calendar_logs', $orderId);
         echo '<div class="zs-log-title"><strong>' . esc_html($title) . '</strong></div>';
         echo '<div class="zs-log-time">' . esc_html($ts) . ' · ' . sprintf(__('Order status: %s', 'zero-sense'), $status) . '</div>';
         if ($details) {
@@ -521,5 +527,4 @@ class CalendarLogMetabox
         $html = ob_get_clean();
         wp_send_json_success(['html' => $html]);
     }
-
 }
