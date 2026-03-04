@@ -47,6 +47,7 @@ class DataExposer
                 'marketing_consent' => __('Marketing Consent', 'zero-sense'),
                 'staff_jefe_voluntarios' => __('Staff: Jefe de voluntarios', 'zero-sense'),
                 'staff_cocineros' => __('Staff: Cocineros', 'zero-sense'),
+                'staff_cocineros_names' => __('Staff: Cocineros (Names Only)', 'zero-sense'),
                 'staff_ayudantes' => __('Staff: Ayudantes', 'zero-sense'),
                 'staff_camareros' => __('Staff: Camareros', 'zero-sense'),
                 'staff_barra' => __('Staff: Barra', 'zero-sense'),
@@ -116,6 +117,7 @@ class DataExposer
             'marketing_consent' => $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no',
             'staff_jefe_voluntarios' => self::getStaffByRole($order, 'jefe-voluntarios'),
             'staff_cocineros' => self::getStaffByRole($order, 'cocineros'),
+            'staff_cocineros_names' => self::getStaffNamesByRole($order, 'cocineros'),
             'staff_ayudantes' => self::getStaffByRole($order, 'ayudantes'),
             'staff_camareros' => self::getStaffByRole($order, 'camareros'),
             'staff_barra' => self::getStaffByRole($order, 'barra'),
@@ -169,6 +171,34 @@ class DataExposer
                     }
                     
                     $staffNames[] = $details;
+                }
+            }
+        }
+
+        return implode(', ', $staffNames);
+    }
+
+    /**
+     * Get staff names only by role for an order
+     */
+    private static function getStaffNamesByRole(WC_Order $order, string $role): string
+    {
+        $staffAssignments = $order->get_meta(MetaKeys::EVENT_STAFF, true);
+        if (!is_array($staffAssignments)) {
+            return '';
+        }
+
+        $staffNames = [];
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+            
+            if ($assignment['role'] === $role) {
+                $staffId = (int) $assignment['staff_id'];
+                $staffPost = get_post($staffId);
+                if ($staffPost) {
+                    $staffNames[] = $staffPost->post_title;
                 }
             }
         }
