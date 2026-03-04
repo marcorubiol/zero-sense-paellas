@@ -148,9 +148,9 @@ class CalendarLogMetabox
             }
             
             if (!$isReserved) {
-                // Update button - only if event_id exists and NOT reserved
-                echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
-                echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
+                // Reserve button - triggers master workflow
+                echo '<button type="button" class="zs-btn is-action zs-calendar-sync-btn" ';
+                echo 'data-order-id="' . esc_attr($orderId) . '">';
                 echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
                 echo '</button>';
             } else {
@@ -162,22 +162,22 @@ class CalendarLogMetabox
             
             // Sync button - only if needs sync flag is set (manual fallback)
             if ($needsSync) {
-                echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
-                echo 'data-action="sync" data-order-id="' . esc_attr($orderId) . '">';
+                echo '<button type="button" class="zs-btn is-action zs-calendar-sync-btn" ';
+                echo 'data-order-id="' . esc_attr($orderId) . '">';
                 echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync to Calendar', 'zero-sense') . '</span>';
                 echo '</button>';
             }
             
             // Delete button - only if event_id exists (styled as red link)
-            echo '<button type="button" class="zs-calendar-action-btn" ';
-            echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '" ';
+            echo '<button type="button" class="zs-calendar-delete-btn" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '" ';
             echo 'style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">';
             echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
-            // Create button - only if NO event_id
-            echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
-            echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
+            // Create button - triggers master workflow
+            echo '<button type="button" class="zs-btn is-action zs-calendar-sync-btn" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '">';
             echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
