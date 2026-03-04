@@ -45,6 +45,13 @@ Modern, modular WordPress plugin for Paellas en Casa. PSR-4, auto-discovered fea
 - **Smart Configuration UI**: Side-by-side layout for email and Holded workflow configuration
 - **Performance Optimized**: 50% reduction in database writes with single storage system
 
+### 🗑️ Log Management (NEW)
+- **Individual Log Deletion**: Delete specific log entries across all metaboxes
+- **Universal Support**: Calendar, Deposits, Order Status, Email, and Holded logs
+- **AJAX-Powered**: Smooth deletion with confirmation dialogs and animations
+- **Security-First**: Proper nonce verification and permission checks
+- **Hover Interface**: Delete buttons appear on hover for clean UI
+
 ### 🌍 Multilingual Excellence
 - **WPML String Translation**: All admin strings registered for translation
 - **Dynamic Tag Translation**: MetaBox fields properly translated in Bricks Builder

@@ -125,6 +125,16 @@ class StatusLogMetabox
                 }
                 
                 echo '<span class="zs-badge ' . esc_attr($badgeClass) . '">' . esc_html($badgeLabel) . '</span>';
+                
+                // Delete button
+                echo '<button type="button" class="zs-log-delete" ';
+                echo 'data-log-type="status" ';
+                echo 'data-order-id="' . esc_attr($orderId) . '" ';
+                echo 'data-timestamp="' . esc_attr($log['timestamp'] ?? '') . '" ';
+                echo 'title="' . esc_attr__('Delete this log', 'zero-sense') . '">';
+                echo '×';
+                echo '</button>';
+                
                 echo '</div>';
             }
             echo '</div>';

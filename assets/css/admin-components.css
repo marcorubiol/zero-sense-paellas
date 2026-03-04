@@ -457,6 +457,48 @@ button.zs-mb-link {
     line-height: 1.6;
 }
 
+/* Log deletion button */
+.zs-log-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #d63638;
+    border-radius: 50%;
+    color: #d63638;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.zs-log-item:hover .zs-log-delete {
+    opacity: 1;
+}
+
+.zs-log-delete:hover {
+    background: #d63638;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.zs-log-delete:active {
+    transform: scale(0.95);
+}
+
+/* Adjust log item padding to accommodate delete button */
+.zs-log-item {
+    padding-right: 32px;
+}
+
 /* Color styling - applied to ALL logs equally */
 .zs-log-item.zs-auto,
 .zs-log-item.zs-automatic,
