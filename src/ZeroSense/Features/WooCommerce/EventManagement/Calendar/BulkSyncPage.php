@@ -44,6 +44,7 @@ class BulkSyncPage implements FeatureInterface
 
         add_action('admin_menu', [$this, 'addAdminPage']);
         add_action('admin_post_zs_bulk_sync_calendar', [$this, 'handleBulkSync']);
+        add_action('admin_post_zs_bulk_reserve_calendar', [$this, 'handleBulkReserve']);
         add_action('admin_post_zs_bulk_delete_calendar', [$this, 'handleBulkDelete']);
     }
 
