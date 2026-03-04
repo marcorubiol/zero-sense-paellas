@@ -304,8 +304,8 @@ class BulkSyncPage implements FeatureInterface
                 continue;
             }
             
-            // Trigger FlowMattic workflow
-            do_action('zs_trigger_class_action_direct', 'zs-calendar-create', $orderId);
+            // Trigger FlowMattic master workflow (will create event since no event_id exists)
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
             
             echo '<li>' . sprintf(__('Order #%d: Triggered calendar creation', 'zero-sense'), $orderId) . '</li>';
             $synced++;
