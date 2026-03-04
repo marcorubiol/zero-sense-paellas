@@ -180,7 +180,7 @@ class BulkSyncPage implements FeatureInterface
                     <p><strong style="color: #d63638;"><?php esc_html_e('DANGER:', 'zero-sense'); ?></strong> <?php esc_html_e('This will delete calendar events for orders with the selected statuses. This action cannot be undone.', 'zero-sense'); ?></p>
                     
                     <p>
-                        <button type="submit" id="zs-delete-btn" style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">
+                        <button type="submit" class="button button-large" id="zs-delete-btn" style="background: #d63638; border-color: #d63638; color: #fff;">
                             <?php esc_html_e('Delete Events for Selected Statuses', 'zero-sense'); ?>
                         </button>
                     </p>
