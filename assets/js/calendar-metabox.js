@@ -1,3 +1,5 @@
+// Force visible output to verify script loads
+alert('[Calendar] FILE LOADED - calendar-metabox.js');
 console.log('[Calendar] FILE LOADED - calendar-metabox.js');
 
 /**
@@ -8,6 +10,7 @@ console.log('[Calendar] FILE LOADED - calendar-metabox.js');
     'use strict';
     
     console.log('[Calendar] Script loading...');
+    alert('[Calendar] Script executing inside IIFE');
     
     // Wait for DOM and config to be ready
     if (typeof zsCalendarConfig === 'undefined') {
