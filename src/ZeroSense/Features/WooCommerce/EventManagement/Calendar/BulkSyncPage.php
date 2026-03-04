@@ -114,7 +114,7 @@ class BulkSyncPage implements FeatureInterface
                     <?php wp_nonce_field('zs_bulk_delete_calendar', 'zs_bulk_delete_nonce'); ?>
                     
                     <p>
-                        <button type="submit" class="button button-large" id="zs-delete-btn" style="background: #d63638; border-color: #d63638; color: #fff;">
+                        <button type="submit" id="zs-delete-btn" style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">
                             <?php esc_html_e('Delete All Events', 'zero-sense'); ?>
                         </button>
                     </p>
