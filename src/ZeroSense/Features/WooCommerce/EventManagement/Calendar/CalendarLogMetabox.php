@@ -14,6 +14,9 @@ class CalendarLogMetabox
         add_action('add_meta_boxes', [$this, 'addMetabox']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
         
+        // Save calendar notes when order is saved
+        add_action('woocommerce_process_shop_order_meta', [$this, 'saveCalendarNotes'], 10, 1);
+        
         // AJAX handlers
         add_action('wp_ajax_zs_calendar_create_event', [$this, 'ajaxCreateEvent']);
         add_action('wp_ajax_zs_calendar_delete_event', [$this, 'ajaxDeleteEvent']);
@@ -560,6 +563,31 @@ class CalendarLogMetabox
         
         $html = ob_get_clean();
         wp_send_json_success(['html' => $html]);
+    }
+    
+    /**
+     * Save calendar notes when order is updated
+     */
+    public function saveCalendarNotes(int $orderId): void
+    {
+        // Check nonce
+        if (!isset($_POST['zs_calendar_nonce']) || !wp_verify_nonce($_POST['zs_calendar_nonce'], 'zs_calendar_action')) {
+            return;
+        }
+        
+        // Check if notes field is present
+        if (!isset($_POST['zs_calendar_notes'])) {
+            return;
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+        
+        $notes = sanitize_textarea_field(wp_unslash($_POST['zs_calendar_notes']));
+        $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
+        $order->save_meta_data();
     }
     
     /**

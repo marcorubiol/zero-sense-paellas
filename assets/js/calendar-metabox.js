@@ -29,8 +29,9 @@
             
             if (!textarea) return;
             
-            this.disabled = true;
-            this.textContent = 'Saving...';
+            const saveBtn = this;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
             statusEl.style.display = 'none';
             
             fetch(config.ajaxUrl, {
