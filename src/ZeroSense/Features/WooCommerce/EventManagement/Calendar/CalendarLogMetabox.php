@@ -27,6 +27,7 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
         add_action('wp_ajax_zs_calendar_save_notes', [$this, 'ajaxSaveNotes']);
         add_action('wp_ajax_zs_calendar_sync_event', [$this, 'ajaxSyncEvent']);
+        add_action('wp_ajax_zs_calendar_reserve_event', [$this, 'ajaxReserveEvent']);
     }
     
     public function enqueueScripts($hook): void
@@ -148,8 +149,8 @@ class CalendarLogMetabox
             }
             
             if (!$isReserved) {
-                // Reserve button - triggers master workflow
-                echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
+                // Reserve button - marks as reserved and triggers sync
+                echo '<button type="button" class="zs-btn is-action zs-calendar-reserve" ';
                 echo 'data-order-id="' . esc_attr($orderId) . '">';
                 echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
                 echo '</button>';
@@ -631,5 +632,32 @@ class CalendarLogMetabox
         do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'manual');
         
         wp_send_json_success(['message' => 'Sync workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to reserve event (mark as reserved and trigger sync)
+     */
+    public function ajaxReserveEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Mark as reserved BEFORE triggering workflow
+        $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
+        $order->save_meta_data();
+        
+        // Trigger FlowMattic workflow to update calendar title (remove "PRE |")
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'manual');
+        
+        wp_send_json_success(['message' => 'Event marked as reserved and sync triggered']);
     }
 }

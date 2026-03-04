@@ -1,5 +1,3 @@
-// Force visible output to verify script loads
-alert('[Calendar] FILE LOADED - calendar-metabox.js');
 console.log('[Calendar] FILE LOADED - calendar-metabox.js');
 
 /**
@@ -10,7 +8,6 @@ console.log('[Calendar] FILE LOADED - calendar-metabox.js');
     'use strict';
     
     console.log('[Calendar] Script loading...');
-    alert('[Calendar] Script executing inside IIFE');
     
     // Wait for DOM and config to be ready
     if (typeof zsCalendarConfig === 'undefined') {
@@ -136,6 +133,74 @@ console.log('[Calendar] FILE LOADED - calendar-metabox.js');
                 })
                 .catch(function(err) {
                     console.error('[Calendar] AJAX error:', err);
+                    alert('Error: ' + err.message);
+                    button.disabled = false;
+                    if (labelEl) {
+                        labelEl.textContent = originalText;
+                    }
+                });
+            });
+        });
+        
+        // Reserve buttons - marks as reserved and triggers sync
+        const reserveButtons = document.querySelectorAll('.zs-calendar-reserve');
+        console.log('[Calendar] Found reserve buttons:', reserveButtons.length);
+        
+        reserveButtons.forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                console.log('[Calendar] Reserve button clicked');
+                e.preventDefault();
+                
+                if (this.disabled) {
+                    console.log('[Calendar] Button is disabled, ignoring click');
+                    return;
+                }
+                
+                const orderId = this.getAttribute('data-order-id');
+                const labelEl = this.querySelector('.zs-calendar-btn-label');
+                const originalText = labelEl ? labelEl.textContent : '';
+                const button = this;
+                
+                console.log('[Calendar] Order ID:', orderId);
+                
+                const confirmMsg = 'Mark event as reserved?';
+                if (!confirm(confirmMsg)) {
+                    console.log('[Calendar] User cancelled confirmation');
+                    return;
+                }
+                
+                console.log('[Calendar] User confirmed, marking as reserved...');
+                button.disabled = true;
+                if (labelEl) {
+                    labelEl.textContent = 'Reserving...';
+                }
+                
+                console.log('[Calendar] Sending reserve AJAX request');
+                
+                // Trigger AJAX to mark as reserved and sync
+                fetch(config.ajaxUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'zs_calendar_reserve_event',
+                        order_id: orderId,
+                        nonce: config.nonce
+                    })
+                })
+                .then(function(r) {
+                    console.log('[Calendar] Reserve AJAX response received:', r);
+                    return r.json();
+                })
+                .then(function(data) {
+                    console.log('[Calendar] Reserve AJAX data:', data);
+                    // Reload page after 2 seconds to show changes
+                    setTimeout(function() {
+                        console.log('[Calendar] Reloading page...');
+                        location.reload();
+                    }, 2000);
+                })
+                .catch(function(err) {
+                    console.error('[Calendar] Reserve AJAX error:', err);
                     alert('Error: ' + err.message);
                     button.disabled = false;
                     if (labelEl) {
