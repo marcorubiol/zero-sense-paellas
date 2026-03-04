@@ -432,14 +432,14 @@ button.zs-mb-link {
 /* Log delete button - hidden by default, visible on hover */
 .zs-log-delete-btn {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 4px;
+    right: 4px;
     width: 20px;
     height: 20px;
     padding: 0;
     border: none;
     background: none;
-    color: #646970;
+    color: #9a9da2;
     font-size: 20px;
     line-height: 1;
     cursor: pointer;
@@ -459,6 +459,17 @@ button.zs-mb-link {
 .zs-log-delete-btn:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+/* Hide badge when hovering log item to make room for delete button */
+.zs-log-item:hover .zs-badge {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.zs-badge {
+    transition: opacity 0.2s ease;
 }
 
 /* Log titles - identical for all */
