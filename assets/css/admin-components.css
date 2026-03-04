@@ -462,7 +462,8 @@ button.zs-mb-link {
 }
 
 /* Hide badge when hovering log item to make room for delete button */
-.zs-log-item:hover .zs-badge {
+/* Only hide if delete button is present (when feature is enabled) */
+.zs-log-item:has(.zs-log-delete-btn):hover .zs-badge {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
