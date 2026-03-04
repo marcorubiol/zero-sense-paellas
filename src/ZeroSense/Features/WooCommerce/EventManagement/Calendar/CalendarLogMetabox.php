@@ -23,6 +23,7 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
         add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
         add_action('wp_ajax_zs_calendar_save_notes', [$this, 'ajaxSaveNotes']);
+        add_action('wp_ajax_zs_calendar_sync_event', [$this, 'ajaxSyncEvent']);
     }
     
     public function enqueueScripts($hook): void
@@ -132,8 +133,17 @@ class CalendarLogMetabox
 
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
+        $needsSync = $order->get_meta(MetaKeys::CALENDAR_NEEDS_SYNC, true) === 'yes';
+        
         echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">';
         if ($eventId !== '') {
+            // Show NEEDS SYNC badge if flag is set
+            if ($needsSync) {
+                echo '<span class="zs-badge zs-badge-error">';
+                echo esc_html__('NEEDS SYNC', 'zero-sense');
+                echo '</span>';
+            }
+            
             if (!$isReserved) {
                 // Update button - only if event_id exists and NOT reserved
                 echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
@@ -145,6 +155,14 @@ class CalendarLogMetabox
                 echo '<span class="zs-badge zs-badge-reserved">';
                 echo esc_html__('RESERVED', 'zero-sense');
                 echo '</span>';
+            }
+            
+            // Sync button - only if needs sync flag is set (manual fallback)
+            if ($needsSync) {
+                echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
+                echo 'data-action="sync" data-order-id="' . esc_attr($orderId) . '">';
+                echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync to Calendar', 'zero-sense') . '</span>';
+                echo '</button>';
             }
             
             // Delete button - only if event_id exists (styled as red link)
@@ -567,5 +585,23 @@ class CalendarLogMetabox
         $order->save_meta_data();
         
         wp_send_json_success(['message' => __('Notes saved', 'zero-sense')]);
+    }
+    
+    /**
+     * AJAX handler to manually trigger calendar sync
+     */
+    public function ajaxSyncEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        // Trigger FlowMattic workflow via class action
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'manual');
+        
+        wp_send_json_success(['message' => 'Sync workflow triggered']);
     }
 }

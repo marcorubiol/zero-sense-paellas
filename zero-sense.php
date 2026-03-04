@@ -317,3 +317,41 @@ function zs_log_calendar_update($order_id, $event_id = '', $trigger_source = 'au
         ];
     }
 }
+
+/**
+ * Global helper function for FlowMattic to clear calendar sync flag
+ * Call this after successfully syncing to Google Calendar
+ * 
+ * @param string|int $order_id Order ID
+ * @return array Response with success status
+ */
+function zs_clear_calendar_sync_flag($order_id): array
+{
+    try {
+        $orderId = absint($order_id);
+        if ($orderId === 0) {
+            return ['success' => false, 'message' => 'Invalid order ID'];
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return ['success' => false, 'message' => 'Order not found'];
+        }
+
+        // Clear the sync flag
+        $order->delete_meta_data(\ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys::CALENDAR_NEEDS_SYNC);
+        $order->save_meta_data();
+
+        return [
+            'success' => true,
+            'message' => 'Sync flag cleared',
+            'order_id' => $orderId,
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+        ];
+    }
+}

@@ -88,6 +88,9 @@
                 } else if (action === 'update') {
                     confirmMsg = config.i18n.confirmUpdate;
                     loadingText = config.i18n.loadingUpdate;
+                } else if (action === 'sync') {
+                    confirmMsg = 'Sync event to Google Calendar?';
+                    loadingText = 'Syncing...';
                 } else {
                     confirmMsg = config.i18n.confirmCreate;
                     loadingText = config.i18n.loadingCreate;

@@ -67,6 +67,9 @@ class GoogleCalendarSync implements FeatureInterface
 
         // Register metabox
         (new CalendarLogMetabox())->register();
+        
+        // Register auto-sync
+        (new Calendar\CalendarAutoSync())->register();
     }
 
     private function registerMetaField(): void
@@ -92,6 +95,14 @@ class GoogleCalendarSync implements FeatureInterface
         $registry->register(MetaKeys::CALENDAR_NOTES, [
             'label' => __('Calendar notes', 'zero-sense'),
             'type' => 'textarea',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'GoogleCalendarSync',
+        ]);
+        
+        $registry->register(MetaKeys::CALENDAR_NEEDS_SYNC, [
+            'label' => __('Calendar needs sync', 'zero-sense'),
+            'type' => 'text',
             'translatable' => false,
             'legacy_keys' => [],
             'feature' => 'GoogleCalendarSync',
