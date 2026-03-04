@@ -22,6 +22,7 @@ class CalendarLogMetabox
         add_action('wp_ajax_zs_calendar_get_content', [$this, 'ajaxGetContent']);
         add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
         add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
+        add_action('wp_ajax_zs_calendar_save_notes', [$this, 'ajaxSaveNotes']);
     }
     
     public function enqueueScripts($hook): void
@@ -162,6 +163,21 @@ class CalendarLogMetabox
         echo '</div>';
         
         echo '</div>'; // .zs-calendar-header-section
+
+        // Calendar Notes section
+        $calendarNotes = $order->get_meta(MetaKeys::CALENDAR_NOTES, true);
+        echo '<div class="zs-calendar-notes-section" style="margin:15px 0; padding:12px; background:#f9f9f9; border-radius:4px;">';
+        echo '<label for="zs_calendar_notes" style="display:block; margin-bottom:6px; font-weight:600;">';
+        echo esc_html__('Calendar Notes', 'zero-sense');
+        echo '</label>';
+        echo '<textarea id="zs_calendar_notes" name="zs_calendar_notes" rows="4" class="widefat" style="margin-bottom:8px;">';
+        echo esc_textarea(is_string($calendarNotes) ? $calendarNotes : '');
+        echo '</textarea>';
+        echo '<button type="button" class="button zs-save-calendar-notes-btn" data-order-id="' . esc_attr($orderId) . '">';
+        echo esc_html__('Save Notes', 'zero-sense');
+        echo '</button>';
+        echo '<span class="zs-calendar-notes-status" style="margin-left:10px; color:#46b450; display:none;"></span>';
+        echo '</div>';
 
         // Last sync info
         if (!$noLogs) {
@@ -526,5 +542,30 @@ class CalendarLogMetabox
         
         $html = ob_get_clean();
         wp_send_json_success(['html' => $html]);
+    }
+    
+    /**
+     * AJAX handler to save calendar notes
+     */
+    public function ajaxSaveNotes(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $notes = isset($_POST['notes']) ? sanitize_textarea_field(wp_unslash($_POST['notes'])) : '';
+        
+        $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
+        $order->save_meta_data();
+        
+        wp_send_json_success(['message' => __('Notes saved', 'zero-sense')]);
     }
 }

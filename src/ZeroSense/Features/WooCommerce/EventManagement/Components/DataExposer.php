@@ -56,6 +56,7 @@ class DataExposer
                 'google_calendar_event_id' => __('Google Calendar Event ID', 'zero-sense'),
                 'event_reserved' => __('Event Reserved (yes/no)', 'zero-sense'),
                 'google_calendar_event_url' => __('Google Calendar Event URL', 'zero-sense'),
+                'calendar_notes' => __('Calendar Notes', 'zero-sense'),
             ],
         ];
         
@@ -124,6 +125,7 @@ class DataExposer
             'vehicles'            => self::getVehiclesFormatted($order),
             'event_reserved' => $order->get_meta(MetaKeys::EVENT_RESERVED, true),
             'google_calendar_event_id' => $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
+            'calendar_notes' => $order->get_meta(MetaKeys::CALENDAR_NOTES, true),
         ];
     }
 

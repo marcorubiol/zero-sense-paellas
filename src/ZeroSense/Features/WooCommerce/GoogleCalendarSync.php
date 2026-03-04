@@ -88,5 +88,13 @@ class GoogleCalendarSync implements FeatureInterface
             'legacy_keys' => [],
             'feature' => 'GoogleCalendarSync',
         ]);
+        
+        $registry->register(MetaKeys::CALENDAR_NOTES, [
+            'label' => __('Calendar notes', 'zero-sense'),
+            'type' => 'textarea',
+            'translatable' => false,
+            'legacy_keys' => [],
+            'feature' => 'GoogleCalendarSync',
+        ]);
     }
 }

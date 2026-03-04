@@ -13,6 +13,58 @@
     
     const config = zsCalendarConfig;
     
+    function attachSaveNotesListener() {
+        const saveBtn = document.querySelector('.zs-save-calendar-notes-btn');
+        if (!saveBtn) return;
+        
+        saveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (this.disabled) return;
+            
+            const orderId = this.getAttribute('data-order-id');
+            const textarea = document.getElementById('zs_calendar_notes');
+            const statusEl = document.querySelector('.zs-calendar-notes-status');
+            const originalText = this.textContent;
+            
+            if (!textarea) return;
+            
+            this.disabled = true;
+            this.textContent = 'Saving...';
+            statusEl.style.display = 'none';
+            
+            fetch(config.ajaxUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'zs_calendar_save_notes',
+                    order_id: orderId,
+                    notes: textarea.value,
+                    nonce: config.nonce
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    statusEl.textContent = '✓ ' + (data.data.message || 'Saved');
+                    statusEl.style.display = 'inline';
+                    setTimeout(function() {
+                        statusEl.style.display = 'none';
+                    }, 3000);
+                } else {
+                    alert('Error: ' + (data.data || 'Unknown error'));
+                }
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            })
+            .catch(function(err) {
+                alert('Error: ' + err.message);
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            });
+        });
+    }
+    
     function attachButtonListeners() {
         const buttons = document.querySelectorAll('.zs-calendar-action-btn');
         
@@ -112,8 +164,12 @@
     
     // Initialize on page load
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachButtonListeners);
+        document.addEventListener('DOMContentLoaded', function() {
+            attachButtonListeners();
+            attachSaveNotesListener();
+        });
     } else {
         attachButtonListeners();
+        attachSaveNotesListener();
     }
 })();
