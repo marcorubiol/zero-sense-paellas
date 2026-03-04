@@ -50,6 +50,12 @@ trait LogDeletionTrait
             wp_send_json_error(['message' => __('Invalid parameters', 'zero-sense')]);
         }
 
+        // Special handling for workflow executions (stored as global option)
+        if ($metaKey === 'zs_workflow_executions') {
+            $this->deleteWorkflowExecution($orderId, $uniqueId);
+            return;
+        }
+
         $order = wc_get_order($orderId);
         if (!$order) {
             wp_send_json_error(['message' => __('Order not found', 'zero-sense')]);
@@ -58,6 +64,10 @@ trait LogDeletionTrait
         // Get current logs
         $logs = $order->get_meta($metaKey, true);
         if (!is_array($logs)) {
+            $logs = [];
+        }
+        
+        if (empty($logs)) {
             wp_send_json_error(['message' => __('No logs found', 'zero-sense')]);
         }
 
@@ -82,6 +92,45 @@ trait LogDeletionTrait
         // Update meta
         $order->update_meta_data($metaKey, $logs);
         $order->save_meta_data();
+
+        wp_send_json_success(['message' => __('Log entry deleted', 'zero-sense')]);
+    }
+
+    /**
+     * Delete a workflow execution from global option
+     *
+     * @param int $orderId Order ID
+     * @param string|null $uniqueId Unique identifier
+     */
+    private function deleteWorkflowExecution(int $orderId, ?string $uniqueId): void
+    {
+        if ($uniqueId === null) {
+            wp_send_json_error(['message' => __('Invalid deletion parameters', 'zero-sense')]);
+        }
+
+        $executions = get_option('zs_flowmattic_workflow_executions', []);
+        if (!is_array($executions)) {
+            $executions = [];
+        }
+
+        if (empty($executions)) {
+            wp_send_json_error(['message' => __('No logs found', 'zero-sense')]);
+        }
+
+        // Filter out the execution with matching unique ID and order ID
+        $filtered = array_values(array_filter($executions, function($execution) use ($uniqueId, $orderId) {
+            // Check if this execution belongs to the order
+            if ((int) ($execution['order_id'] ?? 0) !== $orderId) {
+                return true; // Keep executions from other orders
+            }
+            
+            // Generate unique ID for this execution
+            $execUniqueId = $this->generateUniqueId($execution);
+            return $execUniqueId !== $uniqueId; // Remove if IDs match
+        }));
+
+        // Update option
+        update_option('zs_flowmattic_workflow_executions', $filtered);
 
         wp_send_json_success(['message' => __('Log entry deleted', 'zero-sense')]);
     }
