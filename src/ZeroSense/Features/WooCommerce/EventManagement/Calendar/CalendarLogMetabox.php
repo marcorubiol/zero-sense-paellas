@@ -56,9 +56,9 @@ class CalendarLogMetabox
             'nonce' => wp_create_nonce('zs_calendar_action'),
             'orderId' => $orderId,
             'i18n' => [
-                'confirmDelete' => __('Delete Google Calendar event? This cannot be undone.', 'zero-sense'),
+                'confirmDelete' => __('Delete Calendar event? This cannot be undone.', 'zero-sense'),
                 'confirmUpdate' => __('Mark event as reserved?', 'zero-sense'),
-                'confirmCreate' => __('Create Google Calendar event for this order?', 'zero-sense'),
+                'confirmCreate' => __('Create Calendar event for this order?', 'zero-sense'),
                 'loadingDelete' => __('Deleting...', 'zero-sense'),
                 'loadingUpdate' => __('Updating...', 'zero-sense'),
                 'loadingCreate' => __('Creating...', 'zero-sense'),
@@ -74,7 +74,7 @@ class CalendarLogMetabox
             
             add_meta_box(
                 'zs_calendar_sync',
-                __('Google Calendar Sync', 'zero-sense'),
+                __('Calendar Sync', 'zero-sense'),
                 [$this, 'renderMetabox'],
                 $screen_id,
                 'normal',
@@ -117,12 +117,12 @@ class CalendarLogMetabox
         // Event ID display
         if ($eventId && is_string($eventId) && $eventId !== '') {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
-            echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
+            echo '<strong>' . esc_html__('Calendar Event ID:', 'zero-sense') . '</strong> ';
             echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
             echo '</div>';
         } else {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#999; font-style:italic;">';
-            echo esc_html__('No Google Calendar event linked yet.', 'zero-sense');
+            echo esc_html__('No Calendar event linked yet.', 'zero-sense');
             echo '</div>';
         }
 
@@ -147,13 +147,13 @@ class CalendarLogMetabox
             echo '<button type="button" class="zs-calendar-action-btn" ';
             echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '" ';
             echo 'style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">';
-            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
             // Create button - only if NO event_id
             echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
             echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
-            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
         echo '</div>';
@@ -242,7 +242,7 @@ class CalendarLogMetabox
         $details = [];
         
         if (isset($data['event_id']) && is_string($data['event_id'])) {
-            $details[] = '<strong>' . __('Event ID:', 'zero-sense') . '</strong> ' . esc_html($data['event_id']);
+            $details[] = '<strong>' . __('Calendar Event ID:', 'zero-sense') . '</strong> ' . esc_html($data['event_id']);
         }
         
         if (isset($data['event_title']) && is_string($data['event_title'])) {
@@ -282,14 +282,14 @@ class CalendarLogMetabox
                     'class' => 'zs-badge-manual',
                     'item_class' => 'zs-manual',
                     'label' => __('MAN', 'zero-sense'),
-                    'title' => __('Google Calendar Event Created', 'zero-sense'),
+                    'title' => __('Calendar Event Created', 'zero-sense'),
                 ];
             }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Google Calendar Event Created', 'zero-sense'),
+                'title' => __('Calendar Event Created', 'zero-sense'),
             ];
         }
         
@@ -299,14 +299,14 @@ class CalendarLogMetabox
                     'class' => 'zs-badge-manual',
                     'item_class' => 'zs-manual',
                     'label' => __('MAN', 'zero-sense'),
-                    'title' => __('Google Calendar Event Deleted', 'zero-sense'),
+                    'title' => __('Calendar Event Deleted', 'zero-sense'),
                 ];
             }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Google Calendar Event Deleted', 'zero-sense'),
+                'title' => __('Calendar Event Deleted', 'zero-sense'),
             ];
         }
         
@@ -316,14 +316,14 @@ class CalendarLogMetabox
                     'class' => 'zs-badge-manual',
                     'item_class' => 'zs-manual',
                     'label' => __('MAN', 'zero-sense'),
-                    'title' => __('Google Calendar Event Reserved', 'zero-sense'),
+                    'title' => __('Calendar Event Reserved', 'zero-sense'),
                 ];
             }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Google Calendar Event Reserved', 'zero-sense'),
+                'title' => __('Calendar Event Reserved', 'zero-sense'),
             ];
         }
         
@@ -484,12 +484,12 @@ class CalendarLogMetabox
         // Event ID display
         if ($eventId && is_string($eventId) && $eventId !== '') {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
-            echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
+            echo '<strong>' . esc_html__('Calendar Event ID:', 'zero-sense') . '</strong> ';
             echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
             echo '</div>';
         } else {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#999; font-style:italic;">';
-            echo esc_html__('No Google Calendar event linked yet.', 'zero-sense');
+            echo esc_html__('No Calendar event linked yet.', 'zero-sense');
             echo '</div>';
         }
         
@@ -505,12 +505,12 @@ class CalendarLogMetabox
             }
             echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
             echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
-            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
             echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
             echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
-            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Google Calendar Event', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         }
         echo '</div>';
