@@ -81,6 +81,12 @@ class CalendarAutoSync
             return;
         }
 
+        // Only monitor changes for orders in specific statuses
+        $allowedStatuses = ['pending', 'deposit-paid', 'fully-paid', 'completed'];
+        if (!in_array($order->get_status(), $allowedStatuses, true)) {
+            return;
+        }
+
         // Only sync if calendar event exists
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         if (!$eventId || $eventId === '') {
