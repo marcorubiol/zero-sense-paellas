@@ -128,10 +128,28 @@
                 button.disabled = true;
                 labelEl.textContent = 'Deleting...';
                 
-                // Reload page after 2 seconds to show changes
-                setTimeout(function() {
-                    location.reload();
-                }, 2000);
+                // Trigger AJAX to execute FlowMattic workflow
+                fetch(config.ajaxUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'zs_calendar_delete_event',
+                        order_id: orderId,
+                        nonce: config.nonce
+                    })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    // Reload page after 2 seconds to show changes
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                })
+                .catch(function(err) {
+                    alert('Error: ' + err.message);
+                    button.disabled = false;
+                    labelEl.textContent = originalText;
+                });
             });
         });
     }
