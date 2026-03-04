@@ -228,6 +228,7 @@ class ApiExtension
         $data['zs_order_products_count'] = count($order->get_items());
         $data['zs_order_products_by_category_json'] = wp_json_encode($this->buildOrderProductsByCategory($order));
         $data['zs_event_media_urls'] = $this->buildEventMediaUrls($order);
+        $data['staff_kitchen_names'] = $this->buildKitchenStaffNames($order);
 
         $lastModifiedRaw = $this->resolveOrderLastModifiedRaw($order);
         if ($lastModifiedRaw !== '') {
@@ -345,6 +346,33 @@ class ApiExtension
         }
 
         return $urls;
+    }
+
+    private function buildKitchenStaffNames(WC_Order $order): string
+    {
+        $staffAssignments = $order->get_meta('zs_event_staff', true);
+        if (!is_array($staffAssignments)) {
+            return '';
+        }
+
+        $kitchenRoles = ['cap-de-bolo', 'cuiner-a', 'ajudant-a-de-cuina'];
+        $staffNames = [];
+
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+            
+            if (in_array($assignment['role'], $kitchenRoles, true)) {
+                $staffId = (int) $assignment['staff_id'];
+                $staffPost = get_post($staffId);
+                if ($staffPost) {
+                    $staffNames[] = $staffPost->post_title;
+                }
+            }
+        }
+
+        return implode(', ', $staffNames);
     }
 
     private function resolveOrderLastModifiedRaw(WC_Order $order): string
