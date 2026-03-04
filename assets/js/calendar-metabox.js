@@ -1,3 +1,5 @@
+console.log('[Calendar] FILE LOADED - calendar-metabox.js');
+
 /**
  * Google Calendar Metabox JavaScript
  * Handles Create/Reserve/Delete event buttons with AJAX and polling

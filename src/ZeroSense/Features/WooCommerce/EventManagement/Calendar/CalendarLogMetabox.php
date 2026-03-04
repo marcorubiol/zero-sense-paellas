@@ -49,12 +49,12 @@ class CalendarLogMetabox
             return;
         }
         
-        // Enqueue script
+        // Enqueue script with cache-busting version
         wp_enqueue_script(
             'zs-calendar-metabox',
             ZERO_SENSE_URL . 'assets/js/calendar-metabox.js',
             ['jquery'],
-            '1.0.0',
+            '1.0.1-' . time(), // Cache-busting
             true
         );
         
