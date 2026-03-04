@@ -83,8 +83,27 @@ class Integration
     }
 
     /**
+     * Check if a workflow is configured as an email workflow
+     */
+    private function isEmailWorkflow(string $workflowId): bool
+    {
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        if (!is_array($stored)) {
+            return false;
+        }
+
+        foreach ($stored as $trigger) {
+            if (($trigger['workflow_id'] ?? '') === $workflowId) {
+                return !empty($trigger['email_config']['is_email']);
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Log Flowmattic execution
-     * Track email sends during workflow execution
+     * Track email sends during workflow execution (only for email workflows)
      */
     public function trackEmailSend(array $atts): array
     {
@@ -92,6 +111,11 @@ class Integration
             $context = end(self::$activeWorkflowContexts);
             
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
+                // Only log for workflows configured as email workflows
+                if (!$this->isEmailWorkflow($context['workflow_id'])) {
+                    return $atts;
+                }
+
                 // Determine status based on trigger source
                 $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
 
@@ -127,10 +151,15 @@ class Integration
             return;
         }
         
-        // Look for recently active workflow contexts
+        // Look for recently active workflow contexts (only email workflows)
         foreach ($stored as $trigger) {
             $workflowId = $trigger['workflow_id'] ?? '';
             if (!$workflowId) {
+                continue;
+            }
+            
+            // Skip non-email workflows
+            if (empty($trigger['email_config']['is_email'])) {
                 continue;
             }
             
@@ -171,6 +200,11 @@ class Integration
         if (!empty(self::$activeWorkflowContexts)) {
             $context = end(self::$activeWorkflowContexts);
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
+                // Only log for workflows configured as email workflows
+                if (!$this->isEmailWorkflow($context['workflow_id'])) {
+                    return;
+                }
+
                 // Log failed email send
                 $this->logEmailToFlowmattic(
                     $context['workflow_id'],
