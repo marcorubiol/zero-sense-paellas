@@ -56,7 +56,7 @@ class DataExposer
                 'google_calendar_event_id' => __('Google Calendar Event ID', 'zero-sense'),
                 'event_reserved' => __('Event Reserved (yes/no)', 'zero-sense'),
                 'google_calendar_event_url' => __('Google Calendar Event URL', 'zero-sense'),
-                'calendar_notes' => __('Calendar Notes', 'zero-sense'),
+                'zs_calendar_notes' => __('Calendar Notes', 'zero-sense'),
             ],
         ];
         
