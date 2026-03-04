@@ -4,6 +4,16 @@ namespace ZeroSense\Utilities;
 trait LogDeletionTrait
 {
     /**
+     * Check if log deletion feature is enabled
+     *
+     * @return bool
+     */
+    private function isLogDeletionEnabled(): bool
+    {
+        return (bool) get_option('zs_utilities_logdeletion', true);
+    }
+
+    /**
      * Render delete button for a log entry
      *
      * @param int $logIndex The index of the log entry in the array
@@ -13,6 +23,10 @@ trait LogDeletionTrait
      */
     protected function renderLogDeleteButton(int $logIndex, string $metaKey, int $orderId, ?string $uniqueId = null): void
     {
+        if (!$this->isLogDeletionEnabled()) {
+            return;
+        }
+
         $dataAttr = $uniqueId !== null 
             ? 'data-unique-id="' . esc_attr($uniqueId) . '"'
             : 'data-log-index="' . esc_attr($logIndex) . '"';
@@ -31,6 +45,11 @@ trait LogDeletionTrait
      */
     public function ajaxDeleteLogEntry(): void
     {
+        // Check if feature is enabled
+        if (!$this->isLogDeletionEnabled()) {
+            wp_send_json_error(['message' => __('Log deletion is disabled', 'zero-sense')]);
+        }
+
         // Verify nonce
         if (!check_ajax_referer('zs_delete_log_nonce', 'nonce', false)) {
             wp_send_json_error(['message' => __('Security check failed', 'zero-sense')]);
@@ -172,6 +191,10 @@ trait LogDeletionTrait
      */
     protected function enqueueLogDeletionScript(): void
     {
+        if (!$this->isLogDeletionEnabled()) {
+            return;
+        }
+
         static $enqueued = false;
         if ($enqueued) {
             return;
