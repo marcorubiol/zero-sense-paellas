@@ -124,8 +124,17 @@ trait LogDeletionTrait
                 return true; // Keep executions from other orders
             }
             
-            // Generate unique ID for this execution
-            $execUniqueId = $this->generateUniqueId($execution);
+            // Generate unique ID for this execution using ORIGINAL timestamp format
+            // The stored execution has timestamp as string, but rendered logs have it as Unix timestamp
+            $workflowId = $execution['workflow_id'] ?? '';
+            $timestamp = $execution['timestamp'] ?? '';
+            
+            // Convert timestamp to Unix timestamp if it's a string date
+            if (is_string($timestamp) && !is_numeric($timestamp)) {
+                $timestamp = strtotime($timestamp);
+            }
+            
+            $execUniqueId = $timestamp . '_' . $workflowId;
             return $execUniqueId !== $uniqueId; // Remove if IDs match
         }));
 
