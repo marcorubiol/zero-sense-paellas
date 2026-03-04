@@ -128,7 +128,7 @@ class CalendarLogMetabox
 
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">';
+        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">';
         if ($eventId !== '') {
             if (!$isReserved) {
                 // Update button - only if event_id exists and NOT reserved
@@ -495,7 +495,7 @@ class CalendarLogMetabox
         
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
+        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">';
         if ($eventId !== '') {
             if (!$isReserved) {
                 echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
