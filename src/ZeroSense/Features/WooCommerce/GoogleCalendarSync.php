@@ -69,7 +69,7 @@ class GoogleCalendarSync implements FeatureInterface
         (new CalendarLogMetabox())->register();
         
         // Register auto-sync
-        (new Calendar\CalendarAutoSync())->register();
+        (new EventManagement\Calendar\CalendarAutoSync())->register();
     }
 
     private function registerMetaField(): void
