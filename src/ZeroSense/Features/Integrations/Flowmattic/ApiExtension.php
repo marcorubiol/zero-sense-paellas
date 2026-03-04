@@ -249,8 +249,12 @@ class ApiExtension
         }
 
         // Get all event data from DataExposer (automatically includes all staff fields and future additions)
+        // Add zs_ prefix to all fields that don't already have it
         $eventData = DataExposer::getOrderEventData($order);
-        $data = array_merge($data, $eventData);
+        foreach ($eventData as $key => $value) {
+            $prefixedKey = strpos($key, 'zs_') === 0 ? $key : 'zs_' . $key;
+            $data[$prefixedKey] = $value;
+        }
     }
 
     private function buildOrderProductsSimple(WC_Order $order): string
