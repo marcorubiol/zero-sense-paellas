@@ -143,9 +143,10 @@ class CalendarLogMetabox
                 echo '</span>';
             }
             
-            // Delete button - only if event_id exists
-            echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
-            echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
+            // Delete button - only if event_id exists (styled as red link)
+            echo '<button type="button" class="zs-calendar-action-btn" ';
+            echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '" ';
+            echo 'style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">';
             echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Google Calendar Event', 'zero-sense') . '</span>';
             echo '</button>';
         } else {
