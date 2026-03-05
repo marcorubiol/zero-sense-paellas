@@ -36,61 +36,33 @@ class CalendarAutoSync
 
     public function register(): void
     {
-        add_action('updated_post_meta', [$this, 'onMetaUpdated'], 10, 4);
-        add_action('added_post_meta', [$this, 'onMetaAdded'], 10, 4);
+        error_log('[CalendarAutoSync] Registering hooks...');
+        
+        // Use WooCommerce hooks that work with both HPOS and legacy storage
+        add_action('woocommerce_update_order', [$this, 'onOrderUpdated'], 10, 1);
         
         // Auto-mark as reserved when order is paid
         add_action('woocommerce_order_status_deposit-paid', [$this, 'markAsReserved'], 10, 1);
         add_action('woocommerce_order_status_fully-paid', [$this, 'markAsReserved'], 10, 1);
         add_action('woocommerce_order_status_completed', [$this, 'markAsReserved'], 10, 1);
-    }
-
-    /**
-     * Handle meta update
-     */
-    public function onMetaUpdated(int $metaId, int $objectId, string $metaKey, $metaValue): void
-    {
-        $this->handleMetaChange($objectId, $metaKey);
-    }
-
-    /**
-     * Handle meta addition
-     */
-    public function onMetaAdded(int $metaId, int $objectId, string $metaKey, $metaValue): void
-    {
-        $this->handleMetaChange($objectId, $metaKey);
-    }
-
-    /**
-     * Handle meta change and trigger sync if needed
-     */
-    private function handleMetaChange(int $objectId, string $metaKey): void
-    {
-        error_log('[CalendarAutoSync] Meta changed: ' . $metaKey . ' for order ' . $objectId);
         
-        // Only process if meta key is in monitored list
-        if (!in_array($metaKey, self::MONITORED_FIELDS, true)) {
-            error_log('[CalendarAutoSync] Field not monitored: ' . $metaKey);
+        error_log('[CalendarAutoSync] Hooks registered successfully');
+    }
+
+    /**
+     * Handle order update (works with both HPOS and legacy storage)
+     */
+    public function onOrderUpdated(int $orderId): void
+    {
+        error_log('[CalendarAutoSync] Order updated: ' . $orderId);
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof \WC_Order) {
+            error_log('[CalendarAutoSync] Order not found: ' . $orderId);
             return;
         }
 
-        error_log('[CalendarAutoSync] Field IS monitored: ' . $metaKey);
-
-        // Verify this is a shop_order
-        if (get_post_type($objectId) !== 'shop_order') {
-            error_log('[CalendarAutoSync] Not a shop_order: ' . get_post_type($objectId));
-            return;
-        }
-
-        $order = wc_get_order($objectId);
-        if (!$order instanceof WC_Order) {
-            error_log('[CalendarAutoSync] Order not found: ' . $objectId);
-            return;
-        }
-
-        error_log('[CalendarAutoSync] Order found: #' . $objectId);
-
-        // Only monitor changes for orders in specific statuses
+        // Check if order is in allowed status
         $allowedStatuses = ['pending', 'deposit-paid', 'fully-paid', 'completed'];
         $currentStatus = $order->get_status();
         if (!in_array($currentStatus, $allowedStatuses, true)) {
@@ -100,7 +72,7 @@ class CalendarAutoSync
 
         error_log('[CalendarAutoSync] Status OK: ' . $currentStatus);
 
-        // Only sync if calendar event exists
+        // Check if has event ID
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         if (!$eventId || $eventId === '') {
             error_log('[CalendarAutoSync] No event ID found');
@@ -108,15 +80,14 @@ class CalendarAutoSync
         }
 
         error_log('[CalendarAutoSync] Event ID found: ' . $eventId);
+        error_log('[CalendarAutoSync] Triggering sync for order ' . $orderId);
 
         // Mark as needing sync
         $order->update_meta_data(MetaKeys::CALENDAR_NEEDS_SYNC, 'yes');
         $order->save_meta_data();
 
-        error_log('[CalendarAutoSync] Triggering workflow for order ' . $objectId);
-
         // Trigger FlowMattic workflow
-        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $objectId, 'automatic');
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
         
         error_log('[CalendarAutoSync] Workflow triggered successfully');
     }
