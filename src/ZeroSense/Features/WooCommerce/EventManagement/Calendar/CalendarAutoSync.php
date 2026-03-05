@@ -62,13 +62,15 @@ class CalendarAutoSync
 
     /**
      * Auto-sync calendar when admin saves an order and monitored fields changed
+     * Defers trigger to shutdown so all meta (MetaBox, etc.) is saved before FlowMattic reads it
      */
     public function onOrderSaved(\WC_Order $order): void
     {
-        // Once per order per request
-        static $processed = [];
+        static $scheduled = [];
         $orderId = $order->get_id();
-        if (isset($processed[$orderId])) {
+
+        // Only schedule once per order per request
+        if (isset($scheduled[$orderId])) {
             return;
         }
 
@@ -92,23 +94,25 @@ class CalendarAutoSync
             return;
         }
 
-        // Only sync if monitored fields actually changed (compare hash from page load)
-        $previousHash = sanitize_text_field($_POST['_zs_calendar_fields_hash'] ?? '');
-        if ($previousHash !== '' && $previousHash === self::computeFieldsHash($order)) {
-            return;
-        }
+        // Mark as scheduled to prevent duplicate registrations
+        $scheduled[$orderId] = true;
 
-        // Mark as processed BEFORE triggering to prevent re-entry
-        $processed[$orderId] = true;
+        // Defer to shutdown: all plugins (MetaBox, etc.) have saved their meta by then
+        add_action('shutdown', function () use ($orderId) {
+            // Re-read order fresh from DB with ALL updated meta
+            $freshOrder = wc_get_order($orderId);
+            if (!$freshOrder instanceof \WC_Order) {
+                return;
+            }
 
-        // Remove our hook to prevent recursive triggers from FlowMattic saves
-        remove_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10);
+            // Only sync if monitored fields actually changed
+            $previousHash = sanitize_text_field($_POST['_zs_calendar_fields_hash'] ?? '');
+            if ($previousHash !== '' && $previousHash === self::computeFieldsHash($freshOrder)) {
+                return;
+            }
 
-        // Trigger FlowMattic workflow
-        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
-
-        // Re-add our hook
-        add_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10, 1);
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
+        });
     }
 
     /**
