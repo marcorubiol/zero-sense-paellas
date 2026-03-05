@@ -14,42 +14,24 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy plugin via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USER }}
-          port: ${{ secrets.SFTP_PORT }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          key: ${{ secrets.SFTP_KEY }}
-          source: "./*"
-          target: ${{ secrets.PLUGIN_TARGET_DIR }}
-          overwrite: true
-
-      - name: Clean up deleted files
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USER }}
-          port: ${{ secrets.SFTP_PORT }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          key: ${{ secrets.SFTP_KEY }}
-          script: |
-            # Remove deleted Migration features
-            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration/OrderValidationPage.php" 2>/dev/null || true
-            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration/MetaBoxMigrator.php" 2>/dev/null || true
-            # Remove Migration directory if empty
-            rmdir "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration" 2>/dev/null || true
-            
-            # Remove deleted Service Location column feature
-            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/OrderManagement/AdminOrderServiceLocation.php" 2>/dev/null || true
-            
-            # Remove debug scripts
-            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/debug-validation-page.php" 2>/dev/null || true
-            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/check-validation.php" 2>/dev/null || true
-            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/force-delete-validation.php" 2>/dev/null || true
-            
-            echo "Cleanup completed"
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SFTP_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+      
+      - name: Deploy plugin via rsync (full sync with delete)
+        run: |
+          rsync -avzr --delete \
+            --exclude='.git*' \
+            --exclude='node_modules' \
+            --exclude='.DS_Store' \
+            --exclude='*.log' \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SFTP_PORT }} -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SFTP_USER }}@${{ secrets.SFTP_HOST }}:${{ secrets.PLUGIN_TARGET_DIR }}/
+          echo "✅ Full sync completed - orphaned files removed"
 
       - name: Clear caches post-deploy
         uses: appleboy/ssh-action@v1
