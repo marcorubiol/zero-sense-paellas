@@ -250,11 +250,17 @@ class BulkSyncPage implements FeatureInterface
             // Fresh start - clear session
             $_SESSION[$sessionKey] = [];
             
-            // CLEANUP PHASE: Delete all existing calendar event IDs from eligible orders
+            // CLEANUP PHASE: Delete existing calendar event IDs (max 100 at a time to avoid timeout)
             $cleanupArgs = [
-                'limit' => -1,
+                'limit' => 100,
                 'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
                 'return' => 'ids',
+                'meta_query' => [
+                    [
+                        'key' => MetaKeys::GOOGLE_CALENDAR_EVENT_ID,
+                        'compare' => 'EXISTS',
+                    ],
+                ],
             ];
             
             $cleanupOrderIds = wc_get_orders($cleanupArgs);
@@ -266,14 +272,11 @@ class BulkSyncPage implements FeatureInterface
                     continue;
                 }
                 
-                $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
-                if ($eventId && $eventId !== '') {
-                    $order->delete_meta_data(MetaKeys::GOOGLE_CALENDAR_EVENT_ID);
-                    $order->delete_meta_data('zs_google_calendar_id');
-                    $order->delete_meta_data(MetaKeys::EVENT_RESERVED);
-                    $order->save_meta_data();
-                    $cleanedCount++;
-                }
+                $order->delete_meta_data(MetaKeys::GOOGLE_CALENDAR_EVENT_ID);
+                $order->delete_meta_data('zs_google_calendar_id');
+                $order->delete_meta_data(MetaKeys::EVENT_RESERVED);
+                $order->save_meta_data();
+                $cleanedCount++;
             }
             
             // Store cleanup info in session for display
