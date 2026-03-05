@@ -289,7 +289,7 @@ class BulkSyncPage implements FeatureInterface
             // If should reserve, mark it and trigger sync to update title
             if ($shouldReserve) {
                 // Wait for create to finish
-                sleep(2);
+                sleep(5);
                 
                 // Mark as reserved
                 $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
@@ -314,8 +314,8 @@ class BulkSyncPage implements FeatureInterface
             $created++;
             flush();
             
-            // Wait 2 seconds between each order to avoid overwhelming the API
-            sleep(2);
+            // Wait 5 seconds between each order to avoid overwhelming the API
+            sleep(5);
         }
         
         echo '</ul>';
