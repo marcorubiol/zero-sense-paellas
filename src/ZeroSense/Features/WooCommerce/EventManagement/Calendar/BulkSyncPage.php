@@ -76,14 +76,15 @@ class BulkSyncPage implements FeatureInterface
         <div class="wrap">
             <h1><?php esc_html_e('Bulk Calendar Operations', 'zero-sense'); ?></h1>
             
-            <!-- CREATE EVENTS -->
+            <!-- CREATE & RESERVE EVENTS -->
             <div class="card" style="max-width: 800px; margin-bottom: 20px;">
-                <h2><?php esc_html_e('Create Calendar Events', 'zero-sense'); ?></h2>
-                <p><?php esc_html_e('This will trigger the FlowMattic workflow to create Google Calendar events for all orders that:', 'zero-sense'); ?></p>
+                <h2><?php esc_html_e('Create & Reserve Calendar Events', 'zero-sense'); ?></h2>
+                <p><?php esc_html_e('This will create Google Calendar events for all eligible orders and automatically reserve paid orders:', 'zero-sense'); ?></p>
                 <ul>
-                    <li><?php esc_html_e('Are in "Pending", "Deposit Paid", "Fully Paid", "Processing" or "Completed" status', 'zero-sense'); ?></li>
-                    <li><?php esc_html_e('Do NOT have a Google Calendar event ID yet', 'zero-sense'); ?></li>
-                    <li><?php esc_html_e('Have a valid event date', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Creates events for orders in "Pending", "Deposit Paid", "Fully Paid", "Processing" or "Completed" status', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Only creates if order does NOT have a Google Calendar event ID yet', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Requires a valid event date', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Auto-reserves events for "Deposit Paid", "Fully Paid" and "Completed" orders', 'zero-sense'); ?></li>
                 </ul>
                 
                 <p><strong><?php esc_html_e('Warning:', 'zero-sense'); ?></strong> <?php esc_html_e('This process may take several minutes (2 seconds per order). Do not close this page until it completes.', 'zero-sense'); ?></p>
@@ -94,31 +95,7 @@ class BulkSyncPage implements FeatureInterface
                     
                     <p>
                         <button type="submit" class="button button-primary button-large" id="zs-sync-btn">
-                            <?php esc_html_e('Create All Events', 'zero-sense'); ?>
-                        </button>
-                    </p>
-                </form>
-            </div>
-            
-            <!-- RESERVE EVENTS -->
-            <div class="card" style="max-width: 800px; margin-bottom: 20px; border-left: 4px solid #f0b849;">
-                <h2 style="color: #996800;"><?php esc_html_e('Reserve Calendar Events', 'zero-sense'); ?></h2>
-                <p><?php esc_html_e('This will trigger the FlowMattic workflow to mark events as "reserved" for all orders that:', 'zero-sense'); ?></p>
-                <ul>
-                    <li><?php esc_html_e('Are in "Deposit Paid", "Fully Paid" or "Completed" status', 'zero-sense'); ?></li>
-                    <li><?php esc_html_e('Have a Google Calendar event ID (event already created)', 'zero-sense'); ?></li>
-                    <li><?php esc_html_e('Are NOT already marked as reserved', 'zero-sense'); ?></li>
-                </ul>
-                
-                <p><strong><?php esc_html_e('Note:', 'zero-sense'); ?></strong> <?php esc_html_e('This will update the event in Google Calendar (title, color, etc.) and mark it as reserved. Process takes 2 seconds per order.', 'zero-sense'); ?></p>
-                
-                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="zs-bulk-reserve-form">
-                    <input type="hidden" name="action" value="zs_bulk_reserve_calendar">
-                    <?php wp_nonce_field('zs_bulk_reserve_calendar', 'zs_bulk_reserve_nonce'); ?>
-                    
-                    <p>
-                        <button type="submit" class="button button-secondary button-large" id="zs-reserve-btn">
-                            <?php esc_html_e('Reserve All Eligible Events', 'zero-sense'); ?>
+                            <?php esc_html_e('Create & Reserve All Events', 'zero-sense'); ?>
                         </button>
                     </p>
                 </form>
@@ -195,27 +172,15 @@ class BulkSyncPage implements FeatureInterface
         </div>
         
         <script>
-        // Create form handler
+        // Create & Reserve form handler
         document.getElementById('zs-bulk-sync-form').addEventListener('submit', function(e) {
-            if (!confirm('<?php esc_js(_e('Are you sure you want to create calendar events for all eligible orders? This may take several minutes.', 'zero-sense')); ?>')) {
+            if (!confirm('<?php esc_js(_e('This will create calendar events for all eligible orders and auto-reserve paid orders. This may take several minutes. Continue?', 'zero-sense')); ?>')) {
                 e.preventDefault();
                 return;
             }
             
             document.getElementById('zs-sync-btn').disabled = true;
-            document.getElementById('zs-sync-btn').textContent = '<?php esc_js(_e('Creating...', 'zero-sense')); ?>';
-            document.getElementById('zs-sync-progress').style.display = 'block';
-        });
-        
-        // Reserve form handler
-        document.getElementById('zs-bulk-reserve-form').addEventListener('submit', function(e) {
-            if (!confirm('<?php esc_js(_e('This will reserve all events for Deposit Paid, Fully Paid, and Completed orders. Continue?', 'zero-sense')); ?>')) {
-                e.preventDefault();
-                return;
-            }
-            
-            document.getElementById('zs-reserve-btn').disabled = true;
-            document.getElementById('zs-reserve-btn').textContent = '<?php esc_js(_e('Reserving...', 'zero-sense')); ?>';
+            document.getElementById('zs-sync-btn').textContent = '<?php esc_js(_e('Creating & Reserving...', 'zero-sense')); ?>';
             document.getElementById('zs-sync-progress').style.display = 'block';
         });
         
@@ -274,11 +239,11 @@ class BulkSyncPage implements FeatureInterface
         ];
         
         $orderIds = wc_get_orders($args);
-        $synced = 0;
+        $created = 0;
+        $reserved = 0;
         $skipped = 0;
-        $errors = 0;
         
-        echo '<div class="wrap"><h1>' . esc_html__('Bulk Sync Results', 'zero-sense') . '</h1>';
+        echo '<div class="wrap"><h1>' . esc_html__('Bulk Create & Reserve Results', 'zero-sense') . '</h1>';
         echo '<div class="card" style="max-width: 800px;"><ul>';
         
         foreach ($orderIds as $orderId) {
@@ -304,21 +269,60 @@ class BulkSyncPage implements FeatureInterface
                 continue;
             }
             
-            // Trigger FlowMattic master workflow (will create event since no event_id exists)
-            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
+            // Determine if order should be auto-reserved
+            $orderStatus = $order->get_status();
+            $shouldReserve = in_array($orderStatus, ['deposit-paid', 'fully-paid', 'completed'], true);
             
-            echo '<li>' . sprintf(__('Order #%d: Triggered calendar creation', 'zero-sense'), $orderId) . '</li>';
-            $synced++;
+            // Log the create action BEFORE triggering (so it's in DB even if timeout)
+            if (class_exists('\ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs')) {
+                CalendarLogs::add($order, 'created', [
+                    'event_id' => 'pending',
+                    'trigger_source' => 'automatic',
+                ]);
+            }
+            
+            // Trigger FlowMattic create workflow
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-create', $orderId);
+            
+            $message = sprintf(__('Order #%d: Triggered calendar creation', 'zero-sense'), $orderId);
+            
+            // If should reserve, mark it and trigger sync to update title
+            if ($shouldReserve) {
+                // Wait for create to finish
+                sleep(2);
+                
+                // Mark as reserved
+                $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
+                $order->save_meta_data();
+                
+                // Log reserve
+                if (class_exists('\ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs')) {
+                    CalendarLogs::add($order, 'reserved', [
+                        'event_id' => 'pending',
+                        'trigger_source' => 'automatic',
+                    ]);
+                }
+                
+                // Trigger sync to update calendar (remove PRE |)
+                do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
+                
+                $message .= ' + ' . __('reserved', 'zero-sense');
+                $reserved++;
+            }
+            
+            echo '<li>' . $message . '</li>';
+            $created++;
             flush();
             
-            // Wait 2 seconds between each order to avoid overwhelming the API and timeouts
+            // Wait 2 seconds between each order to avoid overwhelming the API
             sleep(2);
         }
         
         echo '</ul>';
         echo '<h3>' . esc_html__('Summary', 'zero-sense') . '</h3>';
-        echo '<p>' . sprintf(__('Synced: %d', 'zero-sense'), $synced) . '</p>';
-        echo '<p>' . sprintf(__('Skipped: %d', 'zero-sense'), $skipped) . '</p>';
+        echo '<p>' . sprintf(__('Events created: %d', 'zero-sense'), $created) . '</p>';
+        echo '<p>' . sprintf(__('Events auto-reserved: %d', 'zero-sense'), $reserved) . '</p>';
+        echo '<p>' . sprintf(__('Orders skipped: %d', 'zero-sense'), $skipped) . '</p>';
         echo '<p><a href="' . esc_url(admin_url('admin.php?page=zs-calendar-bulk-sync')) . '" class="button">' . esc_html__('Back', 'zero-sense') . '</a></p>';
         echo '</div></div>';
     }
@@ -468,6 +472,14 @@ class BulkSyncPage implements FeatureInterface
                 $skipped++;
                 flush();
                 continue;
+            }
+            
+            // Log BEFORE triggering (so it's in DB even if timeout)
+            if (class_exists('\ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs')) {
+                CalendarLogs::add($order, 'deleted', [
+                    'event_id' => $eventId,
+                    'trigger_source' => 'automatic',
+                ]);
             }
             
             // Trigger FlowMattic workflow for deletion
