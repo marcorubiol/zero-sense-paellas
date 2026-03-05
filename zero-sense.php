@@ -95,6 +95,15 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '',
             ];
         }
 
+        // Auto-detect trigger source from manual flag if not explicitly set
+        if ($triggerSource === 'automatic') {
+            $isManualFlag = $order->get_meta('_zs_manual_trigger', true) === 'yes';
+            if ($isManualFlag) {
+                $triggerSource = 'manual';
+                $order->delete_meta_data('_zs_manual_trigger');
+            }
+        }
+
         // Check if event already exists (to determine if this is create or update)
         $existingEventId = $order->get_meta('zs_google_calendar_event_id', true);
         $isUpdate = ($existingEventId !== '' && $existingEventId !== false);

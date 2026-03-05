@@ -111,6 +111,13 @@ class CalendarAutoSync
                 return;
             }
 
+            // Log the auto-sync — no FlowMattic call needed for logging
+            $eventId = $freshOrder->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+            CalendarLogs::add($freshOrder, 'updated', [
+                'event_id' => $eventId,
+                'trigger_source' => 'automatic',
+            ]);
+
             do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
         });
     }

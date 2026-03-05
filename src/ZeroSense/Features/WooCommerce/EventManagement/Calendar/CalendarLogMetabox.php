@@ -420,6 +420,13 @@ class CalendarLogMetabox
             wp_send_json_error('Invalid order ID');
         }
         
+        // Set manual flag so zs_save_calendar_event_id() logs the create as 'manual'
+        $order = wc_get_order($orderId);
+        if ($order) {
+            $order->update_meta_data('_zs_manual_trigger', 'yes');
+            $order->save_meta_data();
+        }
+        
         // Trigger FlowMattic workflow via class action
         do_action('zs_trigger_class_action_direct', 'zs-calendar-create', $orderId);
         
@@ -438,12 +445,17 @@ class CalendarLogMetabox
             wp_send_json_error('Invalid order ID');
         }
         
-        // Set temporary flag so FlowMattic knows this is manual
         $order = wc_get_order($orderId);
-        if ($order) {
-            $order->update_meta_data('_zs_manual_trigger', 'yes');
-            $order->save_meta_data();
+        if (!$order) {
+            wp_send_json_error('Order not found');
         }
+        
+        // Log before triggering — we have the event_id now, it will be gone after
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        CalendarLogs::add($order, 'deleted', [
+            'event_id' => $eventId,
+            'trigger_source' => 'manual',
+        ]);
         
         // Trigger FlowMattic workflow via class action
         do_action('zs_trigger_class_action_direct', 'zs-calendar-delete', $orderId);
@@ -670,11 +682,18 @@ class CalendarLogMetabox
             wp_send_json_error('Invalid order ID');
         }
         
-        // Set temporary flag so FlowMattic knows this is manual
         $order = wc_get_order($orderId);
-        if ($order) {
-            $order->update_meta_data('_zs_manual_trigger', 'yes');
-            $order->save_meta_data();
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Log immediately — no FlowMattic call needed for logging
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        if ($eventId && $eventId !== '') {
+            CalendarLogs::add($order, 'updated', [
+                'event_id' => $eventId,
+                'trigger_source' => 'manual',
+            ]);
         }
         
         // Trigger FlowMattic workflow via class action
