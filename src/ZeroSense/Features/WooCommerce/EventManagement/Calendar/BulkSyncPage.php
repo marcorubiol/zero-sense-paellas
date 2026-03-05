@@ -3,6 +3,7 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Calendar;
 
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
+use ZeroSense\Features\WooCommerce\Migration\MetaBoxMigrator;
 
 class BulkSyncPage implements FeatureInterface
 {
@@ -347,6 +348,10 @@ class BulkSyncPage implements FeatureInterface
             ]);
             return;
         }
+        
+        // Migrate MetaBox fields to new keys before creating event
+        $migrator = new MetaBoxMigrator();
+        $migrator->migrateOrder($order);
         
         $orderStatus = $order->get_status();
         $shouldReserve = in_array($orderStatus, ['deposit-paid', 'fully-paid', 'completed'], true);
