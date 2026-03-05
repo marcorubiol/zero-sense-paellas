@@ -5,9 +5,26 @@
  */
 
 // Load WordPress
-require_once(__DIR__ . '/../../../../wp-load.php');
+$wp_load_paths = [
+    __DIR__ . '/../../../../wp-load.php',
+    __DIR__ . '/../../../wp-load.php',
+    dirname(dirname(dirname(dirname(__DIR__)))) . '/wp-load.php',
+];
 
-if (!current_user_can('manage_options')) {
+$wp_loaded = false;
+foreach ($wp_load_paths as $path) {
+    if (file_exists($path)) {
+        require_once($path);
+        $wp_loaded = true;
+        break;
+    }
+}
+
+if (!$wp_loaded) {
+    die('Error: Could not find wp-load.php. Tried paths: ' . implode(', ', $wp_load_paths));
+}
+
+if (!function_exists('current_user_can') || !current_user_can('manage_options')) {
     die('Access denied');
 }
 
