@@ -66,39 +66,59 @@ class CalendarAutoSync
      */
     private function handleMetaChange(int $objectId, string $metaKey): void
     {
+        error_log('[CalendarAutoSync] Meta changed: ' . $metaKey . ' for order ' . $objectId);
+        
         // Only process if meta key is in monitored list
         if (!in_array($metaKey, self::MONITORED_FIELDS, true)) {
+            error_log('[CalendarAutoSync] Field not monitored: ' . $metaKey);
             return;
         }
 
+        error_log('[CalendarAutoSync] Field IS monitored: ' . $metaKey);
+
         // Verify this is a shop_order
         if (get_post_type($objectId) !== 'shop_order') {
+            error_log('[CalendarAutoSync] Not a shop_order: ' . get_post_type($objectId));
             return;
         }
 
         $order = wc_get_order($objectId);
         if (!$order instanceof WC_Order) {
+            error_log('[CalendarAutoSync] Order not found: ' . $objectId);
             return;
         }
 
+        error_log('[CalendarAutoSync] Order found: #' . $objectId);
+
         // Only monitor changes for orders in specific statuses
         $allowedStatuses = ['pending', 'deposit-paid', 'fully-paid', 'completed'];
-        if (!in_array($order->get_status(), $allowedStatuses, true)) {
+        $currentStatus = $order->get_status();
+        if (!in_array($currentStatus, $allowedStatuses, true)) {
+            error_log('[CalendarAutoSync] Status not allowed: ' . $currentStatus);
             return;
         }
+
+        error_log('[CalendarAutoSync] Status OK: ' . $currentStatus);
 
         // Only sync if calendar event exists
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         if (!$eventId || $eventId === '') {
+            error_log('[CalendarAutoSync] No event ID found');
             return;
         }
+
+        error_log('[CalendarAutoSync] Event ID found: ' . $eventId);
 
         // Mark as needing sync
         $order->update_meta_data(MetaKeys::CALENDAR_NEEDS_SYNC, 'yes');
         $order->save_meta_data();
 
+        error_log('[CalendarAutoSync] Triggering workflow for order ' . $objectId);
+
         // Trigger FlowMattic workflow
         do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $objectId, 'automatic');
+        
+        error_log('[CalendarAutoSync] Workflow triggered successfully');
     }
 
     /**
