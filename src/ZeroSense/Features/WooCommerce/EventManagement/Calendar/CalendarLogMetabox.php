@@ -640,6 +640,20 @@ class CalendarLogMetabox
         // Trigger calendar sync if event exists
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         if ($eventId && $eventId !== '') {
+            // Add log entry for notes update
+            if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+                $logData = [
+                    'event_id' => $eventId,
+                    'trigger_source' => 'manual',
+                ];
+
+                CalendarLogs::add(
+                    $order,
+                    'updated',
+                    $logData
+                );
+            }
+            
             // Set manual trigger flag
             $order->update_meta_data('_zs_manual_trigger', 'yes');
             $order->save_meta_data();
