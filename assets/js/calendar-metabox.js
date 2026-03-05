@@ -80,8 +80,7 @@
                 const originalText = labelEl ? labelEl.textContent : '';
                 const button = this;
                 
-                const confirmMsg = 'Sync event to Google Calendar?';
-                if (!confirm(confirmMsg)) return;
+                // No confirmation here - FlowMattic class-actions.js will show its own confirmation
                 
                 button.disabled = true;
                 if (labelEl) {

@@ -3,7 +3,7 @@
  * Plugin Name: Zerø Sense
  * Plugin URI: https://paellasencasa.com
  * Description: Modern PSR-4 WordPress plugin for Paellas en Casa website with custom fields migration and HPOS compatibility
- * Version: 3.4.3
+ * Version: 3.4.4
  * Author: Zero Sense
  * Author URI: https://zerosense.studio
  * Text Domain: zero-sense
