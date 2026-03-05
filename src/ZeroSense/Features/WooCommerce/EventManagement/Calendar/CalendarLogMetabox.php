@@ -3,13 +3,76 @@ namespace ZeroSense\Features\WooCommerce\EventManagement\Calendar;
 
 use WC_Order;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
+use ZeroSense\Utilities\LogDeletionTrait;
 
 class CalendarLogMetabox
 {
+    use LogDeletionTrait;
     public function register(): void
     {
         if (!is_admin()) { return; }
         add_action('add_meta_boxes', [$this, 'addMetabox']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+        
+        // Save calendar notes when order is saved
+        add_action('woocommerce_process_shop_order_meta', [$this, 'saveCalendarNotes'], 10, 1);
+        
+        // AJAX handlers
+        add_action('wp_ajax_zs_calendar_create_event', [$this, 'ajaxCreateEvent']);
+        add_action('wp_ajax_zs_calendar_delete_event', [$this, 'ajaxDeleteEvent']);
+        add_action('wp_ajax_zs_calendar_check_status', [$this, 'ajaxCheckStatus']);
+        add_action('wp_ajax_zs_calendar_get_header', [$this, 'ajaxGetHeader']);
+        add_action('wp_ajax_zs_calendar_get_content', [$this, 'ajaxGetContent']);
+        add_action('wp_ajax_zs_calendar_update_event', [$this, 'ajaxUpdateEvent']);
+        add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
+        add_action('wp_ajax_zs_calendar_save_notes', [$this, 'ajaxSaveNotes']);
+        add_action('wp_ajax_zs_calendar_sync_event', [$this, 'ajaxSyncEvent']);
+        add_action('wp_ajax_zs_calendar_reserve_event', [$this, 'ajaxReserveEvent']);
+    }
+    
+    public function enqueueScripts($hook): void
+    {
+        // Only load on order edit pages
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+        
+        // Get order ID
+        $orderId = 0;
+        if (isset($_GET['id'])) {
+            $orderId = absint($_GET['id']);
+        } elseif (isset($_GET['post'])) {
+            $orderId = absint($_GET['post']);
+        }
+        
+        if (!$orderId) {
+            return;
+        }
+        
+        // Enqueue script with cache-busting version
+        wp_enqueue_script(
+            'zs-calendar-metabox',
+            ZERO_SENSE_URL . 'assets/js/calendar-metabox.js',
+            ['jquery'],
+            '1.0.1-' . time(), // Cache-busting
+            true
+        );
+        
+        // Pass configuration to JavaScript
+        wp_localize_script('zs-calendar-metabox', 'zsCalendarConfig', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('zs_calendar_action'),
+            'orderId' => $orderId,
+            'i18n' => [
+                'confirmDelete' => __('Delete Calendar event? This cannot be undone.', 'zero-sense'),
+                'confirmUpdate' => __('Mark event as reserved?', 'zero-sense'),
+                'confirmCreate' => __('Create Calendar event for this order?', 'zero-sense'),
+                'loadingDelete' => __('Deleting...', 'zero-sense'),
+                'loadingUpdate' => __('Updating...', 'zero-sense'),
+                'loadingCreate' => __('Creating...', 'zero-sense'),
+            ]
+        ]);
     }
 
     public function addMetabox(): void
@@ -20,7 +83,7 @@ class CalendarLogMetabox
             
             add_meta_box(
                 'zs_calendar_sync',
-                __('Google Calendar Sync', 'zero-sense'),
+                __('Calendar Sync', 'zero-sense'),
                 [$this, 'renderMetabox'],
                 $screen_id,
                 'normal',
@@ -44,27 +107,92 @@ class CalendarLogMetabox
             return;
         }
 
+        wp_nonce_field('zs_calendar_action', 'zs_calendar_nonce');
+        
+        // Hidden hash of monitored fields for auto-sync change detection
+        echo '<input type="hidden" name="_zs_calendar_fields_hash" value="' . esc_attr(CalendarAutoSync::computeFieldsHash($order)) . '">';
+        
+        echo '<div class="zs-calendar-logs-metabox">';
+        $this->renderMetaboxContent($order, $orderId);
+        echo '</div>';
+    }
+    
+    private function renderMetaboxContent(WC_Order $order, int $orderId): void
+    {
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         $logs = CalendarLogs::getForOrder($order);
         $noLogs = empty($logs);
 
-        echo '<div class="zs-calendar-logs-metabox">';
-
-        // Header: Event ID and status
+        // Header section (wrapped for AJAX replacement)
+        echo '<div class="zs-calendar-header-section">';
+        
+        // Event ID display
         if ($eventId && is_string($eventId) && $eventId !== '') {
-            $eventUrl = $this->getCalendarEventUrl($eventId);
             echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
-            echo '<strong>' . esc_html__('Event ID:', 'zero-sense') . '</strong> ';
+            echo '<strong>' . esc_html__('Calendar Event ID:', 'zero-sense') . '</strong> ';
             echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
-            if ($eventUrl !== '') {
-                echo ' <a href="' . esc_url($eventUrl) . '" target="_blank" style="text-decoration:none;">🔗</a>';
-            }
             echo '</div>';
         } else {
             echo '<div style="margin-bottom:10px; font-size:12px; color:#999; font-style:italic;">';
-            echo esc_html__('No Google Calendar event linked yet.', 'zero-sense');
+            echo esc_html__('No Calendar event linked yet.', 'zero-sense');
             echo '</div>';
         }
+
+        // Action buttons
+        $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
+        
+        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">';
+        if ($eventId !== '') {
+            if (!$isReserved) {
+                // Reserve button - marks as reserved and triggers sync
+                echo '<button type="button" class="zs-btn is-action zs-calendar-reserve" ';
+                echo 'data-order-id="' . esc_attr($orderId) . '">';
+                echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
+                echo '</button>';
+            } else {
+                // Show RESERVED badge
+                echo '<span class="zs-badge zs-badge-reserved">';
+                echo esc_html__('RESERVED', 'zero-sense');
+                echo '</span>';
+            }
+            
+            // Sync button - always available as manual fallback
+            echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '">';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync Calendar', 'zero-sense') . '</span>';
+            echo '</button>';
+            
+            // Delete button (styled as red link)
+            echo '<button type="button" class="zs-calendar-delete" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '" ';
+            echo 'style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Calendar Event', 'zero-sense') . '</span>';
+            echo '</button>';
+        } else {
+            // Create button - triggers master workflow
+            echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '">';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Calendar Event', 'zero-sense') . '</span>';
+            echo '</button>';
+        }
+        echo '</div>';
+        
+        echo '</div>'; // .zs-calendar-header-section
+
+        // Calendar Notes section
+        $calendarNotes = $order->get_meta(MetaKeys::CALENDAR_NOTES, true);
+        echo '<div class="zs-calendar-notes-section" style="margin:15px 0; padding:12px; background:#f9f9f9; border-radius:4px;">';
+        echo '<label for="zs_calendar_notes" style="display:block; margin-bottom:6px; font-weight:600;">';
+        echo esc_html__('Calendar Notes', 'zero-sense');
+        echo '</label>';
+        echo '<textarea id="zs_calendar_notes" name="zs_calendar_notes" rows="4" class="widefat" style="margin-bottom:8px;">';
+        echo esc_textarea(is_string($calendarNotes) ? $calendarNotes : '');
+        echo '</textarea>';
+        echo '<button type="button" class="button zs-save-calendar-notes-btn" data-order-id="' . esc_attr($orderId) . '">';
+        echo esc_html__('Save Notes', 'zero-sense');
+        echo '</button>';
+        echo '<span class="zs-calendar-notes-status" style="margin-left:10px; color:#46b450; display:none;"></span>';
+        echo '</div>';
 
         // Last sync info
         if (!$noLogs) {
@@ -93,7 +221,7 @@ class CalendarLogMetabox
             // Show first 3 logs
             foreach ($logs as $index => $log) {
                 if ($index >= $max) break;
-                $this->renderLogItem($log);
+                $this->renderLogItem($log, $index, $orderId);
             }
             
             // Show remaining logs (hidden)
@@ -101,7 +229,7 @@ class CalendarLogMetabox
                 echo '<div id="zs-calendar-logs-hidden" style="display:none;">';
                 foreach ($logs as $index => $log) {
                     if ($index < $max) continue;
-                    $this->renderLogItem($log);
+                    $this->renderLogItem($log, $index, $orderId);
                 }
                 echo '</div>';
                 
@@ -127,11 +255,11 @@ class CalendarLogMetabox
                 echo '}});});</script>';
             }
         }
-
-        echo '</div>';
+        
+        $this->enqueueLogDeletionScript();
     }
 
-    private function renderLogItem(array $log): void
+    private function renderLogItem(array $log, int $logIndex, int $orderId): void
     {
         $type = sanitize_key($log['type'] ?? 'unknown');
         $data = is_array($log['data'] ?? null) ? $log['data'] : [];
@@ -150,7 +278,7 @@ class CalendarLogMetabox
         $details = [];
         
         if (isset($data['event_id']) && is_string($data['event_id'])) {
-            $details[] = '<strong>' . __('Event ID:', 'zero-sense') . '</strong> ' . esc_html($data['event_id']);
+            $details[] = '<strong>' . __('Calendar Event ID:', 'zero-sense') . '</strong> ' . esc_html($data['event_id']);
         }
         
         if (isset($data['event_title']) && is_string($data['event_title'])) {
@@ -171,6 +299,7 @@ class CalendarLogMetabox
         }
 
         echo '<div class="zs-log-item ' . esc_attr($itemClass) . '">';
+        $this->renderLogDeleteButton($logIndex, 'zs_calendar_logs', $orderId);
         echo '<div class="zs-log-title"><strong>' . esc_html($title) . '</strong></div>';
         echo '<div class="zs-log-time">' . esc_html($ts) . ' · ' . sprintf(__('Order status: %s', 'zero-sense'), $status) . '</div>';
         if ($details) {
@@ -185,11 +314,36 @@ class CalendarLogMetabox
         $triggerSource = $data['trigger_source'] ?? 'automatic';
         
         if ($type === 'created') {
+            if ($triggerSource === 'manual') {
+                return [
+                    'class' => 'zs-badge-manual',
+                    'item_class' => 'zs-manual',
+                    'label' => __('MAN', 'zero-sense'),
+                    'title' => __('Calendar Event Created', 'zero-sense'),
+                ];
+            }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Event created', 'zero-sense'),
+                'title' => __('Calendar Event Created', 'zero-sense'),
+            ];
+        }
+        
+        if ($type === 'deleted') {
+            if ($triggerSource === 'manual') {
+                return [
+                    'class' => 'zs-badge-manual',
+                    'item_class' => 'zs-manual',
+                    'label' => __('MAN', 'zero-sense'),
+                    'title' => __('Calendar Event Deleted', 'zero-sense'),
+                ];
+            }
+            return [
+                'class' => 'zs-badge-auto',
+                'item_class' => 'zs-auto',
+                'label' => __('AUTO', 'zero-sense'),
+                'title' => __('Calendar Event Deleted', 'zero-sense'),
             ];
         }
         
@@ -199,14 +353,31 @@ class CalendarLogMetabox
                     'class' => 'zs-badge-manual',
                     'item_class' => 'zs-manual',
                     'label' => __('MAN', 'zero-sense'),
-                    'title' => __('Event updated manually', 'zero-sense'),
+                    'title' => __('Calendar Event Updated', 'zero-sense'),
                 ];
             }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Event updated', 'zero-sense'),
+                'title' => __('Calendar Event Updated', 'zero-sense'),
+            ];
+        }
+        
+        if ($type === 'reserved') {
+            if ($triggerSource === 'manual') {
+                return [
+                    'class' => 'zs-badge-manual',
+                    'item_class' => 'zs-manual',
+                    'label' => __('MAN', 'zero-sense'),
+                    'title' => __('Event Reserved', 'zero-sense'),
+                ];
+            }
+            return [
+                'class' => 'zs-badge-auto',
+                'item_class' => 'zs-auto',
+                'label' => __('AUTO', 'zero-sense'),
+                'title' => __('Event Reserved', 'zero-sense'),
             ];
         }
         
@@ -237,9 +408,340 @@ class CalendarLogMetabox
         ];
     }
 
-    private function getCalendarEventUrl(string $eventId): string
+    /**
+     * AJAX handler to create calendar event
+     */
+    public function ajaxCreateEvent(): void
     {
-        if ($eventId === '') return '';
-        return 'https://calendar.google.com/calendar/event?eid=' . urlencode($eventId);
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        // Set manual flag so zs_save_calendar_event_id() logs the create as 'manual'
+        $order = wc_get_order($orderId);
+        if ($order) {
+            $order->update_meta_data('_zs_manual_trigger', 'yes');
+            $order->save_meta_data();
+        }
+        
+        // Trigger FlowMattic workflow via class action
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-create', $orderId);
+        
+        wp_send_json_success(['message' => 'Workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to delete calendar event
+     */
+    public function ajaxDeleteEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Log before triggering — we have the event_id now, it will be gone after
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        CalendarLogs::add($order, 'deleted', [
+            'event_id' => $eventId,
+            'trigger_source' => 'manual',
+        ]);
+        
+        // Trigger FlowMattic workflow via class action
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-delete', $orderId);
+        
+        wp_send_json_success(['message' => 'Workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to update calendar event
+     */
+    public function ajaxUpdateEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        // Trigger FlowMattic workflow via class action with 'manual' trigger source
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-update', $orderId, 'manual');
+        
+        wp_send_json_success(['message' => 'Workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to check if event status changed
+     */
+    public function ajaxCheckStatus(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        $checkAction = sanitize_text_field($_POST['check_action'] ?? '');
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        
+        $changed = false;
+        if ($checkAction === 'create' && $eventId !== '') {
+            $changed = true; // Event ID now exists
+        } elseif ($checkAction === 'delete' && $eventId === '') {
+            $changed = true; // Event ID was deleted
+        } elseif ($checkAction === 'update') {
+            // Check if zs_event_reserved changed to 'yes'
+            $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
+            $changed = $isReserved;
+        }
+        
+        wp_send_json_success(['changed' => $changed]);
+    }
+
+    /**
+     * AJAX handler to get full metabox content (header + logs)
+     */
+    public function ajaxGetContent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        $order = wc_get_order($orderId);
+        
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Render full metabox content
+        ob_start();
+        $this->renderMetaboxContent($order, $orderId);
+        $html = ob_get_clean();
+        
+        wp_send_json_success(['html' => $html]);
+    }
+    
+    /**
+     * AJAX handler to get updated header HTML
+     */
+    public function ajaxGetHeader(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        $order = wc_get_order($orderId);
+        
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        
+        // Render header HTML
+        ob_start();
+        echo '<div class="zs-calendar-header-section">';
+        
+        // Event ID display
+        if ($eventId && is_string($eventId) && $eventId !== '') {
+            echo '<div style="margin-bottom:10px; font-size:12px; color:#555;">';
+            echo '<strong>' . esc_html__('Calendar Event ID:', 'zero-sense') . '</strong> ';
+            echo '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">' . esc_html($eventId) . '</code>';
+            echo '</div>';
+        } else {
+            echo '<div style="margin-bottom:10px; font-size:12px; color:#999; font-style:italic;">';
+            echo esc_html__('No Calendar event linked yet.', 'zero-sense');
+            echo '</div>';
+        }
+        
+        // Action buttons
+        $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
+        echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">';
+        if ($eventId !== '') {
+            if (!$isReserved) {
+                echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
+                echo 'data-action="update" data-order-id="' . esc_attr($orderId) . '">';
+                echo '<span class="zs-calendar-btn-label">' . esc_html__('Reserve Event', 'zero-sense') . '</span>';
+                echo '</button>';
+            }
+            echo '<button type="button" class="zs-btn is-destructive zs-calendar-action-btn" ';
+            echo 'data-action="delete" data-order-id="' . esc_attr($orderId) . '">';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Delete Calendar Event', 'zero-sense') . '</span>';
+            echo '</button>';
+        } else {
+            echo '<button type="button" class="zs-btn is-action zs-calendar-action-btn" ';
+            echo 'data-action="create" data-order-id="' . esc_attr($orderId) . '">';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Create Calendar Event', 'zero-sense') . '</span>';
+            echo '</button>';
+        }
+        echo '</div>';
+
+        
+        echo '</div>';
+        
+        $html = ob_get_clean();
+        wp_send_json_success(['html' => $html]);
+    }
+    
+    /**
+     * Save calendar notes when order is updated
+     */
+    public function saveCalendarNotes(int $orderId): void
+    {
+        // Check nonce
+        if (!isset($_POST['zs_calendar_nonce']) || !wp_verify_nonce($_POST['zs_calendar_nonce'], 'zs_calendar_action')) {
+            return;
+        }
+        
+        // Check if notes field is present
+        if (!isset($_POST['zs_calendar_notes'])) {
+            return;
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+        
+        $notes = sanitize_textarea_field(wp_unslash($_POST['zs_calendar_notes']));
+        $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
+        $order->save_meta_data();
+    }
+    
+    /**
+     * AJAX handler to save calendar notes
+     */
+    public function ajaxSaveNotes(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $notes = isset($_POST['notes']) ? sanitize_textarea_field(wp_unslash($_POST['notes'])) : '';
+        
+        $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
+        $order->save_meta_data();
+        
+        // Trigger calendar sync if event exists
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        if ($eventId && $eventId !== '') {
+            // Add log entry for notes update
+            if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+                $logData = [
+                    'event_id' => $eventId,
+                    'trigger_source' => 'manual',
+                ];
+
+                CalendarLogs::add(
+                    $order,
+                    'updated',
+                    $logData
+                );
+            }
+            
+            // Set manual trigger flag
+            $order->update_meta_data('_zs_manual_trigger', 'yes');
+            $order->save_meta_data();
+            
+            // Trigger sync workflow
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
+        }
+        
+        wp_send_json_success(['message' => __('Notes saved', 'zero-sense')]);
+    }
+    
+    /**
+     * AJAX handler to manually trigger calendar sync
+     */
+    public function ajaxSyncEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        // Log immediately — no FlowMattic call needed for logging
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        if ($eventId && $eventId !== '') {
+            CalendarLogs::add($order, 'updated', [
+                'event_id' => $eventId,
+                'trigger_source' => 'manual',
+            ]);
+        }
+        
+        // Trigger FlowMattic workflow via class action
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'manual');
+        
+        wp_send_json_success(['message' => 'Sync workflow triggered']);
+    }
+
+    /**
+     * AJAX handler to reserve event (mark as reserved and trigger sync)
+     */
+    public function ajaxReserveEvent(): void
+    {
+        check_ajax_referer('zs_calendar_action', 'nonce');
+        
+        $orderId = absint($_POST['order_id'] ?? 0);
+        if ($orderId === 0) {
+            wp_send_json_error('Invalid order ID');
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order) {
+            wp_send_json_error('Order not found');
+        }
+        
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        
+        // Mark as reserved BEFORE triggering workflow
+        $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
+        $order->save_meta_data();
+        
+        // Add log entry
+        if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+            $logData = [
+                'event_id' => $eventId,
+                'trigger_source' => 'manual',
+            ];
+
+            CalendarLogs::add(
+                $order,
+                'reserved',
+                $logData
+            );
+        }
+        
+        // Trigger FlowMattic workflow to update calendar (remove "PRE |" from title)
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
+        
+        wp_send_json_success(['message' => 'Event marked as reserved and sync triggered']);
     }
 }

@@ -29,6 +29,7 @@
     --zs-color-error: #DC2626;
     --zs-color-gateway: #166534;
     --zs-color-skip: #374151;
+    --zs-color-reserved: #248f6b;
 
     /* Buttons */
     --zs-btn-font-size: 12px;
@@ -51,6 +52,7 @@
     --zs-bg-error: color-mix(in srgb, var(--zs-color-error) 15%, white 85%);
     --zs-bg-gateway: color-mix(in srgb, var(--zs-color-gateway) 15%, white 85%);
     --zs-bg-skip: color-mix(in srgb, var(--zs-color-skip) 15%, white 85%);
+    --zs-bg-reserved: color-mix(in srgb, var(--zs-color-reserved) 15%, white 85%);
 }
 
 /* =================================================================
@@ -427,6 +429,50 @@ button.zs-mb-link {
     line-height: 1.4;
 }
 
+/* Log delete button - hidden by default, visible on hover */
+.zs-log-delete-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #9a9da2;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    font-weight: 400;
+}
+
+.zs-log-item:hover .zs-log-delete-btn {
+    opacity: 1;
+}
+
+.zs-log-delete-btn:hover {
+    color: #2c3338;
+}
+
+.zs-log-delete-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Hide badge when hovering log item to make room for delete button */
+/* Only hide if delete button is present (when feature is enabled) */
+.zs-log-item:has(.zs-log-delete-btn):hover .zs-badge {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.zs-badge {
+    transition: opacity 0.2s ease;
+}
+
 /* Log titles - identical for all */
 .zs-log-title {
     display: flex;
@@ -616,6 +662,12 @@ button.zs-mb-link {
     color: var(--zs-color-skip);
 }
 
+/* Green - Reserved */
+.zs-badge-reserved {
+    background: var(--zs-bg-reserved);
+    color: var(--zs-color-reserved);
+}
+
 /* Hover effects using color-mix - slightly darker on hover */
 .zs-badge-auto:hover {
     background: color-mix(in srgb, var(--zs-color-auto) 25%, white 75%);
@@ -642,6 +694,15 @@ button.zs-mb-link {
 .zs-badge-skipped:hover,
 .zs-badge-unknown:hover {
     background: color-mix(in srgb, var(--zs-color-skip) 25%, white 75%);
+}
+
+.zs-badge-reserved:hover {
+    background: color-mix(in srgb, var(--zs-color-reserved) 25%, white 75%);
+}
+
+/* Calendar metabox specific badge positioning */
+#zs_calendar_sync .zs-badge.zs-badge-reserved {
+    top: 0;
 }
 
 /* =================================================================

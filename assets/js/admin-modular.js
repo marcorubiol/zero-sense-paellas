@@ -63,6 +63,86 @@ const ZeroSenseAdmin = {
         if (typeof ZeroSenseFlowmattic !== 'undefined') {
             ZeroSenseFlowmattic.init();
         }
+        
+        // Initialize clear cache button
+        this.initClearCacheButton();
+    },
+    
+    /**
+     * Initialize clear cache button
+     */
+    initClearCacheButton: function() {
+        const btn = document.getElementById('zs-clear-cache-btn');
+        if (!btn) return;
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const icon = btn.querySelector('.dashicons');
+            const originalText = btn.textContent.trim();
+            btn.disabled = true;
+            icon.classList.add('zs-spin');
+            
+            // Make AJAX request
+            fetch(zsAdmin.ajaxUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'zs_clear_cache',
+                    nonce: zsAdmin.nonce
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message briefly
+                    btn.innerHTML = '<span class="dashicons dashicons-yes"></span> Cleared!';
+                    btn.style.background = '#00a32a';
+                    btn.style.borderColor = '#00a32a';
+                    btn.style.color = '#fff';
+                    
+                    // Reload page after 800ms
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 800);
+                } else {
+                    // Show error
+                    btn.innerHTML = '<span class="dashicons dashicons-warning"></span> Error';
+                    btn.style.background = '#d63638';
+                    btn.style.borderColor = '#d63638';
+                    btn.style.color = '#fff';
+                    
+                    // Reset after 2s
+                    setTimeout(function() {
+                        btn.innerHTML = '<span class="dashicons dashicons-update"></span> ' + originalText;
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                        btn.disabled = false;
+                        icon.classList.remove('zs-spin');
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Clear cache error:', error);
+                btn.innerHTML = '<span class="dashicons dashicons-warning"></span> Error';
+                btn.style.background = '#d63638';
+                btn.style.borderColor = '#d63638';
+                btn.style.color = '#fff';
+                
+                setTimeout(function() {
+                    btn.innerHTML = '<span class="dashicons dashicons-update"></span> ' + originalText;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                    btn.disabled = false;
+                    icon.classList.remove('zs-spin');
+                }, 2000);
+            });
+        });
     },
     
     // Re-export commonly used methods for backward compatibility

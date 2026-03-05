@@ -26,6 +26,24 @@ jobs:
           target: ${{ secrets.PLUGIN_TARGET_DIR }}
           overwrite: true
 
+      - name: Clean up orphaned files
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          port: ${{ secrets.SFTP_PORT }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          key: ${{ secrets.SFTP_KEY }}
+          script: |
+            rm -rf "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/OrderManagement/AdminOrderServiceLocation.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/emergency-cleanup.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/check-migration-dir.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/debug-validation-page.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/check-validation.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/force-delete-validation.php" 2>/dev/null || true
+            echo "Orphaned files cleanup completed"
+
       - name: Clear caches post-deploy
         uses: appleboy/ssh-action@v1
         with:

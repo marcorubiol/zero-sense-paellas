@@ -46,6 +46,9 @@ class Integration
         // Hook for Class Actions triggered by button clicks
         add_action('wp_ajax_zs_trigger_class_action', [$this, 'handleClassActionAjax']);
         add_action('wp_ajax_nopriv_zs_trigger_class_action', [$this, 'handleClassActionAjax']);
+        
+        // Hook for programmatic class action triggering (used by calendar AJAX handlers)
+        add_action('zs_trigger_class_action_direct', [$this, 'handleDirectClassAction'], 10, 3);
 
         // Add JavaScript for Class Action detection
         add_action('wp_enqueue_scripts', [$this, 'enqueueClassActionScript']);
@@ -80,8 +83,27 @@ class Integration
     }
 
     /**
+     * Check if a workflow is configured as an email workflow
+     */
+    private function isEmailWorkflow(string $workflowId): bool
+    {
+        $stored = get_option('zs_flowmattic_custom_triggers', []);
+        if (!is_array($stored)) {
+            return false;
+        }
+
+        foreach ($stored as $trigger) {
+            if (($trigger['workflow_id'] ?? '') === $workflowId) {
+                return !empty($trigger['email_config']['is_email']);
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Log Flowmattic execution
-     * Track email sends during workflow execution
+     * Track email sends during workflow execution (only for email workflows)
      */
     public function trackEmailSend(array $atts): array
     {
@@ -89,6 +111,11 @@ class Integration
             $context = end(self::$activeWorkflowContexts);
             
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
+                // Only log for workflows configured as email workflows
+                if (!$this->isEmailWorkflow($context['workflow_id'])) {
+                    return $atts;
+                }
+
                 // Determine status based on trigger source
                 $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
 
@@ -124,10 +151,15 @@ class Integration
             return;
         }
         
-        // Look for recently active workflow contexts
+        // Look for recently active workflow contexts (only email workflows)
         foreach ($stored as $trigger) {
             $workflowId = $trigger['workflow_id'] ?? '';
             if (!$workflowId) {
+                continue;
+            }
+            
+            // Skip non-email workflows
+            if (empty($trigger['email_config']['is_email'])) {
                 continue;
             }
             
@@ -168,6 +200,11 @@ class Integration
         if (!empty(self::$activeWorkflowContexts)) {
             $context = end(self::$activeWorkflowContexts);
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
+                // Only log for workflows configured as email workflows
+                if (!$this->isEmailWorkflow($context['workflow_id'])) {
+                    return;
+                }
+
                 // Log failed email send
                 $this->logEmailToFlowmattic(
                     $context['workflow_id'],
@@ -683,6 +720,30 @@ class Integration
     }
 
     /**
+     * Handle direct class action triggering (programmatic, not AJAX)
+     * Used by calendar AJAX handlers and other internal code
+     * 
+     * @param string $className Class action name
+     * @param int $orderId Order ID
+     * @param string $triggerSource 'manual' or 'automatic' (default: 'manual')
+     */
+    public function handleDirectClassAction(string $className, int $orderId, string $triggerSource = 'manual'): void
+    {
+        if (!isset(self::$manualTriggers[$className])) {
+            return;
+        }
+
+        $workflowIds = self::$manualTriggers[$className];
+        if (is_array($workflowIds)) {
+            foreach ($workflowIds as $workflowId) {
+                $this->triggerClassWorkflow($workflowId, $className, $orderId, $triggerSource);
+            }
+        } else {
+            $this->triggerClassWorkflow($workflowIds, $className, $orderId, $triggerSource);
+        }
+    }
+
+    /**
      * Trigger workflow for Class Action with smart Order ID handling
      * Made public to allow manual triggering from Flowmattic.php without modifying $_POST
      */
@@ -711,6 +772,7 @@ class Integration
             'workflow_id' => $workflowId,
             'class_name' => $className,
             'trigger_source' => $triggerType === 'manual' ? 'zero_sense_class_action_manual' : 'zero_sense_class_action',
+            'trigger_type' => $triggerType, // Simple 'manual' or 'automatic' for use in workflows
             'timestamp' => current_time('mysql')
         ];
 

@@ -6,6 +6,7 @@ use WC_Order_Item;
 use WP_REST_Request;
 use WP_REST_Response;
 use ZeroSense\Core\MetaFieldRegistry;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\DataExposer;
 
 class ApiExtension
 {
@@ -224,6 +225,7 @@ class ApiExtension
      */
     private function addComputedFields(WC_Order $order, array &$data, string $orderLanguage): void
     {
+        // Order-level computed fields
         $data['zs_order_products_simple'] = $this->buildOrderProductsSimple($order);
         $data['zs_order_products_count'] = count($order->get_items());
         $data['zs_order_products_by_category_json'] = wp_json_encode($this->buildOrderProductsByCategory($order));
@@ -244,6 +246,14 @@ class ApiExtension
         if ($orderLanguage !== '') {
             $data['zs_order_language_name'] = $this->resolveOrderLanguageName($orderLanguage);
             $data['zs_order_language_code'] = strtoupper($orderLanguage);
+        }
+
+        // Get all event data from DataExposer (automatically includes all staff fields and future additions)
+        // Add zs_ prefix to all fields that don't already have it
+        $eventData = DataExposer::getOrderEventData($order);
+        foreach ($eventData as $key => $value) {
+            $prefixedKey = strpos($key, 'zs_') === 0 ? $key : 'zs_' . $key;
+            $data[$prefixedKey] = $value;
         }
     }
 

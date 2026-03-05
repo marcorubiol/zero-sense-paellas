@@ -45,18 +45,17 @@ class DataExposer
                 'budget_email_content' => __('Budget Email Content', 'zero-sense'),
                 'final_details_email_content' => __('Final Details Email Content', 'zero-sense'),
                 'marketing_consent' => __('Marketing Consent', 'zero-sense'),
-                'staff_cap_de_bolo' => __('Staff: Cap de Bolo', 'zero-sense'),
-                'staff_cuiner_a' => __('Staff: Cuiner/a', 'zero-sense'),
-                'staff_ajudant_a_de_cuina' => __('Staff: Ajudant/a de cuina', 'zero-sense'),
-                'staff_cambrer_a_barra' => __('Staff: Cambrer/a - Barra', 'zero-sense'),
-                'staff_cockteler_a' => __('Staff: Cockteler/a', 'zero-sense'),
-                'staff_tallador_a_de_pernil' => __('Staff: Tallador/a de pernil', 'zero-sense'),
+                'staff_jefe_voluntarios' => __('Staff: Jefe de voluntarios', 'zero-sense'),
+                'staff_cocineros' => __('Staff: Cocineros', 'zero-sense'),
+                'staff_ayudantes' => __('Staff: Ayudantes', 'zero-sense'),
+                'staff_camareros' => __('Staff: Camareros', 'zero-sense'),
+                'staff_barra' => __('Staff: Barra', 'zero-sense'),
+                'staff_coqueteles' => __('Staff: Coqueteles', 'zero-sense'),
+                'staff_tallador_pernil' => __('Staff: Tallador de pernil', 'zero-sense'),
                 'staff_all_formatted' => __('Staff: All (Formatted)', 'zero-sense'),
-                'staff_kitchen_names' => __('Staff: Kitchen Team Names (Cap de Bolo, Cuiner/a, Ajudant/a de cuina)', 'zero-sense'),
                 'google_calendar_event_id' => __('Google Calendar Event ID', 'zero-sense'),
                 'event_reserved' => __('Event Reserved (yes/no)', 'zero-sense'),
                 'google_calendar_event_url' => __('Google Calendar Event URL', 'zero-sense'),
-                'zs_calendar_notes' => __('Calendar Notes', 'zero-sense'),
             ],
         ];
         
@@ -114,18 +113,16 @@ class DataExposer
             'budget_email_content' => $order->get_meta(MetaKeys::BUDGET_EMAIL_CONTENT),
             'final_details_email_content' => $order->get_meta(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT),
             'marketing_consent' => $order->get_meta(MetaKeys::MARKETING_CONSENT) === '1' ? 'yes' : 'no',
-            'staff_cap_de_bolo' => self::getStaffByRole($order, 'cap-de-bolo'),
-            'staff_cuiner_a' => self::getStaffByRole($order, 'cuiner-a'),
-            'staff_ajudant_a_de_cuina' => self::getStaffByRole($order, 'ajudant-a-de-cuina'),
-            'staff_cambrer_a_barra' => self::getStaffByRole($order, 'cambrer-a-barra'),
-            'staff_cockteler_a' => self::getStaffByRole($order, 'cockteler-a'),
-            'staff_tallador_a_de_pernil' => self::getStaffByRole($order, 'tallador-a-de-pernil'),
+            'staff_jefe_voluntarios' => self::getStaffByRole($order, 'jefe-voluntarios'),
+            'staff_cocineros' => self::getStaffByRole($order, 'cocineros'),
+            'staff_ayudantes' => self::getStaffByRole($order, 'ayudantes'),
+            'staff_camareros' => self::getStaffByRole($order, 'camareros'),
+            'staff_barra' => self::getStaffByRole($order, 'barra'),
+            'staff_coqueteles' => self::getStaffByRole($order, 'coqueteles'),
+            'staff_tallador_pernil' => self::getStaffByRole($order, 'tallador-pernil'),
             'staff_all_formatted' => self::getAllStaffFormatted($order),
-            'staff_kitchen_names' => self::getKitchenStaffNames($order),
             'vehicles'            => self::getVehiclesFormatted($order),
-            'event_reserved' => $order->get_meta(MetaKeys::EVENT_RESERVED, true),
             'google_calendar_event_id' => $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true),
-            'calendar_notes' => $order->get_meta(MetaKeys::CALENDAR_NOTES, true),
         ];
     }
 
@@ -200,48 +197,18 @@ class DataExposer
     }
 
     /**
-     * Get kitchen staff names only (Jefe de voluntarios, Cocineros, Ayudantes)
-     * Returns only the names without email or phone
-     */
-    private static function getKitchenStaffNames(WC_Order $order): string
-    {
-        $staffAssignments = $order->get_meta(MetaKeys::EVENT_STAFF, true);
-        if (!is_array($staffAssignments)) {
-            return '';
-        }
-
-        $kitchenRoles = ['cap-de-bolo', 'cuiner-a', 'ajudant-a-de-cuina'];
-        $staffNames = [];
-
-        foreach ($staffAssignments as $assignment) {
-            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
-                continue;
-            }
-            
-            if (in_array($assignment['role'], $kitchenRoles, true)) {
-                $staffId = (int) $assignment['staff_id'];
-                $staffPost = get_post($staffId);
-                if ($staffPost) {
-                    $staffNames[] = $staffPost->post_title;
-                }
-            }
-        }
-
-        return implode(', ', $staffNames);
-    }
-
-    /**
      * Get all staff formatted for display
      */
     private static function getAllStaffFormatted(WC_Order $order): string
     {
         $roles = [
-            'cap-de-bolo' => __('Cap de Bolo', 'zero-sense'),
-            'cuiner-a' => __('Cuiner/a', 'zero-sense'),
-            'ajudant-a-de-cuina' => __('Ajudant/a de cuina', 'zero-sense'),
-            'cambrer-a-barra' => __('Cambrer/a - Barra', 'zero-sense'),
-            'cockteler-a' => __('Cockteler/a', 'zero-sense'),
-            'tallador-a-de-pernil' => __('Tallador/a de pernil', 'zero-sense'),
+            'jefe-voluntarios' => __('Jefe de voluntarios', 'zero-sense'),
+            'cocineros' => __('Cocineros', 'zero-sense'),
+            'ayudantes' => __('Ayudantes', 'zero-sense'),
+            'camareros' => __('Camareros', 'zero-sense'),
+            'barra' => __('Barra', 'zero-sense'),
+            'coqueteles' => __('Coqueteles', 'zero-sense'),
+            'tallador-pernil' => __('Tallador de pernil', 'zero-sense'),
         ];
 
         $output = [];

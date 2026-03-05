@@ -99,6 +99,50 @@
 
 .zs-spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--zs-color-border); border-top-color: var(--zs-color-primary); border-radius:50%; animation: zsSpin .8s linear infinite; }
 @keyframes zsSpin { to { transform: rotate(360deg); } }
+
+/* Clear Cache Button */
+.zs-btn-cache {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--zs-color-border);
+  border-radius: 4px;
+  background: var(--zs-color-white);
+  color: var(--zs-color-primary);
+  font-size: var(--zs-font-size-xs);
+  font-family: var(--zs-font-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zs-btn-cache:hover {
+  border-color: var(--zs-color-primary);
+  background: var(--zs-color-bg);
+}
+
+.zs-btn-cache:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.zs-btn-cache .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 1;
+}
+
+.zs-btn-cache .dashicons.zs-spin {
+  animation: zsSpin 0.8s linear infinite;
+}
+
+.zs-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
 /* Zerø Sense v3.0 Admin Styles */
 :root {
     --zs-color-primary: #2c2c2c;

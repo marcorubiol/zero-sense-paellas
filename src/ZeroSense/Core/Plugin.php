@@ -49,6 +49,9 @@ class Plugin
      */
     private function init(): void
     {
+        // One-time cleanup of removed features (Migration Tools)
+        $this->cleanupRemovedFeatures();
+
         // Initialize feature manager
         $this->featureManager = new FeatureManager();
         $this->featureManager->registerCacheInvalidation();
@@ -58,6 +61,28 @@ class Plugin
         // Initialize admin dashboard
         if (is_admin()) {
             $this->adminDashboard = new AdminDashboard($this->featureManager);
+        }
+    }
+
+    /**
+     * Cleanup options from removed features
+     * Runs once on version upgrade
+     */
+    private function cleanupRemovedFeatures(): void
+    {
+        $currentVersion = get_option('zs_plugin_version', '0.0.0');
+        
+        // Only run cleanup once when upgrading to 3.4.5+
+        if (version_compare($currentVersion, '3.4.5', '<')) {
+            // Remove Migration Tools options
+            delete_option('zs_metabox_migration_enabled');
+            delete_option('zs_order_validation_enabled');
+            
+            // Force clear feature cache to remove deleted features
+            (new FeatureCache())->clear();
+            
+            // Update version marker
+            update_option('zs_plugin_version', ZERO_SENSE_VERSION);
         }
     }
 

@@ -3,9 +3,11 @@ namespace ZeroSense\Features\Integrations\Flowmattic;
 
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Core\Logger;
+use ZeroSense\Utilities\LogDeletionTrait;
 
 class Flowmattic implements FeatureInterface
 {
+    use LogDeletionTrait;
     private const WORKFLOW_EXECUTIONS_OPTION = 'zs_flowmattic_workflow_executions';
     
     // Email send status constants (public so runtime can reference them)
@@ -1335,6 +1337,7 @@ class Flowmattic implements FeatureInterface
         // Add Holded metaboxes to order admin
         add_action('add_meta_boxes', [$this, 'addHoldedActionsMetabox']);
         add_action('add_meta_boxes', [$this, 'addHoldedLogsMetabox']);
+        add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
         add_action('wp_ajax_zs_flow_trigger_holded_sync', [$this, 'ajaxTriggerHoldedSync']);
     }
 
@@ -2076,7 +2079,7 @@ class Flowmattic implements FeatureInterface
         // Show first 3 logs
         for ($i = 0; $i < min(3, $totalLogs); $i++) {
             $log = $emailLogs[$i];
-            $this->renderSingleEmailLog($log, false);
+            $this->renderSingleEmailLog($log, false, $orderId);
         }
         
         // Show remaining logs (hidden initially)
@@ -2084,7 +2087,7 @@ class Flowmattic implements FeatureInterface
             echo '<div id="' . esc_attr($listId) . '" class="zs-hidden-logs">';
             for ($i = 3; $i < $totalLogs; $i++) {
                 $log = $emailLogs[$i];
-                $this->renderSingleEmailLog($log, false);
+                $this->renderSingleEmailLog($log, false, $orderId);
             }
             echo '</div>';
             
@@ -2118,17 +2121,23 @@ class Flowmattic implements FeatureInterface
             
         });
         </script>';
+        
+        $this->enqueueLogDeletionScript();
     }
 
     /**
      * Render a single email log item
      */
-    private function renderSingleEmailLog(array $log, bool $isCompact = true): void
+    private function renderSingleEmailLog(array $log, bool $isCompact = true, int $orderId = 0): void
     {
         $statusClass = 'zs-' . $log['status'];
         $badge = $this->getStatusBadge($log['status']);
         
         echo '<div class="zs-log-item ' . esc_attr($statusClass) . '">';
+        if ($orderId > 0) {
+            $uniqueId = $this->generateUniqueId($log);
+            $this->renderLogDeleteButton(0, 'zs_workflow_executions', $orderId, $uniqueId);
+        }
         echo $badge;
         echo '<div class="zs-log-title">';
         echo '<strong>' . esc_html($log['description']) . '</strong>';
@@ -2409,7 +2418,7 @@ class Flowmattic implements FeatureInterface
         $hidden = array_slice($logs, 3);
         
         foreach ($visible as $log) {
-            $this->renderSingleWorkflowLog($log);
+            $this->renderSingleWorkflowLog($log, $orderId);
         }
         
         if (!empty($hidden)) {
@@ -2422,7 +2431,7 @@ class Flowmattic implements FeatureInterface
             
             echo '<div id="' . esc_attr($listId) . '" class="zs-hidden-logs" style="display:none;">';
             foreach ($hidden as $log) {
-                $this->renderSingleWorkflowLog($log);
+                $this->renderSingleWorkflowLog($log, $orderId);
             }
             echo '</div>';
             
@@ -2449,17 +2458,23 @@ class Flowmattic implements FeatureInterface
         }
         
         echo '</div>';
+        
+        $this->enqueueLogDeletionScript();
     }
 
     /**
      * Render a single workflow log item (for Holded logs)
      */
-    private function renderSingleWorkflowLog(array $log): void
+    private function renderSingleWorkflowLog(array $log, int $orderId = 0): void
     {
         $statusClass = 'zs-' . $log['status'];
         $badge = $this->getStatusBadge($log['status']);
         
         echo '<div class="zs-log-item ' . esc_attr($statusClass) . '">';
+        if ($orderId > 0) {
+            $uniqueId = $this->generateUniqueId($log);
+            $this->renderLogDeleteButton(0, 'zs_workflow_executions', $orderId, $uniqueId);
+        }
         echo $badge;
         echo '<div class="zs-log-title">';
         echo '<strong>' . esc_html($log['description']) . '</strong>';

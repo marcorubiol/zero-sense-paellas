@@ -3,7 +3,7 @@
  * Plugin Name: Zerø Sense
  * Plugin URI: https://paellasencasa.com
  * Description: Modern PSR-4 WordPress plugin for Paellas en Casa website with custom fields migration and HPOS compatibility
- * Version: 3.4.0
+ * Version: 3.4.5
  * Author: Zero Sense
  * Author URI: https://zerosense.studio
  * Text Domain: zero-sense
@@ -60,14 +60,18 @@ function zero_sense_autoloader_error()
  * @param string|int $order_id Order ID
  * @param string $event_id Google Calendar Event ID
  * @param string $event_title Event title (optional)
+ * @param string $calendar_id Google Calendar ID (optional)
+ * @param string $trigger_source 'manual' or 'automatic' (optional, defaults to 'automatic')
  * @return array Response with success status and message
  */
-function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = ''): array
+function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '', $calendar_id = '', $trigger_source = 'automatic'): array
 {
     try {
         $orderId = absint($order_id);
         $eventId = sanitize_text_field($event_id);
         $eventTitle = sanitize_text_field($event_title);
+        $calendarId = sanitize_text_field($calendar_id);
+        $triggerSource = in_array($trigger_source, ['manual', 'automatic'], true) ? $trigger_source : 'automatic';
 
         if ($orderId === 0) {
             return [
@@ -91,24 +95,47 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '')
             ];
         }
 
-        // Save event ID
+        // Auto-detect trigger source from manual flag if not explicitly set
+        if ($triggerSource === 'automatic') {
+            $isManualFlag = $order->get_meta('_zs_manual_trigger', true) === 'yes';
+            if ($isManualFlag) {
+                $triggerSource = 'manual';
+                $order->delete_meta_data('_zs_manual_trigger');
+            }
+        }
+
+        // Check if event already exists (to determine if this is create or update)
+        $existingEventId = $order->get_meta('zs_google_calendar_event_id', true);
+        $isUpdate = ($existingEventId !== '' && $existingEventId !== false);
+
+        // Save event ID and calendar ID
         $order->update_meta_data('zs_google_calendar_event_id', $eventId);
+        if ($calendarId !== '') {
+            $order->update_meta_data('zs_google_calendar_id', $calendarId);
+        }
         $order->save_meta_data();
 
         // Add log entry if CalendarLogs class is available
         if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
             $logData = [
                 'event_id' => $eventId,
-                'trigger_source' => 'automatic',
+                'trigger_source' => $triggerSource,
             ];
             
             if ($eventTitle !== '') {
                 $logData['event_title'] = $eventTitle;
             }
+            
+            if ($calendarId !== '') {
+                $logData['calendar_id'] = $calendarId;
+            }
 
+            // Log as 'updated' if event already existed, otherwise 'created'
+            $logType = $isUpdate ? 'updated' : 'created';
+            
             \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
                 $order,
-                'created',
+                $logType,
                 $logData
             );
         }
@@ -118,6 +145,72 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '')
             'message' => 'Event ID saved successfully',
             'order_id' => $orderId,
             'event_id' => $eventId,
+            'calendar_id' => $calendarId,
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+        ];
+    }
+}
+
+/**
+ * Global helper function for FlowMattic to delete Google Calendar Event ID
+ * 
+ * @param string|int $order_id Order ID
+ * @param string $trigger_source 'manual' or 'automatic' (optional, defaults to 'automatic')
+ * @return array Response with success status and message
+ */
+function zs_delete_calendar_event_id($order_id, $trigger_source = 'automatic'): array
+{
+    try {
+        $orderId = absint($order_id);
+        $triggerSource = in_array($trigger_source, ['manual', 'automatic'], true) ? $trigger_source : 'automatic';
+
+        if ($orderId === 0) {
+            return [
+                'success' => false,
+                'message' => 'Invalid order ID',
+            ];
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return [
+                'success' => false,
+                'message' => 'Order not found',
+            ];
+        }
+
+        // Get event ID before deleting (for log)
+        $eventId = $order->get_meta('zs_google_calendar_event_id', true);
+
+        // Delete event ID and calendar ID
+        $order->delete_meta_data('zs_google_calendar_event_id');
+        $order->delete_meta_data('zs_google_calendar_id');
+        $order->delete_meta_data(\ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys::EVENT_RESERVED);
+        $order->save_meta_data();
+
+        // Add log entry if CalendarLogs class is available
+        if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+            $logData = [
+                'event_id' => $eventId,
+                'trigger_source' => $triggerSource,
+            ];
+
+            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
+                $order,
+                'deleted',
+                $logData
+            );
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Event ID deleted successfully',
+            'order_id' => $orderId,
         ];
 
     } catch (\Throwable $e) {
@@ -190,3 +283,72 @@ function zero_sense_uninstall()
 register_activation_hook(__FILE__, 'zero_sense_activate');
 register_deactivation_hook(__FILE__, 'zero_sense_deactivate');
 register_uninstall_hook(__FILE__, 'zero_sense_uninstall');
+
+/**
+ * Global helper function to check if trigger was manual (from metabox button)
+ * This checks and clears a temporary flag set by AJAX handlers
+ * 
+ * @param string|int $order_id Order ID
+ * @return string 'manual' or 'automatic'
+ */
+function zs_get_trigger_source($order_id): string
+{
+    $orderId = absint($order_id);
+    if ($orderId === 0) {
+        return 'automatic';
+    }
+
+    $order = wc_get_order($orderId);
+    if (!$order instanceof WC_Order) {
+        return 'automatic';
+    }
+
+    // Check if manual flag is set
+    $isManual = $order->get_meta('_zs_manual_trigger', true) === 'yes';
+    
+    // Clear the flag immediately after reading
+    if ($isManual) {
+        $order->delete_meta_data('_zs_manual_trigger');
+        $order->save_meta_data();
+    }
+    
+    return $isManual ? 'manual' : 'automatic';
+}
+
+/**
+ * Global helper function for FlowMattic to clear calendar sync flag
+ * Call this after successfully syncing to Google Calendar
+ * 
+ * @param string|int $order_id Order ID
+ * @return array Response with success status
+ */
+function zs_clear_calendar_sync_flag($order_id): array
+{
+    try {
+        $orderId = absint($order_id);
+        if ($orderId === 0) {
+            return ['success' => false, 'message' => 'Invalid order ID'];
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return ['success' => false, 'message' => 'Order not found'];
+        }
+
+        // Clear the sync flag
+        $order->delete_meta_data(\ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys::CALENDAR_NEEDS_SYNC);
+        $order->save_meta_data();
+
+        return [
+            'success' => true,
+            'message' => 'Sync flag cleared',
+            'order_id' => $orderId,
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+        ];
+    }
+}

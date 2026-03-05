@@ -32,6 +32,7 @@ class AdminDashboard
         add_action('admin_init', [$this, 'handleFormSubmission']);
         add_action('wp_ajax_zs_toggle_feature', [$this, 'handleAjaxToggle']);
         add_action('wp_ajax_zs_save_config', [$this, 'handleAjaxSaveConfig']);
+        add_action('wp_ajax_zs_clear_cache', [$this, 'handleClearCache']);
     }
 
     /**
@@ -245,6 +246,10 @@ class AdminDashboard
                         <p class="zs-version-info">
                             <?php echo '<code>v:' . ZERO_SENSE_VERSION . '</code>'; ?>
                         </p>
+                        <button type="button" id="zs-clear-cache-btn" class="zs-btn-cache">
+                            <span class="dashicons dashicons-update"></span>
+                            <?php _e('Clear Cache', 'zero-sense'); ?>
+                        </button>
                     </div>
                 </div>
                 
@@ -744,5 +749,41 @@ class AdminDashboard
             'feature' => $featureName,
             'saved_fields' => $savedFields
         ]);
+    }
+
+    /**
+     * Handle AJAX clear cache request
+     */
+    public function handleClearCache(): void
+    {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'zs_admin_nonce')) {
+            wp_send_json_error('Invalid nonce');
+            return;
+        }
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Permission denied');
+            return;
+        }
+
+        try {
+            // Clear the feature cache
+            $this->featureManager->clearCache();
+            
+            // Clear WordPress object cache
+            wp_cache_flush();
+            
+            // Force reload features to ensure fresh scan
+            $this->featureManager->reloadFeatures();
+            
+            wp_send_json_success([
+                'message' => __('Feature cache cleared successfully', 'zero-sense')
+            ]);
+        } catch (\Exception $e) {
+            Logger::error('Error clearing feature cache', $e->getMessage());
+            wp_send_json_error('Error clearing cache: ' . $e->getMessage());
+        }
     }
 }

@@ -3,13 +3,16 @@ namespace ZeroSense\Features\WooCommerce\OrderStatuses\Components;
 
 use WC_Order;
 use ZeroSense\Features\WooCommerce\OrderStatuses\Support\StatusLogs;
+use ZeroSense\Utilities\LogDeletionTrait;
 
 class StatusLogMetabox
 {
+    use LogDeletionTrait;
     public function register(): void
     {
         if (!is_admin()) { return; }
         add_action('add_meta_boxes', [$this, 'addMetabox']);
+        add_action('wp_ajax_zs_delete_log_entry', [$this, 'ajaxDeleteLogEntry']);
     }
 
     public function addMetabox(): void
@@ -60,7 +63,7 @@ class StatusLogMetabox
         } else {
             $count = 0; $max = 3; $hasMore = count($logs) > $max;
             echo '<div id="zs-status-logs-list">';
-            foreach ($logs as $log) {
+            foreach ($logs as $index => $log) {
                 $count++;
                 $hidden = ($count > $max) ? ' style="display:none" class="zs-hidden"' : '';
                 
@@ -105,6 +108,7 @@ class StatusLogMetabox
                 $total = isset($log['order_total']) ? wc_price((float) $log['order_total'], ['currency' => $order->get_currency()]) : '';
 
                 echo '<div' . $hidden . ' class="zs-log-item ' . esc_attr($itemClass) . '">';
+                $this->renderLogDeleteButton($index, 'zs_order_status_logs', $orderId);
                 echo '<div class="zs-log-title"><strong>' . sprintf(__('From %s → %s', 'zero-sense'), $from, $to) . '</strong></div>';
                 echo '<div class="zs-log-time">' . esc_html($ts);
                 if ($userName) {
@@ -137,5 +141,7 @@ class StatusLogMetabox
         }
 
         echo '</div>';
+        
+        $this->enqueueLogDeletionScript();
     }
 }
