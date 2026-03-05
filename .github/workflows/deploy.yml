@@ -35,10 +35,20 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           key: ${{ secrets.SFTP_KEY }}
           script: |
-            # Remove deleted OrderValidationPage.php
+            # Remove deleted Migration features
             rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration/OrderValidationPage.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration/MetaBoxMigrator.php" 2>/dev/null || true
             # Remove Migration directory if empty
             rmdir "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration" 2>/dev/null || true
+            
+            # Remove deleted Service Location column feature
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/OrderManagement/AdminOrderServiceLocation.php" 2>/dev/null || true
+            
+            # Remove debug scripts
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/debug-validation-page.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/check-validation.php" 2>/dev/null || true
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/force-delete-validation.php" 2>/dev/null || true
+            
             echo "Cleanup completed"
 
       - name: Clear caches post-deploy
