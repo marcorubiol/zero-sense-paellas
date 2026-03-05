@@ -78,6 +78,9 @@ class Plugin
             delete_option('zs_metabox_migration_enabled');
             delete_option('zs_order_validation_enabled');
             
+            // Force clear feature cache to remove deleted features
+            (new FeatureCache())->clear();
+            
             // Update version marker
             update_option('zs_plugin_version', ZERO_SENSE_VERSION);
         }
