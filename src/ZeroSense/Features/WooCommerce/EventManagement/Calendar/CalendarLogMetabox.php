@@ -651,12 +651,28 @@ class CalendarLogMetabox
             wp_send_json_error('Order not found');
         }
         
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        
         // Mark as reserved BEFORE triggering workflow
         $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
         $order->save_meta_data();
         
-        // Trigger FlowMattic workflow to update calendar title (remove "PRE |")
-        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'manual');
+        // Add log entry
+        if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+            $logData = [
+                'event_id' => $eventId,
+                'trigger_source' => 'manual',
+            ];
+
+            CalendarLogs::add(
+                $order,
+                'reserved',
+                $logData
+            );
+        }
+        
+        // Trigger FlowMattic workflow to update calendar (remove "PRE |" from title)
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
         
         wp_send_json_success(['message' => 'Event marked as reserved and sync triggered']);
     }

@@ -378,6 +378,20 @@ class BulkSyncPage implements FeatureInterface
             $order->update_meta_data(MetaKeys::EVENT_RESERVED, 'yes');
             $order->save_meta_data();
             
+            // Add log entry
+            if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
+                $logData = [
+                    'event_id' => $eventId,
+                    'trigger_source' => 'automatic',
+                ];
+
+                \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
+                    $order,
+                    'reserved',
+                    $logData
+                );
+            }
+            
             // Trigger FlowMattic workflow to update calendar (remove "PRE |" from title)
             do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
             

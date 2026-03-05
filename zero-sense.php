@@ -61,15 +61,17 @@ function zero_sense_autoloader_error()
  * @param string $event_id Google Calendar Event ID
  * @param string $event_title Event title (optional)
  * @param string $calendar_id Google Calendar ID (optional)
+ * @param string $trigger_source 'manual' or 'automatic' (optional, defaults to 'automatic')
  * @return array Response with success status and message
  */
-function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '', $calendar_id = ''): array
+function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '', $calendar_id = '', $trigger_source = 'automatic'): array
 {
     try {
         $orderId = absint($order_id);
         $eventId = sanitize_text_field($event_id);
         $eventTitle = sanitize_text_field($event_title);
         $calendarId = sanitize_text_field($calendar_id);
+        $triggerSource = in_array($trigger_source, ['manual', 'automatic'], true) ? $trigger_source : 'automatic';
 
         if ($orderId === 0) {
             return [
@@ -93,6 +95,10 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '',
             ];
         }
 
+        // Check if event already exists (to determine if this is create or update)
+        $existingEventId = $order->get_meta('zs_google_calendar_event_id', true);
+        $isUpdate = ($existingEventId !== '' && $existingEventId !== false);
+
         // Save event ID and calendar ID
         $order->update_meta_data('zs_google_calendar_event_id', $eventId);
         if ($calendarId !== '') {
@@ -104,7 +110,7 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '',
         if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
             $logData = [
                 'event_id' => $eventId,
-                'trigger_source' => 'automatic',
+                'trigger_source' => $triggerSource,
             ];
             
             if ($eventTitle !== '') {
@@ -115,9 +121,12 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '',
                 $logData['calendar_id'] = $calendarId;
             }
 
+            // Log as 'updated' if event already existed, otherwise 'created'
+            $logType = $isUpdate ? 'updated' : 'created';
+            
             \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
                 $order,
-                'created',
+                $logType,
                 $logData
             );
         }
@@ -142,12 +151,14 @@ function zs_save_calendar_event_id($order_id, $event_id = '', $event_title = '',
  * Global helper function for FlowMattic to delete Google Calendar Event ID
  * 
  * @param string|int $order_id Order ID
+ * @param string $trigger_source 'manual' or 'automatic' (optional, defaults to 'automatic')
  * @return array Response with success status and message
  */
-function zs_delete_calendar_event_id($order_id): array
+function zs_delete_calendar_event_id($order_id, $trigger_source = 'automatic'): array
 {
     try {
         $orderId = absint($order_id);
+        $triggerSource = in_array($trigger_source, ['manual', 'automatic'], true) ? $trigger_source : 'automatic';
 
         if ($orderId === 0) {
             return [
@@ -177,7 +188,7 @@ function zs_delete_calendar_event_id($order_id): array
         if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
             $logData = [
                 'event_id' => $eventId,
-                'trigger_source' => 'manual',
+                'trigger_source' => $triggerSource,
             ];
 
             \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
