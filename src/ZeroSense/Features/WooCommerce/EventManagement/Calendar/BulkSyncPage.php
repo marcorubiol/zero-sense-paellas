@@ -249,6 +249,35 @@ class BulkSyncPage implements FeatureInterface
         if (!isset($_POST['continue_batch'])) {
             // Fresh start - clear session
             $_SESSION[$sessionKey] = [];
+            
+            // CLEANUP PHASE: Delete all existing calendar event IDs from eligible orders
+            $cleanupArgs = [
+                'limit' => -1,
+                'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
+                'return' => 'ids',
+            ];
+            
+            $cleanupOrderIds = wc_get_orders($cleanupArgs);
+            $cleanedCount = 0;
+            
+            foreach ($cleanupOrderIds as $orderId) {
+                $order = wc_get_order($orderId);
+                if (!$order) {
+                    continue;
+                }
+                
+                $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+                if ($eventId && $eventId !== '') {
+                    $order->delete_meta_data(MetaKeys::GOOGLE_CALENDAR_EVENT_ID);
+                    $order->delete_meta_data(MetaKeys::GOOGLE_CALENDAR_ID);
+                    $order->delete_meta_data(MetaKeys::EVENT_RESERVED);
+                    $order->save_meta_data();
+                    $cleanedCount++;
+                }
+            }
+            
+            // Store cleanup info in session for display
+            $_SESSION[$sessionKey . '_cleaned'] = $cleanedCount;
         }
         
         $processedIds = $_SESSION[$sessionKey] ?? [];
@@ -276,9 +305,17 @@ class BulkSyncPage implements FeatureInterface
         $totalOrders = count($allOrderIds);
         $totalProcessed = count($processedIds);
         $totalRemaining = count($remainingIds);
+        $cleanedCount = $_SESSION[$sessionKey . '_cleaned'] ?? 0;
         
         echo '<div class="wrap"><h1>' . esc_html__('Bulk Create & Reserve Results', 'zero-sense') . '</h1>';
         echo '<div class="card" style="max-width: 800px;">';
+        
+        if ($cleanedCount > 0 && $totalProcessed === 0) {
+            echo '<p style="background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin-bottom: 15px;">';
+            echo '<strong>✓ ' . sprintf(__('Cleanup: Removed %d existing event IDs before creating new events', 'zero-sense'), $cleanedCount) . '</strong>';
+            echo '</p>';
+        }
+        
         echo '<p><strong>' . sprintf(__('Progress: %d / %d orders processed (%d remaining)', 'zero-sense'), $totalProcessed, $totalOrders, $totalRemaining) . '</strong></p>';
         echo '<p>' . sprintf(__('Processing batch of %d orders...', 'zero-sense'), count($batchIds)) . '</p>';
         echo '<ul>';
