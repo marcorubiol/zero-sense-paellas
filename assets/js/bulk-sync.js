@@ -59,12 +59,7 @@
                 this.queue = queueResponse.data.queue;
                 this.config.onQueueReady(this.queue.length);
 
-                // If create operation, run cleanup first
-                if (this.operation === 'create' && this.queue.length > 0) {
-                    await this.runCleanup();
-                }
-
-                // Process queue
+                // Process queue (cleanup is now a separate operation)
                 await this.processQueue();
 
                 this.config.onComplete(this.stats);
@@ -114,18 +109,27 @@
                     await this.waitForResume();
                 }
 
-                if (!this.running) break;
-
                 const orderId = this.queue[i];
-                const delay = this.config.getDelay();
+                const delay = this.config.getDelay() * 1000;
 
                 try {
-                    const response = await $.post(window.zsBulkSync.ajaxUrl, {
-                        action: 'zs_bulk_process_one',
-                        nonce: window.zsBulkSync.nonce,
-                        order_id: orderId,
-                        operation: this.operation
-                    });
+                    let response;
+                    
+                    if (this.operation === 'cleanup') {
+                        response = await $.post(window.zsBulkSync.ajaxUrl, {
+                            action: 'zs_bulk_cleanup_one',
+                            nonce: window.zsBulkSync.nonce,
+                            order_id: orderId
+                        });
+                    } else {
+                        response = await $.post(window.zsBulkSync.ajaxUrl, {
+                            action: 'zs_bulk_process_one',
+                            nonce: window.zsBulkSync.nonce,
+                            order_id: orderId,
+                            operation: this.operation,
+                            statuses: this.statuses
+                        });
+                    }
 
                     if (response.success) {
                         const action = response.data.action;
@@ -137,43 +141,28 @@
                             }
                         } else if (action === 'deleted') {
                             this.stats.deleted++;
+                        } else if (action === 'cleaned') {
+                            this.stats.cleaned++;
                         } else if (action === 'skipped') {
                             this.stats.skipped++;
                         }
 
-                        this.config.onProgress(
-                            i + 1,
-                            this.queue.length,
-                            response.data.message,
-                            action,
-                            this.stats
-                        );
+                        this.processed++;
+                        this.config.onProgress(this.processed, this.queue.length, response.data.message, action, this.stats);
                     } else {
                         this.stats.errors++;
-                        this.config.onProgress(
-                            i + 1,
-                            this.queue.length,
-                            `Order #${orderId}: Error - ${response.data}`,
-                            'error',
-                            this.stats
-                        );
+                        this.processed++;
+                        this.config.onProgress(this.processed, this.queue.length, response.data || 'Unknown error', 'error', this.stats);
                     }
                 } catch (error) {
                     this.stats.errors++;
-                    this.config.onProgress(
-                        i + 1,
-                        this.queue.length,
-                        `Order #${orderId}: Error - ${error.message}`,
-                        'error',
-                        this.stats
-                    );
+                    this.processed++;
+                    this.config.onProgress(this.processed, this.queue.length, error.message, 'error', this.stats);
                 }
-
-                this.processed = i + 1;
 
                 // Delay before next order
                 if (i < this.queue.length - 1) {
-                    await this.delay(delay * 1000);
+                    await this.delay(delay);
                 }
             }
         }
@@ -489,9 +478,134 @@
         }
     };
 
+    // Cleanup operation UI controller
+    const cleanupUI = {
+        processor: null,
+        
+        init() {
+            $('#zs-cleanup-start').on('click', () => this.start());
+            $('#zs-cleanup-pause').on('click', () => this.togglePause());
+            $('#zs-cleanup-cancel').on('click', () => this.cancel());
+        },
+
+        start() {
+            if (!confirm('⚠️ WARNING: This will REMOVE all Google Calendar Event IDs from orders. You will need to recreate all events. This cannot be undone. Are you absolutely sure?')) {
+                return;
+            }
+
+            $('#zs-cleanup-start').hide();
+            $('#zs-cleanup-pause').show();
+            $('#zs-cleanup-cancel').show();
+            $('#zs-cleanup-delay').prop('disabled', true);
+            $('.zs-bulk-section').eq(1).find('.zs-bulk-progress').show();
+            $('.zs-bulk-section').eq(1).find('.zs-bulk-stats').show();
+            $('#zs-cleanup-log').show().empty();
+
+            this.processor = new BulkProcessor('cleanup', {
+                getDelay: () => parseInt($('#zs-cleanup-delay').val()),
+                onStart: () => this.updateLog('Starting cleanup...', 'info'),
+                onQueueReady: (total) => this.updateLog(`Found ${total} orders with event IDs to clean`, 'info'),
+                onCleanupStart: () => {},
+                onCleanupProgress: () => {},
+                onCleanupComplete: () => {},
+                onProgress: (current, total, message, action, stats) => {
+                    const percent = Math.round((current / total) * 100);
+                    $('.zs-bulk-section').eq(1).find('.zs-progress-fill').css('width', percent + '%');
+                    $('.zs-bulk-section').eq(1).find('.zs-progress-text').text(`${percent}% (${current}/${total} orders)`);
+                    
+                    const eta = this.processor.getETA();
+                    if (eta > 0) {
+                        $('.zs-bulk-section').eq(1).find('.zs-progress-eta').text(`Estimated time: ${this.formatTime(eta)}`);
+                    }
+                    
+                    this.updateStats(stats);
+                    this.updateLog(message, action);
+                },
+                onPause: () => {
+                    $('#zs-cleanup-pause').text('Resume');
+                    this.updateLog('⏸ Paused', 'info');
+                },
+                onResume: () => {
+                    $('#zs-cleanup-pause').text('Pause');
+                    this.updateLog('▶ Resumed', 'info');
+                },
+                onCancel: () => {
+                    this.reset();
+                    this.updateLog('✖ Cancelled', 'error');
+                },
+                onComplete: (stats) => {
+                    this.reset();
+                    this.updateLog(`✓ Complete! Cleaned: ${stats.cleaned}, Skipped: ${stats.skipped}, Errors: ${stats.errors}`, 'success');
+                },
+                onError: (message) => {
+                    this.reset();
+                    this.updateLog(`✖ Error: ${message}`, 'error');
+                }
+            });
+
+            this.processor.start();
+        },
+
+        togglePause() {
+            if (this.processor.paused) {
+                this.processor.resume();
+            } else {
+                this.processor.pause();
+            }
+        },
+
+        cancel() {
+            if (confirm('Are you sure you want to cancel?')) {
+                this.processor.cancel();
+            }
+        },
+
+        reset() {
+            $('#zs-cleanup-start').show();
+            $('#zs-cleanup-pause').hide().text('Pause');
+            $('#zs-cleanup-cancel').hide();
+            $('#zs-cleanup-delay').prop('disabled', false);
+        },
+
+        updateStats(stats) {
+            $('#zs-cleanup-count-cleaned').text(stats.cleaned);
+            $('#zs-cleanup-count-skipped').text(stats.skipped);
+            $('#zs-cleanup-count-errors').text(stats.errors);
+        },
+
+        updateLog(message, type) {
+            const icon = {
+                cleaned: '✓',
+                skipped: '⚠',
+                error: '✖',
+                info: '→',
+                success: '✓'
+            }[type] || '•';
+
+            const className = {
+                cleaned: 'success',
+                skipped: 'warning',
+                error: 'error',
+                info: 'info',
+                success: 'success'
+            }[type] || '';
+
+            const $log = $('#zs-cleanup-log');
+            $log.append(`<div class="zs-log-entry zs-log-${className}">${icon} ${message}</div>`);
+            $log.scrollTop($log[0].scrollHeight);
+        },
+
+        formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        }
+    };
+
     // Initialize on document ready
     $(document).ready(function() {
         createUI.init();
+        cleanupUI.init();
         deleteUI.init();
     });
 

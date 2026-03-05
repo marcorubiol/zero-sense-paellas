@@ -151,6 +151,49 @@ class BulkSyncPage implements FeatureInterface
                 <div class="zs-bulk-log" id="zs-create-log" style="display:none;"></div>
             </div>
             
+            <!-- CLEANUP EVENT IDS -->
+            <div class="card zs-bulk-section">
+                <h2 style="color: #d63638;"><?php esc_html_e('⚠️ Cleanup Event IDs (Dangerous)', 'zero-sense'); ?></h2>
+                <p style="color: #d63638;"><strong><?php esc_html_e('WARNING: This will remove all Google Calendar Event IDs from orders. Use only if you need to start fresh!', 'zero-sense'); ?></strong></p>
+                
+                <div class="zs-bulk-controls">
+                    <button type="button" id="zs-cleanup-start" class="button button-large" style="background: #d63638; border-color: #d63638; color: #fff;">
+                        <?php esc_html_e('Start Cleanup (Remove Event IDs)', 'zero-sense'); ?>
+                    </button>
+                    <button type="button" id="zs-cleanup-pause" class="button button-large" style="display:none;">
+                        <?php esc_html_e('Pause', 'zero-sense'); ?>
+                    </button>
+                    <button type="button" id="zs-cleanup-cancel" class="button button-large" style="display:none;">
+                        <?php esc_html_e('Cancel', 'zero-sense'); ?>
+                    </button>
+                    
+                    <div class="zs-bulk-speed">
+                        <label><?php esc_html_e('Delay:', 'zero-sense'); ?></label>
+                        <select id="zs-cleanup-delay">
+                            <option value="0">0s (fast)</option>
+                            <option value="1" selected>1s</option>
+                            <option value="2">2s</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="zs-bulk-progress" style="display:none;">
+                    <div class="zs-progress-bar">
+                        <div class="zs-progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="zs-progress-text">0% (0/0 orders)</div>
+                    <div class="zs-progress-eta"></div>
+                </div>
+                
+                <div class="zs-bulk-stats" style="display:none;">
+                    <span class="zs-stat"><strong><?php esc_html_e('Cleaned:', 'zero-sense'); ?></strong> <span id="zs-cleanup-count-cleaned">0</span></span>
+                    <span class="zs-stat"><strong><?php esc_html_e('Skipped:', 'zero-sense'); ?></strong> <span id="zs-cleanup-count-skipped">0</span></span>
+                    <span class="zs-stat"><strong><?php esc_html_e('Errors:', 'zero-sense'); ?></strong> <span id="zs-cleanup-count-errors">0</span></span>
+                </div>
+                
+                <div class="zs-bulk-log" id="zs-cleanup-log" style="display:none;"></div>
+            </div>
+            
             <!-- DELETE EVENTS -->
             <div class="card zs-bulk-section">
                 <h2 style="color: #d63638;"><?php esc_html_e('Delete Calendar Events', 'zero-sense'); ?></h2>
@@ -377,11 +420,12 @@ class BulkSyncPage implements FeatureInterface
                 ]);
             }
             
-            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
-            
             $message .= ' + ' . __('reserved', 'zero-sense');
             $reserved = true;
         }
+        
+        // Always trigger sync workflow for FlowMattic (regardless of reservation status)
+        do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
         
         wp_send_json_success([
             'message' => $message,
