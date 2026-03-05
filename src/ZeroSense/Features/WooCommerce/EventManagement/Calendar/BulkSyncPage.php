@@ -352,7 +352,7 @@ class BulkSyncPage implements FeatureInterface
         $shouldReserve = in_array($orderStatus, ['deposit-paid', 'fully-paid', 'completed'], true);
         
         if (class_exists('\ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs')) {
-            CalendarLogs::add($order, 'created', [
+            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add($order, 'created', [
                 'event_id' => 'pending',
                 'trigger_source' => 'automatic',
             ]);
@@ -368,7 +368,7 @@ class BulkSyncPage implements FeatureInterface
             $order->save_meta_data();
             
             if (class_exists('\ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs')) {
-                CalendarLogs::add($order, 'reserved', [
+                \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add($order, 'reserved', [
                     'event_id' => 'pending',
                     'trigger_source' => 'automatic',
                 ]);
@@ -402,7 +402,7 @@ class BulkSyncPage implements FeatureInterface
         }
         
         if (class_exists('\ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs')) {
-            CalendarLogs::add($order, 'deleted', [
+            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add($order, 'deleted', [
                 'event_id' => $eventId,
                 'trigger_source' => 'automatic',
             ]);
