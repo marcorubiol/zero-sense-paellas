@@ -445,6 +445,13 @@ class CalendarLogMetabox
             wp_send_json_error('Invalid order ID');
         }
         
+        // Set temporary flag so FlowMattic knows this is manual
+        $order = wc_get_order($orderId);
+        if ($order) {
+            $order->update_meta_data('_zs_manual_trigger', 'yes');
+            $order->save_meta_data();
+        }
+        
         // Trigger FlowMattic workflow via class action
         do_action('zs_trigger_class_action_direct', 'zs-calendar-delete', $orderId);
         
