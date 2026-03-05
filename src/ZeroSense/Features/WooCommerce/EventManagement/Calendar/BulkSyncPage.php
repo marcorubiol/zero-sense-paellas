@@ -87,7 +87,15 @@ class BulkSyncPage implements FeatureInterface
                     <li><?php esc_html_e('Auto-reserves events for "Deposit Paid", "Fully Paid" and "Completed" orders', 'zero-sense'); ?></li>
                 </ul>
                 
-                <p><strong><?php esc_html_e('Warning:', 'zero-sense'); ?></strong> <?php esc_html_e('This process may take several minutes (2 seconds per order). Do not close this page until it completes.', 'zero-sense'); ?></p>
+                <p><strong><?php esc_html_e('How it works:', 'zero-sense'); ?></strong></p>
+                <ol style="margin-left: 20px;">
+                    <li><?php esc_html_e('Processes 20 orders at a time (5 seconds per order = ~100 seconds per batch)', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Shows results and progress after each batch', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Review the results, then click "Continue with next 20 orders" to process more', 'zero-sense'); ?></li>
+                    <li><?php esc_html_e('Session tracking prevents duplicates if you refresh or timeout', 'zero-sense'); ?></li>
+                </ol>
+                
+                <p><strong><?php esc_html_e('Warning:', 'zero-sense'); ?></strong> <?php esc_html_e('Do not close this page while a batch is processing.', 'zero-sense'); ?></p>
                 
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="zs-bulk-sync-form">
                     <input type="hidden" name="action" value="zs_bulk_sync_calendar">
@@ -153,6 +161,14 @@ class BulkSyncPage implements FeatureInterface
                             <?php esc_html_e('Deselect All', 'zero-sense'); ?>
                         </button>
                     </p>
+                    
+                    <p><strong><?php esc_html_e('How it works:', 'zero-sense'); ?></strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li><?php esc_html_e('Processes 20 orders at a time (5 seconds per order = ~100 seconds per batch)', 'zero-sense'); ?></li>
+                        <li><?php esc_html_e('Shows results and progress after each batch', 'zero-sense'); ?></li>
+                        <li><?php esc_html_e('Review the results, then click "Continue with next 20 orders" to process more', 'zero-sense'); ?></li>
+                        <li><?php esc_html_e('Session tracking prevents duplicates if you refresh or timeout', 'zero-sense'); ?></li>
+                    </ol>
                     
                     <p><strong style="color: #d63638;"><?php esc_html_e('DANGER:', 'zero-sense'); ?></strong> <?php esc_html_e('This will delete calendar events for orders with the selected statuses. This action cannot be undone.', 'zero-sense'); ?></p>
                     
