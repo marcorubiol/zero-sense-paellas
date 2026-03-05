@@ -713,15 +713,18 @@
 
     // Select All / Unselect All functionality
     function initSelectAllButtons() {
-        $('.zs-select-all').on('click', function(e) {
+        // Use event delegation to handle dynamically added elements
+        $(document).on('click', '.zs-select-all', function(e) {
             e.preventDefault();
             const target = $(this).data('target');
+            console.log('Select All clicked for:', target);
             $(`input[name="${target}"]`).prop('checked', true);
         });
 
-        $('.zs-unselect-all').on('click', function(e) {
+        $(document).on('click', '.zs-unselect-all', function(e) {
             e.preventDefault();
             const target = $(this).data('target');
+            console.log('Unselect All clicked for:', target);
             $(`input[name="${target}"]`).prop('checked', false);
         });
     }
