@@ -106,10 +106,18 @@ class BulkSyncPage implements FeatureInterface
         <div class="wrap">
             <h1><?php esc_html_e('Bulk Calendar Operations', 'zero-sense'); ?></h1>
             
-            <!-- CREATE & RESERVE EVENTS -->
+            <!-- CREATE EVENTS -->
             <div class="card zs-bulk-section">
-                <h2><?php esc_html_e('Create & Reserve Calendar Events', 'zero-sense'); ?></h2>
+                <h2><?php esc_html_e('Create Events', 'zero-sense'); ?></h2>
                 <p><?php esc_html_e('This will update each order (triggering automatic validation), then create Google Calendar events for all eligible orders and automatically reserve paid orders.', 'zero-sense'); ?></p>
+                
+                <div class="zs-status-selector">
+                    <label><input type="checkbox" name="create_statuses[]" value="pending" checked> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="create_statuses[]" value="deposit-paid" checked> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="create_statuses[]" value="fully-paid" checked> <?php esc_html_e('Fully Paid', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="create_statuses[]" value="processing" checked> <?php esc_html_e('Processing', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="create_statuses[]" value="completed" checked> <?php esc_html_e('Completed', 'zero-sense'); ?></label>
+                </div>
                 
                 <div class="zs-bulk-controls">
                     <button type="button" id="zs-create-start" class="button button-primary button-large">
@@ -155,6 +163,17 @@ class BulkSyncPage implements FeatureInterface
             <div class="card zs-bulk-section">
                 <h2 style="color: #d63638;"><?php esc_html_e('⚠️ Cleanup Event IDs (Dangerous)', 'zero-sense'); ?></h2>
                 <p style="color: #d63638;"><strong><?php esc_html_e('WARNING: This will remove all Google Calendar Event IDs from orders. Use only if you need to start fresh!', 'zero-sense'); ?></strong></p>
+                
+                <div class="zs-status-selector">
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="pending" checked> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="deposit-paid" checked> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="fully-paid" checked> <?php esc_html_e('Fully Paid', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="processing" checked> <?php esc_html_e('Processing', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="completed" checked> <?php esc_html_e('Completed', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="cancelled" checked> <?php esc_html_e('Cancelled', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="failed" checked> <?php esc_html_e('Failed', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="cleanup_statuses[]" value="refunded" checked> <?php esc_html_e('Refunded', 'zero-sense'); ?></label>
+                </div>
                 
                 <div class="zs-bulk-controls">
                     <button type="button" id="zs-cleanup-start" class="button button-large" style="background: #d63638; border-color: #d63638; color: #fff;">
@@ -261,16 +280,27 @@ class BulkSyncPage implements FeatureInterface
         }
 
         $operation = sanitize_text_field($_POST['operation'] ?? 'create');
+        $statuses = isset($_POST['statuses']) && is_array($_POST['statuses']) 
+            ? array_map('sanitize_text_field', $_POST['statuses']) 
+            : [];
+        
+        if (empty($statuses)) {
+            wp_send_json_error('No statuses selected');
+        }
         
         if ($operation === 'delete') {
-            $statuses = isset($_POST['statuses']) && is_array($_POST['statuses']) 
-                ? array_map('sanitize_text_field', $_POST['statuses']) 
-                : [];
-            
-            if (empty($statuses)) {
-                wp_send_json_error('No statuses selected');
-            }
-            
+            $args = [
+                'limit' => 500,
+                'status' => $statuses,
+                'return' => 'ids',
+                'meta_query' => [
+                    [
+                        'key' => MetaKeys::GOOGLE_CALENDAR_EVENT_ID,
+                        'compare' => 'EXISTS',
+                    ],
+                ],
+            ];
+        } elseif ($operation === 'cleanup') {
             $args = [
                 'limit' => 500,
                 'status' => $statuses,
@@ -283,9 +313,10 @@ class BulkSyncPage implements FeatureInterface
                 ],
             ];
         } else {
+            // create operation
             $args = [
                 'limit' => 500,
-                'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
+                'status' => $statuses,
                 'return' => 'ids',
                 'meta_query' => [
                     [

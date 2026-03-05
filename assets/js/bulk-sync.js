@@ -220,10 +220,21 @@
         },
 
         start() {
+            const statuses = [];
+            $('input[name="create_statuses[]"]:checked').each(function() {
+                statuses.push($(this).val());
+            });
+
+            if (statuses.length === 0) {
+                alert('Please select at least one status');
+                return;
+            }
+
             $('#zs-create-start').hide();
             $('#zs-create-pause').show();
             $('#zs-create-cancel').show();
             $('#zs-create-delay').prop('disabled', true);
+            $('input[name="create_statuses[]"]').prop('disabled', true);
             $('.zs-bulk-progress').first().show();
             $('.zs-bulk-stats').first().show();
             $('#zs-create-log').show().empty();
@@ -232,17 +243,9 @@
                 getDelay: () => parseInt($('#zs-create-delay').val()),
                 onStart: () => this.updateLog('Starting...', 'info'),
                 onQueueReady: (total) => this.updateLog(`Found ${total} orders to process`, 'info'),
-                onCleanupStart: (total) => this.updateLog(`Cleaning up existing event IDs from ${total} orders...`, 'info'),
-                onCleanupProgress: (current, total, message) => {
-                    const percent = Math.round((current / total) * 100);
-                    $('.zs-progress-fill').first().css('width', percent + '%');
-                    $('.zs-progress-text').first().text(`Cleanup: ${percent}% (${current}/${total})`);
-                },
-                onCleanupComplete: (cleaned) => {
-                    if (cleaned > 0) {
-                        this.updateLog(`✓ Cleaned ${cleaned} existing event IDs`, 'success');
-                    }
-                },
+                onCleanupStart: () => {},
+                onCleanupProgress: () => {},
+                onCleanupComplete: () => {},
                 onProgress: (current, total, message, action, stats) => {
                     const percent = Math.round((current / total) * 100);
                     $('.zs-progress-fill').first().css('width', percent + '%');
@@ -278,7 +281,7 @@
                 }
             });
 
-            this.processor.start();
+            this.processor.start(statuses);
         },
 
         togglePause() {
@@ -300,6 +303,7 @@
             $('#zs-create-pause').hide().text('Pause');
             $('#zs-create-cancel').hide();
             $('#zs-create-delay').prop('disabled', false);
+            $('input[name="create_statuses[]"]').prop('disabled', false);
         },
 
         updateStats(stats) {
@@ -489,7 +493,17 @@
         },
 
         start() {
-            if (!confirm('⚠️ WARNING: This will REMOVE all Google Calendar Event IDs from orders. You will need to recreate all events. This cannot be undone. Are you absolutely sure?')) {
+            const statuses = [];
+            $('input[name="cleanup_statuses[]"]:checked').each(function() {
+                statuses.push($(this).val());
+            });
+
+            if (statuses.length === 0) {
+                alert('Please select at least one status');
+                return;
+            }
+
+            if (!confirm(`⚠️ WARNING: This will REMOVE all Google Calendar Event IDs from orders with these statuses: ${statuses.join(', ')}. You will need to recreate all events. This cannot be undone. Are you absolutely sure?`)) {
                 return;
             }
 
@@ -497,6 +511,7 @@
             $('#zs-cleanup-pause').show();
             $('#zs-cleanup-cancel').show();
             $('#zs-cleanup-delay').prop('disabled', true);
+            $('input[name="cleanup_statuses[]"]').prop('disabled', true);
             $('.zs-bulk-section').eq(1).find('.zs-bulk-progress').show();
             $('.zs-bulk-section').eq(1).find('.zs-bulk-stats').show();
             $('#zs-cleanup-log').show().empty();
@@ -543,7 +558,7 @@
                 }
             });
 
-            this.processor.start();
+            this.processor.start(statuses);
         },
 
         togglePause() {
@@ -565,6 +580,7 @@
             $('#zs-cleanup-pause').hide().text('Pause');
             $('#zs-cleanup-cancel').hide();
             $('#zs-cleanup-delay').prop('disabled', false);
+            $('input[name="cleanup_statuses[]"]').prop('disabled', false);
         },
 
         updateStats(stats) {
