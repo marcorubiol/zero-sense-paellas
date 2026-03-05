@@ -164,6 +164,7 @@ class OrderValidationPage implements FeatureInterface
         $args = [
             'limit' => -1,
             'return' => 'ids',
+            'type' => 'shop_order',
         ];
 
         $orderIds = wc_get_orders($args);
@@ -171,7 +172,7 @@ class OrderValidationPage implements FeatureInterface
 
         foreach ($orderIds as $orderId) {
             $order = wc_get_order($orderId);
-            if (!$order) {
+            if (!$order || !$order instanceof \WC_Order) {
                 continue;
             }
 
@@ -196,6 +197,7 @@ class OrderValidationPage implements FeatureInterface
         $args = [
             'limit' => -1,
             'return' => 'ids',
+            'type' => 'shop_order',
         ];
 
         return count(wc_get_orders($args));
