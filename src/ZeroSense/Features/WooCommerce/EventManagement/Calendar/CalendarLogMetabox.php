@@ -637,6 +637,17 @@ class CalendarLogMetabox
         $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
         $order->save_meta_data();
         
+        // Trigger calendar sync if event exists
+        $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
+        if ($eventId && $eventId !== '') {
+            // Set manual trigger flag
+            $order->update_meta_data('_zs_manual_trigger', 'yes');
+            $order->save_meta_data();
+            
+            // Trigger sync workflow
+            do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId);
+        }
+        
         wp_send_json_success(['message' => __('Notes saved', 'zero-sense')]);
     }
     
