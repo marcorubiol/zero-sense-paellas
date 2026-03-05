@@ -124,19 +124,6 @@ class AdminOrderServiceLocation implements FeatureInterface
         $options = FieldOptions::getServiceLocationOptions();
         $locationName = $options[$locationKey] ?? $locationKey;
 
-        // Icon mapping
-        $icons = [
-            'home' => '🏠',
-            'venue' => '🏛️',
-            'outdoor' => '🌳',
-            'other' => '📍',
-        ];
-
-        $icon = $icons[$locationKey] ?? '📍';
-
-        echo '<span class="zs-service-location" style="display: inline-flex; align-items: center; gap: 0.3em;">';
-        echo '<span style="font-size: 1.1em;">' . esc_html($icon) . '</span>';
-        echo '<span>' . esc_html($locationName) . '</span>';
-        echo '</span>';
+        echo '<span class="zs-service-location">' . esc_html($locationName) . '</span>';
     }
 }
