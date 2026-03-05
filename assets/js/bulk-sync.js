@@ -713,39 +713,21 @@
 
     // Select All / Unselect All functionality
     function initSelectAllButtons() {
-        console.log('initSelectAllButtons called');
-        console.log('Found .zs-select-all elements:', $('.zs-select-all').length);
-        console.log('Found .zs-unselect-all elements:', $('.zs-unselect-all').length);
-        
-        // Use event delegation to handle dynamically added elements
         $(document).on('click', '.zs-select-all', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             const target = $(this).data('target');
-            console.log('Select All clicked for:', target);
-            const checkboxes = $(`input[name="${target}"]`);
-            console.log('Found checkboxes:', checkboxes.length);
-            checkboxes.prop('checked', true);
-            return false;
+            $(`input[name="${target}"]`).prop('checked', true);
         });
 
         $(document).on('click', '.zs-unselect-all', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             const target = $(this).data('target');
-            console.log('Unselect All clicked for:', target);
-            const checkboxes = $(`input[name="${target}"]`);
-            console.log('Found checkboxes:', checkboxes.length);
-            checkboxes.prop('checked', false);
-            return false;
+            $(`input[name="${target}"]`).prop('checked', false);
         });
-        
-        console.log('Event listeners attached');
     }
 
     // Initialize on document ready
     $(document).ready(function() {
-        console.log('Document ready - bulk-sync.js');
         statsUI.init();
         createUI.init();
         cleanupUI.init();
