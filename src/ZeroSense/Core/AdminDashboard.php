@@ -772,6 +772,12 @@ class AdminDashboard
             // Clear the feature cache
             $this->featureManager->clearCache();
             
+            // Clear WordPress object cache
+            wp_cache_flush();
+            
+            // Force reload features to ensure fresh scan
+            $this->featureManager->reloadFeatures();
+            
             wp_send_json_success([
                 'message' => __('Feature cache cleared successfully', 'zero-sense')
             ]);
