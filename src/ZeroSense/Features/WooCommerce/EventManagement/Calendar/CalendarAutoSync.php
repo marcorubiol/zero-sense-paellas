@@ -36,17 +36,13 @@ class CalendarAutoSync
 
     public function register(): void
     {
-        error_log('[CalendarAutoSync] Registering hooks...');
-        
-        // Use hook that fires after order is saved (works with both HPOS and legacy)
-        add_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10, 1);
-        
         // Auto-mark as reserved when order is paid
         add_action('woocommerce_order_status_deposit-paid', [$this, 'markAsReserved'], 10, 1);
         add_action('woocommerce_order_status_fully-paid', [$this, 'markAsReserved'], 10, 1);
         add_action('woocommerce_order_status_completed', [$this, 'markAsReserved'], 10, 1);
         
-        error_log('[CalendarAutoSync] Hooks registered successfully');
+        // Note: Automatic sync on field changes is disabled due to HPOS compatibility issues
+        // Use manual sync buttons in the metabox instead
     }
 
     /**
