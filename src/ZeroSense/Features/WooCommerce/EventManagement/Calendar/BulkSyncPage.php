@@ -109,7 +109,7 @@ class BulkSyncPage implements FeatureInterface
             <!-- CREATE & RESERVE EVENTS -->
             <div class="card zs-bulk-section">
                 <h2><?php esc_html_e('Create & Reserve Calendar Events', 'zero-sense'); ?></h2>
-                <p><?php esc_html_e('This will create Google Calendar events for all eligible orders and automatically reserve paid orders.', 'zero-sense'); ?></p>
+                <p><?php esc_html_e('This will update each order (triggering automatic validation), then create Google Calendar events for all eligible orders and automatically reserve paid orders.', 'zero-sense'); ?></p>
                 
                 <div class="zs-bulk-controls">
                     <button type="button" id="zs-create-start" class="button button-primary button-large">
