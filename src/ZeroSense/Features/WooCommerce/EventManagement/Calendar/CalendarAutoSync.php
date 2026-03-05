@@ -5,94 +5,72 @@ use WC_Order;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 
 /**
- * Auto-sync Google Calendar when order fields change
+ * Auto-sync Google Calendar when order is saved from admin
+ * Compatible with both HPOS and legacy post storage
  */
 class CalendarAutoSync
 {
-    /**
-     * Fields that trigger calendar sync when changed
-     */
-    private const MONITORED_FIELDS = [
-        '_billing_first_name',
-        '_billing_last_name',
-        'zs_event_service_location',
-        'zs_event_paellas_service_time',
-        'zs_event_adults',
-        'zs_event_children_5_to_8',
-        'zs_event_children_0_to_4',
-        'zs_event_total_guests',
-        'zs_event_staff',
-        'zs_calendar_notes',
-        'zs_event_date',
-        '_shipping_address_1',
-        '_shipping_city',
-        'zs_event_start_time',
-    ];
-
-    /**
-     * Throttle duration in seconds
-     */
-    private const THROTTLE_DURATION = 30;
-
     public function register(): void
     {
+        // Prevent duplicate hook registrations
+        static $registered = false;
+        if ($registered) {
+            return;
+        }
+        $registered = true;
+
+        // Auto-sync when order is saved (HPOS-compatible)
+        add_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10, 1);
+
         // Auto-mark as reserved when order is paid
         add_action('woocommerce_order_status_deposit-paid', [$this, 'markAsReserved'], 10, 1);
         add_action('woocommerce_order_status_fully-paid', [$this, 'markAsReserved'], 10, 1);
         add_action('woocommerce_order_status_completed', [$this, 'markAsReserved'], 10, 1);
-        
-        // Note: Automatic sync on field changes is disabled due to HPOS compatibility issues
-        // Use manual sync buttons in the metabox instead
     }
 
     /**
-     * Handle order saved (works with both HPOS and legacy storage)
+     * Auto-sync calendar when admin saves an order
      */
     public function onOrderSaved(\WC_Order $order): void
     {
-        static $processedOrders = [];
-        
+        // Once per order per request
+        static $processed = [];
         $orderId = $order->get_id();
-        
-        // Prevent multiple executions in the same request
-        if (isset($processedOrders[$orderId])) {
-            error_log('[CalendarAutoSync] Order ' . $orderId . ' already processed in this request, skipping');
+        if (isset($processed[$orderId])) {
             return;
         }
-        
-        error_log('[CalendarAutoSync] Order saved: ' . $orderId);
 
-        // Check if order is in allowed status
+        // Only fire on admin form submissions (not AJAX, not cron, not page loads)
+        if (!is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+            return;
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            return;
+        }
+
+        // Only sync orders in allowed statuses
         $allowedStatuses = ['pending', 'deposit-paid', 'fully-paid', 'completed'];
-        $currentStatus = $order->get_status();
-        if (!in_array($currentStatus, $allowedStatuses, true)) {
-            error_log('[CalendarAutoSync] Status not allowed: ' . $currentStatus);
+        if (!in_array($order->get_status(), $allowedStatuses, true)) {
             return;
         }
 
-        error_log('[CalendarAutoSync] Status OK: ' . $currentStatus);
-
-        // Check if has event ID
+        // Only sync if calendar event exists
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         if (!$eventId || $eventId === '') {
-            error_log('[CalendarAutoSync] No event ID found');
             return;
         }
 
-        error_log('[CalendarAutoSync] Event ID found: ' . $eventId);
-        
-        // Mark this order as processed in this request
-        $processedOrders[$orderId] = true;
-        
-        error_log('[CalendarAutoSync] Triggering sync for order ' . $orderId);
+        // Mark as processed BEFORE triggering to prevent re-entry
+        $processed[$orderId] = true;
 
-        // Mark as needing sync (don't call save() to avoid infinite loop)
-        $order->update_meta_data(MetaKeys::CALENDAR_NEEDS_SYNC, 'yes');
+        // Remove our hook to prevent recursive triggers from FlowMattic saves
+        remove_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10);
 
         // Trigger FlowMattic workflow
         do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
-        
-        error_log('[CalendarAutoSync] Workflow triggered successfully');
+
+        // Re-add our hook
+        add_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10, 1);
     }
 
     /**
@@ -122,16 +100,10 @@ class CalendarAutoSync
 
         // Add log entry
         if (class_exists('\\ZeroSense\\Features\\WooCommerce\\EventManagement\\Calendar\\CalendarLogs')) {
-            $logData = [
+            CalendarLogs::add($order, 'reserved', [
                 'event_id' => $eventId,
                 'trigger_source' => 'automatic',
-            ];
-
-            \ZeroSense\Features\WooCommerce\EventManagement\Calendar\CalendarLogs::add(
-                $order,
-                'reserved',
-                $logData
-            );
+            ]);
         }
 
         // Trigger sync workflow to update calendar title (remove "PRE |")

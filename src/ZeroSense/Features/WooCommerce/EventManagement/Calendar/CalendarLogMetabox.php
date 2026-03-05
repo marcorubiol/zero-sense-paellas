@@ -137,17 +137,9 @@ class CalendarLogMetabox
 
         // Action buttons
         $isReserved = $order->get_meta(MetaKeys::EVENT_RESERVED, true) === 'yes';
-        $needsSync = $order->get_meta(MetaKeys::CALENDAR_NEEDS_SYNC, true) === 'yes';
         
         echo '<div class="zs-calendar-actions" style="margin:10px 0; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">';
         if ($eventId !== '') {
-            // Show NEEDS SYNC badge if flag is set
-            if ($needsSync) {
-                echo '<span class="zs-badge zs-badge-error">';
-                echo esc_html__('NEEDS SYNC', 'zero-sense');
-                echo '</span>';
-            }
-            
             if (!$isReserved) {
                 // Reserve button - marks as reserved and triggers sync
                 echo '<button type="button" class="zs-btn is-action zs-calendar-reserve" ';
@@ -161,15 +153,13 @@ class CalendarLogMetabox
                 echo '</span>';
             }
             
-            // Sync button - only if needs sync flag is set (manual fallback)
-            if ($needsSync) {
-                echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
-                echo 'data-order-id="' . esc_attr($orderId) . '">';
-                echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync to Calendar', 'zero-sense') . '</span>';
-                echo '</button>';
-            }
+            // Sync button - always available as manual fallback
+            echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
+            echo 'data-order-id="' . esc_attr($orderId) . '">';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync to Calendar', 'zero-sense') . '</span>';
+            echo '</button>';
             
-            // Delete button - only if event_id exists (styled as red link)
+            // Delete button (styled as red link)
             echo '<button type="button" class="zs-calendar-delete" ';
             echo 'data-order-id="' . esc_attr($orderId) . '" ';
             echo 'style="background: none; border: none; color: #d63638; text-decoration: underline; cursor: pointer; padding: 0; font-size: 13px;">';
