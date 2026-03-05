@@ -112,6 +112,12 @@ class BulkSyncPage implements FeatureInterface
                 <h2><?php esc_html_e('📊 Event Statistics', 'zero-sense'); ?></h2>
                 <p><?php esc_html_e('Check how many orders have Google Calendar events created.', 'zero-sense'); ?></p>
                 
+                <div class="zs-status-actions">
+                    <a href="#" class="zs-select-all" data-target="stats_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></a>
+                    <span>|</span>
+                    <a href="#" class="zs-unselect-all" data-target="stats_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></a>
+                </div>
+                
                 <div class="zs-status-selector">
                     <label><input type="checkbox" name="stats_statuses[]" value="pending"> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="stats_statuses[]" value="deposit-paid"> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
@@ -121,11 +127,6 @@ class BulkSyncPage implements FeatureInterface
                     <label><input type="checkbox" name="stats_statuses[]" value="cancelled"> <?php esc_html_e('Cancelled', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="stats_statuses[]" value="failed"> <?php esc_html_e('Failed', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="stats_statuses[]" value="refunded"> <?php esc_html_e('Refunded', 'zero-sense'); ?></label>
-                </div>
-                
-                <div class="zs-bulk-controls">
-                    <button type="button" class="button zs-select-all" data-target="stats_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></button>
-                    <button type="button" class="button zs-unselect-all" data-target="stats_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></button>
                 </div>
                 
                 <div class="zs-bulk-controls">
@@ -169,6 +170,12 @@ class BulkSyncPage implements FeatureInterface
                 <h2><?php esc_html_e('Create Events', 'zero-sense'); ?></h2>
                 <p><?php esc_html_e('This will update each order (triggering automatic validation), then create Google Calendar events for all eligible orders and automatically reserve paid orders.', 'zero-sense'); ?></p>
                 
+                <div class="zs-status-actions">
+                    <a href="#" class="zs-select-all" data-target="create_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></a>
+                    <span>|</span>
+                    <a href="#" class="zs-unselect-all" data-target="create_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></a>
+                </div>
+                
                 <div class="zs-status-selector">
                     <label><input type="checkbox" name="create_statuses[]" value="pending"> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="create_statuses[]" value="deposit-paid"> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
@@ -178,11 +185,6 @@ class BulkSyncPage implements FeatureInterface
                     <label><input type="checkbox" name="create_statuses[]" value="cancelled"> <?php esc_html_e('Cancelled', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="create_statuses[]" value="failed"> <?php esc_html_e('Failed', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="create_statuses[]" value="refunded"> <?php esc_html_e('Refunded', 'zero-sense'); ?></label>
-                </div>
-                
-                <div class="zs-bulk-controls">
-                    <button type="button" class="button zs-select-all" data-target="create_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></button>
-                    <button type="button" class="button zs-unselect-all" data-target="create_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></button>
                 </div>
                 
                 <div class="zs-bulk-controls">
@@ -230,6 +232,12 @@ class BulkSyncPage implements FeatureInterface
                 <h2 style="color: #d63638;"><?php esc_html_e('⚠️ Cleanup Event IDs (Dangerous)', 'zero-sense'); ?></h2>
                 <p style="color: #d63638;"><strong><?php esc_html_e('WARNING: This will remove all Google Calendar Event IDs from orders. Use only if you need to start fresh!', 'zero-sense'); ?></strong></p>
                 
+                <div class="zs-status-actions">
+                    <a href="#" class="zs-select-all" data-target="cleanup_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></a>
+                    <span>|</span>
+                    <a href="#" class="zs-unselect-all" data-target="cleanup_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></a>
+                </div>
+                
                 <div class="zs-status-selector">
                     <label><input type="checkbox" name="cleanup_statuses[]" value="pending"> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="cleanup_statuses[]" value="deposit-paid"> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
@@ -239,11 +247,6 @@ class BulkSyncPage implements FeatureInterface
                     <label><input type="checkbox" name="cleanup_statuses[]" value="cancelled"> <?php esc_html_e('Cancelled', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="cleanup_statuses[]" value="failed"> <?php esc_html_e('Failed', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="cleanup_statuses[]" value="refunded"> <?php esc_html_e('Refunded', 'zero-sense'); ?></label>
-                </div>
-                
-                <div class="zs-bulk-controls">
-                    <button type="button" class="button zs-select-all" data-target="cleanup_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></button>
-                    <button type="button" class="button zs-unselect-all" data-target="cleanup_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></button>
                 </div>
                 
                 <div class="zs-bulk-controls">
@@ -289,6 +292,12 @@ class BulkSyncPage implements FeatureInterface
                 <h2 style="color: #d63638;"><?php esc_html_e('Delete Calendar Events', 'zero-sense'); ?></h2>
                 <p><?php esc_html_e('Select which order statuses you want to delete calendar events for:', 'zero-sense'); ?></p>
                 
+                <div class="zs-status-actions">
+                    <a href="#" class="zs-select-all" data-target="delete_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></a>
+                    <span>|</span>
+                    <a href="#" class="zs-unselect-all" data-target="delete_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></a>
+                </div>
+                
                 <div class="zs-status-selector">
                     <label><input type="checkbox" name="delete_statuses[]" value="pending"> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="delete_statuses[]" value="deposit-paid"> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
@@ -298,11 +307,6 @@ class BulkSyncPage implements FeatureInterface
                     <label><input type="checkbox" name="delete_statuses[]" value="cancelled"> <?php esc_html_e('Cancelled', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="delete_statuses[]" value="failed"> <?php esc_html_e('Failed', 'zero-sense'); ?></label>
                     <label><input type="checkbox" name="delete_statuses[]" value="refunded"> <?php esc_html_e('Refunded', 'zero-sense'); ?></label>
-                </div>
-                
-                <div class="zs-bulk-controls">
-                    <button type="button" class="button zs-select-all" data-target="delete_statuses[]"><?php esc_html_e('Select All', 'zero-sense'); ?></button>
-                    <button type="button" class="button zs-unselect-all" data-target="delete_statuses[]"><?php esc_html_e('Unselect All', 'zero-sense'); ?></button>
                 </div>
                 
                 <div class="zs-bulk-controls">

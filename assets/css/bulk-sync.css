@@ -125,6 +125,30 @@
     color: #646970;
 }
 
+/* Status Actions (Select All / Unselect All) */
+.zs-status-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 8px 0;
+    font-size: 13px;
+}
+
+.zs-status-actions a {
+    color: #2271b1;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.zs-status-actions a:hover {
+    color: #135e96;
+    text-decoration: underline;
+}
+
+.zs-status-actions span {
+    color: #c3c4c7;
+}
+
 /* Status Selector */
 .zs-status-selector {
     display: grid;

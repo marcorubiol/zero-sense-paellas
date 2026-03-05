@@ -713,12 +713,14 @@
 
     // Select All / Unselect All functionality
     function initSelectAllButtons() {
-        $('.zs-select-all').on('click', function() {
+        $('.zs-select-all').on('click', function(e) {
+            e.preventDefault();
             const target = $(this).data('target');
             $(`input[name="${target}"]`).prop('checked', true);
         });
 
-        $('.zs-unselect-all').on('click', function() {
+        $('.zs-unselect-all').on('click', function(e) {
+            e.preventDefault();
             const target = $(this).data('target');
             $(`input[name="${target}"]`).prop('checked', false);
         });
