@@ -119,23 +119,31 @@ class BulkSyncPage implements FeatureInterface
                 </div>
                 
                 <div id="zs-stats-results" style="display:none; margin-top: 20px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
                         <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
                             <div style="font-size: 32px; font-weight: bold; color: #2271b1;" id="zs-stat-total">-</div>
                             <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Total Orders', 'zero-sense'); ?></div>
                         </div>
-                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
+                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center; cursor: pointer;" id="zs-stat-card-with">
                             <div style="font-size: 32px; font-weight: bold; color: #00a32a;" id="zs-stat-with-event">-</div>
-                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('With Event', 'zero-sense'); ?></div>
+                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('With Event', 'zero-sense'); ?> 👁️</div>
                         </div>
-                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
+                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center; cursor: pointer;" id="zs-stat-card-without">
                             <div style="font-size: 32px; font-weight: bold; color: #d63638;" id="zs-stat-without-event">-</div>
-                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Without Event', 'zero-sense'); ?></div>
+                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Without Event', 'zero-sense'); ?> 👁️</div>
                         </div>
                         <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
                             <div style="font-size: 32px; font-weight: bold; color: #2271b1;" id="zs-stat-percentage">-</div>
                             <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Coverage', 'zero-sense'); ?></div>
                         </div>
+                    </div>
+                    
+                    <div id="zs-stats-orders" style="display:none; background: #fff; border: 1px solid #c3c4c7; border-radius: 4px; padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h3 style="margin: 0;" id="zs-stats-orders-title"></h3>
+                            <button type="button" id="zs-stats-orders-close" class="button button-small">✕</button>
+                        </div>
+                        <div id="zs-stats-orders-list" style="max-height: 300px; overflow-y: auto;"></div>
                     </div>
                 </div>
             </div>
@@ -450,7 +458,10 @@ class BulkSyncPage implements FeatureInterface
         
         $withEventIds = wc_get_orders($withEventArgs);
         $withEvent = count($withEventIds);
-        $withoutEvent = $totalOrders - $withEvent;
+        
+        // Calculate orders without event (difference between all and with event)
+        $withoutEventIds = array_diff($allOrderIds, $withEventIds);
+        $withoutEvent = count($withoutEventIds);
         $percentage = $totalOrders > 0 ? round(($withEvent / $totalOrders) * 100, 1) : 0;
         
         wp_send_json_success([
@@ -458,6 +469,8 @@ class BulkSyncPage implements FeatureInterface
             'with_event' => $withEvent,
             'without_event' => $withoutEvent,
             'percentage' => $percentage,
+            'with_event_ids' => array_values($withEventIds),
+            'without_event_ids' => array_values($withoutEventIds),
         ]);
     }
 

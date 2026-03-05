@@ -114,7 +114,6 @@
   font-family: var(--zs-font-primary);
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-right: 12px;
 }
 
 .zs-btn-cache:hover {

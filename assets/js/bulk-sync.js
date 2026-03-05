@@ -620,8 +620,14 @@
 
     // Statistics UI controller
     const statsUI = {
+        withEventIds: [],
+        withoutEventIds: [],
+        
         init() {
             $('#zs-stats-check').on('click', () => this.checkStats());
+            $('#zs-stat-card-with').on('click', () => this.showOrders('with'));
+            $('#zs-stat-card-without').on('click', () => this.showOrders('without'));
+            $('#zs-stats-orders-close').on('click', () => this.hideOrders());
         },
 
         async checkStats() {
@@ -644,7 +650,12 @@
                     $('#zs-stat-without-event').text(data.without_event);
                     $('#zs-stat-percentage').text(data.percentage + '%');
                     
+                    // Store IDs for later display
+                    this.withEventIds = data.with_event_ids || [];
+                    this.withoutEventIds = data.without_event_ids || [];
+                    
                     $('#zs-stats-results').slideDown();
+                    this.hideOrders();
                 } else {
                     alert('Error: ' + (response.data || 'Unknown error'));
                 }
@@ -653,6 +664,39 @@
             } finally {
                 $button.prop('disabled', false).text(originalText);
             }
+        },
+
+        showOrders(type) {
+            const ids = type === 'with' ? this.withEventIds : this.withoutEventIds;
+            const title = type === 'with' ? 'Orders With Event' : 'Orders Without Event';
+            
+            if (ids.length === 0) {
+                return;
+            }
+            
+            $('#zs-stats-orders-title').text(`${title} (${ids.length})`);
+            
+            const $list = $('#zs-stats-orders-list');
+            $list.empty();
+            
+            const editUrl = window.location.origin + '/wp-admin/post.php?post=ORDER_ID&action=edit';
+            
+            ids.forEach(orderId => {
+                const url = editUrl.replace('ORDER_ID', orderId);
+                $list.append(
+                    `<div style="padding: 8px; border-bottom: 1px solid #f0f0f1;">
+                        <a href="${url}" target="_blank" style="text-decoration: none; color: #2271b1; font-weight: 500;">
+                            Order #${orderId} →
+                        </a>
+                    </div>`
+                );
+            });
+            
+            $('#zs-stats-orders').slideDown();
+        },
+
+        hideOrders() {
+            $('#zs-stats-orders').slideUp();
         }
     };
 
