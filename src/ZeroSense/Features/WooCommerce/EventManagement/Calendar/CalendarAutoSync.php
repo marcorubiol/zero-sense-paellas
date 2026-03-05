@@ -54,7 +54,16 @@ class CalendarAutoSync
      */
     public function onOrderSaved(\WC_Order $order): void
     {
+        static $processedOrders = [];
+        
         $orderId = $order->get_id();
+        
+        // Prevent multiple executions in the same request
+        if (isset($processedOrders[$orderId])) {
+            error_log('[CalendarAutoSync] Order ' . $orderId . ' already processed in this request, skipping');
+            return;
+        }
+        
         error_log('[CalendarAutoSync] Order saved: ' . $orderId);
 
         // Check if order is in allowed status
@@ -75,11 +84,14 @@ class CalendarAutoSync
         }
 
         error_log('[CalendarAutoSync] Event ID found: ' . $eventId);
+        
+        // Mark this order as processed in this request
+        $processedOrders[$orderId] = true;
+        
         error_log('[CalendarAutoSync] Triggering sync for order ' . $orderId);
 
-        // Mark as needing sync
+        // Mark as needing sync (don't call save() to avoid infinite loop)
         $order->update_meta_data(MetaKeys::CALENDAR_NEEDS_SYNC, 'yes');
-        $order->save();
 
         // Trigger FlowMattic workflow
         do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
