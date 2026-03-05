@@ -109,6 +109,9 @@ class CalendarLogMetabox
 
         wp_nonce_field('zs_calendar_action', 'zs_calendar_nonce');
         
+        // Hidden hash of monitored fields for auto-sync change detection
+        echo '<input type="hidden" name="_zs_calendar_fields_hash" value="' . esc_attr(CalendarAutoSync::computeFieldsHash($order)) . '">';
+        
         echo '<div class="zs-calendar-logs-metabox">';
         $this->renderMetaboxContent($order, $orderId);
         echo '</div>';
@@ -156,7 +159,7 @@ class CalendarLogMetabox
             // Sync button - always available as manual fallback
             echo '<button type="button" class="zs-btn is-action zs-calendar-sync" ';
             echo 'data-order-id="' . esc_attr($orderId) . '">';
-            echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync to Calendar', 'zero-sense') . '</span>';
+            echo '<span class="zs-calendar-btn-label">' . esc_html__('Sync Calendar', 'zero-sense') . '</span>';
             echo '</button>';
             
             // Delete button (styled as red link)

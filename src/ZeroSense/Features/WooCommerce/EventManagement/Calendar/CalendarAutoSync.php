@@ -5,11 +5,31 @@ use WC_Order;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 
 /**
- * Auto-sync Google Calendar when order is saved from admin
+ * Auto-sync Google Calendar when monitored order fields change
  * Compatible with both HPOS and legacy post storage
  */
 class CalendarAutoSync
 {
+    /**
+     * Fields that trigger calendar sync when changed
+     */
+    public const MONITORED_FIELDS = [
+        '_billing_first_name',
+        '_billing_last_name',
+        'zs_event_service_location',
+        'zs_event_paellas_service_time',
+        'zs_event_adults',
+        'zs_event_children_5_to_8',
+        'zs_event_children_0_to_4',
+        'zs_event_total_guests',
+        'zs_event_staff',
+        'zs_calendar_notes',
+        'zs_event_date',
+        '_shipping_address_1',
+        '_shipping_city',
+        'zs_event_start_time',
+    ];
+
     public function register(): void
     {
         // Prevent duplicate hook registrations
@@ -29,7 +49,19 @@ class CalendarAutoSync
     }
 
     /**
-     * Auto-sync calendar when admin saves an order
+     * Compute hash of all monitored field values for change detection
+     */
+    public static function computeFieldsHash(\WC_Order $order): string
+    {
+        $values = [];
+        foreach (self::MONITORED_FIELDS as $key) {
+            $values[$key] = (string) $order->get_meta($key, true);
+        }
+        return md5(serialize($values));
+    }
+
+    /**
+     * Auto-sync calendar when admin saves an order and monitored fields changed
      */
     public function onOrderSaved(\WC_Order $order): void
     {
@@ -57,6 +89,12 @@ class CalendarAutoSync
         // Only sync if calendar event exists
         $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
         if (!$eventId || $eventId === '') {
+            return;
+        }
+
+        // Only sync if monitored fields actually changed (compare hash from page load)
+        $previousHash = sanitize_text_field($_POST['_zs_calendar_fields_hash'] ?? '');
+        if ($previousHash !== '' && $previousHash === self::computeFieldsHash($order)) {
             return;
         }
 
