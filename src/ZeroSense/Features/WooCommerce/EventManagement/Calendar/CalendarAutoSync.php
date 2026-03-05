@@ -38,8 +38,8 @@ class CalendarAutoSync
     {
         error_log('[CalendarAutoSync] Registering hooks...');
         
-        // Use WooCommerce hooks that work with both HPOS and legacy storage
-        add_action('woocommerce_update_order', [$this, 'onOrderUpdated'], 10, 1);
+        // Use hook that fires after order is saved (works with both HPOS and legacy)
+        add_action('woocommerce_after_order_object_save', [$this, 'onOrderSaved'], 10, 1);
         
         // Auto-mark as reserved when order is paid
         add_action('woocommerce_order_status_deposit-paid', [$this, 'markAsReserved'], 10, 1);
@@ -50,17 +50,12 @@ class CalendarAutoSync
     }
 
     /**
-     * Handle order update (works with both HPOS and legacy storage)
+     * Handle order saved (works with both HPOS and legacy storage)
      */
-    public function onOrderUpdated(int $orderId): void
+    public function onOrderSaved(\WC_Order $order): void
     {
-        error_log('[CalendarAutoSync] Order updated: ' . $orderId);
-        
-        $order = wc_get_order($orderId);
-        if (!$order instanceof \WC_Order) {
-            error_log('[CalendarAutoSync] Order not found: ' . $orderId);
-            return;
-        }
+        $orderId = $order->get_id();
+        error_log('[CalendarAutoSync] Order saved: ' . $orderId);
 
         // Check if order is in allowed status
         $allowedStatuses = ['pending', 'deposit-paid', 'fully-paid', 'completed'];
@@ -84,7 +79,7 @@ class CalendarAutoSync
 
         // Mark as needing sync
         $order->update_meta_data(MetaKeys::CALENDAR_NEEDS_SYNC, 'yes');
-        $order->save_meta_data();
+        $order->save();
 
         // Trigger FlowMattic workflow
         do_action('zs_trigger_class_action_direct', 'zs-calendar-sync', $orderId, 'automatic');
