@@ -631,6 +631,16 @@
         },
 
         async checkStats() {
+            const statuses = [];
+            $('input[name="stats_statuses[]"]:checked').each(function() {
+                statuses.push($(this).val());
+            });
+
+            if (statuses.length === 0) {
+                alert('Please select at least one status');
+                return;
+            }
+
             const $button = $('#zs-stats-check');
             const originalText = $button.text();
             
@@ -639,7 +649,8 @@
             try {
                 const response = await $.post(window.zsBulkSync.ajaxUrl, {
                     action: 'zs_bulk_get_stats',
-                    nonce: window.zsBulkSync.nonce
+                    nonce: window.zsBulkSync.nonce,
+                    statuses: statuses
                 });
 
                 if (response.success) {

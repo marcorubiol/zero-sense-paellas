@@ -112,6 +112,14 @@ class BulkSyncPage implements FeatureInterface
                 <h2><?php esc_html_e('📊 Event Statistics', 'zero-sense'); ?></h2>
                 <p><?php esc_html_e('Check how many orders have Google Calendar events created.', 'zero-sense'); ?></p>
                 
+                <div class="zs-status-selector">
+                    <label><input type="checkbox" name="stats_statuses[]" value="pending" checked> <?php esc_html_e('Pending', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="stats_statuses[]" value="deposit-paid" checked> <?php esc_html_e('Deposit Paid', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="stats_statuses[]" value="fully-paid" checked> <?php esc_html_e('Fully Paid', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="stats_statuses[]" value="processing" checked> <?php esc_html_e('Processing', 'zero-sense'); ?></label>
+                    <label><input type="checkbox" name="stats_statuses[]" value="completed" checked> <?php esc_html_e('Completed', 'zero-sense'); ?></label>
+                </div>
+                
                 <div class="zs-bulk-controls">
                     <button type="button" id="zs-stats-check" class="button button-secondary button-large">
                         <?php esc_html_e('Check Statistics', 'zero-sense'); ?>
@@ -423,10 +431,18 @@ class BulkSyncPage implements FeatureInterface
             wp_send_json_error('Permission denied');
         }
 
+        $statuses = isset($_POST['statuses']) && is_array($_POST['statuses']) 
+            ? array_map('sanitize_text_field', $_POST['statuses']) 
+            : ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'];
+        
+        if (empty($statuses)) {
+            wp_send_json_error('No statuses selected');
+        }
+
         // Get all orders with event date
         $allOrdersArgs = [
             'limit' => -1,
-            'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
+            'status' => $statuses,
             'return' => 'ids',
             'meta_query' => [
                 [
@@ -442,7 +458,7 @@ class BulkSyncPage implements FeatureInterface
         // Get orders with event ID
         $withEventArgs = [
             'limit' => -1,
-            'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
+            'status' => $statuses,
             'return' => 'ids',
             'meta_query' => [
                 [
