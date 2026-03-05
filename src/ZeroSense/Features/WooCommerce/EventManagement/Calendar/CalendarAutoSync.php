@@ -93,15 +93,6 @@ class CalendarAutoSync
             return;
         }
 
-        // Check throttle
-        $throttleKey = 'zs_calendar_sync_throttle_' . $objectId;
-        if (get_transient($throttleKey)) {
-            return;
-        }
-
-        // Set throttle
-        set_transient($throttleKey, true, self::THROTTLE_DURATION);
-
         // Mark as needing sync
         $order->update_meta_data(MetaKeys::CALENDAR_NEEDS_SYNC, 'yes');
         $order->save_meta_data();
