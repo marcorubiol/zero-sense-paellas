@@ -80,25 +80,32 @@ class BulkSyncPage implements FeatureInterface
             return;
         }
 
-        wp_enqueue_script(
-            'zs-bulk-sync',
-            ZERO_SENSE_URL . 'assets/js/bulk-sync.js',
-            ['jquery'],
-            ZERO_SENSE_VERSION,
-            true
-        );
+        $js_path = ZERO_SENSE_PATH . 'assets/js/bulk-sync.js';
+        $css_path = ZERO_SENSE_PATH . 'assets/css/bulk-sync.css';
+        
+        if (file_exists($js_path)) {
+            wp_enqueue_script(
+                'zs-bulk-sync',
+                ZERO_SENSE_URL . 'assets/js/bulk-sync.js',
+                ['jquery'],
+                (string) filemtime($js_path),
+                true
+            );
+            
+            wp_localize_script('zs-bulk-sync', 'zsBulkSync', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('zs_bulk_sync'),
+            ]);
+        }
 
-        wp_enqueue_style(
-            'zs-bulk-sync',
-            ZERO_SENSE_URL . 'assets/css/bulk-sync.css',
-            [],
-            ZERO_SENSE_VERSION
-        );
-
-        wp_localize_script('zs-bulk-sync', 'zsBulkSync', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('zs_bulk_sync'),
-        ]);
+        if (file_exists($css_path)) {
+            wp_enqueue_style(
+                'zs-bulk-sync',
+                ZERO_SENSE_URL . 'assets/css/bulk-sync.css',
+                [],
+                (string) filemtime($css_path)
+            );
+        }
     }
 
     public function renderPage(): void
