@@ -232,21 +232,53 @@ class BulkSyncPage implements FeatureInterface
 
         set_time_limit(0);
         
+        // Get or initialize session tracking
+        if (!session_id()) {
+            session_start();
+        }
+        
+        $sessionKey = 'zs_bulk_sync_processed';
+        if (!isset($_POST['continue_batch'])) {
+            // Fresh start - clear session
+            $_SESSION[$sessionKey] = [];
+        }
+        
+        $processedIds = $_SESSION[$sessionKey] ?? [];
+        
+        // Get all eligible orders
         $args = [
             'limit' => -1,
             'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
             'return' => 'ids',
         ];
         
-        $orderIds = wc_get_orders($args);
+        $allOrderIds = wc_get_orders($args);
+        
+        // Filter out already processed orders
+        $remainingIds = array_diff($allOrderIds, $processedIds);
+        
+        // Process only next 20
+        $batchSize = 20;
+        $batchIds = array_slice($remainingIds, 0, $batchSize);
+        
         $created = 0;
         $reserved = 0;
         $skipped = 0;
         
-        echo '<div class="wrap"><h1>' . esc_html__('Bulk Create & Reserve Results', 'zero-sense') . '</h1>';
-        echo '<div class="card" style="max-width: 800px;"><ul>';
+        $totalOrders = count($allOrderIds);
+        $totalProcessed = count($processedIds);
+        $totalRemaining = count($remainingIds);
         
-        foreach ($orderIds as $orderId) {
+        echo '<div class="wrap"><h1>' . esc_html__('Bulk Create & Reserve Results', 'zero-sense') . '</h1>';
+        echo '<div class="card" style="max-width: 800px;">';
+        echo '<p><strong>' . sprintf(__('Progress: %d / %d orders processed (%d remaining)', 'zero-sense'), $totalProcessed, $totalOrders, $totalRemaining) . '</strong></p>';
+        echo '<p>' . sprintf(__('Processing batch of %d orders...', 'zero-sense'), count($batchIds)) . '</p>';
+        echo '<ul>';
+        
+        foreach ($batchIds as $orderId) {
+            // Mark as processed immediately to prevent duplicates
+            $_SESSION[$sessionKey][] = $orderId;
+            
             $order = wc_get_order($orderId);
             if (!$order) {
                 continue;
@@ -319,11 +351,31 @@ class BulkSyncPage implements FeatureInterface
         }
         
         echo '</ul>';
-        echo '<h3>' . esc_html__('Summary', 'zero-sense') . '</h3>';
+        echo '<h3>' . esc_html__('Batch Summary', 'zero-sense') . '</h3>';
         echo '<p>' . sprintf(__('Events created: %d', 'zero-sense'), $created) . '</p>';
         echo '<p>' . sprintf(__('Events auto-reserved: %d', 'zero-sense'), $reserved) . '</p>';
         echo '<p>' . sprintf(__('Orders skipped: %d', 'zero-sense'), $skipped) . '</p>';
-        echo '<p><a href="' . esc_url(admin_url('admin.php?page=zs-calendar-bulk-sync')) . '" class="button">' . esc_html__('Back', 'zero-sense') . '</a></p>';
+        
+        // Check if more orders remain
+        $newRemaining = count($remainingIds) - count($batchIds);
+        
+        if ($newRemaining > 0) {
+            echo '<hr style="margin: 20px 0;">';
+            echo '<p><strong>' . sprintf(__('%d orders remaining. Review the results above, then continue when ready.', 'zero-sense'), $newRemaining) . '</strong></p>';
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display: inline-block; margin-right: 10px;">';
+            echo '<input type="hidden" name="action" value="zs_bulk_sync_calendar">';
+            echo '<input type="hidden" name="continue_batch" value="1">';
+            wp_nonce_field('zs_bulk_sync_calendar', 'zs_bulk_sync_nonce');
+            echo '<button type="submit" class="button button-primary button-large">' . sprintf(__('Continue with next %d orders', 'zero-sense'), min($batchSize, $newRemaining)) . '</button>';
+            echo '</form>';
+        } else {
+            echo '<hr style="margin: 20px 0;">';
+            echo '<p><strong style="color: #00a32a;">✓ ' . esc_html__('All orders processed!', 'zero-sense') . '</strong></p>';
+            // Clear session
+            unset($_SESSION[$sessionKey]);
+        }
+        
+        echo '<a href="' . esc_url(admin_url('admin.php?page=zs-calendar-bulk-sync')) . '" class="button">' . esc_html__('Back to Bulk Operations', 'zero-sense') . '</a>';
         echo '</div></div>';
     }
     
@@ -435,34 +487,71 @@ class BulkSyncPage implements FeatureInterface
 
         set_time_limit(0);
         
-        // Get ALL orders without any filtering
+        // Get or initialize session tracking
+        if (!session_id()) {
+            session_start();
+        }
+        
+        $sessionKey = 'zs_bulk_delete_processed';
+        if (!isset($_POST['continue_batch'])) {
+            // Fresh start - clear session and store selected statuses
+            $_SESSION[$sessionKey] = [];
+            $_SESSION[$sessionKey . '_statuses'] = $selectedStatuses;
+        } else {
+            // Continuing - restore statuses from session
+            $selectedStatuses = $_SESSION[$sessionKey . '_statuses'] ?? [];
+        }
+        
+        $processedIds = $_SESSION[$sessionKey] ?? [];
+        
+        // Get ALL orders
         $args = [
             'limit' => -1,
             'return' => 'ids',
         ];
         
-        $orderIds = wc_get_orders($args);
+        $allOrderIds = wc_get_orders($args);
+        
+        // Filter by status and exclude already processed
+        $eligibleIds = [];
+        foreach ($allOrderIds as $orderId) {
+            if (in_array($orderId, $processedIds, true)) {
+                continue;
+            }
+            $order = wc_get_order($orderId);
+            if ($order && in_array($order->get_status(), $selectedStatuses, true)) {
+                $eligibleIds[] = $orderId;
+            }
+        }
+        
+        // Process only next 20
+        $batchSize = 20;
+        $batchIds = array_slice($eligibleIds, 0, $batchSize);
+        
         $deleted = 0;
         $skipped = 0;
-        $statusMismatch = 0;
+        
+        $totalEligible = count($eligibleIds);
+        $totalProcessed = count(array_intersect($processedIds, $allOrderIds));
+        $totalRemaining = count($eligibleIds);
         
         echo '<div class="wrap"><h1>' . esc_html__('Bulk Delete Results', 'zero-sense') . '</h1>';
         echo '<div class="card" style="max-width: 800px;">';
-        echo '<p>' . sprintf(__('Scanning %d orders for statuses: %s', 'zero-sense'), count($orderIds), implode(', ', $selectedStatuses)) . '</p>';
+        echo '<p><strong>' . sprintf(__('Statuses: %s', 'zero-sense'), implode(', ', $selectedStatuses)) . '</strong></p>';
+        echo '<p><strong>' . sprintf(__('Progress: %d eligible orders found, %d remaining', 'zero-sense'), $totalEligible + $totalProcessed, $totalRemaining) . '</strong></p>';
+        echo '<p>' . sprintf(__('Processing batch of %d orders...', 'zero-sense'), count($batchIds)) . '</p>';
         echo '<ul>';
         
-        foreach ($orderIds as $orderId) {
+        foreach ($batchIds as $orderId) {
+            // Mark as processed immediately
+            $_SESSION[$sessionKey][] = $orderId;
+            
             $order = wc_get_order($orderId);
             if (!$order) {
                 continue;
             }
             
-            // Check if order status matches selected statuses
             $orderStatus = $order->get_status();
-            if (!in_array($orderStatus, $selectedStatuses, true)) {
-                $statusMismatch++;
-                continue;
-            }
             
             $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
             
@@ -489,17 +578,36 @@ class BulkSyncPage implements FeatureInterface
             $deleted++;
             flush();
             
-            // Wait 2 seconds between each order to avoid overwhelming the API and timeouts
-            sleep(2);
+            // Wait 5 seconds between each order to avoid overwhelming the API and timeouts
+            sleep(5);
         }
         
         echo '</ul>';
-        echo '<h3>' . esc_html__('Summary', 'zero-sense') . '</h3>';
-        echo '<p>' . sprintf(__('Total orders scanned: %d', 'zero-sense'), count($orderIds)) . '</p>';
+        echo '<h3>' . esc_html__('Batch Summary', 'zero-sense') . '</h3>';
         echo '<p>' . sprintf(__('Events deleted: %d', 'zero-sense'), $deleted) . '</p>';
         echo '<p>' . sprintf(__('Orders skipped (no event): %d', 'zero-sense'), $skipped) . '</p>';
-        echo '<p>' . sprintf(__('Orders skipped (status mismatch): %d', 'zero-sense'), $statusMismatch) . '</p>';
-        echo '<p><a href="' . esc_url(admin_url('admin.php?page=zs-calendar-bulk-sync')) . '" class="button">' . esc_html__('Back', 'zero-sense') . '</a></p>';
+        
+        // Check if more orders remain
+        $newRemaining = count($eligibleIds) - count($batchIds);
+        
+        if ($newRemaining > 0) {
+            echo '<hr style="margin: 20px 0;">';
+            echo '<p><strong>' . sprintf(__('%d orders remaining. Review the results above, then continue when ready.', 'zero-sense'), $newRemaining) . '</strong></p>';
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display: inline-block; margin-right: 10px;">';
+            echo '<input type="hidden" name="action" value="zs_bulk_delete_calendar">';
+            echo '<input type="hidden" name="continue_batch" value="1">';
+            wp_nonce_field('zs_bulk_delete_calendar', 'zs_bulk_delete_nonce');
+            echo '<button type="submit" class="button button-primary button-large">' . sprintf(__('Continue with next %d orders', 'zero-sense'), min($batchSize, $newRemaining)) . '</button>';
+            echo '</form>';
+        } else {
+            echo '<hr style="margin: 20px 0;">';
+            echo '<p><strong style="color: #00a32a;">✓ ' . esc_html__('All eligible orders processed!', 'zero-sense') . '</strong></p>';
+            // Clear session
+            unset($_SESSION[$sessionKey]);
+            unset($_SESSION[$sessionKey . '_statuses']);
+        }
+        
+        echo '<a href="' . esc_url(admin_url('admin.php?page=zs-calendar-bulk-sync')) . '" class="button">' . esc_html__('Back to Bulk Operations', 'zero-sense') . '</a>';
         echo '</div></div>';
     }
 }
