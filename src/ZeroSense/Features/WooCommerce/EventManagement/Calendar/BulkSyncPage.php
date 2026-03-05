@@ -81,17 +81,17 @@ class BulkSyncPage implements FeatureInterface
 
         wp_enqueue_script(
             'zs-bulk-sync',
-            plugins_url('assets/js/bulk-sync.js', dirname(__FILE__, 5)),
+            ZERO_SENSE_URL . 'assets/js/bulk-sync.js',
             ['jquery'],
-            '1.0.0',
+            ZERO_SENSE_VERSION,
             true
         );
 
         wp_enqueue_style(
             'zs-bulk-sync',
-            plugins_url('assets/css/bulk-sync.css', dirname(__FILE__, 5)),
+            ZERO_SENSE_URL . 'assets/css/bulk-sync.css',
             [],
-            '1.0.0'
+            ZERO_SENSE_VERSION
         );
 
         wp_localize_script('zs-bulk-sync', 'zsBulkSync', [
