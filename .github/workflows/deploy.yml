@@ -26,6 +26,21 @@ jobs:
           target: ${{ secrets.PLUGIN_TARGET_DIR }}
           overwrite: true
 
+      - name: Clean up deleted files
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          port: ${{ secrets.SFTP_PORT }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          key: ${{ secrets.SFTP_KEY }}
+          script: |
+            # Remove deleted OrderValidationPage.php
+            rm -f "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration/OrderValidationPage.php" 2>/dev/null || true
+            # Remove Migration directory if empty
+            rmdir "${{ secrets.PLUGIN_TARGET_DIR }}/src/ZeroSense/Features/WooCommerce/Migration" 2>/dev/null || true
+            echo "Cleanup completed"
+
       - name: Clear caches post-deploy
         uses: appleboy/ssh-action@v1
         with:
