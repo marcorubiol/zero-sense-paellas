@@ -179,12 +179,6 @@ class BulkSyncPage implements FeatureInterface
                     </p>
                 </form>
             </div>
-                
-                <div id="zs-sync-progress" style="display:none; margin-top: 20px;">
-                    <h3><?php esc_html_e('Syncing...', 'zero-sense'); ?></h3>
-                    <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; font-family: monospace; max-height: 400px; overflow-y: auto;" id="zs-sync-log"></div>
-                </div>
-            </div>
         </div>
         
         <script>
@@ -196,8 +190,7 @@ class BulkSyncPage implements FeatureInterface
             }
             
             document.getElementById('zs-sync-btn').disabled = true;
-            document.getElementById('zs-sync-btn').textContent = '<?php esc_js(_e('Creating & Reserving...', 'zero-sense')); ?>';
-            document.getElementById('zs-sync-progress').style.display = 'block';
+            document.getElementById('zs-sync-btn').textContent = '<?php esc_js(_e('Processing...', 'zero-sense')); ?>';
         });
         
         // Delete form handler
@@ -218,8 +211,7 @@ class BulkSyncPage implements FeatureInterface
             }
             
             document.getElementById('zs-delete-btn').disabled = true;
-            document.getElementById('zs-delete-btn').textContent = '<?php esc_js(_e('Deleting...', 'zero-sense')); ?>';
-            document.getElementById('zs-sync-progress').style.display = 'block';
+            document.getElementById('zs-delete-btn').textContent = '<?php esc_js(_e('Processing...', 'zero-sense')); ?>';
         });
         
         // Select All / Deselect All handlers
