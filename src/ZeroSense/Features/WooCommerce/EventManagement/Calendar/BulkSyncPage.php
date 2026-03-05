@@ -49,6 +49,7 @@ class BulkSyncPage implements FeatureInterface
         add_action('wp_ajax_zs_bulk_get_queue', [$this, 'ajaxGetQueue']);
         add_action('wp_ajax_zs_bulk_process_one', [$this, 'ajaxProcessOne']);
         add_action('wp_ajax_zs_bulk_cleanup_one', [$this, 'ajaxCleanupOne']);
+        add_action('wp_ajax_zs_bulk_get_stats', [$this, 'ajaxGetStats']);
     }
 
     public function getPriority(): int
@@ -105,6 +106,39 @@ class BulkSyncPage implements FeatureInterface
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Bulk Calendar Operations', 'zero-sense'); ?></h1>
+            
+            <!-- STATISTICS -->
+            <div class="card zs-bulk-section">
+                <h2><?php esc_html_e('📊 Event Statistics', 'zero-sense'); ?></h2>
+                <p><?php esc_html_e('Check how many orders have Google Calendar events created.', 'zero-sense'); ?></p>
+                
+                <div class="zs-bulk-controls">
+                    <button type="button" id="zs-stats-check" class="button button-secondary button-large">
+                        <?php esc_html_e('Check Statistics', 'zero-sense'); ?>
+                    </button>
+                </div>
+                
+                <div id="zs-stats-results" style="display:none; margin-top: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #2271b1;" id="zs-stat-total">-</div>
+                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Total Orders', 'zero-sense'); ?></div>
+                        </div>
+                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #00a32a;" id="zs-stat-with-event">-</div>
+                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('With Event', 'zero-sense'); ?></div>
+                        </div>
+                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #d63638;" id="zs-stat-without-event">-</div>
+                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Without Event', 'zero-sense'); ?></div>
+                        </div>
+                        <div class="zs-stat-card" style="background: #f0f0f1; padding: 20px; border-radius: 4px; text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #2271b1;" id="zs-stat-percentage">-</div>
+                            <div style="color: #646970; margin-top: 5px;"><?php esc_html_e('Coverage', 'zero-sense'); ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- CREATE EVENTS -->
             <div class="card zs-bulk-section">
@@ -371,6 +405,60 @@ class BulkSyncPage implements FeatureInterface
                 'action' => 'skipped',
             ]);
         }
+    }
+
+    public function ajaxGetStats(): void
+    {
+        check_ajax_referer('zs_bulk_sync', 'nonce');
+        
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Permission denied');
+        }
+
+        // Get all orders with event date
+        $allOrdersArgs = [
+            'limit' => -1,
+            'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
+            'return' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => MetaKeys::EVENT_DATE,
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ];
+        
+        $allOrderIds = wc_get_orders($allOrdersArgs);
+        $totalOrders = count($allOrderIds);
+        
+        // Get orders with event ID
+        $withEventArgs = [
+            'limit' => -1,
+            'status' => ['pending', 'deposit-paid', 'fully-paid', 'processing', 'completed'],
+            'return' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => MetaKeys::EVENT_DATE,
+                    'compare' => 'EXISTS',
+                ],
+                [
+                    'key' => MetaKeys::GOOGLE_CALENDAR_EVENT_ID,
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ];
+        
+        $withEventIds = wc_get_orders($withEventArgs);
+        $withEvent = count($withEventIds);
+        $withoutEvent = $totalOrders - $withEvent;
+        $percentage = $totalOrders > 0 ? round(($withEvent / $totalOrders) * 100, 1) : 0;
+        
+        wp_send_json_success([
+            'total' => $totalOrders,
+            'with_event' => $withEvent,
+            'without_event' => $withoutEvent,
+            'percentage' => $percentage,
+        ]);
     }
 
     public function ajaxProcessOne(): void

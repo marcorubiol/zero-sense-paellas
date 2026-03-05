@@ -618,8 +618,47 @@
         }
     };
 
+    // Statistics UI controller
+    const statsUI = {
+        init() {
+            $('#zs-stats-check').on('click', () => this.checkStats());
+        },
+
+        async checkStats() {
+            const $button = $('#zs-stats-check');
+            const originalText = $button.text();
+            
+            $button.prop('disabled', true).text('Loading...');
+
+            try {
+                const response = await $.post(window.zsBulkSync.ajaxUrl, {
+                    action: 'zs_bulk_get_stats',
+                    nonce: window.zsBulkSync.nonce
+                });
+
+                if (response.success) {
+                    const data = response.data;
+                    
+                    $('#zs-stat-total').text(data.total);
+                    $('#zs-stat-with-event').text(data.with_event);
+                    $('#zs-stat-without-event').text(data.without_event);
+                    $('#zs-stat-percentage').text(data.percentage + '%');
+                    
+                    $('#zs-stats-results').slideDown();
+                } else {
+                    alert('Error: ' + (response.data || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                $button.prop('disabled', false).text(originalText);
+            }
+        }
+    };
+
     // Initialize on document ready
     $(document).ready(function() {
+        statsUI.init();
         createUI.init();
         cleanupUI.init();
         deleteUI.init();
