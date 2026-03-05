@@ -269,7 +269,7 @@ class BulkSyncPage implements FeatureInterface
                 $eventId = $order->get_meta(MetaKeys::GOOGLE_CALENDAR_EVENT_ID, true);
                 if ($eventId && $eventId !== '') {
                     $order->delete_meta_data(MetaKeys::GOOGLE_CALENDAR_EVENT_ID);
-                    $order->delete_meta_data(MetaKeys::GOOGLE_CALENDAR_ID);
+                    $order->delete_meta_data('zs_google_calendar_id');
                     $order->delete_meta_data(MetaKeys::EVENT_RESERVED);
                     $order->save_meta_data();
                     $cleanedCount++;
