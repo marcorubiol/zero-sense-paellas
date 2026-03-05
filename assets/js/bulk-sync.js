@@ -711,12 +711,26 @@
         }
     };
 
+    // Select All / Unselect All functionality
+    function initSelectAllButtons() {
+        $('.zs-select-all').on('click', function() {
+            const target = $(this).data('target');
+            $(`input[name="${target}"]`).prop('checked', true);
+        });
+
+        $('.zs-unselect-all').on('click', function() {
+            const target = $(this).data('target');
+            $(`input[name="${target}"]`).prop('checked', false);
+        });
+    }
+
     // Initialize on document ready
     $(document).ready(function() {
         statsUI.init();
         createUI.init();
         cleanupUI.init();
         deleteUI.init();
+        initSelectAllButtons();
     });
 
 })(jQuery);
