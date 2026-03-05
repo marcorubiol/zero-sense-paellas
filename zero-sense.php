@@ -276,6 +276,37 @@ register_deactivation_hook(__FILE__, 'zero_sense_deactivate');
 register_uninstall_hook(__FILE__, 'zero_sense_uninstall');
 
 /**
+ * Global helper function to check if trigger was manual (from metabox button)
+ * This checks and clears a temporary flag set by AJAX handlers
+ * 
+ * @param string|int $order_id Order ID
+ * @return string 'manual' or 'automatic'
+ */
+function zs_get_trigger_source($order_id): string
+{
+    $orderId = absint($order_id);
+    if ($orderId === 0) {
+        return 'automatic';
+    }
+
+    $order = wc_get_order($orderId);
+    if (!$order instanceof WC_Order) {
+        return 'automatic';
+    }
+
+    // Check if manual flag is set
+    $isManual = $order->get_meta('_zs_manual_trigger', true) === 'yes';
+    
+    // Clear the flag immediately after reading
+    if ($isManual) {
+        $order->delete_meta_data('_zs_manual_trigger');
+        $order->save_meta_data();
+    }
+    
+    return $isManual ? 'manual' : 'automatic';
+}
+
+/**
  * Global helper function for FlowMattic to clear calendar sync flag
  * Call this after successfully syncing to Google Calendar
  * 

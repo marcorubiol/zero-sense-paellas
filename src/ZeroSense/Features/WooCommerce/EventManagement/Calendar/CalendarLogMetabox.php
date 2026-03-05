@@ -360,14 +360,31 @@ class CalendarLogMetabox
                     'class' => 'zs-badge-manual',
                     'item_class' => 'zs-manual',
                     'label' => __('MAN', 'zero-sense'),
-                    'title' => __('Calendar Event Reserved', 'zero-sense'),
+                    'title' => __('Calendar Event Updated', 'zero-sense'),
                 ];
             }
             return [
                 'class' => 'zs-badge-auto',
                 'item_class' => 'zs-auto',
                 'label' => __('AUTO', 'zero-sense'),
-                'title' => __('Calendar Event Reserved', 'zero-sense'),
+                'title' => __('Calendar Event Updated', 'zero-sense'),
+            ];
+        }
+        
+        if ($type === 'reserved') {
+            if ($triggerSource === 'manual') {
+                return [
+                    'class' => 'zs-badge-manual',
+                    'item_class' => 'zs-manual',
+                    'label' => __('MAN', 'zero-sense'),
+                    'title' => __('Event Reserved', 'zero-sense'),
+                ];
+            }
+            return [
+                'class' => 'zs-badge-auto',
+                'item_class' => 'zs-auto',
+                'label' => __('AUTO', 'zero-sense'),
+                'title' => __('Event Reserved', 'zero-sense'),
             ];
         }
         
@@ -626,6 +643,13 @@ class CalendarLogMetabox
         $orderId = absint($_POST['order_id'] ?? 0);
         if ($orderId === 0) {
             wp_send_json_error('Invalid order ID');
+        }
+        
+        // Set temporary flag so FlowMattic knows this is manual
+        $order = wc_get_order($orderId);
+        if ($order) {
+            $order->update_meta_data('_zs_manual_trigger', 'yes');
+            $order->save_meta_data();
         }
         
         // Trigger FlowMattic workflow via class action
