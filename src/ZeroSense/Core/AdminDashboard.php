@@ -243,13 +243,13 @@ class AdminDashboard
                         </p>
                     </div>
                     <div class="zs-header-right">
+                        <p class="zs-version-info">
+                            <?php echo '<code>v:' . ZERO_SENSE_VERSION . '</code>'; ?>
+                        </p>
                         <button type="button" id="zs-clear-cache-btn" class="zs-btn-cache">
                             <span class="dashicons dashicons-update"></span>
                             <?php _e('Clear Cache', 'zero-sense'); ?>
                         </button>
-                        <p class="zs-version-info">
-                            <?php echo '<code>v:' . ZERO_SENSE_VERSION . '</code>'; ?>
-                        </p>
                     </div>
                 </div>
                 
