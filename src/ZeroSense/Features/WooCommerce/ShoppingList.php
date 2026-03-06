@@ -126,8 +126,12 @@ class ShoppingList implements FeatureInterface
     {
         if (!$this->isShoppingListPage()) { return; }
         $sig = get_query_var(self::QUERY_SIG);
-        if (!is_string($sig) || $sig === '') { return; }
-        if (!$this->verifySignature()) { $this->deny(); }
+        
+        // Bloquear si NO hay firma o si la firma es inválida
+        if (!is_string($sig) || $sig === '' || !$this->verifySignature()) {
+            $this->deny();
+        }
+        
         header('X-Robots-Tag: noindex, nofollow, noarchive', true);
         add_filter('wp_robots', function (array $r): array {
             $r['noindex'] = true; $r['nofollow'] = true; return $r;
