@@ -162,12 +162,33 @@ class ShoppingList implements FeatureInterface
 
         global $sitepress;
         $defaultLang = $sitepress ? $sitepress->get_default_language() : 'es';
+        
+        // Suprimir filtros WPML temporalmente para evitar duplicados
+        $suppress = has_filter('get_terms_args', 'wpml_get_terms_args_filter');
+        if ($suppress !== false) {
+            remove_filter('get_terms_args', 'wpml_get_terms_args_filter', 10);
+        }
+        
         $locations = get_terms([
             'taxonomy'   => 'service-area',
             'hide_empty' => false,
             'lang'       => $defaultLang,
         ]);
+        
+        // Restaurar filtro WPML
+        if ($suppress !== false) {
+            add_filter('get_terms_args', 'wpml_get_terms_args_filter', 10, 2);
+        }
+        
         if (is_wp_error($locations) || !is_array($locations)) { $locations = []; }
+        
+        // Filtrar duplicados manualmente por term_id
+        $seen = [];
+        $locations = array_filter($locations, function($term) use (&$seen) {
+            if (isset($seen[$term->term_id])) { return false; }
+            $seen[$term->term_id] = true;
+            return true;
+        });
 
         $preOrders = $preList = $preItemKeys = [];
         if ($preFiltered) {
