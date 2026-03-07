@@ -6,6 +6,7 @@ namespace ZeroSense\Features\WooCommerce\OrderManagement;
 use WC_Order;
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys as DepositMetaKeys;
+use ZeroSense\Features\WooCommerce\Deposits\Support\Utils as DepositUtils;
 
 if (!defined('ABSPATH')) { exit; }
 
@@ -654,6 +655,7 @@ class AdminOrdersCsvExport implements FeatureInterface
     private function buildRow(WC_Order $order, array $cols): array
     {
         $eventDate = (string) $order->get_meta('zs_event_date', true);
+        $depositInfo = DepositUtils::getDepositInfo($order);
 
         $serviceLocationId = (int) $order->get_meta('zs_event_service_location', true);
         $serviceLocationName = '';
@@ -663,7 +665,7 @@ class AdminOrdersCsvExport implements FeatureInterface
         }
 
         $depositAmount       = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_AMOUNT, true);
-        $depositPct          = (string) $order->get_meta(DepositMetaKeys::DEPOSIT_PERCENTAGE, true);
+        $depositPct          = isset($depositInfo['deposit_percentage']) ? (string) $depositInfo['deposit_percentage'] : '';
         $remainingAmount     = (string) $order->get_meta(DepositMetaKeys::REMAINING_AMOUNT, true);
         $isDepositPaid       = (string) $order->get_meta(DepositMetaKeys::IS_DEPOSIT_PAID, true);
         $depositPaymentDate  = (string) $order->get_meta(DepositMetaKeys::FIRST_PAYMENT_DATE, true);
