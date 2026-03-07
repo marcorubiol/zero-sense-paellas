@@ -675,12 +675,11 @@ class AdminOrdersCsvExport implements FeatureInterface
         $eventTs     = $eventDate !== '' ? strtotime($eventDate) : false;
 
         // Calculate total paid
-        $totalPaid = '';
+        $totalPaid = '0,00';
         if ($order->has_status(['fully-paid', 'completed'])) {
             $totalPaid = number_format((float) $order->get_total(), 2, ',', '');
-        } elseif ($remainingAmount !== '') {
-            $totalPaidValue = (float) $order->get_total() - (float) $remainingAmount;
-            $totalPaid = number_format($totalPaidValue, 2, ',', '');
+        } elseif ($order->has_status('deposit-paid')) {
+            $totalPaid = $depositAmount !== '' ? number_format((float) $depositAmount, 2, ',', '') : '0,00';
         }
 
         // Format deposit paid as Yes/No
