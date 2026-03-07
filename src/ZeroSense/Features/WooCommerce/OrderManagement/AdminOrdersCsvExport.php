@@ -21,7 +21,7 @@ class AdminOrdersCsvExport implements FeatureInterface
     private const ALL_COLUMNS = [
         // Order identification
         'order_id'           => 'Order ID',
-        'date'               => 'Date',
+        'date'               => 'Order date',
         'status'             => 'Status',
         // Customer
         'customer_name'      => 'Customer name',
