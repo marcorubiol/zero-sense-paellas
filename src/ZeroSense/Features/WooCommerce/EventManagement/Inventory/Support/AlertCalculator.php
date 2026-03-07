@@ -107,6 +107,7 @@ class AlertCalculator
         
         return [
             'material_key' => $materialKey,
+            'event_date' => $eventDate,
             'alert_type' => $alertType,
             'needed' => $neededQuantity,
             'total_stock' => $totalStock,
