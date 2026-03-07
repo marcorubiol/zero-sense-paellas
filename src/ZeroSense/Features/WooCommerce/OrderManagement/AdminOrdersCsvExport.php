@@ -840,6 +840,16 @@ class AdminOrdersCsvExport implements FeatureInterface
             }
         }
 
+        if (!empty($_GET['statuses']) && is_array($_GET['statuses'])) {
+            $params['statuses'] = array_map('sanitize_text_field', wp_unslash($_GET['statuses']));
+        }
+
+        foreach (['date_from', 'date_to'] as $key) {
+            if (isset($_GET[$key]) && $_GET[$key] !== '') {
+                $params[$key] = sanitize_text_field(wp_unslash($_GET[$key]));
+            }
+        }
+
         return $params;
     }
 }
