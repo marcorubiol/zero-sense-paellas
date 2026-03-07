@@ -19,12 +19,15 @@ class AdminOrdersCsvExport implements FeatureInterface
     private const BATCH_SIZE      = 50;
 
     private const ALL_COLUMNS = [
+        // Order identification
         'order_id'           => 'Order ID',
         'date'               => 'Date',
         'status'             => 'Status',
+        // Customer
         'customer_name'      => 'Customer name',
         'email'              => 'Email',
         'phone'              => 'Phone',
+        // Event
         'event_date'         => 'Event date',
         'start_time'         => 'Event start time',
         'serving_time'       => 'Paellas service time',
@@ -32,17 +35,19 @@ class AdminOrdersCsvExport implements FeatureInterface
         'event_type'         => 'Event type',
         'location'           => 'Service location',
         'city'               => 'City',
+        // Financial
         'order_total'        => 'Order total',
-        'total_paid'         => 'Total paid',
-        'remaining'          => 'Remaining amount',
         'deposit_amount'     => 'Deposit amount',
         'deposit_pct'        => 'Deposit %',
+        'total_paid'         => 'Total paid',
+        'remaining'          => 'Remaining amount',
         'deposit_paid'       => 'Deposit paid?',
         'first_payment_date' => 'First payment date',
         'second_payment_date'=> 'Second payment date',
         'payment_method'     => 'Payment method',
-        'language'           => 'Language',
+        // Other
         'products'           => 'Products',
+        'language'           => 'Language',
     ];
 
     public function getName(): string        { return __('Orders: CSV Export', 'zero-sense'); }
