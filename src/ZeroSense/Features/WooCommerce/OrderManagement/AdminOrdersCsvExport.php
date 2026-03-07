@@ -676,7 +676,9 @@ class AdminOrdersCsvExport implements FeatureInterface
 
         // Calculate total paid
         $totalPaid = '';
-        if ($remainingAmount !== '') {
+        if ($order->has_status(['fully-paid', 'completed'])) {
+            $totalPaid = number_format((float) $order->get_total(), 2, ',', '');
+        } elseif ($remainingAmount !== '') {
             $totalPaidValue = (float) $order->get_total() - (float) $remainingAmount;
             $totalPaid = number_format($totalPaidValue, 2, ',', '');
         }
