@@ -55,7 +55,13 @@ class CalendarAutoSync
     {
         $values = [];
         foreach (self::MONITORED_FIELDS as $key) {
-            $values[$key] = (string) $order->get_meta($key, true);
+            $metaValue = $order->get_meta($key, true);
+            // Handle both string and array values for hash computation
+            if (is_array($metaValue)) {
+                $values[$key] = serialize($metaValue);
+            } else {
+                $values[$key] = (string) $metaValue;
+            }
         }
         return md5(serialize($values));
     }
