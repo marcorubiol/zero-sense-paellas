@@ -201,7 +201,7 @@
     function handleUnitChange($unitSelect) {
         var $row = $unitSelect.closest('tr');
         var $qtyCell = $row.find('td').eq(2); // qty column is 3rd td (index 2)
-        var $qtyInput = $qtyCell.find('input[name="zs_recipe_ingredients[qty][]"]');
+        var $qtyInput = $qtyCell.find('input[type="number"][name="zs_recipe_ingredients[qty][]"]').first();
         var unit = $unitSelect.val();
         
         if (unit === 'cn') {
