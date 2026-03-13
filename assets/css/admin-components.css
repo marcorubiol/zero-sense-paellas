@@ -1236,3 +1236,70 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     font-weight: bold;
     margin-left: 2px;
 }
+
+/* =================================================================
+   RECIPE TABLES RESPONSIVE
+   ================================================================= */
+
+/* Responsive adjustments for recipe ingredient/utensil/liquid tables */
+@media screen and (max-width: 1280px) {
+    /* Adjust column widths for smaller screens */
+    #zs-recipe-rows td:nth-child(2),
+    #zs-utensil-rows td:nth-child(2),
+    #zs-liquid-rows td:nth-child(2) {
+        min-width: 180px;
+    }
+    
+    #zs-recipe-rows td:nth-child(3),
+    #zs-recipe-rows td:nth-child(4),
+    #zs-utensil-rows td:nth-child(3),
+    #zs-utensil-rows td:nth-child(4),
+    #zs-utensil-rows td:nth-child(5),
+    #zs-liquid-rows td:nth-child(3) {
+        min-width: 80px;
+    }
+    
+    /* Make select and input elements more compact */
+    #zs-recipe-rows select,
+    #zs-recipe-rows input,
+    #zs-utensil-rows select,
+    #zs-utensil-rows input,
+    #zs-liquid-rows select,
+    #zs-liquid-rows input {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+    
+    /* Reduce button padding */
+    #zs-recipe-rows .button,
+    #zs-utensil-rows .button,
+    #zs-liquid-rows .button {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+}
+
+/* For very small screens, allow horizontal scroll with better UX */
+@media screen and (max-width: 960px) {
+    .zs-mb-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .zs-mb-section table.widefat {
+        min-width: 700px;
+    }
+    
+    /* Add scroll hint shadow */
+    .zs-mb-section {
+        background: 
+            linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+            linear-gradient(to right, rgba(0,0,0,.05), white 30%) 0 100%,
+            linear-gradient(to left, white 30%, rgba(255,255,255,0)),
+            linear-gradient(to left, rgba(0,0,0,.05), white 30%) 100%;
+        background-repeat: no-repeat;
+        background-color: white;
+        background-size: 40px 100%, 40px 100%, 40px 100%, 40px 100%;
+        background-attachment: local, scroll, local, scroll;
+    }
+}
