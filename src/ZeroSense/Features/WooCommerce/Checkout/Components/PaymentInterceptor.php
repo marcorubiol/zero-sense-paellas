@@ -53,14 +53,16 @@ class PaymentInterceptor
             'order_id' => $order->get_id(),
             'status' => $order->get_status(),
             'isNewOrder' => $isNewOrder,
-            'language' => $this->getOrderLanguage($order),
         ]);
         
         if ($isNewOrder && $order->get_status() !== 'budget-requested') {
             $order->update_status('budget-requested', __('Budget requested after checkout completion.', 'zero-sense'));
         }
         
-        return $this->getCheckoutRedirectUrl($this->getOrderLanguage($order));
+        // Don't redirect - let WooCommerce use default order-received page
+        // BacsRedirects handles BACS payments from order-pay context
+        // ReturnHandler handles Redsys payment returns
+        return null;
     }
 
     public function processBlocksOrderBackup(\WC_Order $order): void
@@ -71,26 +73,5 @@ class PaymentInterceptor
     public function processClassicOrderBackup(int $order_id, array $posted_data, \WC_Order $order): void
     {
         $this->processOrderInterception($order);
-    }
-
-    private function getCheckoutRedirectUrl(string $language): ?string
-    {
-        $urls = [
-            'es' => '/woo-status/gracias-transfer-primer-pago/',
-            'en' => '/en/woo-status/thanks-transfer-first-payment/',
-            'ca' => '/ca/woo-status/gracies-transfer-primer-pagament/',
-        ];
-        return isset($urls[$language]) ? home_url($urls[$language]) : null;
-    }
-
-    private function getOrderLanguage(\WC_Order $order): string
-    {
-        $language = $order->get_meta('wpml_language');
-        if ($language && in_array($language, ['es', 'en', 'ca'], true)) return $language;
-        if (function_exists('apply_filters')) {
-            $current_language = apply_filters('wpml_current_language', null);
-            if (in_array($current_language, ['en', 'ca'], true)) return $current_language;
-        }
-        return 'es';
     }
 }
