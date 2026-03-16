@@ -615,7 +615,7 @@ class CalendarLogMetabox
             return;
         }
         
-        $notes = sanitize_textarea_field(wp_unslash($_POST['zs_calendar_notes']));
+        $notes = wp_kses_post(wp_unslash($_POST['zs_calendar_notes']));
         $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
         $order->save_meta_data();
     }
@@ -637,7 +637,7 @@ class CalendarLogMetabox
             wp_send_json_error('Order not found');
         }
         
-        $notes = isset($_POST['notes']) ? sanitize_textarea_field(wp_unslash($_POST['notes'])) : '';
+        $notes = isset($_POST['notes']) ? wp_kses_post(wp_unslash($_POST['notes'])) : '';
         
         $order->update_meta_data(MetaKeys::CALENDAR_NOTES, $notes);
         $order->save_meta_data();

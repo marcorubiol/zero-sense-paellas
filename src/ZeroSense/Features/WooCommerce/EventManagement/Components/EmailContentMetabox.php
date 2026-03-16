@@ -80,10 +80,10 @@ class EmailContentMetabox
         }
 
         if (isset($_POST['budget_email_content'])) {
-            $order->update_meta_data(MetaKeys::BUDGET_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['budget_email_content']));
+            $order->update_meta_data(MetaKeys::BUDGET_EMAIL_CONTENT, wp_kses_post(wp_unslash($_POST['budget_email_content'])));
         }
         if (isset($_POST['final_details_email_content'])) {
-            $order->update_meta_data(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, sanitize_textarea_field((string) $_POST['final_details_email_content']));
+            $order->update_meta_data(MetaKeys::FINAL_DETAILS_EMAIL_CONTENT, wp_kses_post(wp_unslash($_POST['final_details_email_content'])));
         }
 
         $order->save();

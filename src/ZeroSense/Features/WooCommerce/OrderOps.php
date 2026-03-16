@@ -254,7 +254,7 @@ class OrderOps implements FeatureInterface
         }
 
         if (isset($_POST['zs_ops_notes'])) {
-            $newValue = sanitize_textarea_field((string) $_POST['zs_ops_notes']);
+            $newValue = wp_kses_post(wp_unslash($_POST['zs_ops_notes']));
             FieldChangeTracker::compareAndTrack($orderId, self::META_OPS_NOTES, $order->get_meta(self::META_OPS_NOTES, true), $newValue);
             $order->update_meta_data(self::META_OPS_NOTES, $newValue);
         }

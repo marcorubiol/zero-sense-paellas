@@ -332,7 +332,7 @@ class CheckoutFields
         // Intolerances
         $intolerances = $this->getSubmittedFieldValue(MetaKeys::INTOLERANCES);
         if ($intolerances !== null) {
-            $order->update_meta_data(MetaKeys::INTOLERANCES, sanitize_textarea_field((string) $intolerances));
+            $order->update_meta_data(MetaKeys::INTOLERANCES, wp_kses_post(wp_unslash($intolerances)));
         }
 
         // Service location (from hidden field, falls back to WC session)
