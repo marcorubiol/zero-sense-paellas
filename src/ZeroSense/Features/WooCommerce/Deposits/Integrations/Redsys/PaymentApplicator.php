@@ -37,7 +37,24 @@ trait PaymentApplicator
                 'expected_deposit' => wc_format_decimal($depositAmountMeta),
                 'payment_type'     => 'deposit',
             ]);
+        } elseif ($intent === 'balance' || $intent === 'remaining') {
+            // Balance payment on deposit-paid order
+            $target = 'fully-paid';
+            $balanceAmount = max(0.0, $orderTotal - $depositAmountMeta);
+
+            MetaKeys::update($order, MetaKeys::IS_BALANCE_PAID, 'yes');
+            MetaKeys::update($order, MetaKeys::SECOND_PAYMENT_DATE, current_time('mysql'));
+            MetaKeys::update($order, MetaKeys::PAYMENT_FLOW, 'balance');
+            MetaKeys::update($order, MetaKeys::REMAINING_AMOUNT, 0);
+            MetaKeys::update($order, MetaKeys::BALANCE_AMOUNT, $balanceAmount);
+
+            Logs::add($order, 'gateway', [
+                'event'        => 'balance_paid',
+                'amount_paid'  => wc_format_decimal($amountPaid),
+                'payment_type' => 'balance',
+            ]);
         } else {
+            // Full payment (initial full payment or other cases)
             $target      = 'fully-paid';
             $flowValue   = $intent ?: 'full';
             $balanceAmount = max(0.0, $orderTotal - $depositAmountMeta);

@@ -255,10 +255,57 @@ class RedsysBizum extends WC_Payment_Gateway
 
             $isSuccess = ($dsResponse >= 0 && $dsResponse <= 99);
             if ($isSuccess) {
-                // Idempotency: already processed
-                if ($order->has_status(['deposit-paid', 'fully-paid'])) { status_header(200); exit; }
-                $intent    = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                // Calculate amount early for idempotency checks
                 $amountRaw = (float) (isset($params['Ds_Amount']) ? $params['Ds_Amount'] : 0) / 100;
+
+                // Idempotency: if fully paid, already processed
+                if ($order->has_status('fully-paid')) {
+                    status_header(200); exit;
+                }
+
+                // Smart idempotency for deposit-paid: distinguish balance payment from duplicate deposit
+                if ($order->has_status('deposit-paid')) {
+                    $intent = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                    $remainingAmount = (float) $order->get_meta(MetaKeys::REMAINING_AMOUNT, true);
+                    $depositAmount = (float) $order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true);
+
+                    $tolerance = 2.0; // €2 tolerance for rounding differences
+                    $isBalancePayment = abs($amountRaw - $remainingAmount) <= $tolerance;
+                    $isDuplicateDeposit = abs($amountRaw - $depositAmount) <= $tolerance;
+
+                    if ($intent === 'remaining' && $isBalancePayment) {
+                        // Expected case: balance payment - continue processing
+                        if ($logger) {
+                            $logger->info(sprintf('Balance payment detected: order=%d amount=%.2f remaining=%.2f', $orderId, $amountRaw, $remainingAmount), ['source' => 'zero-sense-redsys-bizum']);
+                        }
+                    } elseif ($intent === 'remaining' && !$isBalancePayment) {
+                        // Discrepancy: payment_flow says remaining but amount doesn't match
+                        $order->add_order_note(sprintf(__('Warning: payment_flow indicates balance payment but amount mismatch. Expected: %.2f, Received: %.2f. Processing anyway.', 'zero-sense'), $remainingAmount, $amountRaw));
+                        if ($logger) {
+                            $logger->warning(sprintf('Balance payment amount mismatch: order=%d expected=%.2f received=%.2f', $orderId, $remainingAmount, $amountRaw), ['source' => 'zero-sense-redsys-bizum']);
+                        }
+                    } elseif (!$intent && $isBalancePayment) {
+                        // Fallback: payment_flow empty but amount matches balance
+                        $order->add_order_note(sprintf(__('Balance payment detected by amount match (%.2f EUR). payment_flow was empty.', 'zero-sense'), $amountRaw));
+                        if ($logger) {
+                            $logger->info(sprintf('Balance payment inferred from amount: order=%d amount=%.2f', $orderId, $amountRaw), ['source' => 'zero-sense-redsys-bizum']);
+                        }
+                        $intent = 'balance';
+                    } elseif ($isDuplicateDeposit) {
+                        // Duplicate deposit payment - ignore
+                        $order->add_order_note(sprintf(__('Duplicate deposit payment ignored (%.2f EUR matches original deposit of %.2f EUR).', 'zero-sense'), $amountRaw, $depositAmount));
+                        if ($logger) {
+                            $logger->warning(sprintf('Duplicate deposit payment ignored: order=%d amount=%.2f', $orderId, $amountRaw), ['source' => 'zero-sense-redsys-bizum']);
+                        }
+                        status_header(200); exit;
+                    } else {
+                        // Already processed (normal idempotency)
+                        status_header(200); exit;
+                    }
+                }
+
+                $intent = $intent ?? (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+
                 $order->add_order_note(sprintf(__('Redsys Bizum payment success via callback (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
                 $this->applyPaymentSuccess($order, $intent, $amountRaw);
             } else {

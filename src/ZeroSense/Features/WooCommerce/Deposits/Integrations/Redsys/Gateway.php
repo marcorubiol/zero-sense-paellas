@@ -400,14 +400,61 @@ class Gateway extends WC_Payment_Gateway
 
             $isSuccess = ($dsResponse >= 0 && $dsResponse <= 99);
             if ($isSuccess) {
-                // Idempotency: if already in a paid status, just acknowledge
-                if ($order->has_status(['deposit-paid', 'fully-paid'])) {
-                    try { Logs::add($order, 'gateway', ['event' => 'callback_already_processed', 'status' => $order->get_status()]); } catch (\Throwable $e) {}
+                // Calculate amount early for idempotency checks
+                $amountRaw = (float) ($callbackApi->getParameter('Ds_Amount') ?? 0) / 100;
+
+                // Idempotency: if fully paid, already processed
+                if ($order->has_status('fully-paid')) {
+                    try { Logs::add($order, 'gateway', ['event' => 'callback_already_processed', 'status' => 'fully-paid']); } catch (\Throwable $e) {}
                     status_header(200); exit;
                 }
 
-                $intent    = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
-                $amountRaw = (float) ($callbackApi->getParameter('Ds_Amount') ?? 0) / 100;
+                // Smart idempotency for deposit-paid: distinguish balance payment from duplicate deposit
+                if ($order->has_status('deposit-paid')) {
+                    $intent = (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
+                    $remainingAmount = (float) $order->get_meta(MetaKeys::REMAINING_AMOUNT, true);
+                    $depositAmount = (float) $order->get_meta(MetaKeys::DEPOSIT_AMOUNT, true);
+
+                    $tolerance = 2.0; // €2 tolerance for rounding differences
+                    $isBalancePayment = abs($amountRaw - $remainingAmount) <= $tolerance;
+                    $isDuplicateDeposit = abs($amountRaw - $depositAmount) <= $tolerance;
+
+                    if ($intent === 'remaining' && $isBalancePayment) {
+                        // Expected case: balance payment - continue processing
+                        if ($logger) {
+                            $logger->info(sprintf('Balance payment detected: order=%d amount=%.2f remaining=%.2f', $orderId, $amountRaw, $remainingAmount), ['source' => 'zero-sense-redsys-deposits']);
+                        }
+                    } elseif ($intent === 'remaining' && !$isBalancePayment) {
+                        // Discrepancy: payment_flow says remaining but amount doesn't match
+                        $order->add_order_note(sprintf(__('Warning: payment_flow indicates balance payment but amount mismatch. Expected: %.2f, Received: %.2f. Processing anyway.', 'zero-sense'), $remainingAmount, $amountRaw));
+                        if ($logger) {
+                            $logger->warning(sprintf('Balance payment amount mismatch: order=%d expected=%.2f received=%.2f', $orderId, $remainingAmount, $amountRaw), ['source' => 'zero-sense-redsys-deposits']);
+                        }
+                        // Continue processing - trust the intent
+                    } elseif (!$intent && $isBalancePayment) {
+                        // Fallback: payment_flow empty but amount matches balance
+                        $order->add_order_note(sprintf(__('Balance payment detected by amount match (%.2f EUR). payment_flow was empty.', 'zero-sense'), $amountRaw));
+                        if ($logger) {
+                            $logger->info(sprintf('Balance payment inferred from amount: order=%d amount=%.2f', $orderId, $amountRaw), ['source' => 'zero-sense-redsys-deposits']);
+                        }
+                        // Update intent for PaymentApplicator
+                        $intent = 'balance';
+                    } elseif ($isDuplicateDeposit) {
+                        // Duplicate deposit payment - ignore
+                        $order->add_order_note(sprintf(__('Duplicate deposit payment ignored (%.2f EUR matches original deposit of %.2f EUR).', 'zero-sense'), $amountRaw, $depositAmount));
+                        try { Logs::add($order, 'gateway', ['event' => 'duplicate_deposit_ignored', 'amount' => $amountRaw]); } catch (\Throwable $e) {}
+                        if ($logger) {
+                            $logger->warning(sprintf('Duplicate deposit payment ignored: order=%d amount=%.2f', $orderId, $amountRaw), ['source' => 'zero-sense-redsys-deposits']);
+                        }
+                        status_header(200); exit;
+                    } else {
+                        // Already processed (normal idempotency)
+                        try { Logs::add($order, 'gateway', ['event' => 'callback_already_processed', 'status' => 'deposit-paid']); } catch (\Throwable $e) {}
+                        status_header(200); exit;
+                    }
+                }
+
+                $intent = $intent ?? (string) $order->get_meta(MetaKeys::PAYMENT_FLOW, true);
 
                 $order->add_order_note(sprintf(__('Redsys payment success via callback (%s). Response: %d', 'zero-sense'), $intent ?: 'n/a', $dsResponse));
                 $target = $this->applyPaymentSuccess($order, $intent, $amountRaw);
