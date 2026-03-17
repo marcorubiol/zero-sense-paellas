@@ -88,6 +88,14 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 per cada recepta de paella amb 60-80 persones',
             ],
+            [
+                'key' => 'tapapeus',
+                'label' => 'Tapapeus',
+                'category' => 'paelles',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cada paella',
+            ],
 
             // MATÈRIA PESADA — cassoles
             [
@@ -387,7 +395,7 @@ class MaterialDefinitions
     public static function getDependencyMap(): array
     {
         return [
-            'paelles'        => ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm'],
+            'paelles'        => ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm', 'tapapeus'],
             'cremadors'      => ['potes_tripodes', 'buta', 'catifes'],
             'cassoles'       => ['vitro_petita'],
             'taules_treball' => ['teles_negres', 'estovalles'],
