@@ -289,20 +289,11 @@ class EventDetailsMetabox
                             <label for="event_starters_service_time">
                                 <?php esc_html_e('Starters service time', 'zero-sense'); ?>
                             </label>
-                            <div class="zs-mb-field-inline">
-                                <input type="time" 
-                                       id="event_starters_service_time" 
-                                       name="event_starters_service_time" 
-                                       value="<?php echo esc_attr($startersServiceTime); ?>" 
-                                       class="short">
-                                <button type="button" 
-                                        id="zs-recalculate-starters-time" 
-                                        class="zs-btn is-primary"
-                                        title="<?php esc_attr_e('Set 30 minutes before Paellas service time', 'zero-sense'); ?>">
-                                    <span class="dashicons dashicons-update"></span>
-                                    <?php esc_html_e('Auto', 'zero-sense'); ?>
-                                </button>
-                            </div>
+                            <input type="time" 
+                                   id="event_starters_service_time" 
+                                   name="event_starters_service_time" 
+                                   value="<?php echo esc_attr($startersServiceTime); ?>" 
+                                   class="short">
                         </div>
                         
                         <div class="zs-mb-field">
@@ -457,7 +448,6 @@ class EventDetailsMetabox
                     });
                 }
 
-                setupRecalcBtn('zs-recalculate-starters-time', 'event_starters_service_time', 30);
                 setupRecalcBtn('zs-recalculate-team-arrival-time', 'event_team_arrival_time', 180);
 
                 // Guest count validation
@@ -701,21 +691,11 @@ class EventDetailsMetabox
             $servingTime = (string) $order->get_meta(MetaKeys::SERVING_TIME, true);
         }
 
-        // Starters service time: save POST value if non-empty, else auto-calculate from serving time
+        // Starters service time: save POST value (allow empty)
         if (isset($_POST['event_starters_service_time'])) {
             $newValue = sanitize_text_field($_POST['event_starters_service_time']);
-            if ($newValue !== '') {
-                FieldChangeTracker::compareAndTrack($orderId, MetaKeys::STARTERS_SERVICE_TIME, $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true), $newValue);
-                $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $newValue);
-            } elseif ($servingTime !== '') {
-                $existing = $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true);
-                if ($existing === '' || $existing === false || $existing === null) {
-                    $calculated = $this->calculateStartersTime($servingTime);
-                    if ($calculated !== '') {
-                        $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $calculated);
-                    }
-                }
-            }
+            FieldChangeTracker::compareAndTrack($orderId, MetaKeys::STARTERS_SERVICE_TIME, $order->get_meta(MetaKeys::STARTERS_SERVICE_TIME, true), $newValue);
+            $order->update_meta_data(MetaKeys::STARTERS_SERVICE_TIME, $newValue);
         }
 
         // Team arrival time: save POST value if non-empty, else auto-calculate from serving time
