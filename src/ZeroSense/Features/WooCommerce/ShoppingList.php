@@ -394,7 +394,10 @@ class ShoppingList implements FeatureInterface
 
             foreach ($eligible as $row) {
                 $recipeId = (int) $row['recipe_id'];
-                $eqItem = (float) $row['qty'] * $paxRatio;
+                $eqBase   = (float) $row['qty'] * $paxRatio;
+                $eqItem   = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
+                    ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
+                    : $eqBase;
                 if ($eqItem <= 0) { continue; }
 
                 $recipeIng = get_post_meta($recipeId, self::META_RECIPE_ING, true);

@@ -2137,7 +2137,10 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $eqItem = $group['total_qty'] * $paxRatio;
+            $eqBase  = $group['total_qty'] * $paxRatio;
+            $eqItem  = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
+                ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
+                : $eqBase;
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
@@ -2232,7 +2235,10 @@ class BricksDynamicTags implements FeatureInterface
 
         // Calculate ingredients for each recipe
         foreach ($recipeGroups as $recipeId => &$group) {
-            $eqItem = $group['total_qty'] * $paxRatio;
+            $eqBase  = $group['total_qty'] * $paxRatio;
+            $eqItem  = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
+                ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
+                : $eqBase;
             
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (!is_array($recipeIngredients)) {
@@ -2427,7 +2433,10 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $eqItem = $group['total_qty'] * $paxRatio;
+            $eqBase  = $group['total_qty'] * $paxRatio;
+            $eqItem  = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
+                ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
+                : $eqBase;
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';

@@ -36,7 +36,7 @@ class RecipeCalculator
             return 1.0;
         }
         $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return round($eq * self::SAFETY_MARGIN) / $total;
+        return $eq / $total;
     }
 
     /**
@@ -108,10 +108,12 @@ class RecipeCalculator
             if ($paellaOnly && get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) !== '1') {
                 continue;
             }
+            $eqBase = $qty * $paxRatio;
+            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
             $eligible[] = [
                 'recipe_id' => $recipeId,
                 'qty'       => $qty,
-                'eq'        => $qty * $paxRatio,
+                'eq'        => $isPaella ? round($eqBase * self::SAFETY_MARGIN) : $eqBase,
             ];
         }
 
