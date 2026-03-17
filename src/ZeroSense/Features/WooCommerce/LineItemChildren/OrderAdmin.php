@@ -112,7 +112,21 @@ class OrderAdmin
             return;
         }
 
-        if (!is_admin() || empty($_POST['zs_item_children']) || !is_array($_POST['zs_item_children'])) {
+        if (!is_admin()) {
+            return;
+        }
+
+        $childrenData = [];
+        if (!empty($_POST['zs_item_children']) && is_array($_POST['zs_item_children'])) {
+            $childrenData = $_POST['zs_item_children'];
+        } elseif (!empty($_POST['items']) && is_string($_POST['items'])) {
+            parse_str(wp_unslash($_POST['items']), $parsed);
+            if (!empty($parsed['zs_item_children']) && is_array($parsed['zs_item_children'])) {
+                $childrenData = $parsed['zs_item_children'];
+            }
+        }
+
+        if (empty($childrenData)) {
             return;
         }
 
@@ -122,7 +136,7 @@ class OrderAdmin
 
         $hasChanges = false;
 
-        foreach ($_POST['zs_item_children'] as $itemId => $rawChildren) {
+        foreach ($childrenData as $itemId => $rawChildren) {
             $itemId   = (int) $itemId;
             $children = max(0, (int) $rawChildren);
 
