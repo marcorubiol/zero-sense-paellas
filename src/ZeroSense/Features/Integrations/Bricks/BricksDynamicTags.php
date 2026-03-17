@@ -1259,7 +1259,7 @@ class BricksDynamicTags implements FeatureInterface
             if (!$product instanceof \WC_Product) {
                 continue;
             }
-            $originalId = $this->resolveOriginalProductId($product->get_id());
+            $originalId = RecipeCalculator::resolveOriginalProductId($product->get_id());
             $rid = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_ID, true);
             if ($rid > 0) {
                 $recipeIds[$rid] = true;

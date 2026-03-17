@@ -40,19 +40,28 @@ class RecipeCalculator
     }
 
     /**
+     * Resolve the WPML-original product ID (handles variable products + WPML language).
+     */
+    public static function resolveOriginalProductId(int $productId): int
+    {
+        $parentId = wp_get_post_parent_id($productId);
+        $checkId  = $parentId ? $parentId : $productId;
+
+        if (!defined('ICL_SITEPRESS_VERSION')) {
+            return $checkId;
+        }
+
+        $defaultLang = apply_filters('wpml_default_language', null);
+        $originalId  = apply_filters('wpml_object_id', $checkId, 'product', true, $defaultLang);
+        return $originalId ? (int) $originalId : $checkId;
+    }
+
+    /**
      * Resolve the recipe ID for an order item (handles rabbit choice + WPML).
      */
     public static function resolveRecipeId(WC_Order_Item_Product $item, WC_Product $product): int
     {
-        $productId = $product->get_id();
-        $parentId  = wp_get_post_parent_id($productId);
-        $checkId   = $parentId ? $parentId : $productId;
-
-        if (defined('ICL_SITEPRESS_VERSION')) {
-            $defaultLang = apply_filters('wpml_default_language', null);
-            $originalId  = apply_filters('wpml_object_id', $checkId, 'product', true, $defaultLang);
-            $checkId     = $originalId ? (int) $originalId : $checkId;
-        }
+        $checkId = self::resolveOriginalProductId($product->get_id());
 
         $recipeId = (int) get_post_meta($checkId, self::META_RECIPE_ID, true);
         if ($recipeId <= 0) {
