@@ -46,7 +46,7 @@ class OrderAdmin
         ?>
         <div class="zs-item-children-edit" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:12px; flex-wrap:wrap;">
             <label style="font-weight:600; color:#555;" for="zs_ic_<?php echo esc_attr((string) $itemId); ?>">
-                <?php esc_html_e('Niños (5-8)', 'zero-sense'); ?>:
+                <?php esc_html_e('Children (5-8)', 'zero-sense'); ?>:
             </label>
             <input
                 type="number"
@@ -61,7 +61,7 @@ class OrderAdmin
             <span style="color:#888;">
                 <?php echo esc_html((string) $adults); ?> adult
                 <?php if ($current > 0) : ?>
-                    + <?php echo esc_html((string) $current); ?> nen
+                    + <?php echo esc_html((string) $current); ?> child
                     (<?php echo wp_kses_post(wc_price($unitPrice * 0.6)); ?>/u)
                     = <?php echo wp_kses_post(wc_price($adults * $unitPrice + $current * $unitPrice * 0.6)); ?>
                 <?php endif; ?>
