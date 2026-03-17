@@ -37,6 +37,10 @@ class Integration
 
         // Hook into WooCommerce order status changes
         add_action('woocommerce_order_status_changed', [$this, 'onOrderStatusChanged'], 10, 4);
+        
+        // Hook into WordPress trash/untrash actions for orders (handles "Move to Trash" button)
+        add_action('wp_trash_post', [$this, 'onOrderTrashed'], 10, 1);
+        add_action('untrashed_post', [$this, 'onOrderUntrashed'], 10, 2);
 
         // Setup triggers when WordPress initializes
         add_action('init', [$this, 'setupTriggers']);
@@ -353,6 +357,50 @@ class Integration
     public function onOrderStatusChanged(int $orderId, string $oldStatus, string $newStatus, WC_Order $order): void
     {
         $this->maybeTriggerWorkflow($orderId, $oldStatus, $newStatus, $order);
+    }
+    
+    /**
+     * Handle when an order is moved to trash (via "Move to Trash" button)
+     */
+    public function onOrderTrashed(int $postId): void
+    {
+        // Only process shop_order post type
+        if (get_post_type($postId) !== 'shop_order') {
+            return;
+        }
+        
+        $order = wc_get_order($postId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+        
+        // Get the current order status before it's trashed
+        $currentStatus = $order->get_status();
+        
+        // Trigger workflow with transition to 'trash'
+        $this->maybeTriggerWorkflow($postId, $currentStatus, 'trash', $order);
+    }
+    
+    /**
+     * Handle when an order is restored from trash
+     */
+    public function onOrderUntrashed(int $postId, string $previousStatus): void
+    {
+        // Only process shop_order post type
+        if (get_post_type($postId) !== 'shop_order') {
+            return;
+        }
+        
+        $order = wc_get_order($postId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+        
+        // Get the restored status
+        $restoredStatus = $order->get_status();
+        
+        // Trigger workflow with transition from 'trash' to restored status
+        $this->maybeTriggerWorkflow($postId, 'trash', $restoredStatus, $order);
     }
 
     private function maybeTriggerWorkflow(int $orderId, string $oldStatus, string $newStatus, WC_Order $order): void
