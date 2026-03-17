@@ -38,7 +38,10 @@ class Integration
         // Hook into WooCommerce order status changes
         add_action('woocommerce_order_status_changed', [$this, 'onOrderStatusChanged'], 10, 4);
         
-        // Hook into WordPress trash/untrash actions for orders (handles "Move to Trash" button)
+        // Hook into trash/untrash for HPOS orders (woocommerce_trash_order fires for HPOS)
+        add_action('woocommerce_trash_order', [$this, 'onOrderTrashedHpos'], 10, 1);
+        add_action('woocommerce_untrash_order', [$this, 'onOrderUntrashedHpos'], 10, 1);
+        // Fallback for classic post-based storage (non-HPOS)
         add_action('wp_trash_post', [$this, 'onOrderTrashed'], 10, 1);
         add_action('untrashed_post', [$this, 'onOrderUntrashed'], 10, 2);
 
@@ -359,6 +362,54 @@ class Integration
         $this->maybeTriggerWorkflow($orderId, $oldStatus, $newStatus, $order);
     }
     
+    /**
+     * Handle when an HPOS order is moved to trash
+     */
+    public function onOrderTrashedHpos(int $orderId): void
+    {
+        if (function_exists('wc_get_logger')) {
+            wc_get_logger()->debug('Flowmattic: woocommerce_trash_order fired', [
+                'source' => 'zero-sense-flowmattic-debug',
+                'order_id' => $orderId,
+            ]);
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            if (function_exists('wc_get_logger')) {
+                wc_get_logger()->debug('Flowmattic: woocommerce_trash_order — could not load order', [
+                    'source' => 'zero-sense-flowmattic-debug',
+                    'order_id' => $orderId,
+                ]);
+            }
+            return;
+        }
+        
+        $currentStatus = $order->get_status();
+        $this->maybeTriggerWorkflow($orderId, $currentStatus, 'trash', $order);
+    }
+    
+    /**
+     * Handle when an HPOS order is restored from trash
+     */
+    public function onOrderUntrashedHpos(int $orderId): void
+    {
+        if (function_exists('wc_get_logger')) {
+            wc_get_logger()->debug('Flowmattic: woocommerce_untrash_order fired', [
+                'source' => 'zero-sense-flowmattic-debug',
+                'order_id' => $orderId,
+            ]);
+        }
+        
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+        
+        $restoredStatus = $order->get_status();
+        $this->maybeTriggerWorkflow($orderId, 'trash', $restoredStatus, $order);
+    }
+
     /**
      * Handle when an order is moved to trash (via "Move to Trash" button)
      */
