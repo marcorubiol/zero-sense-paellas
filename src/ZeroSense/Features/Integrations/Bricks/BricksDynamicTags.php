@@ -2105,8 +2105,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio    = $this->getPaxRatio($order);
-        $adultsRatio = $this->getAdultsRatio($order);
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2131,9 +2130,17 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
             if (!isset($recipeGroups[$recipeId])) {
-                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
+                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0, 'is_paella' => get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1', 'eq_sum_raw' => 0.0, 'has_per_item' => false];
             }
             $recipeGroups[$recipeId]['total_qty'] += $qty;
+            if ($recipeGroups[$recipeId]['is_paella']) {
+                $rawMeta = $item->get_meta(RecipeCalculator::META_ITEM_CHILDREN, true);
+                if ($rawMeta !== '' && $rawMeta !== false && $rawMeta !== null) {
+                    $ic = max(0, min((int) $rawMeta, (int) $qty));
+                    $recipeGroups[$recipeId]['eq_sum_raw'] += ($qty - $ic) + $ic * RecipeCalculator::CHILD_WEIGHT;
+                    $recipeGroups[$recipeId]['has_per_item'] = true;
+                }
+            }
             }
 
         if (empty($recipeGroups) ) {
@@ -2143,9 +2150,12 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
-            $eqBase   = $group['total_qty'] * ($isPaella ? $paxRatio : $adultsRatio);
-            $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
+            $isPaella = $group['is_paella'];
+            $eqItem   = $isPaella
+                ? ($group['has_per_item']
+                    ? round($group['eq_sum_raw'] * RecipeCalculator::SAFETY_MARGIN)
+                    : round($group['total_qty'] * $paxRatio * RecipeCalculator::SAFETY_MARGIN))
+                : $group['total_qty'];
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
@@ -2189,8 +2199,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio    = $this->getPaxRatio($order);
-        $adultsRatio = $this->getAdultsRatio($order);
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2222,9 +2231,12 @@ class BricksDynamicTags implements FeatureInterface
             if (!isset($recipeGroups[$recipeId])) {
                 $recipeGroups[$recipeId] = [
                     'recipe_title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage),
-                    'products' => [],
-                    'total_qty' => 0.0,
-                    'recipe_id' => $recipeId,
+                    'products'     => [],
+                    'total_qty'    => 0.0,
+                    'recipe_id'    => $recipeId,
+                    'is_paella'    => get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1',
+                    'eq_sum_raw'   => 0.0,
+                    'has_per_item' => false,
                 ];
             }
 
@@ -2233,6 +2245,14 @@ class BricksDynamicTags implements FeatureInterface
                 'qty' => $qty,
             ];
             $recipeGroups[$recipeId]['total_qty'] += $qty;
+            if ($recipeGroups[$recipeId]['is_paella']) {
+                $rawMeta = $item->get_meta(RecipeCalculator::META_ITEM_CHILDREN, true);
+                if ($rawMeta !== '' && $rawMeta !== false && $rawMeta !== null) {
+                    $ic = max(0, min((int) $rawMeta, (int) $qty));
+                    $recipeGroups[$recipeId]['eq_sum_raw'] += ($qty - $ic) + $ic * RecipeCalculator::CHILD_WEIGHT;
+                    $recipeGroups[$recipeId]['has_per_item'] = true;
+                }
+            }
             }
 
         if (empty($recipeGroups) ) {
@@ -2241,9 +2261,12 @@ class BricksDynamicTags implements FeatureInterface
 
         // Calculate ingredients for each recipe
         foreach ($recipeGroups as $recipeId => &$group) {
-            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
-            $eqBase   = $group['total_qty'] * ($isPaella ? $paxRatio : $adultsRatio);
-            $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
+            $isPaella = $group['is_paella'];
+            $eqItem   = $isPaella
+                ? ($group['has_per_item']
+                    ? round($group['eq_sum_raw'] * RecipeCalculator::SAFETY_MARGIN)
+                    : round($group['total_qty'] * $paxRatio * RecipeCalculator::SAFETY_MARGIN))
+                : $group['total_qty'];
             
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (!is_array($recipeIngredients)) {
@@ -2401,8 +2424,7 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio    = $this->getPaxRatio($order);
-        $adultsRatio = $this->getAdultsRatio($order);
+        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2427,9 +2449,17 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
             if (!isset($recipeGroups[$recipeId])) {
-                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0];
+                $recipeGroups[$recipeId] = ['title' => $this->getTranslatedRecipeTitle($recipeId, $orderLanguage), 'total_qty' => 0.0, 'is_paella' => get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1', 'eq_sum_raw' => 0.0, 'has_per_item' => false];
             }
             $recipeGroups[$recipeId]['total_qty'] += $qty;
+            if ($recipeGroups[$recipeId]['is_paella']) {
+                $rawMeta = $item->get_meta(RecipeCalculator::META_ITEM_CHILDREN, true);
+                if ($rawMeta !== '' && $rawMeta !== false && $rawMeta !== null) {
+                    $ic = max(0, min((int) $rawMeta, (int) $qty));
+                    $recipeGroups[$recipeId]['eq_sum_raw'] += ($qty - $ic) + $ic * RecipeCalculator::CHILD_WEIGHT;
+                    $recipeGroups[$recipeId]['has_per_item'] = true;
+                }
+            }
             }
 
         if (empty($recipeGroups) ) {
@@ -2439,9 +2469,12 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
-            $eqBase   = $group['total_qty'] * ($isPaella ? $paxRatio : $adultsRatio);
-            $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
+            $isPaella = $group['is_paella'];
+            $eqItem   = $isPaella
+                ? ($group['has_per_item']
+                    ? round($group['eq_sum_raw'] * RecipeCalculator::SAFETY_MARGIN)
+                    : round($group['total_qty'] * $paxRatio * RecipeCalculator::SAFETY_MARGIN))
+                : $group['total_qty'];
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';

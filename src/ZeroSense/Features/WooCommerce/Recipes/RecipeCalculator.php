@@ -98,8 +98,7 @@ class RecipeCalculator
      */
     public static function getEligibleItems(WC_Order $order, bool $paellaOnly = false): array
     {
-        $paxRatio    = self::getPaxRatio($order);
-        $adultsRatio = self::getAdultsRatio($order);
+        $paxRatio = self::getPaxRatio($order);
         $lineItems   = $order->get_items('line_item');
         if (!$lineItems) {
             return [];
@@ -137,7 +136,7 @@ class RecipeCalculator
                     $eq = round($qty * $paxRatio * self::SAFETY_MARGIN);
                 }
             } else {
-                $eq = $qty * $adultsRatio;
+                $eq = $qty;
             }
             $eligible[] = [
                 'recipe_id' => $recipeId,

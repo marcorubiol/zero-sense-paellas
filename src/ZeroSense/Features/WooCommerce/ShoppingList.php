@@ -365,8 +365,7 @@ class ShoppingList implements FeatureInterface
         foreach ($byOrder as $orderId => $allowedIdxs) {
             $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
-            $paxRatio    = RecipeCalculator::getPaxRatio($order);
-            $adultsRatio = RecipeCalculator::getAdultsRatio($order);
+            $paxRatio = RecipeCalculator::getPaxRatio($order);
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
@@ -389,15 +388,25 @@ class ShoppingList implements FeatureInterface
                 if (!$product instanceof \WC_Product) { continue; }
                 $recipeId = $this->resolveRecipeId($item, $product);
                 if ($recipeId <= 0) { continue; }
-                $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
+                $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty, 'item' => $item];
             }
             if (empty($eligible)) { continue; }
 
             foreach ($eligible as $row) {
                 $recipeId = (int) $row['recipe_id'];
+                $rowQty   = (float) $row['qty'];
                 $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
-                $eqBase   = (float) $row['qty'] * ($isPaella ? $paxRatio : $adultsRatio);
-                $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
+                if ($isPaella) {
+                    $rawMeta = $row['item']->get_meta(RecipeCalculator::META_ITEM_CHILDREN, true);
+                    if ($rawMeta !== '' && $rawMeta !== false && $rawMeta !== null) {
+                        $ic     = max(0, min((int) $rawMeta, (int) $rowQty));
+                        $eqItem = round(($rowQty - $ic + $ic * RecipeCalculator::CHILD_WEIGHT) * RecipeCalculator::SAFETY_MARGIN);
+                    } else {
+                        $eqItem = round($rowQty * $paxRatio * RecipeCalculator::SAFETY_MARGIN);
+                    }
+                } else {
+                    $eqItem = $rowQty;
+                }
                 if ($eqItem <= 0) { continue; }
 
                 $recipeIng = get_post_meta($recipeId, self::META_RECIPE_ING, true);
