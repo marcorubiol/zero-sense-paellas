@@ -5,6 +5,7 @@ namespace ZeroSense\Features\WooCommerce;
 
 use WC_Order;
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Features\WooCommerce\Recipes\RecipeCalculator;
 
 class ShoppingList implements FeatureInterface
 {
@@ -28,9 +29,6 @@ class ShoppingList implements FeatureInterface
     private const META_ADULTS           = 'zs_event_adults';
     private const META_CHILDREN         = 'zs_event_children_5_to_8';
     private const META_BABIES           = 'zs_event_children_0_to_4';
-    private const ADULT_WEIGHT          = 1.0;
-    private const CHILD_WEIGHT          = 0.4;
-    private const BABY_WEIGHT           = 0.0;
     private const ALLOWED_STATUSES      = ['wc-deposit-paid', 'wc-fully-paid', 'deposit-paid', 'fully-paid'];
 
     public function getName(): string        { return __('Shopping List', 'zero-sense'); }
@@ -331,7 +329,7 @@ class ShoppingList implements FeatureInterface
         $children = (int) $order->get_meta(self::META_CHILDREN, true);
         $babies   = (int) $order->get_meta(self::META_BABIES, true);
         $total    = $adults + $children + $babies;
-        $eqTotal  = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
+        $eqTotal  = ($adults * RecipeCalculator::ADULT_WEIGHT) + ($children * RecipeCalculator::CHILD_WEIGHT) + ($babies * RecipeCalculator::BABY_WEIGHT);
         $paxRatio = $total > 0 ? $eqTotal / $total : 1.0;
 
         $items = []; $idx = 0;
@@ -367,12 +365,7 @@ class ShoppingList implements FeatureInterface
         foreach ($byOrder as $orderId => $allowedIdxs) {
             $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
-            $adults   = (int) $order->get_meta(self::META_ADULTS, true);
-            $children = (int) $order->get_meta(self::META_CHILDREN, true);
-            $babies   = (int) $order->get_meta(self::META_BABIES, true);
-            $total    = $adults + $children + $babies;
-            $eqTotal  = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-            $paxRatio = $total > 0 ? $eqTotal / $total : 1.0;
+            $paxRatio = RecipeCalculator::getPaxRatio($order);
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
@@ -412,7 +405,7 @@ class ShoppingList implements FeatureInterface
                         $perPax = isset($ingRow['qty'])        ? (float) $ingRow['qty']       : 0.0;
                         $unit   = isset($ingRow['unit'])       ? sanitize_key((string) $ingRow['unit']) : '';
                         if ($termId <= 0 || $perPax <= 0 || $unit === '') { continue; }
-                        $amount = $eqItem * $perPax;
+                        $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
                         if ($amount <= 0) { continue; }
                         $k = $termId . '|' . $unit;
                         if (!isset($ingTotals[$k])) { $ingTotals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0]; }
@@ -428,7 +421,7 @@ class ShoppingList implements FeatureInterface
                             $termId       = isset($liqRow['liquid']) ? (int) $liqRow['liquid']   : 0;
                             $litresPerPax = isset($liqRow['qty'])    ? (float) $liqRow['qty']     : 0.0;
                             if ($termId <= 0 || $litresPerPax <= 0) { continue; }
-                            $amount = $litresPerPax * $eqItem;
+                            $amount = ceil(($litresPerPax * $eqItem) * RecipeCalculator::SAFETY_MARGIN);
                             if ($amount <= 0) { continue; }
                             $k = (string) $termId;
                             if (!isset($liquidTotals[$k])) { $liquidTotals[$k] = ['term_id' => $termId, 'qty' => 0.0]; }
@@ -545,37 +538,14 @@ class ShoppingList implements FeatureInterface
     // Math helpers
     // -------------------------------------------------------------------------
 
-    private function getEquivalentPax(WC_Order $order): float
-    {
-        $adults   = (int) $order->get_meta(self::META_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_CHILDREN, true);
-        $babies   = (int) $order->get_meta(self::META_BABIES, true);
-        $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return $eq > 0 ? (float) $eq : 0.0;
-    }
-
     private function resolveRecipeId(\WC_Order_Item_Product $item, \WC_Product $product): int
     {
-        $recipeId = (int) $product->get_meta(self::META_RECIPE_ID, true);
-        if ($recipeId <= 0) { return 0; }
-        if ($item->get_meta(self::META_RABBIT_CHOICE, true) === 'without') {
-            $noRabbit = (int) $product->get_meta(self::META_RECIPE_NO_RABBIT, true);
-            return $noRabbit > 0 ? $noRabbit : $recipeId;
-        }
-        return $recipeId;
+        return RecipeCalculator::resolveRecipeId($item, $product);
     }
 
     private function normalizeUnit(float $qty, string $unit): array
     {
-        // cn (cantidad necesaria) - qualitative unit, return count for aggregation display
-        if ($unit === 'cn') { return ['qty' => $qty, 'unit' => 'c/n']; }
-        
-        if ($unit === 'g'  && $qty >= 1000) { return ['qty' => $qty / 1000, 'unit' => 'kg']; }
-        if ($unit === 'kg' && $qty < 1)     { return ['qty' => $qty * 1000, 'unit' => 'gr']; }
-        if ($unit === 'ml' && $qty >= 1000) { return ['qty' => $qty / 1000, 'unit' => 'lit']; }
-        if ($unit === 'l'  && $qty < 1)     { return ['qty' => $qty * 1000, 'unit' => 'ml']; }
-        $map = ['g' => 'gr', 'kg' => 'kg', 'ml' => 'ml', 'l' => 'lit', 'u' => 'pcs', 'cn' => 'c/n'];
-        return ['qty' => $qty, 'unit' => $map[$unit] ?? $unit];
+        return RecipeCalculator::normalizeUnit($qty, $unit);
     }
 
     private function aggregatePaxTotals(array $orders, array $selectedItemKeys): array
@@ -611,7 +581,7 @@ class ShoppingList implements FeatureInterface
         $babies   = (int) $order->get_meta(self::META_BABIES, true);
         $total    = $adults + $children + $babies;
         if ($total <= 0) { return 0.0; }
-        $eq       = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
+        $eq       = ($adults * RecipeCalculator::ADULT_WEIGHT) + ($children * RecipeCalculator::CHILD_WEIGHT) + ($babies * RecipeCalculator::BABY_WEIGHT);
         $paxRatio = $eq / $total;
 
         $totalEq = 0.0;

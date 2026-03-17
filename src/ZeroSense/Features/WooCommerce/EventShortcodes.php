@@ -7,6 +7,7 @@ use WC_Product;
 use WP_Post;
 use WP_Term;
 use ZeroSense\Core\FeatureInterface;
+use ZeroSense\Features\WooCommerce\Recipes\RecipeCalculator;
 
 class EventShortcodes implements FeatureInterface
 {
@@ -23,10 +24,6 @@ class EventShortcodes implements FeatureInterface
     private const META_RABBIT_CHOICE = '_zs_rabbit_choice';
     private const META_RECIPE_INGREDIENTS = 'zs_recipe_ingredients';
     private const TAX_INGREDIENT = 'zs_ingredient';
-
-    private const ADULT_WEIGHT = 1.0;
-    private const CHILD_WEIGHT = 0.4;
-    private const BABY_WEIGHT = 0.0;
 
     public function getName(): string
     {
@@ -208,96 +205,15 @@ class EventShortcodes implements FeatureInterface
             return '';
         }
 
-        $paxRatio = $this->getPaxRatio($order);
-
-        $lineItems = $order->get_items('line_item');
-        if (!$lineItems) {
+        $eligible = RecipeCalculator::getEligibleItems($order);
+        if ($eligible === []) {
             return '';
         }
 
-        $eligible = [];
-        foreach ($lineItems as $item) {
-            if (!$item instanceof WC_Order_Item_Product) {
-                continue;
-            }
-
-            $qty = (float) $item->get_quantity();
-            if ($qty <= 0) {
-                continue;
-            }
-
-            $product = $item->get_product();
-            if (!$product instanceof WC_Product) {
-                $pid = (int) $item->get_product_id();
-                $product = $pid > 0 ? wc_get_product($pid) : null;
-            }
-
-            if (!$product instanceof WC_Product) {
-                continue;
-            }
-
-            $recipeId = $this->resolveRecipeIdForItem($item, $product);
-            if ($recipeId <= 0) {
-                continue;
-            }
-
-            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            }
-
-        if ($eligible === [] ) {
-            return '';
-        }
-
-        $totals = [];
-        foreach ($eligible as $row) {
-            $recipeId = (int) $row['recipe_id'];
-            $qty = (float) $row['qty'];
-
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
-                continue;
-            }
-
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
-            if (!is_array($recipeIngredients)) {
-                continue;
-            }
-
-            foreach ($recipeIngredients as $ingRow) {
-                if (!is_array($ingRow)) {
-                    continue;
-                }
-
-                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
-                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
-                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
-
-                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
-                    continue;
-                }
-
-                $amount = $eqItem * $perPax;
-                if ($amount <= 0) {
-                    continue;
-                }
-
-                $k = $termId . '|' . $unit;
-                if (!isset($totals[$k])) {
-                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
-                }
-                $totals[$k]['qty'] += $amount;
-            }
-        }
-
+        $totals = RecipeCalculator::aggregateIngredients($eligible);
         if ($totals === []) {
             return '';
         }
-
-        usort($totals, function(array $a, array $b): int {
-            $ta = $a['term_id'] ?? 0;
-            $tb = $b['term_id'] ?? 0;
-            return $ta <=> $tb;
-        });
 
         $rows = '';
         foreach ($totals as $t) {
@@ -359,21 +275,6 @@ class EventShortcodes implements FeatureInterface
         return $orderId > 0 ? $orderId : null;
     }
 
-    private function getPaxRatio(WC_Order $order): float
-    {
-        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
-        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
-
-        $totalGuests = $adults + $children + $babies;
-        if ($totalGuests <= 0) {
-            return 1.0;
-        }
-
-        $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return $eq / $totalGuests;
-    }
-
     private function getInfrastructureSchema(): array
     {
         $schema = get_option(self::OPTION_INFRASTRUCTURE_SCHEMA, null);
@@ -410,22 +311,6 @@ class EventShortcodes implements FeatureInterface
         }
 
         return $out;
-    }
-
-    private function resolveRecipeIdForItem(WC_Order_Item_Product $item, WC_Product $product): int
-    {
-        $recipeId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_ID, true);
-        if ($recipeId <= 0) {
-            return 0;
-        }
-
-        $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true);
-        if ($rabbitChoice !== 'without') {
-            return $recipeId;
-        }
-
-        $noRabbitId = (int) $product->get_meta(self::META_PRODUCT_RECIPE_NO_RABBIT, true);
-        return $noRabbitId > 0 ? $noRabbitId : $recipeId;
     }
 
     private function formatNumber(float $n): string

@@ -12,6 +12,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialCal
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\MaterialDefinitions;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Support\ManualOverride;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Utils as DepositsUtils;
+use ZeroSense\Features\WooCommerce\Recipes\RecipeCalculator;
 use WC_Order;
 use WP_Post;
 
@@ -65,9 +66,6 @@ class BricksDynamicTags implements FeatureInterface
     private const META_EVENT_CHILDREN = 'zs_event_children_5_to_8';
     private const META_EVENT_BABIES = 'zs_event_children_0_to_4';
     
-    private const ADULT_WEIGHT = 1.0;
-    private const CHILD_WEIGHT = 0.4;
-    private const BABY_WEIGHT = 0.0;
 
     /**
      * Get MetaBox fields from registry
@@ -1907,17 +1905,7 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function getPaxRatio(WC_Order $order): float
     {
-        $adults = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
-        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
-        $babies = (int) $order->get_meta(self::META_EVENT_BABIES, true);
-
-        $totalGuests = $adults + $children + $babies;
-        if ($totalGuests <= 0) {
-            return 1.0;
-        }
-
-        $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return $eq / $totalGuests;
+        return RecipeCalculator::getPaxRatio($order);
     }
 
     /**
@@ -1937,44 +1925,7 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function normalizeUnit(float $qty, string $unit): array
     {
-        // cn (cantidad necesaria) - qualitative unit, no quantity display
-        if ($unit === 'cn') {
-            return ['qty' => 0, 'unit' => 'c/n'];
-        }
-
-        $unitMap = [
-            'g'   => 'gr',
-            'kg'  => 'kg',
-            'ml'  => 'ml',
-            'l'   => 'lit',
-            'u'   => 'pcs',
-            'cn' => 'c/n',
-        ];
-
-        // Convert g to kg if >= 1000g
-        if ($unit === 'g' && $qty >= 1000) {
-            return ['qty' => $qty / 1000, 'unit' => 'kg'];
-        }
-
-        // Convert kg to g if < 1kg
-        if ($unit === 'kg' && $qty < 1) {
-            return ['qty' => $qty * 1000, 'unit' => 'gr'];
-        }
-
-        // Convert ml to lt if >= 1000ml
-        if ($unit === 'ml' && $qty >= 1000) {
-            return ['qty' => $qty / 1000, 'unit' => 'lit'];
-        }
-
-        // Convert l to ml if < 1l
-        if ($unit === 'l' && $qty < 1) {
-            return ['qty' => $qty * 1000, 'unit' => 'ml'];
-        }
-
-        return [
-            'qty'  => $qty,
-            'unit' => $unitMap[$unit] ?? $unit,
-        ];
+        return RecipeCalculator::normalizeUnit($qty, $unit);
     }
 
     /**
@@ -2199,7 +2150,7 @@ class BricksDynamicTags implements FeatureInterface
                     $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
                     $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
                     if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
-                    $amount = $eqItem * $perPax;
+                    $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
@@ -2303,7 +2254,7 @@ class BricksDynamicTags implements FeatureInterface
                     continue;
                 }
 
-                $amount = $eqItem * $perPax;
+                $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
                 if ($amount <= 0) {
                     continue;
                 }
@@ -2383,78 +2334,16 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
 
-        $lineItems = $order->get_items('line_item');
-        if (!$lineItems) {
+        $eligible = RecipeCalculator::getEligibleItems($order);
+        if (empty($eligible)) {
             return '';
         }
 
-        $eligible = [];
-        foreach ($lineItems as $item) {
-            if (!$item instanceof \WC_Order_Item_Product) {
-                continue;
-            }
-            $qty = (float) $item->get_quantity();
-            if ($qty <= 0) {
-                continue;
-            }
-            $product = $item->get_product();
-            if (!$product instanceof \WC_Product) {
-                continue;
-            }
-            $recipeId = $this->resolveRecipeIdForItem($item, $product);
-            if ($recipeId <= 0) {
-                continue;
-            }
-            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            }
-
-        if (empty($eligible) ) {
-            return '';
-        }
-
-        $totals = [];
-        foreach ($eligible as $row) {
-            $recipeId = (int) $row['recipe_id'];
-            $qty = (float) $row['qty'];
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
-                continue;
-            }
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
-            if (!is_array($recipeIngredients)) {
-                continue;
-            }
-            foreach ($recipeIngredients as $ingRow) {
-                if (!is_array($ingRow)) {
-                    continue;
-                }
-                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
-                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
-                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
-                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
-                    continue;
-                }
-                $amount = $eqItem * $perPax;
-                if ($amount <= 0) {
-                    continue;
-                }
-                $k = $termId . '|' . $unit;
-                if (!isset($totals[$k])) {
-                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
-                }
-                $totals[$k]['qty'] += $amount;
-            }
-        }
-
+        $totals = RecipeCalculator::aggregateIngredients($eligible);
         if (empty($totals)) {
             return '';
         }
-
-        usort($totals, function(array $a, array $b): int {
-            return ($a['term_id'] ?? 0) <=> ($b['term_id'] ?? 0);
-        });
 
         $html = '';
         foreach ($totals as $t) {
@@ -2553,7 +2442,7 @@ class BricksDynamicTags implements FeatureInterface
                     $termId = isset($liqRow['liquid']) ? (int) $liqRow['liquid'] : 0;
                     $perPax = isset($liqRow['qty']) ? (float) $liqRow['qty'] : 0.0;
                     if ($termId <= 0 || $perPax <= 0) continue;
-                    $amount = $eqItem * $perPax;
+                    $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
                     if ($amount <= 0) continue;
                     $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
                     if ($liqName === '') continue;
@@ -2571,7 +2460,7 @@ class BricksDynamicTags implements FeatureInterface
                     $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
                     $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
                     if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
-                    $amount = $eqItem * $perPax;
+                    $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
@@ -2602,91 +2491,16 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
 
-        $lineItems = $order->get_items('line_item');
-        if (!$lineItems) {
+        $eligible = RecipeCalculator::getEligibleItems($order);
+        if (empty($eligible)) {
             return '';
         }
 
-        $eligible = [];
-        foreach ($lineItems as $item) {
-            if (!$item instanceof \WC_Order_Item_Product) {
-                continue;
-            }
-
-            $qty = (float) $item->get_quantity();
-            if ($qty <= 0) {
-                continue;
-            }
-
-            $product = $item->get_product();
-            if (!$product instanceof \WC_Product) {
-                continue;
-            }
-
-            $recipeId = $this->resolveRecipeIdForItem($item, $product);
-            if ($recipeId <= 0) {
-                continue;
-            }
-
-            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            }
-
-        if (empty($eligible) ) {
-            return '';
-        }
-
-        $totals = [];
-        foreach ($eligible as $row) {
-            $recipeId = (int) $row['recipe_id'];
-            $qty = (float) $row['qty'];
-
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
-                continue;
-            }
-
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
-            if (!is_array($recipeIngredients)) {
-                continue;
-            }
-
-            foreach ($recipeIngredients as $ingRow) {
-                if (!is_array($ingRow)) {
-                    continue;
-                }
-
-                $termId = isset($ingRow['ingredient']) ? (int) $ingRow['ingredient'] : 0;
-                $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
-                $unit = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
-
-                if ($termId <= 0 || $perPax <= 0 || $unit === '') {
-                    continue;
-                }
-
-                $amount = $eqItem * $perPax;
-                if ($amount <= 0) {
-                    continue;
-                }
-
-                $k = $termId . '|' . $unit;
-                if (!isset($totals[$k])) {
-                    $totals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0];
-                }
-                $totals[$k]['qty'] += $amount;
-            }
-        }
-
+        $totals = RecipeCalculator::aggregateIngredients($eligible);
         if (empty($totals)) {
             return '';
         }
-
-        usort($totals, function(array $a, array $b): int {
-            $ta = $a['term_id'] ?? 0;
-            $tb = $b['term_id'] ?? 0;
-            return $ta <=> $tb;
-        });
 
         $items = [];
         foreach ($totals as $t) {
@@ -3238,80 +3052,13 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
 
-        $lineItems = $order->get_items('line_item');
-        if (!$lineItems) {
+        $eligible = RecipeCalculator::getEligibleItems($order, true);
+        if (empty($eligible)) {
             return '';
         }
 
-        $eligible = [];
-        foreach ($lineItems as $item) {
-            if (!$item instanceof \WC_Order_Item_Product) {
-                continue;
-            }
-            $qty = (float) $item->get_quantity();
-            if ($qty <= 0) {
-                continue;
-            }
-            $product = $item->get_product();
-            if (!$product instanceof \WC_Product) {
-                continue;
-            }
-            $recipeId = $this->resolveRecipeIdForItem($item, $product);
-            if ($recipeId <= 0) {
-                continue;
-            }
-            // Only include paella recipes
-            $needsPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true);
-            if ($needsPaella !== '1') {
-                continue;
-            }
-            $eligible[] = ['recipe_id' => $recipeId, 'qty' => $qty];
-            }
-
-        if (empty($eligible) ) {
-            return '';
-        }
-
-        $totals = [];
-        foreach ($eligible as $row) {
-            $recipeId = (int) $row['recipe_id'];
-            $qty = (float) $row['qty'];
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
-                continue;
-            }
-
-            $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
-            if (!is_array($recipeLiquids)) {
-                continue;
-            }
-
-            foreach ($recipeLiquids as $liquidRow) {
-                if (!is_array($liquidRow)) {
-                    continue;
-                }
-                $termId = isset($liquidRow['liquid']) ? (int) $liquidRow['liquid'] : 0;
-                $litresPerPax = isset($liquidRow['qty']) ? (float) $liquidRow['qty'] : 0.0;
-
-                if ($termId <= 0 || $litresPerPax <= 0) {
-                    continue;
-                }
-
-                $amount = $litresPerPax * $eqItem;
-                if ($amount <= 0) {
-                    continue;
-                }
-
-                $k = (string) $termId;
-                if (!isset($totals[$k])) {
-                    $totals[$k] = ['term_id' => $termId, 'qty' => 0.0];
-                }
-                $totals[$k]['qty'] += $amount;
-            }
-        }
-
+        $totals = RecipeCalculator::aggregateLiquids($eligible);
         if (empty($totals)) {
             return '';
         }
@@ -3750,33 +3497,7 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function resolveRecipeIdForItem(\WC_Order_Item_Product $item, \WC_Product $product): int
     {
-        $originalId = $this->resolveOriginalProductId($product->get_id());
-        $recipeId = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_ID, true);
-        if ($recipeId <= 0) {
-            return 0;
-        }
-
-        $rabbitChoice = $item->get_meta(self::META_RABBIT_CHOICE, true);
-        if ($rabbitChoice !== 'without') {
-            return $recipeId;
-        }
-
-        $noRabbitId = (int) get_post_meta($originalId, self::META_PRODUCT_RECIPE_NO_RABBIT, true);
-        return $noRabbitId > 0 ? $noRabbitId : $recipeId;
-    }
-
-    private function resolveOriginalProductId(int $productId): int
-    {
-        $parentId = wp_get_post_parent_id($productId);
-        $checkId  = $parentId ? $parentId : $productId;
-
-        if (!defined('ICL_SITEPRESS_VERSION')) {
-            return $checkId;
-        }
-
-        $defaultLang = apply_filters('wpml_default_language', null);
-        $originalId  = apply_filters('wpml_object_id', $checkId, 'product', true, $defaultLang);
-        return $originalId ? (int) $originalId : $checkId;
+        return RecipeCalculator::resolveRecipeId($item, $product);
     }
 
     /**
