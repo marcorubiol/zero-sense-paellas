@@ -36,7 +36,7 @@ class RecipeCalculator
             return 1.0;
         }
         $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return ceil($eq * self::SAFETY_MARGIN) / $total;
+        return round($eq * self::SAFETY_MARGIN) / $total;
     }
 
     /**
