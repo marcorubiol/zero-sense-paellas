@@ -4,9 +4,9 @@ namespace ZeroSense\Features\WooCommerce\Deposits\Integrations;
 use WC_Order;
 
 /**
- * Handles offline payment methods (BACS, COD, Cheque) to preserve deposit-paid status.
+ * Handles offline payment methods (BACS, COD, Cheque) to preserve deposit-paid and pending status.
  * 
- * When a customer pays with offline methods on order-pay page while in deposit-paid status,
+ * When a customer pays with offline methods on order-pay page while in deposit-paid or pending status,
  * we preserve the status for manual review instead of auto-changing to on-hold.
  */
 class OfflinePaymentHandler
@@ -31,7 +31,7 @@ class OfflinePaymentHandler
      * 
      * @param string $status The default status the gateway would set (usually 'on-hold')
      * @param WC_Order $order The order object
-     * @return string The status to use (preserves 'deposit-paid' for manual review)
+     * @return string The status to use (preserves 'deposit-paid' and 'pending' for manual review)
      */
     public function preserveDepositStatus(string $status, $order): string
     {
@@ -39,15 +39,15 @@ class OfflinePaymentHandler
             return $status;
         }
 
-        // If order is in deposit-paid status, preserve it for manual review
-        if ($order->has_status('deposit-paid')) {
+        // If order is in deposit-paid or pending status, preserve it for manual review
+        if ($order->has_status(['deposit-paid', 'pending'])) {
             // Add note about pending offline payment
             $paymentMethod = $order->get_payment_method();
             $methodTitle = $order->get_payment_method_title();
             
             $order->add_order_note(
                 sprintf(
-                    __('Second payment via %s selected. Awaiting manual confirmation.', 'zero-sense'),
+                    __('Payment via %s selected. Awaiting manual confirmation.', 'zero-sense'),
                     $methodTitle ?: $paymentMethod
                 )
             );
@@ -57,7 +57,8 @@ class OfflinePaymentHandler
                 set_transient('zs_bacs_2nd_pay_processed_' . $order->get_id(), 'yes', 60);
             }
             
-            return 'deposit-paid';
+            // Return the current status to preserve it
+            return $order->get_status();
         }
 
         // Allow default behavior for other statuses
