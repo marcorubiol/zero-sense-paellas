@@ -88,14 +88,6 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 per cada recepta de paella amb 60-80 persones',
             ],
-            [
-                'key' => 'tapapeus',
-                'label' => 'Tapapeus',
-                'category' => 'paelles',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => '1 per cada paella',
-            ],
 
             // MATÈRIA PESADA — cassoles
             [
@@ -156,6 +148,7 @@ class MaterialDefinitions
             ],
 
             // MATÈRIA PESADA — equipament de foc
+            // Cremadors (dependència de paelles)
             [
                 'key' => 'cremador_50cm',
                 'label' => 'Cremador 50cm',
@@ -188,6 +181,8 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 per cada paella de 100cm, 115cm o 135cm',
             ],
+            
+            // Suport cremadors (dependència de cremadors)
             [
                 'key' => 'potes_tripodes',
                 'label' => 'Potes / Trípodes',
@@ -197,6 +192,26 @@ class MaterialDefinitions
                 'description' => '1 per cremador',
             ],
             [
+                'key' => 'catifes',
+                'label' => 'Catifes',
+                'category' => 'equipament_foc',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cremador',
+            ],
+            
+            // Accessoris paelles (dependència de paelles)
+            [
+                'key' => 'tapapeus',
+                'label' => 'Tapapeus',
+                'category' => 'equipament_foc',
+                'parent_category' => 'materia_pesada',
+                'unit' => 'u',
+                'description' => '1 per cada paella',
+            ],
+            
+            // Combustible (dependència de cremadors)
+            [
                 'key' => 'buta',
                 'label' => 'Butà',
                 'category' => 'equipament_foc',
@@ -204,14 +219,8 @@ class MaterialDefinitions
                 'unit' => 'u',
                 'description' => '1 per cremador + 1 extra si >60pax',
             ],
-            [
-                'key' => 'vitro_gran',
-                'label' => 'Vitro Gran',
-                'category' => 'equipament_foc',
-                'parent_category' => 'materia_pesada',
-                'unit' => 'u',
-                'description' => 'Manual sense autocàlcul',
-            ],
+            
+            // Vitroceràmiques (vitro_petita: dependència de cassoles)
             [
                 'key' => 'vitro_petita',
                 'label' => 'Vitro Petita',
@@ -221,12 +230,12 @@ class MaterialDefinitions
                 'description' => '1 per cassola',
             ],
             [
-                'key' => 'catifes',
-                'label' => 'Catifes',
+                'key' => 'vitro_gran',
+                'label' => 'Vitro Gran',
                 'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per cremador',
+                'description' => 'Manual sense autocàlcul',
             ],
 
             // TRANSPORT I MUNTATGE — caixes
