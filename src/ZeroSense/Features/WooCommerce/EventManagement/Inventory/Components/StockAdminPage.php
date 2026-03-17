@@ -197,7 +197,7 @@ class StockAdminPage
                                                         type="number" 
                                                         class="stock-input"
                                                         data-key="<?php echo esc_attr($key); ?>"
-                                                        value="<?php echo esc_attr($quantity); ?>"
+                                                        value="<?php echo $quantity > 0 ? esc_attr($quantity) : ''; ?>"
                                                         min="0"
                                                         disabled
                                                     />
