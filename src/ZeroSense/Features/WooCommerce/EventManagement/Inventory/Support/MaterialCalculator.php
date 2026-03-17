@@ -238,8 +238,8 @@ class MaterialCalculator
         // Catifes: 1 por cremador
         $result['catifes'] = $totalCremadors;
         
-        // Tapapeus: 1 por paella
-        $result['tapapeus'] = $totalPaellas;
+        // Tapapeus: 1 por cremador
+        $result['tapapeus'] = $totalCremadors;
         
         return $result;
     }

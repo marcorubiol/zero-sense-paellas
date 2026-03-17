@@ -207,7 +207,7 @@ class MaterialDefinitions
                 'category' => 'equipament_foc',
                 'parent_category' => 'materia_pesada',
                 'unit' => 'u',
-                'description' => '1 per cada paella',
+                'description' => '1 per cremador',
             ],
             
             // Combustible (dependència de cremadors)
@@ -404,8 +404,8 @@ class MaterialDefinitions
     public static function getDependencyMap(): array
     {
         return [
-            'paelles'        => ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm', 'tapapeus'],
-            'cremadors'      => ['potes_tripodes', 'buta', 'catifes'],
+            'paelles'        => ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm'],
+            'cremadors'      => ['potes_tripodes', 'buta', 'catifes', 'tapapeus'],
             'cassoles'       => ['vitro_petita'],
             'taules_treball' => ['teles_negres', 'estovalles'],
         ];
