@@ -12,6 +12,7 @@ use ZeroSense\Features\WooCommerce\Recipes\RecipeCalculator;
 class OrderAdmin
 {
     private static bool $isRecalculating = false;
+    private static bool $scriptPrinted   = false;
 
     public function register(): void
     {
@@ -69,6 +70,40 @@ class OrderAdmin
             <?php endif; ?>
         </div>
         <?php
+        if (!self::$scriptPrinted) {
+            self::$scriptPrinted = true;
+            ?>
+            <script>
+            (function($){
+                function applyChildrenDiscount(itemId, children) {
+                    var $sub   = $('input[name="line_subtotal[' + itemId + ']"]');
+                    var $total = $('input[name="line_total['    + itemId + ']"]');
+                    var $qty   = $('input[name="order_item_qty[' + itemId + ']"]');
+                    if (!$sub.length || !$total.length) return;
+                    var subtotal = parseFloat($sub.val()) || 0;
+                    var qty      = parseFloat($qty.val())  || 1;
+                    if (subtotal <= 0 || qty <= 0) return;
+                    $total.val( ((subtotal / qty) * (qty - 0.4 * children)).toFixed(2) );
+                }
+                function itemIdFrom($input) {
+                    var m = ($input.attr('name') || '').match(/zs_item_children\[(\d+)\]/);
+                    return m ? m[1] : null;
+                }
+                $(document)
+                    .on('change input', 'input[name^="zs_item_children["]', function(){
+                        var id = itemIdFrom($(this));
+                        if (id) applyChildrenDiscount(id, Math.max(0, parseInt($(this).val()) || 0));
+                    })
+                    .on('click', 'button.calculate-action', function(){
+                        $('input[name^="zs_item_children["]').each(function(){
+                            var id = itemIdFrom($(this));
+                            if (id) applyChildrenDiscount(id, Math.max(0, parseInt($(this).val()) || 0));
+                        });
+                    });
+            })(jQuery);
+            </script>
+            <?php
+        }
     }
 
     public function saveChildrenFromOrder(WC_Abstract_Order $order): void
