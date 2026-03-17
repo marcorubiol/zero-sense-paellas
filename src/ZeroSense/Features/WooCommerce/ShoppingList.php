@@ -405,7 +405,7 @@ class ShoppingList implements FeatureInterface
                         $perPax = isset($ingRow['qty'])        ? (float) $ingRow['qty']       : 0.0;
                         $unit   = isset($ingRow['unit'])       ? sanitize_key((string) $ingRow['unit']) : '';
                         if ($termId <= 0 || $perPax <= 0 || $unit === '') { continue; }
-                        $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
+                        $amount = $eqItem * $perPax;
                         if ($amount <= 0) { continue; }
                         $k = $termId . '|' . $unit;
                         if (!isset($ingTotals[$k])) { $ingTotals[$k] = ['term_id' => $termId, 'unit' => $unit, 'qty' => 0.0]; }
@@ -421,7 +421,7 @@ class ShoppingList implements FeatureInterface
                             $termId       = isset($liqRow['liquid']) ? (int) $liqRow['liquid']   : 0;
                             $litresPerPax = isset($liqRow['qty'])    ? (float) $liqRow['qty']     : 0.0;
                             if ($termId <= 0 || $litresPerPax <= 0) { continue; }
-                            $amount = ceil(($litresPerPax * $eqItem) * RecipeCalculator::SAFETY_MARGIN);
+                            $amount = $litresPerPax * $eqItem;
                             if ($amount <= 0) { continue; }
                             $k = (string) $termId;
                             if (!isset($liquidTotals[$k])) { $liquidTotals[$k] = ['term_id' => $termId, 'qty' => 0.0]; }

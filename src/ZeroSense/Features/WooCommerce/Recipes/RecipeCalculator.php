@@ -36,7 +36,7 @@ class RecipeCalculator
             return 1.0;
         }
         $eq = ($adults * self::ADULT_WEIGHT) + ($children * self::CHILD_WEIGHT) + ($babies * self::BABY_WEIGHT);
-        return $eq / $total;
+        return ceil($eq * self::SAFETY_MARGIN) / $total;
     }
 
     /**
@@ -145,7 +145,7 @@ class RecipeCalculator
                 if ($termId <= 0 || $perPax <= 0 || $unit === '') {
                     continue;
                 }
-                $amount = ceil(($eq * $perPax) * self::SAFETY_MARGIN);
+                $amount = $eq * $perPax;
                 if ($amount <= 0) {
                     continue;
                 }
@@ -191,7 +191,7 @@ class RecipeCalculator
                 if ($termId <= 0 || $litresPerPax <= 0) {
                     continue;
                 }
-                $amount = ceil(($litresPerPax * $eq) * self::SAFETY_MARGIN);
+                $amount = $litresPerPax * $eq;
                 if ($amount <= 0) {
                     continue;
                 }

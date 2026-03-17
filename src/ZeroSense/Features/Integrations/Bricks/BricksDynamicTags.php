@@ -2150,7 +2150,7 @@ class BricksDynamicTags implements FeatureInterface
                     $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
                     $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
                     if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
-                    $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
+                    $amount = $eqItem * $perPax;
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
@@ -2254,7 +2254,7 @@ class BricksDynamicTags implements FeatureInterface
                     continue;
                 }
 
-                $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
+                $amount = $eqItem * $perPax;
                 if ($amount <= 0) {
                     continue;
                 }
@@ -2442,7 +2442,7 @@ class BricksDynamicTags implements FeatureInterface
                     $termId = isset($liqRow['liquid']) ? (int) $liqRow['liquid'] : 0;
                     $perPax = isset($liqRow['qty']) ? (float) $liqRow['qty'] : 0.0;
                     if ($termId <= 0 || $perPax <= 0) continue;
-                    $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
+                    $amount = $eqItem * $perPax;
                     if ($amount <= 0) continue;
                     $liqName = $this->getTranslatedLiquidName($termId, $orderLanguage);
                     if ($liqName === '') continue;
@@ -2460,7 +2460,7 @@ class BricksDynamicTags implements FeatureInterface
                     $perPax = isset($ingRow['qty']) ? (float) $ingRow['qty'] : 0.0;
                     $unit   = isset($ingRow['unit']) ? sanitize_key((string) $ingRow['unit']) : '';
                     if ($termId <= 0 || $perPax <= 0 || $unit === '') continue;
-                    $amount = ceil(($eqItem * $perPax) * RecipeCalculator::SAFETY_MARGIN);
+                    $amount = $eqItem * $perPax;
                     if ($amount <= 0) continue;
                     $normalized = $this->normalizeUnit($amount, $unit);
                     $ingName = $this->getTranslatedIngredientName($termId, $orderLanguage);
