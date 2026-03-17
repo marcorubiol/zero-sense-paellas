@@ -1170,6 +1170,10 @@ class Flowmattic implements FeatureInterface
                 'failed' => __('Failed', 'zero-sense'),
             ];
         }
+        
+        // Add trash status manually (not included in wc_get_order_statuses)
+        $statusOptions['trash'] = __('Trash', 'zero-sense');
+        
         return $statusOptions;
     }
 
