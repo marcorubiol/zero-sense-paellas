@@ -22,6 +22,7 @@ class RecipeCalculator
     const META_RECIPE_ING       = 'zs_recipe_ingredients';
     const META_RECIPE_LIQUIDS   = 'zs_recipe_liquids';
     const META_NEEDS_PAELLA     = 'zs_recipe_needs_paella';
+    const META_ITEM_CHILDREN    = '_zs_item_children';
 
     /**
      * Ratio: equivalent pax / total pax — applies adult/child/baby weights.
@@ -125,11 +126,23 @@ class RecipeCalculator
             if ($paellaOnly && !$isPaella) {
                 continue;
             }
-            $eqBase = $qty * ($isPaella ? $paxRatio : $adultsRatio);
+            if ($isPaella) {
+                $rawMeta = $item->get_meta(self::META_ITEM_CHILDREN, true);
+                if ($rawMeta !== '' && $rawMeta !== false && $rawMeta !== null) {
+                    $itemChildren = max(0, min((int) $rawMeta, (int) $qty));
+                    $itemAdults   = max(0, (int) $qty - $itemChildren);
+                    $itemEq       = $itemAdults + $itemChildren * self::CHILD_WEIGHT;
+                    $eq           = round($itemEq * self::SAFETY_MARGIN);
+                } else {
+                    $eq = round($qty * $paxRatio * self::SAFETY_MARGIN);
+                }
+            } else {
+                $eq = $qty * $adultsRatio;
+            }
             $eligible[] = [
                 'recipe_id' => $recipeId,
                 'qty'       => $qty,
-                'eq'        => $isPaella ? round($eqBase * self::SAFETY_MARGIN) : $eqBase,
+                'eq'        => $eq,
             ];
         }
 
