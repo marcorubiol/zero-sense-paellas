@@ -40,6 +40,21 @@ class RecipeCalculator
     }
 
     /**
+     * Ratio: adults only / total pax — for non-paella recipes (ignores child/baby weights).
+     */
+    public static function getAdultsRatio(WC_Order $order): float
+    {
+        $adults   = (int) $order->get_meta(self::META_EVENT_ADULTS, true);
+        $children = (int) $order->get_meta(self::META_EVENT_CHILDREN, true);
+        $babies   = (int) $order->get_meta(self::META_EVENT_BABIES, true);
+        $total    = $adults + $children + $babies;
+        if ($total <= 0) {
+            return 1.0;
+        }
+        return $adults / $total;
+    }
+
+    /**
      * Resolve the WPML-original product ID (handles variable products + WPML language).
      */
     public static function resolveOriginalProductId(int $productId): int
@@ -82,8 +97,9 @@ class RecipeCalculator
      */
     public static function getEligibleItems(WC_Order $order, bool $paellaOnly = false): array
     {
-        $paxRatio  = self::getPaxRatio($order);
-        $lineItems = $order->get_items('line_item');
+        $paxRatio    = self::getPaxRatio($order);
+        $adultsRatio = self::getAdultsRatio($order);
+        $lineItems   = $order->get_items('line_item');
         if (!$lineItems) {
             return [];
         }
@@ -105,11 +121,11 @@ class RecipeCalculator
             if ($recipeId <= 0) {
                 continue;
             }
-            if ($paellaOnly && get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) !== '1') {
+            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
+            if ($paellaOnly && !$isPaella) {
                 continue;
             }
-            $eqBase = $qty * $paxRatio;
-            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
+            $eqBase = $qty * ($isPaella ? $paxRatio : $adultsRatio);
             $eligible[] = [
                 'recipe_id' => $recipeId,
                 'qty'       => $qty,

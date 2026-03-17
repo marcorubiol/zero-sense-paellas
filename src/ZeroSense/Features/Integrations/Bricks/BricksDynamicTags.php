@@ -1908,6 +1908,11 @@ class BricksDynamicTags implements FeatureInterface
         return RecipeCalculator::getPaxRatio($order);
     }
 
+    private function getAdultsRatio(WC_Order $order): float
+    {
+        return RecipeCalculator::getAdultsRatio($order);
+    }
+
     /**
      * Format number removing trailing zeros
      */
@@ -2100,7 +2105,8 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
+        $paxRatio    = $this->getPaxRatio($order);
+        $adultsRatio = $this->getAdultsRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2137,10 +2143,9 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $eqBase  = $group['total_qty'] * $paxRatio;
-            $eqItem  = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
-                ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
-                : $eqBase;
+            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
+            $eqBase   = $group['total_qty'] * ($isPaella ? $paxRatio : $adultsRatio);
+            $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
@@ -2184,7 +2189,8 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
+        $paxRatio    = $this->getPaxRatio($order);
+        $adultsRatio = $this->getAdultsRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2235,10 +2241,9 @@ class BricksDynamicTags implements FeatureInterface
 
         // Calculate ingredients for each recipe
         foreach ($recipeGroups as $recipeId => &$group) {
-            $eqBase  = $group['total_qty'] * $paxRatio;
-            $eqItem  = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
-                ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
-                : $eqBase;
+            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
+            $eqBase   = $group['total_qty'] * ($isPaella ? $paxRatio : $adultsRatio);
+            $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
             
             $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (!is_array($recipeIngredients)) {
@@ -2396,7 +2401,8 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
+        $paxRatio    = $this->getPaxRatio($order);
+        $adultsRatio = $this->getAdultsRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2433,10 +2439,9 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
-            $eqBase  = $group['total_qty'] * $paxRatio;
-            $eqItem  = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
-                ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
-                : $eqBase;
+            $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
+            $eqBase   = $group['total_qty'] * ($isPaella ? $paxRatio : $adultsRatio);
+            $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
 
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';

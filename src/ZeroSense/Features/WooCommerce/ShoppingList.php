@@ -365,7 +365,8 @@ class ShoppingList implements FeatureInterface
         foreach ($byOrder as $orderId => $allowedIdxs) {
             $order = wc_get_order($orderId);
             if (!$order instanceof WC_Order) { continue; }
-            $paxRatio = RecipeCalculator::getPaxRatio($order);
+            $paxRatio    = RecipeCalculator::getPaxRatio($order);
+            $adultsRatio = RecipeCalculator::getAdultsRatio($order);
             $lineItems = $order->get_items('line_item');
             if (!$lineItems) { continue; }
 
@@ -394,10 +395,9 @@ class ShoppingList implements FeatureInterface
 
             foreach ($eligible as $row) {
                 $recipeId = (int) $row['recipe_id'];
-                $eqBase   = (float) $row['qty'] * $paxRatio;
-                $eqItem   = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1'
-                    ? round($eqBase * RecipeCalculator::SAFETY_MARGIN)
-                    : $eqBase;
+                $isPaella = get_post_meta($recipeId, self::META_NEEDS_PAELLA, true) === '1';
+                $eqBase   = (float) $row['qty'] * ($isPaella ? $paxRatio : $adultsRatio);
+                $eqItem   = $isPaella ? round($eqBase * RecipeCalculator::SAFETY_MARGIN) : $eqBase;
                 if ($eqItem <= 0) { continue; }
 
                 $recipeIng = get_post_meta($recipeId, self::META_RECIPE_ING, true);
