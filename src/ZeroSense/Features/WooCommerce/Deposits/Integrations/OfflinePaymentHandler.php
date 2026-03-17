@@ -27,7 +27,7 @@ class OfflinePaymentHandler
     }
 
     /**
-     * Preserve deposit-paid status for manual review when using offline payment methods.
+     * Preserve deposit-paid and pending status for manual review when using offline payment methods.
      * 
      * @param string $status The default status the gateway would set (usually 'on-hold')
      * @param WC_Order $order The order object
