@@ -115,8 +115,11 @@ class Integration
     public function trackEmailSend(array $atts): array
     {
         if (!empty(self::$activeWorkflowContexts)) {
-            $context = end(self::$activeWorkflowContexts);
-            
+            $emailTo = is_array($atts['to']) ? implode(', ', $atts['to']) : $atts['to'];
+
+            // If multiple contexts exist for the same workflow_id, disambiguate by billing email
+            $context = $this->resolveContextByEmail($emailTo);
+
             if ($context && !empty($context['workflow_id']) && !empty($context['order_id'])) {
                 // Only log for workflows configured as email workflows
                 if (!$this->isEmailWorkflow($context['workflow_id'])) {
@@ -132,7 +135,7 @@ class Integration
                     $context['order_id'],
                     $status,
                     [
-                        'to' => is_array($atts['to']) ? implode(', ', $atts['to']) : $atts['to'],
+                        'to' => $emailTo,
                         'subject' => $atts['subject'],
                         'trigger_source' => $context['trigger_source'] ?? 'unknown'
                     ]
@@ -146,12 +149,51 @@ class Integration
 
         return $atts;
     }
+
+    /**
+     * Resolve the best active context for the given recipient email.
+     * When multiple contexts share the same workflow_id, match by billing email.
+     */
+    private function resolveContextByEmail(string $emailTo): ?array
+    {
+        if (empty(self::$activeWorkflowContexts)) {
+            return null;
+        }
+
+        // Group contexts by workflow_id
+        $byWorkflow = [];
+        foreach (self::$activeWorkflowContexts as $ctx) {
+            $wid = $ctx['workflow_id'] ?? '';
+            if ($wid !== '') {
+                $byWorkflow[$wid][] = $ctx;
+            }
+        }
+
+        // For each workflow group, try to find exact billing-email match
+        foreach ($byWorkflow as $contexts) {
+            if (count($contexts) === 1) {
+                continue; // No ambiguity — will fall through to end() below
+            }
+            foreach ($contexts as $ctx) {
+                $order = wc_get_order((int) $ctx['order_id']);
+                if ($order && strtolower($order->get_billing_email()) === strtolower($emailTo)) {
+                    return $ctx;
+                }
+            }
+        }
+
+        // No disambiguation needed or no match found — use last context (original behavior)
+        return end(self::$activeWorkflowContexts) ?: null;
+    }
     
     /**
-     * Attempt to recover workflow context from transients when email is sent asynchronously
+     * Attempt to recover workflow context from transients when email is sent asynchronously.
+     * Matches by billing email to correctly attribute concurrent orders using the same workflow.
      */
     private function attemptTransientContextRecovery(array $atts): void
     {
+        $emailTo = is_array($atts['to']) ? implode(', ', $atts['to']) : $atts['to'];
+
         // Get all stored workflow triggers to find potential matches
         $stored = get_option('zs_flowmattic_custom_triggers', []);
         if (!is_array($stored)) {
@@ -170,30 +212,69 @@ class Integration
                 continue;
             }
             
-            $orderId = (int) get_transient('zs_wf_ctx_idx_' . $workflowId);
-            if ($orderId <= 0) {
+            // Index is now an array of order IDs; handle legacy scalar format
+            $raw = get_transient('zs_wf_ctx_idx_' . $workflowId);
+            if (empty($raw)) {
                 continue;
             }
-            
-            $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
-            if (!is_array($context)) {
+            $orderIds = is_array($raw) ? $raw : [(int) $raw];
+            $orderIds = array_filter(array_map('intval', $orderIds));
+            if (empty($orderIds)) {
                 continue;
             }
-            
-            // Found a valid context - use it
-            $status = (strpos($context['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
-            
+
+            // Try to find an order whose billing email matches the recipient
+            $matchedOrderId = null;
+            $matchedContext = null;
+            $fallbackOrderId = null;
+            $fallbackContext = null;
+
+            foreach ($orderIds as $orderId) {
+                $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+                if (!is_array($context)) {
+                    continue;
+                }
+                if ($fallbackOrderId === null) {
+                    $fallbackOrderId = $orderId;
+                    $fallbackContext = $context;
+                }
+                $order = wc_get_order($orderId);
+                if ($order && strtolower($order->get_billing_email()) === strtolower($emailTo)) {
+                    $matchedOrderId = $orderId;
+                    $matchedContext = $context;
+                    break;
+                }
+            }
+
+            $resolvedOrderId = $matchedOrderId ?? $fallbackOrderId;
+            $resolvedContext = $matchedContext ?? $fallbackContext;
+
+            if ($resolvedOrderId === null || $resolvedContext === null) {
+                continue;
+            }
+
+            $status = (strpos($resolvedContext['trigger_source'] ?? '', 'manual') !== false) ? 'manual' : 'auto';
+
             $this->logEmailToFlowmattic(
                 $workflowId,
-                $orderId,
+                $resolvedOrderId,
                 $status,
                 [
-                    'to' => is_array($atts['to']) ? implode(', ', $atts['to']) : $atts['to'],
+                    'to' => $emailTo,
                     'subject' => $atts['subject'],
-                    'trigger_source' => $context['trigger_source'] ?? 'unknown'
+                    'trigger_source' => $resolvedContext['trigger_source'] ?? 'unknown'
                 ]
             );
-            
+
+            // Remove consumed order ID from the index; leave others intact
+            $remaining = array_values(array_diff($orderIds, [$resolvedOrderId]));
+            if (empty($remaining)) {
+                delete_transient('zs_wf_ctx_idx_' . $workflowId);
+            } else {
+                set_transient('zs_wf_ctx_idx_' . $workflowId, $remaining, 10 * MINUTE_IN_SECONDS);
+            }
+            delete_transient('zs_wf_ctx_' . $workflowId . '_' . $resolvedOrderId);
+
             // Only log once per email
             break;
         }
@@ -635,7 +716,10 @@ class Integration
             self::$activeWorkflowContexts[] = $context;
             // Persist context so it survives PHP requests when Flowmattic has a delay
             set_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId, $context, 10 * MINUTE_IN_SECONDS);
-            set_transient('zs_wf_ctx_idx_' . $workflowId, $orderId, 10 * MINUTE_IN_SECONDS);
+            // Index stores array of order IDs to support concurrent orders on the same workflow
+            $existingIdx = (array) get_transient('zs_wf_ctx_idx_' . $workflowId);
+            $existingIdx[] = $orderId;
+            set_transient('zs_wf_ctx_idx_' . $workflowId, array_unique(array_filter(array_map('intval', $existingIdx))), 10 * MINUTE_IN_SECONDS);
         }
         
         // Check if this is a Holded workflow and log automatic execution
@@ -864,7 +948,10 @@ class Integration
             self::$activeWorkflowContexts[] = $context;
             // Persist context so it survives PHP requests when Flowmattic has a delay
             set_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId, $context, 10 * MINUTE_IN_SECONDS);
-            set_transient('zs_wf_ctx_idx_' . $workflowId, $orderId, 10 * MINUTE_IN_SECONDS);
+            // Index stores array of order IDs to support concurrent orders on the same workflow
+            $existingIdx = (array) get_transient('zs_wf_ctx_idx_' . $workflowId);
+            $existingIdx[] = $orderId;
+            set_transient('zs_wf_ctx_idx_' . $workflowId, array_unique(array_filter(array_map('intval', $existingIdx))), 10 * MINUTE_IN_SECONDS);
         }
 
         $debugData = [
@@ -1018,16 +1105,29 @@ class Integration
             }
         }
 
-        $orderId = (int) get_transient('zs_wf_ctx_idx_' . $workflowId);
-        if ($orderId <= 0) {
+        // Index is now an array of order IDs; handle legacy scalar format
+        $raw = get_transient('zs_wf_ctx_idx_' . $workflowId);
+        if (empty($raw)) {
+            return;
+        }
+        $orderIds = is_array($raw) ? $raw : [(int) $raw];
+        $orderIds = array_values(array_filter(array_map('intval', $orderIds)));
+        if (empty($orderIds)) {
             return;
         }
 
-        $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
-        if (is_array($context)) {
-            self::$activeWorkflowContexts[] = $context;
-            // Clean up — context now lives in memory for this request
-            delete_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+        // Restore ALL pending contexts for this workflow into memory
+        $restored = [];
+        foreach ($orderIds as $orderId) {
+            $context = get_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+            if (is_array($context)) {
+                self::$activeWorkflowContexts[] = $context;
+                delete_transient('zs_wf_ctx_' . $workflowId . '_' . $orderId);
+                $restored[] = $orderId;
+            }
+        }
+
+        if (!empty($restored)) {
             delete_transient('zs_wf_ctx_idx_' . $workflowId);
         }
     }
