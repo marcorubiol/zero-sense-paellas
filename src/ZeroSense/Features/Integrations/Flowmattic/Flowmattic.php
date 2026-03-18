@@ -458,7 +458,7 @@ class Flowmattic implements FeatureInterface
             'order_id' => $orderId,
             'category' => $data['category'] ?? 'generic',
             'status' => $status,
-            'timestamp' => current_time('mysql'),
+            'timestamp' => current_time('mysql', true),
             'trigger_source' => $data['trigger_source'] ?? 'unknown',
             'metadata' => $data['metadata'] ?? [],
             'error_message' => $data['error'] ?? null,
