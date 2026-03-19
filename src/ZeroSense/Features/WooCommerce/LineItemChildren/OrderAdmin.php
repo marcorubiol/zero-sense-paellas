@@ -68,6 +68,7 @@ class OrderAdmin
                 <?php endif; ?>
             </span>
             <?php endif; ?>
+            <button type="button" class="button zs-apply-children-btn" data-item="<?php echo esc_attr((string) $itemId); ?>" style="padding:2px 6px; font-size:11px;" title="<?php esc_attr_e('Re-apply children discount', 'zero-sense'); ?>">&#8635;</button>
         </div>
         <?php
         if (!self::$scriptPrinted) {
@@ -99,6 +100,11 @@ class OrderAdmin
                             var id = itemIdFrom($(this));
                             if (id) applyChildrenDiscount(id, Math.max(0, parseInt($(this).val()) || 0));
                         });
+                    })
+                    .on('click', '.zs-apply-children-btn', function(){
+                        var id = $(this).data('item');
+                        var children = Math.max(0, parseInt($('input[name="zs_item_children[' + id + ']"]').val()) || 0);
+                        applyChildrenDiscount(id, children);
                     });
             })(jQuery);
             </script>
@@ -148,13 +154,18 @@ class OrderAdmin
             $qty      = (int) $item->get_quantity();
             $children = min($children, $qty);
 
+            $previousChildren = (int) ($item->get_meta(RecipeCalculator::META_ITEM_CHILDREN, true) ?: 0);
+            $childrenChanged  = ($children !== $previousChildren);
+
             $item->update_meta_data(RecipeCalculator::META_ITEM_CHILDREN, $children);
 
-            $subtotal  = (float) $item->get_subtotal();
-            $unitPrice = $qty > 0 ? $subtotal / $qty : 0.0;
-            $newTotal  = $unitPrice * ($qty - 0.4 * $children);
+            if ($childrenChanged) {
+                $subtotal  = (float) $item->get_subtotal();
+                $unitPrice = $qty > 0 ? $subtotal / $qty : 0.0;
+                $newTotal  = $unitPrice * ($qty - 0.4 * $children);
+                $item->set_total($newTotal);
+            }
 
-            $item->set_total($newTotal);
             $item->save();
 
             $hasChanges = true;
