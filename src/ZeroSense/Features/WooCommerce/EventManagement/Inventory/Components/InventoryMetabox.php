@@ -955,10 +955,25 @@ class InventoryMetabox
                     var value = $input.val();
                     var autoValue = $input.data('auto');
                     
-                    if (value === '' || value == autoValue) return;
-                    
+                    var isDepCascade = $input.data('dependent') == '1' && $input.data('user-override') != '1';
+
+                    if (value === '' || value == autoValue) {
+                        // Cascade field may have been recalculated to 0 (shows blank) — save via data-expected
+                        if (isDepCascade) {
+                            var expected = $input.data('expected');
+                            if (expected !== undefined) {
+                                var normExpected = parseInt(expected) || 0;
+                                var normAuto = parseInt(autoValue) || 0;
+                                if (normExpected !== normAuto) {
+                                    cascadeData[materialKey] = normExpected;
+                                }
+                            }
+                        }
+                        return;
+                    }
+
                     // Dependent fields without explicit user override go to cascade bucket
-                    if ($input.data('dependent') == '1' && $input.data('user-override') != '1') {
+                    if (isDepCascade) {
                         cascadeData[materialKey] = value;
                     } else {
                         data[materialKey] = value;
