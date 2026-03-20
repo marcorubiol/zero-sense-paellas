@@ -658,7 +658,7 @@ class InventoryMetabox
                 if (currentValue === newValue) return;
 
                 // Update value directly (no trigger to avoid marking as manual)
-                var valToSet = newValue === 0 ? '' : newValue;
+                var valToSet = newValue;
                 $input.val(valToSet).data('expected', newValue);
 
                 // Update badge: show AUTO if value matches auto, otherwise keep as-is
