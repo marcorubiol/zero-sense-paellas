@@ -581,6 +581,11 @@ class InventoryMetabox
             var orderId = <?php echo (int) $postId; ?>;
             var nonce = '<?php echo wp_create_nonce('zs_inventory_ajax'); ?>';
             var totalGuests = <?php echo (int) $totalGuests; ?>;
+            var cremadorAutoFields = <?php
+                $depMap = MaterialDefinitions::getDependencyMap();
+                $cremadorDeps = $depMap['cremadors'] ?? [];
+                echo json_encode(array_values(array_diff($cremadorDeps, ['buta'])));
+            ?>;
 
             // Initialize data-expected for cascade fields on page load
             $('.zs-inventory-input[data-cascade="1"]').each(function() {
@@ -633,21 +638,17 @@ class InventoryMetabox
                     updateInputAndTriggerEvent(cremadorKey, count);
                 }
                 
-                // Update potes_tripodes
-                updateInputAndTriggerEvent('potes_tripodes', totalCremadors);
-                
-                // Update buta
+                // Update all cremador-dependent fields (1 per cremador) — list from MaterialDefinitions
+                cremadorAutoFields.forEach(function(key) {
+                    updateInputAndTriggerEvent(key, totalCremadors);
+                });
+
+                // Update buta (special formula: +1 extra if >60pax)
                 var butaCount = totalCremadors;
                 if (totalGuests > 60 && totalCremadors > 0) {
                     butaCount += 1;
                 }
                 updateInputAndTriggerEvent('buta', butaCount);
-                
-                // Update catifes (1 per cremador)
-                updateInputAndTriggerEvent('catifes', totalCremadors);
-
-                // Update tapapeus (1 per cremador)
-                updateInputAndTriggerEvent('tapapeus', totalCremadors);
             }
 
             function updateInputAndTriggerEvent(materialKey, newValue) {
