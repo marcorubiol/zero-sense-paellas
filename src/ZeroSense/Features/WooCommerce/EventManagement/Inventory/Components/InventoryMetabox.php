@@ -645,6 +645,9 @@ class InventoryMetabox
                 
                 // Update catifes (1 per cremador)
                 updateInputAndTriggerEvent('catifes', totalCremadors);
+
+                // Update tapapeus (1 per cremador)
+                updateInputAndTriggerEvent('tapapeus', totalCremadors);
             }
 
             function updateInputAndTriggerEvent(materialKey, newValue) {
