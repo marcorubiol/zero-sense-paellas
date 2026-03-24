@@ -3323,28 +3323,56 @@ class BricksDynamicTags implements FeatureInterface
         $cached = $this->getFdrTransient('inv', $orderId, $order);
         if ($cached !== null) { return $this->computedCache[$cacheKey] = $cached; }
 
-        $calculated = MaterialCalculator::calculate($order);
-        $overrides  = ManualOverride::get($orderId);
-        $final      = ManualOverride::apply($calculated, $overrides);
+        $calculated       = MaterialCalculator::calculate($order);
+        $overrides        = ManualOverride::get($orderId);
+        $cascadeOverrides = ManualOverride::getCascade($orderId);
+        $final            = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $overrides));
 
         if (empty($final)) {
             return '';
         }
 
-        $definitions = [];
+        // Build grouped structure following MaterialDefinitions order
+        $parentLabels = MaterialDefinitions::getParentCategories();
+        $grouped = [];
         foreach (MaterialDefinitions::getAll() as $mat) {
-            $definitions[$mat['key']] = $mat['label'];
-        }
-
-        $html = '';
-        foreach ($final as $key => $qty) {
+            $key = $mat['key'];
+            $qty = $final[$key] ?? 0;
             if ($qty <= 0) {
                 continue;
             }
-            $label = $definitions[$key] ?? ucwords(str_replace('_', ' ', $key));
-            $html .= '<div class="brxe-div fdr-card__field">';
-            $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($label) . '</span>';
-            $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html((string) $qty) . '</span><span class="fdr-card__unit">pcs</span></span>';
+            $parent = $mat['parent_category'] ?? 'altres';
+            $grouped[$parent][] = [
+                'label' => $mat['label'],
+                'qty'   => $qty,
+                'unit'  => $mat['unit'] ?? 'pcs',
+            ];
+        }
+
+        // Append any items from $final not in MaterialDefinitions (e.g. recipe stock)
+        $knownKeys = array_column(MaterialDefinitions::getAll(), 'key');
+        foreach ($final as $key => $qty) {
+            if ($qty <= 0 || in_array($key, $knownKeys, true)) {
+                continue;
+            }
+            $grouped['altres'][] = [
+                'label' => ucwords(str_replace('_', ' ', $key)),
+                'qty'   => $qty,
+                'unit'  => 'pcs',
+            ];
+        }
+
+        $html = '';
+        foreach ($grouped as $parentKey => $items) {
+            $groupLabel = $parentLabels[$parentKey] ?? ucwords(str_replace('_', ' ', $parentKey));
+            $html .= '<div class="brxe-div fdr-card__group">';
+            $html .= '<span class="brxe-text-basic fdr-card__group-title">' . esc_html($groupLabel) . '</span>';
+            foreach ($items as $item) {
+                $html .= '<div class="brxe-div fdr-card__field">';
+                $html .= '<span class="brxe-text-basic fdr-card__field-label">' . esc_html($item['label']) . '</span>';
+                $html .= '<span class="brxe-text-basic fdr-card__field-value"><span class="fdr-card__qty">' . esc_html((string) $item['qty']) . '</span><span class="fdr-card__unit">' . esc_html($item['unit']) . '</span></span>';
+                $html .= '</div>';
+            }
             $html .= '</div>';
         }
 

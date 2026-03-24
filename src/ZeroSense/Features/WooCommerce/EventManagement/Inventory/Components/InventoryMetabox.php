@@ -1289,7 +1289,11 @@ class InventoryMetabox
         }
 
         delete_transient('zs_active_equipment_alerts');
-        
+
+        // Bust FDR transient cache by updating the order version key
+        $order->update_meta_data('_zs_last_modified', current_time('mysql'));
+        $order->save_meta_data();
+
         wp_send_json_success(['message' => 'Inventory saved successfully']);
     }
     
@@ -1332,7 +1336,11 @@ class InventoryMetabox
         }
 
         delete_transient('zs_active_equipment_alerts');
-        
+
+        // Bust FDR transient cache by updating the order version key
+        $order->update_meta_data('_zs_last_modified', current_time('mysql'));
+        $order->save_meta_data();
+
         wp_send_json_success(['message' => 'All overrides cleared successfully']);
     }
     
