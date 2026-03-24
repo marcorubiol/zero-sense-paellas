@@ -282,6 +282,8 @@ class OrderOps implements FeatureInterface
             $newValue = esc_url_raw((string) $_POST['_shipping_location_link']);
             $order->update_meta_data('_shipping_location_link', $newValue);
         }
+
+        $order->save();
     }
 
     private function registerMetaFields(): void
