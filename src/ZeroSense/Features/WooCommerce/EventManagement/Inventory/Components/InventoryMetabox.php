@@ -631,24 +631,14 @@ class InventoryMetabox
                 }
                 
                 // Update cremadors
-                var totalCremadors = 0;
                 for (var cremadorKey in cremadorCounts) {
                     var count = cremadorCounts[cremadorKey];
-                    totalCremadors += count;
                     updateInputAndTriggerEvent(cremadorKey, count);
                 }
-                
-                // Update all cremador-dependent fields (1 per cremador) — list from MaterialDefinitions
-                cremadorAutoFields.forEach(function(key) {
-                    updateInputAndTriggerEvent(key, totalCremadors);
-                });
 
-                // Update buta (special formula: +1 extra if >60pax)
-                var butaCount = totalCremadors;
-                if (totalGuests > 60 && totalCremadors > 0) {
-                    butaCount += 1;
-                }
-                updateInputAndTriggerEvent('buta', butaCount);
+                // Recalculate dependents from actual cremador input values
+                // (this picks up both paella-derived AND manually-set cremadors)
+                recalculateCremadorDependents();
             }
 
             function updateInputAndTriggerEvent(materialKey, newValue) {
@@ -676,6 +666,27 @@ class InventoryMetabox
                     $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
                     $input.removeClass('zs-inventory-override');
                 }
+            }
+
+            // Recalculate dependents from actual cremador input values
+            // (covers manual cremador edits that don't go through paella recalc)
+            function recalculateCremadorDependents() {
+                var cremadorKeys = ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm'];
+                var totalCremadors = 0;
+                cremadorKeys.forEach(function(key) {
+                    var val = parseInt($('input[name="zs_inventory[' + key + ']"]').val()) || 0;
+                    totalCremadors += val;
+                });
+
+                cremadorAutoFields.forEach(function(key) {
+                    updateInputAndTriggerEvent(key, totalCremadors);
+                });
+
+                var butaCount = totalCremadors;
+                if (totalGuests > 60 && totalCremadors > 0) {
+                    butaCount += 1;
+                }
+                updateInputAndTriggerEvent('buta', butaCount);
             }
 
             // Cassola keys
@@ -712,7 +723,17 @@ class InventoryMetabox
                 if (isLocked) return;
                 recalculateVitro();
             });
-            
+
+            // Bind direct cremador edits to recalculate dependents
+            var cremadorSelectors = ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm'].map(function(key) {
+                return 'input[name="zs_inventory[' + key + ']"]';
+            }).join(', ');
+
+            $('.zs-inventory-metabox').on('input', cremadorSelectors, function() {
+                if (isLocked) return;
+                recalculateCremadorDependents();
+            });
+
             // Per-field lock click: unlock a dependent field for editing
             $(document).on('click', '.zs-inventory-dep-lock', function(e) {
                 e.preventDefault();

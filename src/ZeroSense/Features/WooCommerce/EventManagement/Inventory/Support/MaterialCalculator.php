@@ -73,10 +73,68 @@ class MaterialCalculator
         
         return $result;
     }
-    
+
+    /**
+     * Recalculate dependent items based on final values (after overrides).
+     * Items that have an explicit manual override are left untouched.
+     *
+     * @param array $final      Final quantities (calculated + overrides applied)
+     * @param array $overrides  Manual overrides (to know which items the user explicitly set)
+     * @param int   $totalGuests Total guests for buta extra logic
+     * @return array Updated final quantities
+     */
+    public static function recalculateDependents(array $final, array $overrides, int $totalGuests): array
+    {
+        // Sum all cremadors from final values
+        $cremadorKeys = ['cremador_50cm', 'cremador_60cm', 'cremador_70cm', 'cremador_90cm'];
+        $totalCremadors = 0;
+        foreach ($cremadorKeys as $ck) {
+            $totalCremadors += ($final[$ck] ?? 0);
+        }
+
+        // Update cremador dependents (only if not manually overridden)
+        foreach (['potes_tripodes', 'catifes', 'tapapeus'] as $dep) {
+            if (!self::hasManualOverride($dep, $overrides)) {
+                $final[$dep] = $totalCremadors;
+            }
+        }
+
+        // Buta: total cremadors + 1 if >60 pax
+        if (!self::hasManualOverride('buta', $overrides)) {
+            $final['buta'] = $totalCremadors + ($totalGuests > 60 && $totalCremadors > 0 ? 1 : 0);
+        }
+
+        // Sum all cassoles from final values
+        $cassolaKeys = ['cassola_5l', 'cassola_7l', 'cassola_10l', 'cassola_12l', 'cassola_13l', 'cassola_16l', 'cassola_34l'];
+        $totalCassoles = 0;
+        foreach ($cassolaKeys as $ck) {
+            $totalCassoles += ($final[$ck] ?? 0);
+        }
+
+        // Vitro petita: 1 per cassola
+        if (!self::hasManualOverride('vitro_petita', $overrides)) {
+            $final['vitro_petita'] = $totalCassoles;
+        }
+
+        // Taules treball → teles_negres, estovalles
+        $taules = $final['taules_treball'] ?? 0;
+        foreach (['teles_negres', 'estovalles'] as $dep) {
+            if (!self::hasManualOverride($dep, $overrides)) {
+                $final[$dep] = $taules;
+            }
+        }
+
+        return $final;
+    }
+
+    private static function hasManualOverride(string $key, array $overrides): bool
+    {
+        return isset($overrides[$key]) && $overrides[$key] !== '' && $overrides[$key] !== null;
+    }
+
     /**
      * Cuenta staff por roles
-     * 
+     *
      * Mapeo de roles específicos a categorías de ropa:
      * - CUINER: Jefe de voluntarios, Cocineros, Ayudantes
      * - CAMBRER: Camareros, Barra, Coqueteles, Tallador de pernil

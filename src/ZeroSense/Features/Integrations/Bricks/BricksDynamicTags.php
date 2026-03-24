@@ -3328,6 +3328,10 @@ class BricksDynamicTags implements FeatureInterface
         $cascadeOverrides = ManualOverride::getCascade($orderId);
         $final            = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $overrides));
 
+        // Recalculate dependent items from final values (e.g. cremadors → tapapeus)
+        $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
+        $final = MaterialCalculator::recalculateDependents($final, $overrides, $totalGuests);
+
         if (empty($final)) {
             return '';
         }
