@@ -123,6 +123,15 @@ class MetaKeys
     }
 
     /**
+     * Clear the in-process meta cache for a specific order.
+     * Used in callback handlers to ensure fresh DB reads.
+     */
+    public static function clearCacheForOrder(int $orderId): void
+    {
+        unset(self::$cache[$orderId]);
+    }
+
+    /**
      * Try to migrate value from legacy key if it exists.
      * Returns the migrated value or null if no legacy value found.
      */
