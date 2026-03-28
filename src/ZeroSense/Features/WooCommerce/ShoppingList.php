@@ -162,7 +162,13 @@ class ShoppingList implements FeatureInterface
         $sigValid  = $this->verifySignature();
         $preFiltered = $sigValid && $from !== '' && $to !== '' && $loc > 0;
 
-        $locations = get_terms(['taxonomy' => 'service-area', 'hide_empty' => false]);
+        global $sitepress;
+        $defaultLang = $sitepress ? $sitepress->get_default_language() : 'es';
+        $locations = get_terms([
+            'taxonomy'   => 'service-area',
+            'hide_empty' => false,
+            'lang'       => $defaultLang,
+        ]);
         if (is_wp_error($locations) || !is_array($locations)) { $locations = []; }
 
         $preOrders = $preList = $preItemKeys = [];
