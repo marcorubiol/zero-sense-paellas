@@ -37,7 +37,7 @@ class ReturnHandler
         $isFullyPaid = $order->has_status('fully-paid');
         $isDepositPaid = $order->has_status('deposit-paid');
 
-        if ($isFullyPaid || ($isDepositPaid && !$isOrderPay)) {
+        if (($isFullyPaid || $isDepositPaid) && !$isOrderPay) {
             $originalLanguage = $this->switchToOrderLanguage($order);
             $type = $isDepositPaid ? 'deposit' : 'full';
             $redirectUrl = $this->buildRedirectUrl($order, $type);

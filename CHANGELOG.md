@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Budget visibility after full payment**: Fully-paid orders on the order-pay page were always redirected to the thank-you page, preventing clients from viewing their budget. Now fully-paid orders stay on order-pay (same behavior as deposit-paid), while Redsys returns still redirect correctly.
+
 ### Added
 - **Service Location Column**: New admin column in WooCommerce orders list showing event service location (At home, At venue, Outdoor, Other) with icons
 
