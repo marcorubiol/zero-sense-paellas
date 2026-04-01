@@ -113,6 +113,22 @@
         if (!list) { return; }
         var target = document.createElement('div');
         target.id = 'zs-sl-print-target';
+
+        var fromVal = document.getElementById('zs-sl-from') ? document.getElementById('zs-sl-from').value : '';
+        var toVal = document.getElementById('zs-sl-to') ? document.getElementById('zs-sl-to').value : '';
+        var locSel = document.getElementById('zs-sl-loc');
+        var locText = locSel && locSel.selectedIndex > 0 ? locSel.options[locSel.selectedIndex].text : '';
+        if (fromVal || locText) {
+            var header = document.createElement('div');
+            header.className = 'zs-sl-print-header';
+            var parts = [];
+            if (fromVal && toVal && fromVal !== toVal) { parts.push(fromVal + ' — ' + toVal); }
+            else if (fromVal) { parts.push(fromVal); }
+            if (locText) { parts.push(locText); }
+            header.textContent = parts.join(' · ');
+            target.appendChild(header);
+        }
+
         target.appendChild(list.cloneNode(true));
         document.body.appendChild(target);
         document.body.classList.add('zs-printing');
