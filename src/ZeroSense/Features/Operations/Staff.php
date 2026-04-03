@@ -16,6 +16,9 @@ class Staff implements FeatureInterface
     private const NONCE_FIELD = 'zs_staff_nonce';
     private const NONCE_ACTION = 'zs_staff_save';
 
+    private static bool $bolosLoaded = false;
+    private static array $bolosCounts = [];
+
     public function getName(): string
     {
         return __('Staff Members', 'zero-sense');
@@ -56,6 +59,9 @@ class Staff implements FeatureInterface
         add_action('pre_delete_term', [$this, 'protectCoreRoles'], 10, 2);
         add_filter('user_has_cap', [$this, 'preventCoreRoleDeletion'], 10, 3);
         add_filter(self::TAX_ROLE . '_row_actions', [$this, 'removeCoreRoleActions'], 10, 2);
+        add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addBolosColumn']);
+        add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderBolosColumn'], 10, 2);
+        add_action('restrict_manage_posts', [$this, 'renderBolosFilter']);
         add_action('restrict_manage_posts', [$this, 'renderExportButton']);
         add_action('admin_init', [$this, 'handleCsvExport']);
     }
@@ -592,6 +598,109 @@ class Staff implements FeatureInterface
         } else {
             delete_post_meta($postId, self::META_NOTES);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Bolos column + month filter
+    // -------------------------------------------------------------------------
+
+    public function addBolosColumn(array $columns): array
+    {
+        $label = 'Bolos';
+        $month = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
+        if ($month !== '') {
+            $ts = strtotime($month . '-01');
+            if ($ts) {
+                $label = 'Bolos ' . ucfirst(date_i18n('F Y', $ts));
+            }
+        }
+
+        $result = [];
+        foreach ($columns as $key => $val) {
+            $result[$key] = $val;
+            if ($key === 'title') {
+                $result['bolos_count'] = $label;
+            }
+        }
+        return $result;
+    }
+
+    public function renderBolosColumn(string $column, int $postId): void
+    {
+        if ($column !== 'bolos_count') {
+            return;
+        }
+        $counts = self::getBolosCounts();
+        echo (int) ($counts[$postId] ?? 0);
+    }
+
+    public function renderBolosFilter(string $postType): void
+    {
+        if ($postType !== self::CPT) {
+            return;
+        }
+        $current = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
+        $year = (int) current_time('Y');
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $val = sprintf('%d-%02d', $year, $m);
+            $months[$val] = ucfirst(date_i18n('F', mktime(0, 0, 0, $m, 1, $year)));
+        }
+        echo '<select name="zs_bolos_month">';
+        echo '<option value="">' . esc_html__('All months', 'zero-sense') . '</option>';
+        foreach ($months as $val => $label) {
+            echo '<option value="' . esc_attr($val) . '"' . selected($current, $val, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select>';
+    }
+
+    private static function getBolosCounts(): array
+    {
+        if (self::$bolosLoaded) {
+            return self::$bolosCounts;
+        }
+        self::$bolosLoaded = true;
+
+        $month = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
+        if ($month !== '' && preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $from = $month . '-01';
+            $to = date('Y-m-t', strtotime($from));
+        } else {
+            $from = '2000-01-01';
+            $to = '2099-12-31';
+        }
+
+        $orders = wc_get_orders([
+            'limit'      => -1,
+            'return'     => 'objects',
+            'meta_query' => [[
+                'key'     => 'zs_event_date',
+                'value'   => [$from, $to],
+                'compare' => 'BETWEEN',
+                'type'    => 'DATE',
+            ]],
+        ]);
+
+        foreach ($orders as $order) {
+            $staff = $order->get_meta('zs_event_staff', true);
+            if (!is_array($staff)) {
+                continue;
+            }
+            $seen = [];
+            foreach ($staff as $assignment) {
+                if (!is_array($assignment) || empty($assignment['staff_id'])) {
+                    continue;
+                }
+                $sid = (int) $assignment['staff_id'];
+                if (isset($seen[$sid])) {
+                    continue;
+                }
+                $seen[$sid] = true;
+                self::$bolosCounts[$sid] = (self::$bolosCounts[$sid] ?? 0) + 1;
+            }
+        }
+
+        return self::$bolosCounts;
     }
 
     // -------------------------------------------------------------------------
