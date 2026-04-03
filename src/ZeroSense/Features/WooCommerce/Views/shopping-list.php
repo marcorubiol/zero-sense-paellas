@@ -41,8 +41,8 @@ declare(strict_types=1);
                 </select>
             </div>
             <div class="zs-sl__filter-group zs-sl__filter-group--full zs-sl__filter-actions">
-                <button type="button" class="btn--primary zs-sl__search-btn" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
                 <button type="button" class="btn--neutral btn--outline zs-sl__reset-btn" id="zs-sl-reset"><?php esc_html_e('Començar de nou', 'zero-sense'); ?></button>
+                <button type="button" class="btn--primary zs-sl__search-btn" id="zs-sl-search"><?php esc_html_e('Cercar comandes', 'zero-sense'); ?></button>
             </div>
         </div>
     </div>
