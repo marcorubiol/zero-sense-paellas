@@ -56,7 +56,9 @@ class Vehicles implements FeatureInterface
     {
         add_action('init', [$this, 'registerContentTypes']);
         add_action('add_meta_boxes', [$this, 'addVehicleMetabox']);
+        add_action('add_meta_boxes', [$this, 'addUsageMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveVehicleMetabox'], 10, 2);
+        add_action('wp_ajax_zs_vehicle_usage', [$this, 'ajaxVehicleUsage']);
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addUsageColumn']);
         add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderUsageColumn'], 10, 2);
         add_action('restrict_manage_posts', [$this, 'renderFilters']);
@@ -302,6 +304,122 @@ class Vehicles implements FeatureInterface
         }
 
         return self::$monthlyUsage;
+    }
+
+    public function addUsageMetabox(): void
+    {
+        add_meta_box(
+            'zs_vehicle_usage',
+            __('Usage', 'zero-sense'),
+            [$this, 'renderUsageMetabox'],
+            self::CPT,
+            'side',
+            'default'
+        );
+    }
+
+    public function renderUsageMetabox(WP_Post $post): void
+    {
+        $current = (int) current_time('Y');
+        $year = $current;
+        $usage = self::getMonthlyUsage($year);
+        $vehicleData = $usage[$post->ID] ?? [];
+        $nonce = wp_create_nonce('zs_vehicle_usage');
+        $monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        ?>
+        <div class="zs-vehicle-usage-metabox">
+            <select id="zs-usage-year" style="width:100%;margin-bottom:8px;">
+                <?php for ($y = $current - 2; $y <= $current; $y++): ?>
+                    <option value="<?php echo esc_attr($y); ?>"<?php selected($y, $year); ?>><?php echo esc_html($y); ?></option>
+                <?php endfor; ?>
+            </select>
+            <div id="zs-usage-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:11px;line-height:1;">
+                <?php for ($m = 1; $m <= 12; $m++):
+                    $count = (int) ($vehicleData[$m] ?? 0);
+                    $bg = $count > 0 ? '#e7f3ff' : '#f0f0f0';
+                    $color = $count > 0 ? '#0073aa' : '#999';
+                ?>
+                    <div style="text-align:center;padding:4px 2px;background:<?php echo esc_attr($bg); ?>;border-radius:2px;">
+                        <div style="color:#888;font-size:8px;"><?php echo esc_html($monthsShort[$m - 1]); ?></div>
+                        <div style="font-weight:600;color:<?php echo esc_attr($color); ?>;"><?php echo $count; ?></div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+            <div id="zs-usage-total" style="font-size:11px;color:#0073aa;font-weight:600;margin-top:6px;">
+                <?php
+                $total = array_sum($vehicleData);
+                if ($total > 0) {
+                    printf('Total: %d', $total);
+                }
+                ?>
+            </div>
+        </div>
+        <script>
+        (function($) {
+            var vehicleId = <?php echo (int) $post->ID; ?>;
+            var nonce = '<?php echo esc_js($nonce); ?>';
+            var months = <?php echo wp_json_encode($monthsShort); ?>;
+
+            function renderGrid(data) {
+                var total = 0;
+                var html = '';
+                for (var m = 1; m <= 12; m++) {
+                    var count = data[m] || 0;
+                    total += count;
+                    var bg = count > 0 ? '#e7f3ff' : '#f0f0f0';
+                    var color = count > 0 ? '#0073aa' : '#999';
+                    html += '<div style="text-align:center;padding:4px 2px;background:' + bg + ';border-radius:2px;">'
+                          + '<div style="color:#888;font-size:8px;">' + months[m - 1] + '</div>'
+                          + '<div style="font-weight:600;color:' + color + ';">' + count + '</div>'
+                          + '</div>';
+                }
+                $('#zs-usage-grid').html(html);
+                $('#zs-usage-total').html(total > 0 ? 'Total: ' + total : '');
+            }
+
+            $('#zs-usage-year').on('change', function() {
+                var $grid = $('#zs-usage-grid');
+                $grid.css('opacity', '0.5');
+                $.post(ajaxurl, {
+                    action: 'zs_vehicle_usage',
+                    nonce: nonce,
+                    vehicle_id: vehicleId,
+                    year: $(this).val()
+                }, function(response) {
+                    $grid.css('opacity', '1');
+                    if (response.success) {
+                        renderGrid(response.data);
+                    }
+                });
+            });
+        })(jQuery);
+        </script>
+        <?php
+    }
+
+    public function ajaxVehicleUsage(): void
+    {
+        check_ajax_referer('zs_vehicle_usage', 'nonce');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+
+        $vehicleId = isset($_POST['vehicle_id']) ? (int) $_POST['vehicle_id'] : 0;
+        $year = isset($_POST['year']) ? (int) $_POST['year'] : (int) current_time('Y');
+        $current = (int) current_time('Y');
+        $year = max($current - 2, min($current, $year));
+
+        $usage = self::getMonthlyUsage($year);
+        $vehicleData = $usage[$vehicleId] ?? [];
+
+        // Ensure all 12 months are present for JS
+        $result = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $result[$m] = (int) ($vehicleData[$m] ?? 0);
+        }
+
+        wp_send_json_success($result);
     }
 
     public function saveVehicleMetabox(int $postId, WP_Post $post): void
