@@ -14,8 +14,8 @@ class Vehicles implements FeatureInterface
     private const NONCE_FIELD = 'zs_vehicle_nonce';
     private const NONCE_ACTION = 'zs_vehicle_save';
 
-    private static bool $usageLoaded = false;
-    private static array $usageCounts = [];
+    private static int $usageYear = 0;
+    private static array $monthlyUsage = [];
 
     public function getName(): string
     {
@@ -59,6 +59,7 @@ class Vehicles implements FeatureInterface
         add_action('save_post_' . self::CPT, [$this, 'saveVehicleMetabox'], 10, 2);
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addUsageColumn']);
         add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderUsageColumn'], 10, 2);
+        add_action('restrict_manage_posts', [$this, 'renderYearFilter']);
     }
 
     public function registerContentTypes(): void
@@ -142,12 +143,12 @@ class Vehicles implements FeatureInterface
 
     public function addUsageColumn(array $columns): array
     {
-        $year = (int) current_time('Y');
+        $year = self::getSelectedYear();
         $result = [];
         foreach ($columns as $key => $label) {
             $result[$key] = $label;
             if ($key === 'title') {
-                $result['usage_count'] = sprintf(__('Uses %d', 'zero-sense'), $year);
+                $result['usage'] = sprintf(__('Usage %d', 'zero-sense'), $year);
             }
         }
         return $result;
@@ -155,24 +156,85 @@ class Vehicles implements FeatureInterface
 
     public function renderUsageColumn(string $column, int $postId): void
     {
-        if ($column !== 'usage_count') {
+        if ($column !== 'usage') {
             return;
         }
-        $counts = self::getUsageCounts();
-        echo (int) ($counts[$postId] ?? 0);
+
+        $year = self::getSelectedYear();
+        $usage = self::getMonthlyUsage($year);
+        $vehicleData = $usage[$postId] ?? [];
+        $months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+        $total = 0;
+
+        echo '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:2px;font-size:11px;line-height:1;max-width:210px;">';
+        for ($m = 1; $m <= 12; $m++) {
+            $count = (int) ($vehicleData[$m] ?? 0);
+            $total += $count;
+            $bg = $count > 0 ? '#e7f3ff' : '#f0f0f0';
+            $color = $count > 0 ? '#0073aa' : '#999';
+            printf(
+                '<div style="text-align:center;padding:3px 2px;background:%s;border-radius:2px;">'
+                . '<div style="color:#888;font-size:9px;">%s</div>'
+                . '<div style="font-weight:600;color:%s;">%d</div>'
+                . '</div>',
+                esc_attr($bg),
+                esc_html($months[$m - 1]),
+                esc_attr($color),
+                $count
+            );
+        }
+        echo '</div>';
+
+        if ($total > 0) {
+            printf(
+                '<div style="font-size:11px;color:#0073aa;font-weight:600;margin-top:4px;">Total: %d</div>',
+                $total
+            );
+        }
     }
 
-    private static function getUsageCounts(): array
+    public function renderYearFilter(string $postType): void
     {
-        if (self::$usageLoaded) {
-            return self::$usageCounts;
+        if ($postType !== self::CPT) {
+            return;
         }
-        self::$usageLoaded = true;
 
-        $year = (int) current_time('Y');
+        $current = (int) current_time('Y');
+        $selected = self::getSelectedYear();
+
+        echo '<select name="zs_usage_year">';
+        for ($y = $current - 2; $y <= $current; $y++) {
+            printf(
+                '<option value="%d"%s>%d</option>',
+                $y,
+                selected($y, $selected, false),
+                $y
+            );
+        }
+        echo '</select>';
+    }
+
+    private static function getSelectedYear(): int
+    {
+        $current = (int) current_time('Y');
+        $year = isset($_GET['zs_usage_year']) ? (int) $_GET['zs_usage_year'] : $current;
+        return max($current - 2, min($current, $year));
+    }
+
+    private static function getMonthlyUsage(int $year): array
+    {
+        if (self::$usageYear === $year && !empty(self::$monthlyUsage)) {
+            return self::$monthlyUsage;
+        }
+
+        self::$usageYear = $year;
+        self::$monthlyUsage = [];
+
+        $statuses = array_diff(array_keys(wc_get_order_statuses()), ['wc-cancelled']);
         $orders = wc_get_orders([
             'limit'      => -1,
             'return'     => 'objects',
+            'status'     => array_values($statuses),
             'meta_query' => [[
                 'key'     => 'zs_event_date',
                 'value'   => [$year . '-01-01', $year . '-12-31'],
@@ -182,17 +244,25 @@ class Vehicles implements FeatureInterface
         ]);
 
         foreach ($orders as $order) {
+            $eventDate = $order->get_meta('zs_event_date', true);
+            if (!$eventDate) {
+                continue;
+            }
+            $month = (int) substr($eventDate, 5, 2);
+            if ($month < 1 || $month > 12) {
+                continue;
+            }
             $vehicles = $order->get_meta('zs_event_vehicles', true);
             if (!is_array($vehicles)) {
                 continue;
             }
             foreach ($vehicles as $vid) {
                 $vid = (int) $vid;
-                self::$usageCounts[$vid] = (self::$usageCounts[$vid] ?? 0) + 1;
+                self::$monthlyUsage[$vid][$month] = (self::$monthlyUsage[$vid][$month] ?? 0) + 1;
             }
         }
 
-        return self::$usageCounts;
+        return self::$monthlyUsage;
     }
 
     public function saveVehicleMetabox(int $postId, WP_Post $post): void
