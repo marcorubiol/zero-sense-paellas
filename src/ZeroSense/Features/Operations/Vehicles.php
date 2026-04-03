@@ -164,7 +164,8 @@ class Vehicles implements FeatureInterface
         $selectedMonth = self::getSelectedMonth();
         $usage = self::getMonthlyUsage($year);
         $vehicleData = $usage[$postId] ?? [];
-        $months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+        $monthsFull = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        $monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         $total = 0;
 
         echo '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:2px;font-size:11px;line-height:1;max-width:210px;">';
@@ -183,12 +184,12 @@ class Vehicles implements FeatureInterface
             }
             printf(
                 '<div style="text-align:center;padding:3px 2px;background:%s;border-radius:2px;">'
-                . '<div style="color:%s;font-size:9px;">%s</div>'
+                . '<div style="color:%s;font-size:8px;">%s</div>'
                 . '<div style="font-weight:600;color:%s;">%d</div>'
                 . '</div>',
                 esc_attr($bg),
                 esc_attr($labelColor),
-                esc_html($months[$m - 1]),
+                esc_html($monthsShort[$m - 1]),
                 esc_attr($color),
                 $count
             );
@@ -220,7 +221,7 @@ class Vehicles implements FeatureInterface
         $current = (int) current_time('Y');
         $selectedYear = self::getSelectedYear();
         $selectedMonth = self::getSelectedMonth();
-        $months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+        $monthsFull = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
         echo '<select name="zs_usage_year">';
         for ($y = $current - 2; $y <= $current; $y++) {
@@ -240,7 +241,7 @@ class Vehicles implements FeatureInterface
                 '<option value="%d"%s>%s</option>',
                 $m,
                 selected($m, $selectedMonth, false),
-                esc_html($months[$m - 1])
+                esc_html($monthsFull[$m - 1])
             );
         }
         echo '</select>';
