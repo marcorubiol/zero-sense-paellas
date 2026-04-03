@@ -16,6 +16,7 @@ class Vehicles implements FeatureInterface
 
     private static int $usageYear = 0;
     private static array $monthlyUsage = [];
+    private static ?array $availableYears = null;
 
     public function getName(): string
     {
@@ -220,13 +221,13 @@ class Vehicles implements FeatureInterface
             return;
         }
 
-        $current = (int) current_time('Y');
+        $years = self::getAvailableYears();
         $selectedYear = self::getSelectedYear();
         $selectedMonth = self::getSelectedMonth();
         $monthsFull = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
         echo '<select name="zs_usage_year">';
-        for ($y = $current - 2; $y <= $current; $y++) {
+        foreach ($years as $y) {
             printf(
                 '<option value="%d"%s>%d</option>',
                 $y,
@@ -249,11 +250,42 @@ class Vehicles implements FeatureInterface
         echo '</select>';
     }
 
+    private static function getAvailableYears(): array
+    {
+        if (self::$availableYears !== null) {
+            return self::$availableYears;
+        }
+
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'wc_orders_meta';
+        $orderTable = $wpdb->prefix . 'wc_orders';
+
+        // HPOS: get distinct years from zs_event_date for orders with vehicles assigned
+        $years = $wpdb->get_col(
+            "SELECT DISTINCT SUBSTRING(ed.meta_value, 1, 4) AS yr
+             FROM {$table} AS ed
+             INNER JOIN {$table} AS ev ON ev.order_id = ed.order_id AND ev.meta_key = 'zs_event_vehicles'
+             INNER JOIN {$orderTable} AS o ON o.id = ed.order_id AND o.status != 'wc-cancelled'
+             WHERE ed.meta_key = 'zs_event_date'
+               AND ed.meta_value != ''
+             ORDER BY yr DESC"
+        );
+
+        self::$availableYears = array_map('intval', array_filter($years));
+
+        if (empty(self::$availableYears)) {
+            self::$availableYears = [(int) current_time('Y')];
+        }
+
+        return self::$availableYears;
+    }
+
     private static function getSelectedYear(): int
     {
-        $current = (int) current_time('Y');
-        $year = isset($_GET['zs_usage_year']) ? (int) $_GET['zs_usage_year'] : $current;
-        return max($current - 2, min($current, $year));
+        $years = self::getAvailableYears();
+        $year = isset($_GET['zs_usage_year']) ? (int) $_GET['zs_usage_year'] : $years[0];
+        return in_array($year, $years, true) ? $year : $years[0];
     }
 
     private static function getSelectedMonth(): int
@@ -320,8 +352,8 @@ class Vehicles implements FeatureInterface
 
     public function renderUsageMetabox(WP_Post $post): void
     {
-        $current = (int) current_time('Y');
-        $year = $current;
+        $years = self::getAvailableYears();
+        $year = $years[0];
         $usage = self::getMonthlyUsage($year);
         $vehicleData = $usage[$post->ID] ?? [];
         $nonce = wp_create_nonce('zs_vehicle_usage');
@@ -329,9 +361,9 @@ class Vehicles implements FeatureInterface
         ?>
         <div class="zs-vehicle-usage-metabox">
             <select id="zs-usage-year" style="width:100%;margin-bottom:8px;">
-                <?php for ($y = $current - 2; $y <= $current; $y++): ?>
+                <?php foreach ($years as $y): ?>
                     <option value="<?php echo esc_attr($y); ?>"<?php selected($y, $year); ?>><?php echo esc_html($y); ?></option>
-                <?php endfor; ?>
+                <?php endforeach; ?>
             </select>
             <div id="zs-usage-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:11px;line-height:1;">
                 <?php for ($m = 1; $m <= 12; $m++):
@@ -406,9 +438,11 @@ class Vehicles implements FeatureInterface
         }
 
         $vehicleId = isset($_POST['vehicle_id']) ? (int) $_POST['vehicle_id'] : 0;
-        $year = isset($_POST['year']) ? (int) $_POST['year'] : (int) current_time('Y');
-        $current = (int) current_time('Y');
-        $year = max($current - 2, min($current, $year));
+        $years = self::getAvailableYears();
+        $year = isset($_POST['year']) ? (int) $_POST['year'] : $years[0];
+        if (!in_array($year, $years, true)) {
+            $year = $years[0];
+        }
 
         $usage = self::getMonthlyUsage($year);
         $vehicleData = $usage[$vehicleId] ?? [];
