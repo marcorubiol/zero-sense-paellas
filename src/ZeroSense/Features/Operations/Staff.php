@@ -56,6 +56,8 @@ class Staff implements FeatureInterface
         add_action('pre_delete_term', [$this, 'protectCoreRoles'], 10, 2);
         add_filter('user_has_cap', [$this, 'preventCoreRoleDeletion'], 10, 3);
         add_filter(self::TAX_ROLE . '_row_actions', [$this, 'removeCoreRoleActions'], 10, 2);
+        add_action('restrict_manage_posts', [$this, 'renderExportButton']);
+        add_action('admin_init', [$this, 'handleCsvExport']);
     }
     
     public function sortRoleTerms(array $terms, ?array $taxonomies, array $args): array
@@ -590,5 +592,109 @@ class Staff implements FeatureInterface
         } else {
             delete_post_meta($postId, self::META_NOTES);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // CSV Export
+    // -------------------------------------------------------------------------
+
+    public function renderExportButton(string $postType): void
+    {
+        if ($postType !== self::CPT) {
+            return;
+        }
+        $url = wp_nonce_url(admin_url('edit.php?post_type=' . self::CPT . '&zs_export_staff_csv=1'), 'zs_export_staff_csv');
+        echo '<a href="' . esc_url($url) . '" class="button" style="margin-left:8px;">Export CSV</a>';
+    }
+
+    public function handleCsvExport(): void
+    {
+        if (empty($_GET['zs_export_staff_csv'])) {
+            return;
+        }
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(__('Insufficient permissions.', 'zero-sense'));
+        }
+        check_admin_referer('zs_export_staff_csv');
+
+        $orders = wc_get_orders([
+            'limit'      => -1,
+            'return'     => 'objects',
+            'meta_query' => [[
+                'key'     => 'zs_event_date',
+                'value'   => '',
+                'compare' => '!=',
+            ]],
+        ]);
+
+        $staffNames = [];
+        $rows = [];
+
+        foreach ($orders as $order) {
+            $eventDate = $order->get_meta('zs_event_date', true);
+            if (empty($eventDate)) {
+                continue;
+            }
+
+            $staff = $order->get_meta('zs_event_staff', true);
+            if (!is_array($staff)) {
+                continue;
+            }
+
+            foreach ($staff as $assignment) {
+                if (!is_array($assignment) || empty($assignment['staff_id'])) {
+                    continue;
+                }
+
+                $staffId = (int) $assignment['staff_id'];
+                $roleSlug = $assignment['role'] ?? '';
+
+                if (!isset($staffNames[$staffId])) {
+                    $staffNames[$staffId] = get_the_title($staffId) ?: '(#' . $staffId . ')';
+                }
+
+                $roleName = '';
+                if ($roleSlug !== '') {
+                    $term = get_term_by('slug', $roleSlug, self::TAX_ROLE);
+                    if ($term instanceof \WP_Term) {
+                        $roleName = $term->name;
+                    } else {
+                        $roleName = $roleSlug;
+                    }
+                }
+
+                $ts = is_numeric($eventDate) ? (int) $eventDate : strtotime($eventDate);
+                $dateFormatted = $ts ? date('Y-m-d', $ts) : $eventDate;
+                $month = $ts ? date('Y-m', $ts) : '';
+
+                $rows[] = [
+                    'staff'      => $staffNames[$staffId],
+                    'role'       => $roleName,
+                    'event_date' => $dateFormatted,
+                    'month'      => $month,
+                    'order_id'   => $order->get_id(),
+                ];
+            }
+        }
+
+        usort($rows, function (array $a, array $b): int {
+            $cmp = strcmp($a['staff'], $b['staff']);
+            return $cmp !== 0 ? $cmp : strcmp($a['event_date'], $b['event_date']);
+        });
+
+        $filename = 'staff-assignments-' . date('Y-m-d') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+        fputcsv($out, ['Staff', 'Role', 'Event Date', 'Month', 'Order ID'], ';');
+
+        foreach ($rows as $row) {
+            fputcsv($out, array_values($row), ';');
+        }
+
+        fclose($out);
+        exit;
     }
 }
