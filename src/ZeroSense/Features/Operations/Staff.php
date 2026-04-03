@@ -695,6 +695,7 @@ class Staff implements FeatureInterface
 
         $orders = wc_get_orders([
             'limit'      => -1,
+            'status'     => 'any',
             'return'     => 'objects',
             'meta_query' => [[
                 'key'     => 'zs_event_date',
