@@ -606,20 +606,25 @@ class Staff implements FeatureInterface
 
     public function addBolosColumn(array $columns): array
     {
-        $label = 'Bolos';
         $month = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
+        $year = sanitize_text_field($_GET['zs_bolos_year'] ?? '');
+
+        $parts = ['Bolos'];
         if ($month !== '') {
-            $ts = strtotime($month . '-01');
+            $ts = mktime(0, 0, 0, (int) $month, 1, 2000);
             if ($ts) {
-                $label = 'Bolos ' . ucfirst(date_i18n('F Y', $ts));
+                $parts[] = ucfirst(date_i18n('F', $ts));
             }
+        }
+        if ($year !== '') {
+            $parts[] = $year;
         }
 
         $result = [];
         foreach ($columns as $key => $val) {
             $result[$key] = $val;
             if ($key === 'title') {
-                $result['bolos_count'] = $label;
+                $result['bolos_count'] = implode(' ', $parts);
             }
         }
         return $result;
@@ -639,17 +644,26 @@ class Staff implements FeatureInterface
         if ($postType !== self::CPT) {
             return;
         }
-        $current = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
-        $year = (int) current_time('Y');
-        $months = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $val = sprintf('%d-%02d', $year, $m);
-            $months[$val] = ucfirst(date_i18n('F', mktime(0, 0, 0, $m, 1, $year)));
+
+        $currentYear = sanitize_text_field($_GET['zs_bolos_year'] ?? '');
+        $currentMonth = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
+        $thisYear = (int) current_time('Y');
+
+        // Year filter
+        echo '<select name="zs_bolos_year">';
+        echo '<option value="">' . esc_html__('All years', 'zero-sense') . '</option>';
+        for ($y = $thisYear; $y >= $thisYear - 3; $y--) {
+            echo '<option value="' . esc_attr((string) $y) . '"' . selected($currentYear, (string) $y, false) . '>' . esc_html((string) $y) . '</option>';
         }
+        echo '</select>';
+
+        // Month filter
         echo '<select name="zs_bolos_month">';
         echo '<option value="">' . esc_html__('All months', 'zero-sense') . '</option>';
-        foreach ($months as $val => $label) {
-            echo '<option value="' . esc_attr($val) . '"' . selected($current, $val, false) . '>' . esc_html($label) . '</option>';
+        for ($m = 1; $m <= 12; $m++) {
+            $val = (string) $m;
+            $label = ucfirst(date_i18n('F', mktime(0, 0, 0, $m, 1, $thisYear)));
+            echo '<option value="' . esc_attr($val) . '"' . selected($currentMonth, $val, false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select>';
     }
@@ -661,9 +675,18 @@ class Staff implements FeatureInterface
         }
         self::$bolosLoaded = true;
 
-        $month = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
-        if ($month !== '' && preg_match('/^\d{4}-\d{2}$/', $month)) {
-            $from = $month . '-01';
+        $filterYear = sanitize_text_field($_GET['zs_bolos_year'] ?? '');
+        $filterMonth = sanitize_text_field($_GET['zs_bolos_month'] ?? '');
+
+        if ($filterYear !== '' && $filterMonth !== '') {
+            $from = sprintf('%s-%02d-01', $filterYear, (int) $filterMonth);
+            $to = date('Y-m-t', strtotime($from));
+        } elseif ($filterYear !== '') {
+            $from = $filterYear . '-01-01';
+            $to = $filterYear . '-12-31';
+        } elseif ($filterMonth !== '') {
+            $thisYear = (int) current_time('Y');
+            $from = sprintf('%d-%02d-01', $thisYear, (int) $filterMonth);
             $to = date('Y-m-t', strtotime($from));
         } else {
             $from = '2000-01-01';
