@@ -665,13 +665,15 @@ class Staff implements FeatureInterface
 
                 $ts = is_numeric($eventDate) ? (int) $eventDate : strtotime($eventDate);
                 $dateFormatted = $ts ? date('Y-m-d', $ts) : $eventDate;
-                $month = $ts ? date('Y-m', $ts) : '';
+                $monthName = $ts ? ucfirst(date_i18n('F', $ts)) : '';
+                $year = $ts ? date('Y', $ts) : '';
 
                 $rows[] = [
                     'staff'      => $staffNames[$staffId],
                     'role'       => $roleName,
                     'event_date' => $dateFormatted,
-                    'month'      => $month,
+                    'month'      => $monthName,
+                    'year'       => $year,
                     'order_id'   => $order->get_id(),
                 ];
             }
@@ -688,7 +690,7 @@ class Staff implements FeatureInterface
 
         $out = fopen('php://output', 'w');
         fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
-        fputcsv($out, ['Staff', 'Role', 'Event Date', 'Month', 'Order ID'], ';');
+        fputcsv($out, ['Staff', 'Role', 'Event Date', 'Month', 'Year', 'Order ID'], ';');
 
         foreach ($rows as $row) {
             fputcsv($out, array_values($row), ';');
