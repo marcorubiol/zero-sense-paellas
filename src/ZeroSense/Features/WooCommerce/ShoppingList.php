@@ -377,7 +377,7 @@ class ShoppingList implements FeatureInterface
 
             $allItems = []; $idx = 0;
             foreach ($lineItems as $item) {
-                if (!$item instanceof \WC_Order_Item_Product) { continue; }
+                if (!$item instanceof \WC_Order_Item_Product) { $idx++; continue; }
                 $allItems[$idx] = $item;
                 $idx++;
             }
