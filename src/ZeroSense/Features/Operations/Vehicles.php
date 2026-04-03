@@ -59,7 +59,8 @@ class Vehicles implements FeatureInterface
         add_action('save_post_' . self::CPT, [$this, 'saveVehicleMetabox'], 10, 2);
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addUsageColumn']);
         add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderUsageColumn'], 10, 2);
-        add_action('restrict_manage_posts', [$this, 'renderYearFilter']);
+        add_action('restrict_manage_posts', [$this, 'renderFilters']);
+        add_filter('disable_months_dropdown', [$this, 'disableMonthsDropdown'], 10, 2);
     }
 
     public function registerContentTypes(): void
@@ -143,12 +144,11 @@ class Vehicles implements FeatureInterface
 
     public function addUsageColumn(array $columns): array
     {
-        $year = self::getSelectedYear();
         $result = [];
         foreach ($columns as $key => $label) {
             $result[$key] = $label;
             if ($key === 'title') {
-                $result['usage'] = sprintf(__('Usage %d', 'zero-sense'), $year);
+                $result['usage'] = __('Usage', 'zero-sense');
             }
         }
         return $result;
@@ -161,6 +161,7 @@ class Vehicles implements FeatureInterface
         }
 
         $year = self::getSelectedYear();
+        $selectedMonth = self::getSelectedMonth();
         $usage = self::getMonthlyUsage($year);
         $vehicleData = $usage[$postId] ?? [];
         $months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
@@ -170,14 +171,23 @@ class Vehicles implements FeatureInterface
         for ($m = 1; $m <= 12; $m++) {
             $count = (int) ($vehicleData[$m] ?? 0);
             $total += $count;
-            $bg = $count > 0 ? '#e7f3ff' : '#f0f0f0';
-            $color = $count > 0 ? '#0073aa' : '#999';
+            $isSelected = ($selectedMonth === $m);
+            if ($isSelected) {
+                $bg = $count > 0 ? '#0073aa' : '#666';
+                $color = '#fff';
+                $labelColor = 'rgba(255,255,255,.7)';
+            } else {
+                $bg = $count > 0 ? '#e7f3ff' : '#f0f0f0';
+                $color = $count > 0 ? '#0073aa' : '#999';
+                $labelColor = '#888';
+            }
             printf(
                 '<div style="text-align:center;padding:3px 2px;background:%s;border-radius:2px;">'
-                . '<div style="color:#888;font-size:9px;">%s</div>'
+                . '<div style="color:%s;font-size:9px;">%s</div>'
                 . '<div style="font-weight:600;color:%s;">%d</div>'
                 . '</div>',
                 esc_attr($bg),
+                esc_attr($labelColor),
                 esc_html($months[$m - 1]),
                 esc_attr($color),
                 $count
@@ -193,22 +203,44 @@ class Vehicles implements FeatureInterface
         }
     }
 
-    public function renderYearFilter(string $postType): void
+    public function disableMonthsDropdown(bool $disabled, string $postType): bool
+    {
+        if ($postType === self::CPT) {
+            return true;
+        }
+        return $disabled;
+    }
+
+    public function renderFilters(string $postType): void
     {
         if ($postType !== self::CPT) {
             return;
         }
 
         $current = (int) current_time('Y');
-        $selected = self::getSelectedYear();
+        $selectedYear = self::getSelectedYear();
+        $selectedMonth = self::getSelectedMonth();
+        $months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
 
         echo '<select name="zs_usage_year">';
         for ($y = $current - 2; $y <= $current; $y++) {
             printf(
                 '<option value="%d"%s>%d</option>',
                 $y,
-                selected($y, $selected, false),
+                selected($y, $selectedYear, false),
                 $y
+            );
+        }
+        echo '</select>';
+
+        echo '<select name="zs_usage_month">';
+        printf('<option value="0"%s>%s</option>', selected(0, $selectedMonth, false), esc_html__('All months', 'zero-sense'));
+        for ($m = 1; $m <= 12; $m++) {
+            printf(
+                '<option value="%d"%s>%s</option>',
+                $m,
+                selected($m, $selectedMonth, false),
+                esc_html($months[$m - 1])
             );
         }
         echo '</select>';
@@ -219,6 +251,12 @@ class Vehicles implements FeatureInterface
         $current = (int) current_time('Y');
         $year = isset($_GET['zs_usage_year']) ? (int) $_GET['zs_usage_year'] : $current;
         return max($current - 2, min($current, $year));
+    }
+
+    private static function getSelectedMonth(): int
+    {
+        $month = isset($_GET['zs_usage_month']) ? (int) $_GET['zs_usage_month'] : 0;
+        return ($month >= 0 && $month <= 12) ? $month : 0;
     }
 
     private static function getMonthlyUsage(int $year): array
