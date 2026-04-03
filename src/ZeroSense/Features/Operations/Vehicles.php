@@ -14,6 +14,9 @@ class Vehicles implements FeatureInterface
     private const NONCE_FIELD = 'zs_vehicle_nonce';
     private const NONCE_ACTION = 'zs_vehicle_save';
 
+    private static bool $usageLoaded = false;
+    private static array $usageCounts = [];
+
     public function getName(): string
     {
         return __('Vehicles', 'zero-sense');
@@ -54,6 +57,8 @@ class Vehicles implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
         add_action('add_meta_boxes', [$this, 'addVehicleMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveVehicleMetabox'], 10, 2);
+        add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addUsageColumn']);
+        add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderUsageColumn'], 10, 2);
     }
 
     public function registerContentTypes(): void
@@ -133,6 +138,61 @@ class Vehicles implements FeatureInterface
             </table>
         </div>
         <?php
+    }
+
+    public function addUsageColumn(array $columns): array
+    {
+        $year = (int) current_time('Y');
+        $result = [];
+        foreach ($columns as $key => $label) {
+            $result[$key] = $label;
+            if ($key === 'title') {
+                $result['usage_count'] = sprintf(__('Uses %d', 'zero-sense'), $year);
+            }
+        }
+        return $result;
+    }
+
+    public function renderUsageColumn(string $column, int $postId): void
+    {
+        if ($column !== 'usage_count') {
+            return;
+        }
+        $counts = self::getUsageCounts();
+        echo (int) ($counts[$postId] ?? 0);
+    }
+
+    private static function getUsageCounts(): array
+    {
+        if (self::$usageLoaded) {
+            return self::$usageCounts;
+        }
+        self::$usageLoaded = true;
+
+        $year = (int) current_time('Y');
+        $orders = wc_get_orders([
+            'limit'      => -1,
+            'return'     => 'objects',
+            'meta_query' => [[
+                'key'     => 'zs_event_date',
+                'value'   => [$year . '-01-01', $year . '-12-31'],
+                'compare' => 'BETWEEN',
+                'type'    => 'DATE',
+            ]],
+        ]);
+
+        foreach ($orders as $order) {
+            $vehicles = $order->get_meta('zs_event_vehicles', true);
+            if (!is_array($vehicles)) {
+                continue;
+            }
+            foreach ($vehicles as $vid) {
+                $vid = (int) $vid;
+                self::$usageCounts[$vid] = (self::$usageCounts[$vid] ?? 0) + 1;
+            }
+        }
+
+        return self::$usageCounts;
     }
 
     public function saveVehicleMetabox(int $postId, WP_Post $post): void
