@@ -342,7 +342,8 @@ class ShoppingList implements FeatureInterface
         foreach ($order->get_items('line_item') as $item) {
             if (!$item instanceof \WC_Order_Item_Product) { $idx++; continue; }
             $product  = $item->get_product();
-            $recipeId = $product instanceof \WC_Product ? (int) $product->get_meta(self::META_RECIPE_ID, true) : 0;
+            if (!$product instanceof \WC_Product) { $idx++; continue; }
+            $recipeId = RecipeCalculator::resolveRecipeId($item, $product);
             if ($recipeId <= 0) { $idx++; continue; }
             $qty      = (int) $item->get_quantity();
             $recipeName = get_the_title($recipeId);
