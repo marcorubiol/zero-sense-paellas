@@ -49,6 +49,7 @@ class Staff implements FeatureInterface
         add_action('init', [$this, 'registerContentTypes']);
         add_action('init', [$this, 'ensureCoreRoles'], 20); // After taxonomy registration
         add_action('add_meta_boxes', [$this, 'addStaffMetabox']);
+        add_action('add_meta_boxes', [$this, 'addBolosMetabox']);
         add_action('save_post_' . self::CPT, [$this, 'saveStaffMetabox'], 10, 2);
         add_action('admin_footer', [$this, 'addEditRolesLink']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueRoleOrderingAssets']);
@@ -695,13 +696,13 @@ class Staff implements FeatureInterface
 
         $orders = wc_get_orders([
             'limit'      => -1,
-            'status'     => 'any',
+            'status'     => array_keys(wc_get_order_statuses()),
             'return'     => 'objects',
             'meta_query' => [[
                 'key'     => 'zs_event_date',
                 'value'   => [$from, $to],
                 'compare' => 'BETWEEN',
-                'type'    => 'DATE',
+                'type'    => 'CHAR',
             ]],
         ]);
 
@@ -725,6 +726,112 @@ class Staff implements FeatureInterface
         }
 
         return self::$bolosCounts;
+    }
+
+    // -------------------------------------------------------------------------
+    // Bolos history metabox (single staff edit page)
+    // -------------------------------------------------------------------------
+
+    public function addBolosMetabox(): void
+    {
+        add_meta_box(
+            'zs_staff_bolos_history',
+            __('Event History', 'zero-sense'),
+            [$this, 'renderBolosMetabox'],
+            self::CPT,
+            'normal',
+            'low'
+        );
+    }
+
+    public function renderBolosMetabox(WP_Post $post): void
+    {
+        $staffId = $post->ID;
+
+        $orders = wc_get_orders([
+            'limit'      => -1,
+            'status'     => array_keys(wc_get_order_statuses()),
+            'return'     => 'objects',
+            'meta_query' => [[
+                'key'     => 'zs_event_date',
+                'value'   => '',
+                'compare' => '!=',
+            ]],
+        ]);
+
+        $events = [];
+        foreach ($orders as $order) {
+            $staff = $order->get_meta('zs_event_staff', true);
+            if (!is_array($staff)) {
+                continue;
+            }
+            foreach ($staff as $assignment) {
+                if (!is_array($assignment) || (int) ($assignment['staff_id'] ?? 0) !== $staffId) {
+                    continue;
+                }
+                $eventDate = $order->get_meta('zs_event_date', true);
+                $ts = is_numeric($eventDate) ? (int) $eventDate : strtotime($eventDate);
+                $roleSlug = $assignment['role'] ?? '';
+                $roleName = '';
+                if ($roleSlug !== '') {
+                    $term = get_term_by('slug', $roleSlug, self::TAX_ROLE);
+                    $roleName = $term instanceof \WP_Term ? $term->name : $roleSlug;
+                }
+                $events[] = [
+                    'date'     => $ts ? date('Y-m-d', $ts) : $eventDate,
+                    'date_fmt' => $ts ? date_i18n('d/m/Y', $ts) : $eventDate,
+                    'month'    => $ts ? ucfirst(date_i18n('F Y', $ts)) : '',
+                    'role'     => $roleName,
+                    'order_id' => $order->get_id(),
+                ];
+            }
+        }
+
+        usort($events, function (array $a, array $b): int {
+            return strcmp($b['date'], $a['date']);
+        });
+
+        $total = count($events);
+        $byYear = [];
+        foreach ($events as $e) {
+            $y = substr($e['date'], 0, 4);
+            $byYear[$y] = ($byYear[$y] ?? 0) + 1;
+        }
+        krsort($byYear);
+
+        echo '<div style="margin-bottom:12px;">';
+        echo '<strong>' . esc_html__('Total:', 'zero-sense') . '</strong> ' . (int) $total . ' bolos';
+        if (!empty($byYear)) {
+            $parts = [];
+            foreach ($byYear as $y => $c) {
+                $parts[] = $y . ': ' . $c;
+            }
+            echo ' &nbsp;(' . esc_html(implode(', ', $parts)) . ')';
+        }
+        echo '</div>';
+
+        if (empty($events)) {
+            echo '<p>' . esc_html__('No events found.', 'zero-sense') . '</p>';
+            return;
+        }
+
+        echo '<table class="widefat fixed striped" style="margin-top:8px;">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__('Date', 'zero-sense') . '</th>';
+        echo '<th>' . esc_html__('Role', 'zero-sense') . '</th>';
+        echo '<th>' . esc_html__('Order', 'zero-sense') . '</th>';
+        echo '</tr></thead><tbody>';
+
+        foreach ($events as $e) {
+            $orderUrl = admin_url('post.php?post=' . $e['order_id'] . '&action=edit');
+            echo '<tr>';
+            echo '<td>' . esc_html($e['date_fmt']) . '</td>';
+            echo '<td>' . esc_html($e['role']) . '</td>';
+            echo '<td><a href="' . esc_url($orderUrl) . '">#' . esc_html((string) $e['order_id']) . '</a></td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
     }
 
     // -------------------------------------------------------------------------
