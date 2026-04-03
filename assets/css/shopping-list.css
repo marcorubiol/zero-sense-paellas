@@ -505,8 +505,7 @@
     }
     #zs-sl-print-target .zs-sl__list-item {
         display: flex !important;
-        justify-content: flex-start !important;
-        gap: 6px !important;
+        justify-content: space-between !important;
         break-inside: avoid;
         page-break-inside: avoid;
         padding: 3px 6px !important;
