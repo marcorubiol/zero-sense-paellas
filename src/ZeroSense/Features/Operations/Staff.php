@@ -62,6 +62,8 @@ class Staff implements FeatureInterface
         add_filter(self::TAX_ROLE . '_row_actions', [$this, 'removeCoreRoleActions'], 10, 2);
         add_filter('manage_' . self::CPT . '_posts_columns', [$this, 'addBolosColumn']);
         add_action('manage_' . self::CPT . '_posts_custom_column', [$this, 'renderBolosColumn'], 10, 2);
+        add_filter('manage_edit-' . self::CPT . '_sortable_columns', [$this, 'makeBolosSortable']);
+        add_action('pre_get_posts', [$this, 'handleBolosSort']);
         add_action('restrict_manage_posts', [$this, 'renderBolosFilter']);
         add_action('restrict_manage_posts', [$this, 'renderExportButton']);
         add_action('admin_init', [$this, 'handleCsvExport']);
@@ -638,6 +640,42 @@ class Staff implements FeatureInterface
         }
         $counts = self::getBolosCounts();
         echo (int) ($counts[$postId] ?? 0);
+    }
+
+    public function makeBolosSortable(array $columns): array
+    {
+        $columns['bolos_count'] = 'bolos_count';
+        return $columns;
+    }
+
+    public function handleBolosSort(\WP_Query $query): void
+    {
+        if (!is_admin() || !$query->is_main_query()) {
+            return;
+        }
+        if ($query->get('post_type') !== self::CPT || $query->get('orderby') !== 'bolos_count') {
+            return;
+        }
+
+        $counts = self::getBolosCounts();
+        // Sort by injecting post__in with the desired order
+        $allIds = get_posts([
+            'post_type'   => self::CPT,
+            'numberposts' => -1,
+            'fields'      => 'ids',
+            'post_status' => 'any',
+        ]);
+
+        usort($allIds, function (int $a, int $b) use ($counts): int {
+            return ($counts[$a] ?? 0) - ($counts[$b] ?? 0);
+        });
+
+        if ($query->get('order') === 'desc' || $query->get('order') === 'DESC') {
+            $allIds = array_reverse($allIds);
+        }
+
+        $query->set('post__in', $allIds);
+        $query->set('orderby', 'post__in');
     }
 
     public function renderBolosFilter(string $postType): void
