@@ -799,6 +799,18 @@ class Staff implements FeatureInterface
         }
         krsort($byYear);
 
+        // Collect years and months for filters
+        $years = [];
+        $months = [];
+        foreach ($events as $e) {
+            $y = substr($e['date'], 0, 4);
+            $m = substr($e['date'], 5, 2);
+            $years[$y] = true;
+            $months[$m] = true;
+        }
+        krsort($years);
+        ksort($months);
+
         echo '<div style="margin-bottom:12px;">';
         echo '<strong>' . esc_html__('Total:', 'zero-sense') . '</strong> ' . (int) $total . ' bolos';
         if (!empty($byYear)) {
@@ -815,7 +827,25 @@ class Staff implements FeatureInterface
             return;
         }
 
-        echo '<table class="widefat fixed striped" style="margin-top:8px;">';
+        // Filters
+        echo '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+        echo '<select id="zs-bolos-mb-year"><option value="">' . esc_html__('All years', 'zero-sense') . '</option>';
+        foreach (array_keys($years) as $y) {
+            echo '<option value="' . esc_attr($y) . '">' . esc_html($y) . '</option>';
+        }
+        echo '</select>';
+        echo '<select id="zs-bolos-mb-month"><option value="">' . esc_html__('All months', 'zero-sense') . '</option>';
+        for ($m = 1; $m <= 12; $m++) {
+            $mv = sprintf('%02d', $m);
+            if (!isset($months[$mv])) { continue; }
+            $label = ucfirst(date_i18n('F', mktime(0, 0, 0, $m, 1, 2000)));
+            echo '<option value="' . esc_attr($mv) . '">' . esc_html($label) . '</option>';
+        }
+        echo '</select>';
+        echo '<span id="zs-bolos-mb-count" style="line-height:28px;font-weight:600;"></span>';
+        echo '</div>';
+
+        echo '<table class="widefat fixed striped" id="zs-bolos-mb-table" style="margin-top:0;">';
         echo '<thead><tr>';
         echo '<th>' . esc_html__('Date', 'zero-sense') . '</th>';
         echo '<th>' . esc_html__('Role', 'zero-sense') . '</th>';
@@ -824,7 +854,9 @@ class Staff implements FeatureInterface
 
         foreach ($events as $e) {
             $orderUrl = admin_url('post.php?post=' . $e['order_id'] . '&action=edit');
-            echo '<tr>';
+            $y = substr($e['date'], 0, 4);
+            $m = substr($e['date'], 5, 2);
+            echo '<tr data-year="' . esc_attr($y) . '" data-month="' . esc_attr($m) . '">';
             echo '<td>' . esc_html($e['date_fmt']) . '</td>';
             echo '<td>' . esc_html($e['role']) . '</td>';
             echo '<td><a href="' . esc_url($orderUrl) . '">#' . esc_html((string) $e['order_id']) . '</a></td>';
@@ -832,6 +864,31 @@ class Staff implements FeatureInterface
         }
 
         echo '</tbody></table>';
+
+        ?>
+        <script>
+        (function(){
+            var yearSel = document.getElementById('zs-bolos-mb-year');
+            var monthSel = document.getElementById('zs-bolos-mb-month');
+            var table = document.getElementById('zs-bolos-mb-table');
+            var counter = document.getElementById('zs-bolos-mb-count');
+            if (!yearSel || !monthSel || !table) return;
+            function filter() {
+                var y = yearSel.value, m = monthSel.value, visible = 0;
+                var rows = table.querySelectorAll('tbody tr');
+                rows.forEach(function(tr) {
+                    var show = (!y || tr.dataset.year === y) && (!m || tr.dataset.month === m);
+                    tr.style.display = show ? '' : 'none';
+                    if (show) visible++;
+                });
+                counter.textContent = visible + ' bolos';
+            }
+            yearSel.addEventListener('change', filter);
+            monthSel.addEventListener('change', filter);
+            filter();
+        })();
+        </script>
+        <?php
     }
 
     // -------------------------------------------------------------------------
