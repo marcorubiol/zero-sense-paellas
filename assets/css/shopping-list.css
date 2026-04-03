@@ -143,14 +143,9 @@
 
 .zs-sl__orders-actions {
     display: flex;
-    flex-wrap: wrap;
     gap: var(--space-s);
     margin-bottom: var(--space-xs);
     padding: 0 2px;
-}
-
-.zs-sl__orders-actions #zs-sl-print {
-    margin-left: auto;
 }
 
 #zs-sl-check-all,

@@ -8,12 +8,15 @@ declare(strict_types=1);
  * @var array $preItemKeys
  */
 ?>
+<div class="zs-sl__list-actions no-print">
+    <button type="button" class="btn--neutral" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
+    <button type="button" class="btn--neutral btn--outline" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
+</div>
+
 <div class="zs-sl__orders no-print" id="zs-sl-orders">
     <div class="zs-sl__orders-actions">
         <button type="button" class="" id="zs-sl-check-all"><?php esc_html_e('Seleccionar tot', 'zero-sense'); ?></button>
         <button type="button" class="" id="zs-sl-uncheck-all"><?php esc_html_e('Desseleccionar tot', 'zero-sense'); ?></button>
-        <button type="button" class="btn--neutral" id="zs-sl-print"><?php esc_html_e('Imprimir', 'zero-sense'); ?></button>
-        <button type="button" class="btn--neutral btn--outline" id="zs-sl-share"><?php esc_html_e('Copiar enllaç', 'zero-sense'); ?></button>
     </div>
     
     <div class="zs-sl__orders-list" id="zs-sl-orders-list">

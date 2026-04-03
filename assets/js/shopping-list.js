@@ -42,12 +42,14 @@
         if (!orders || orders.length === 0) {
             return '<div class="zs-sl__no-orders"><p>No hi ha comandes per a aquest període i localització.</p></div>';
         }
-        var html = '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
+        var html = '<div class="zs-sl__list-actions no-print">';
+        html += '<button type="button" class="btn--neutral" id="zs-sl-print">Imprimir</button>';
+        html += '<button type="button" class="btn--neutral btn--outline" id="zs-sl-share">Copiar enllaç</button>';
+        html += '</div>';
+        html += '<div class="zs-sl__orders no-print" id="zs-sl-orders">';
         html += '<div class="zs-sl__orders-actions">';
         html += '<button type="button" id="zs-sl-check-all">Seleccionar tot</button>';
         html += '<button type="button" id="zs-sl-uncheck-all">Desseleccionar tot</button>';
-        html += '<button type="button" class="btn--neutral" id="zs-sl-print">Imprimir</button>';
-        html += '<button type="button" class="btn--neutral btn--outline" id="zs-sl-share">Copiar enllaç</button>';
         html += '</div>';
         html += '<div class="zs-sl__orders-list" id="zs-sl-orders-list">';
         orders.forEach(function (o) {
