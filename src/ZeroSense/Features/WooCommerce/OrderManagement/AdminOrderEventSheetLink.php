@@ -149,13 +149,14 @@ class AdminOrderEventSheetLink implements FeatureInterface
         }
 
         $url = get_permalink($page->ID);
-        
+
         if (!$url) {
             return '';
         }
 
-        $finalUrl = add_query_arg('zs_event_token', $token, $url);
-        
+        // Clean path: /fdr/<token>/
+        $finalUrl = untrailingslashit($url) . '/' . $token . '/';
+
         return $finalUrl;
     }
 }

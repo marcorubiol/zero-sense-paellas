@@ -100,13 +100,7 @@ class OrderLanguageAdmin
             $siteUrl = home_url();
             $baseUrl = '';
             
-            if (strpos($siteUrl, 'dev.paellasencasa.com') !== false) {
-                $baseUrl = 'https://dev.paellasencasa.com/fdr';
-            } elseif (strpos($siteUrl, 'localhost') !== false || strpos($siteUrl, '127.0.0.1') !== false) {
-                $baseUrl = home_url('/fdr');
-            } else {
-                $baseUrl = 'https://paellasencasa.com/fdr';
-            }
+            $baseUrl = home_url('/fdr');
             
             $eventLink = do_shortcode('[zs_event_public_link order="' . $orderId . '" base_url="' . $baseUrl . '"]');
             if (!empty($eventLink)) {

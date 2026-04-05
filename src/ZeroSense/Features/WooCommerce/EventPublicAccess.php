@@ -37,6 +37,7 @@ class EventPublicAccess implements FeatureInterface
     public function init(): void
     {
         add_filter('query_vars', [$this, 'registerQueryVars']);
+        add_action('init', [$this, 'registerRewriteRules']);
         add_action('template_redirect', [$this, 'maybeResolveToken'], 1);
 
         add_action('woocommerce_checkout_create_order', [$this, 'ensureTokenOnCheckout'], 5, 2);
@@ -65,6 +66,24 @@ class EventPublicAccess implements FeatureInterface
     {
         $vars[] = self::QUERY_VAR_TOKEN;
         return $vars;
+    }
+
+    /**
+     * Rewrite /fdr/<token>/ to ?pagename=fdr&zs_event_token=<token>
+     */
+    public function registerRewriteRules(): void
+    {
+        add_rewrite_rule(
+            '^fdr/([a-zA-Z0-9]{20,80})/?$',
+            'index.php?pagename=fdr&' . self::QUERY_VAR_TOKEN . '=$matches[1]',
+            'top'
+        );
+
+        // Flush once after registering the new rule
+        if (!get_option('zs_fdr_rewrite_v1')) {
+            flush_rewrite_rules();
+            update_option('zs_fdr_rewrite_v1', true, true);
+        }
     }
 
     public function ensureTokenOnCheckout(WC_Order $order, $data): void
@@ -103,7 +122,18 @@ class EventPublicAccess implements FeatureInterface
 
     public function maybeResolveToken(): void
     {
+        // Support both /fdr/<token>/ (path) and ?zs_event_token=<token> (legacy query)
         $token = get_query_var(self::QUERY_VAR_TOKEN);
+
+        // Fallback: redirect legacy query-param URLs to clean path format
+        if ((!is_string($token) || $token === '') && isset($_GET[self::QUERY_VAR_TOKEN])) {
+            $legacyToken = sanitize_text_field(wp_unslash((string) $_GET[self::QUERY_VAR_TOKEN]));
+            if ($this->isValidToken($legacyToken)) {
+                wp_redirect(home_url('/fdr/' . $legacyToken . '/'), 301);
+                exit;
+            }
+        }
+
         if (!is_string($token) || $token === '') {
             return;
         }
@@ -131,7 +161,8 @@ class EventPublicAccess implements FeatureInterface
             return $robots;
         });
 
-        nocache_headers();
+        // Allow short browser cache (5 min) to survive flaky mobile connections
+        header('Cache-Control: private, max-age=300', true);
     }
 
     private function isValidToken(string $token): bool
@@ -210,10 +241,12 @@ class EventPublicAccess implements FeatureInterface
 
         $base = isset($atts['base_url']) ? esc_url_raw((string) $atts['base_url']) : '';
         if ($base === '') {
-            $base = home_url('/');
+            $base = home_url('/fdr');
         }
 
-        $url = add_query_arg([self::QUERY_VAR_TOKEN => $token], $base);
+        // Clean path: /fdr/<token>/
+        $base = untrailingslashit($base);
+        $url = $base . '/' . $token . '/';
         return esc_url($url);
     }
 
