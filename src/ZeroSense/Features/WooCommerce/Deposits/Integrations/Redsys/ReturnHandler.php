@@ -33,11 +33,14 @@ class ReturnHandler
 
         // Fast-path: S2S callback already updated the order — redirect to thank-you without needing GET params.
         // deposit-paid on order-pay must NOT redirect (customer is there to pay the remainder).
+        // IMPORTANT: if Redsys GET params are present and order is deposit-paid, skip fast-path —
+        // the params may carry proof of a balance payment that S2S failed to deliver.
         $isOrderPay = is_checkout_pay_page();
         $isFullyPaid = $order->has_status('fully-paid');
         $isDepositPaid = $order->has_status('deposit-paid');
+        $hasRedsysParams = $this->hasRedsysParameters();
 
-        if (($isFullyPaid || $isDepositPaid) && !$isOrderPay) {
+        if (($isFullyPaid || ($isDepositPaid && !$hasRedsysParams)) && !$isOrderPay) {
             $originalLanguage = $this->switchToOrderLanguage($order);
             $type = $isDepositPaid ? 'deposit' : 'full';
             $redirectUrl = $this->buildRedirectUrl($order, $type);

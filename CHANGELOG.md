@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Balance payment not processed when S2S callback fails**: When Redsys S2S notification timed out, the browser return handler was skipping the balance payment because the order was already in `deposit-paid` status. The fast-path now checks for Redsys GET parameters before assuming the order is fully handled — if params are present on a deposit-paid order, the normal processing path runs and applies the balance payment.
 - **Budget visibility after full payment**: Fully-paid orders on the order-pay page were always redirected to the thank-you page, preventing clients from viewing their budget. Now fully-paid orders stay on order-pay (same behavior as deposit-paid), while Redsys returns still redirect correctly.
 
 ### Added
