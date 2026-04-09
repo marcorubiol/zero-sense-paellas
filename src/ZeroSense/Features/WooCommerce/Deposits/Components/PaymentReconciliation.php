@@ -9,6 +9,11 @@ namespace ZeroSense\Features\WooCommerce\Deposits\Components;
  *
  * Runs hourly via WP-Cron. Only fires when stuck orders are found.
  * Uses a 24h transient per order to avoid duplicate alerts.
+ *
+ * Only alerts on `pending` and `on-hold` orders — these are orders where
+ * the initial payment (deposit or full) was sent to Redsys but never confirmed.
+ * `deposit-paid` orders are NOT included because they legitimately wait weeks
+ * for the balance payment before the event.
  */
 class PaymentReconciliation
 {
@@ -54,7 +59,10 @@ class PaymentReconciliation
 
     /**
      * Find orders that were sent to Redsys (have _zs_redsys_params)
-     * but still sit in a pre-confirmation status after the threshold.
+     * but still sit in a pre-payment status after the threshold.
+     *
+     * Only `pending` and `on-hold` — NOT `deposit-paid`, which is a normal
+     * state for orders waiting for the balance payment weeks later.
      *
      * @return \WC_Order[]
      */
@@ -63,13 +71,13 @@ class PaymentReconciliation
         $cutoff = gmdate('Y-m-d H:i:s', time() - self::STUCK_THRESHOLD_SECONDS);
 
         return wc_get_orders([
-            'status'       => ['pending', 'on-hold', 'deposit-paid'],
+            'status'        => ['pending', 'on-hold'],
             'date_modified' => '<' . $cutoff,
-            'meta_key'     => '_zs_redsys_params',
-            'meta_compare' => 'EXISTS',
-            'limit'        => 20,
-            'orderby'      => 'date',
-            'order'        => 'ASC',
+            'meta_key'      => '_zs_redsys_params',
+            'meta_compare'  => 'EXISTS',
+            'limit'         => 20,
+            'orderby'       => 'date',
+            'order'         => 'ASC',
         ]);
     }
 
@@ -88,10 +96,10 @@ class PaymentReconciliation
             $ago      = $modified ? human_time_diff($modified->getTimestamp(), time()) : '?';
 
             $lines[] = sprintf(
-                "• Pedido #%d — %s — %s — estado: %s — hace %s",
+                "- Pedido #%d — %s — %s EUR — estado: %s — hace %s",
                 $order->get_id(),
                 $order->get_formatted_billing_full_name(),
-                $order->get_formatted_order_total(),
+                number_format((float) $order->get_total(), 2, ',', '.'),
                 $order->get_status(),
                 $ago
             );
