@@ -48,6 +48,21 @@ class RedsysHelpers
     public static function getMerchantUrl(string $endpointId): string
     {
         $endpoint = 'wc_' . $endpointId;
-        return home_url('/wc-api/' . $endpoint . '/');
+
+        // Switch to default language so home_url() returns the root URL
+        // without WPML prefix — S2S callbacks must be language-neutral
+        $switched = false;
+        if (has_action('wpml_switch_language')) {
+            $switched = true;
+            do_action('wpml_switch_language', apply_filters('wpml_default_language', null));
+        }
+
+        $url = home_url('/wc-api/' . $endpoint . '/');
+
+        if ($switched) {
+            do_action('wpml_switch_language', null);
+        }
+
+        return $url;
     }
 }

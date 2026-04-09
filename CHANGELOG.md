@@ -5,6 +5,14 @@ All notable changes to Zero Sense plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.7] - 2026-04-09
+
+### Fixed
+- **WPML prefix in Redsys callback URL**: `getMerchantUrl()` was using `home_url()` which includes WPML language prefix (e.g. `/en/wc-api/...`). This caused S2S notifications to timeout on 2026-04-04 (order #20533, Apple Pay). Now switches to default language before generating the URL, ensuring callbacks always hit the root domain.
+
+### Added
+- **Payment reconciliation cron**: Hourly check for orders sent to Redsys that never received callback confirmation (stuck in `pending`, `on-hold`, or `deposit-paid` for over 1 hour). Sends email alert to admin. 24h cooldown per order to avoid duplicate alerts.
+
 ## [Unreleased]
 
 ### Fixed

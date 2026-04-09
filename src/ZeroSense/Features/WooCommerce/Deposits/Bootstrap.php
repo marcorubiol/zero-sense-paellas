@@ -14,6 +14,7 @@ use ZeroSense\Features\WooCommerce\Deposits\Components\DepositsLogMetabox;
 use ZeroSense\Features\WooCommerce\Deposits\Components\DepositsCalculatorMetabox;
 use ZeroSense\Features\WooCommerce\Deposits\Components\Persistence;
 use ZeroSense\Features\WooCommerce\Deposits\Components\StatusSync;
+use ZeroSense\Features\WooCommerce\Deposits\Components\PaymentReconciliation;
 use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\Gateway as RedsysGateway;
 use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\BizumGateway;
 use ZeroSense\Features\WooCommerce\Deposits\Integrations\Redsys\ReturnHandler;
@@ -46,6 +47,7 @@ class Bootstrap
         (new DepositsCalculatorMetabox())->register();
         (new Persistence())->register();
         (new StatusSync())->register();
+        (new PaymentReconciliation())->register();
 
         add_filter('woocommerce_payment_gateways', [$this, 'registerGateways']);
 
