@@ -1701,7 +1701,7 @@ class BricksDynamicTags implements FeatureInterface
             .zs-lightbox { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
             .zs-lightbox.active { display: flex; }
             .zs-lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; background: #fff; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); position: relative; z-index: 2; }
-            .zs-lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; text-decoration: none; cursor: pointer; z-index: 3; line-height: 1; }
+            .zs-lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 3; line-height: 1; }
             .zs-lightbox-close:hover { color: #ccc; }
             .zs-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 50px; font-weight: bold; cursor: pointer; z-index: 3; padding: 20px; user-select: none; }
             .zs-lightbox-nav:hover { color: #ccc; }
@@ -1717,12 +1717,12 @@ class BricksDynamicTags implements FeatureInterface
                 var lightboxes = [];
                 var touchStartX = 0;
                 var touchEndX = 0;
-                
+
                 function closeLightbox(e) {
-                    if (e) e.preventDefault();
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
                     lightboxes.forEach(function(lb) { lb.classList.remove("active"); });
                 }
-                
+
                 function showLightbox(index) {
                     lightboxes.forEach(function(lb) { lb.classList.remove("active"); });
                     if (lightboxes[index]) {
@@ -1731,19 +1731,19 @@ class BricksDynamicTags implements FeatureInterface
                         updateCounter();
                     }
                 }
-                
+
                 function nextImage(e) {
-                    if (e) e.preventDefault();
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
                     var next = (currentIndex + 1) % lightboxes.length;
                     showLightbox(next);
                 }
-                
+
                 function prevImage(e) {
-                    if (e) e.preventDefault();
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
                     var prev = (currentIndex - 1 + lightboxes.length) % lightboxes.length;
                     showLightbox(prev);
                 }
-                
+
                 function updateCounter() {
                     var counters = document.querySelectorAll("." + galleryId + " .zs-lightbox-counter");
                     counters.forEach(function(counter, idx) {
@@ -1752,64 +1752,70 @@ class BricksDynamicTags implements FeatureInterface
                         }
                     });
                 }
-                
+
                 function handleTouchStart(e) {
                     touchStartX = e.changedTouches[0].screenX;
                 }
-                
+
                 function handleTouchEnd(e) {
                     touchEndX = e.changedTouches[0].screenX;
                     handleSwipe();
                 }
-                
+
                 function handleSwipe() {
                     if (touchEndX < touchStartX - 50) nextImage();
                     if (touchEndX > touchStartX + 50) prevImage();
                 }
-                
-                document.addEventListener("DOMContentLoaded", function() {
+
+                function init() {
                     lightboxes = Array.from(document.querySelectorAll(".zs-lightbox." + galleryId));
-                    
+
                     var gallery = document.querySelector(".zs-event-media-gallery." + galleryId);
                     if (!gallery) return;
-                    
+
                     gallery.querySelectorAll(".zs-gallery-open").forEach(function(opener, idx) {
                         opener.addEventListener("click", function(e) {
                             e.preventDefault();
                             showLightbox(idx);
                         });
                     });
-                    
+
                     lightboxes.forEach(function(lightbox) {
                         lightbox.addEventListener("click", function(e) {
                             if (e.target === this) closeLightbox(e);
                         });
-                        
+
                         lightbox.addEventListener("touchstart", handleTouchStart, false);
                         lightbox.addEventListener("touchend", handleTouchEnd, false);
                     });
-                    
+
                     document.querySelectorAll(".zs-lightbox." + galleryId + " .zs-lightbox-close").forEach(function(closeBtn) {
                         closeBtn.addEventListener("click", closeLightbox);
                     });
-                    
+
                     document.querySelectorAll(".zs-lightbox." + galleryId + " .zs-lightbox-prev").forEach(function(prevBtn) {
                         prevBtn.addEventListener("click", prevImage);
                     });
-                    
+
                     document.querySelectorAll(".zs-lightbox." + galleryId + " .zs-lightbox-next").forEach(function(nextBtn) {
                         nextBtn.addEventListener("click", nextImage);
                     });
-                    
+
                     document.addEventListener("keydown", function(e) {
                         var isActive = lightboxes.some(function(lb) { return lb.classList.contains("active"); });
                         if (!isActive) return;
-                        
+
                         if (e.key === "Escape") closeLightbox(e);
                         if (e.key === "ArrowLeft") prevImage(e);
                         if (e.key === "ArrowRight") nextImage(e);
                     });
-                });
+                }
+
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", init);
+                } else {
+                    init();
+                }
             })();
         </script>';
         
@@ -1868,7 +1874,7 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             $html .= '<div class="zs-lightbox ' . esc_attr($galleryId) . '">';
-            $html .= '<a href="#" class="zs-lightbox-close">&times;</a>';
+            $html .= '<span class="zs-lightbox-close">&times;</span>';
             $html .= '<div class="zs-lightbox-prev zs-lightbox-nav">&#8249;</div>';
             $html .= '<div class="zs-lightbox-next zs-lightbox-nav">&#8250;</div>';
             $html .= '<img src="' . esc_url($url) . '" alt="' . esc_attr($lbAlt) . '">';
