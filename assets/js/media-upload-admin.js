@@ -121,16 +121,16 @@ jQuery(document).ready(function($) {
 
         var content = '';
         if (type === 'video') {
-            content = '<video src="' + url + '" controls autoplay style="max-width:90vw;max-height:70vh;"></video>';
+            content = '<video src="' + url + '" controls autoplay style="display:block;max-width:80vw;max-height:70vh;"></video>';
         } else {
-            content = '<img src="' + url + '" style="max-width:90vw;max-height:70vh;object-fit:contain;">';
+            content = '<img src="' + url + '" style="display:block;max-width:80vw;max-height:70vh;width:auto;height:auto;">';
         }
 
-        var titleHtml = title ? '<div style="padding:8px 0 0;font-size:13px;color:#333;text-align:center;">' + $('<span>').text(title).html() + '</div>' : '';
+        var titleHtml = title ? '<div style="padding:10px 0 0;font-size:13px;color:#333;text-align:center;">' + $('<span>').text(title).html() + '</div>' : '';
 
-        var overlay = '<div id="zs-lightbox" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:40px;">' +
-            '<div class="zs-lightbox-inner" style="background:#fff;border-radius:8px;padding:20px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:default;">' +
-                '<span id="zs-lightbox-close" style="position:absolute;top:-12px;right:-12px;background:#333;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.3);">&times;</span>' +
+        var overlay = '<div id="zs-lightbox" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:20px;">' +
+            '<div class="zs-lightbox-inner" style="background:#fff;border-radius:8px;padding:20px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:default;">' +
+                '<span id="zs-lightbox-close" style="position:absolute;top:-12px;right:-12px;background:#333;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:10;">&times;</span>' +
                 content +
                 titleHtml +
             '</div>' +
