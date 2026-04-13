@@ -1825,29 +1825,26 @@ class BricksDynamicTags implements FeatureInterface
             $attachmentPost = get_post((int) $id);
             $caption = '';
             if ($attachmentPost) {
-                $caption = $attachmentPost->post_title;
-                if (!$caption || $caption === basename(get_attached_file((int) $id) ?: '')) {
-                    $caption = get_post_meta((int) $id, '_wp_attachment_image_alt', true) ?: '';
-                }
-                if (!$caption) {
-                    $caption = $attachmentPost->post_excerpt ?: '';
-                }
+                // Prefer: alt text → excerpt (WP caption) → title
+                $alt = trim((string) get_post_meta((int) $id, '_wp_attachment_image_alt', true));
+                $excerpt = trim((string) $attachmentPost->post_excerpt);
+                $title = trim((string) $attachmentPost->post_title);
+                $caption = $alt ?: $excerpt ?: $title;
+            }
+            if (!$caption) {
+                $caption = sprintf(__('Imagen %d', 'zero-sense'), $index + 1);
             }
 
             if (is_string($type) && strpos($type, 'video') !== false) {
                 $html .= '<div class="zs-gallery-item zs-gallery-video">';
                 $html .= '<div class="zs-gallery-item-thumb"><video src="' . esc_url($url) . '" controls></video></div>';
-                if ($caption) {
-                    $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
-                }
+                $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
                 $html .= '</div>';
             } else {
                 $thumb = wp_get_attachment_image_url((int) $id, 'medium');
                 $html .= '<div class="zs-gallery-item zs-gallery-image">';
                 $html .= '<div class="zs-gallery-item-thumb"><a href="#" class="zs-gallery-open"><img src="' . esc_url($thumb ?: $url) . '" alt="' . esc_attr($caption) . '"></a></div>';
-                if ($caption) {
-                    $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
-                }
+                $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
                 $html .= '</div>';
                 $index++;
             }
@@ -1864,13 +1861,10 @@ class BricksDynamicTags implements FeatureInterface
             $attachmentPost = get_post((int) $id);
             $lbAlt = '';
             if ($attachmentPost) {
-                $lbAlt = $attachmentPost->post_title;
-                if (!$lbAlt || $lbAlt === basename(get_attached_file((int) $id) ?: '')) {
-                    $lbAlt = get_post_meta((int) $id, '_wp_attachment_image_alt', true) ?: '';
-                }
-                if (!$lbAlt) {
-                    $lbAlt = $attachmentPost->post_excerpt ?: '';
-                }
+                $alt = trim((string) get_post_meta((int) $id, '_wp_attachment_image_alt', true));
+                $excerpt = trim((string) $attachmentPost->post_excerpt);
+                $title = trim((string) $attachmentPost->post_title);
+                $lbAlt = $alt ?: $excerpt ?: $title;
             }
 
             $html .= '<div class="zs-lightbox ' . esc_attr($galleryId) . '">';
