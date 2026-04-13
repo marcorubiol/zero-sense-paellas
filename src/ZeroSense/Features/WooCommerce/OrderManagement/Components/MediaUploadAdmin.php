@@ -7,15 +7,20 @@ class MediaUploadAdmin
 {
     public function __construct()
     {
-        add_action('admin_enqueue_scripts', [$this, 'enable_happyfiles_on_orders'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
+        // Run after HappyFiles' has_media_modal() + enqueue_scripts() (both priority 10)
+        // to override the wc-orders exclusion and manually trigger asset loading.
+        add_action('admin_enqueue_scripts', [$this, 'enable_happyfiles_on_orders'], 11);
         add_action('add_meta_boxes', [$this, 'add_media_upload_metabox']);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save_media_field'], 20);
     }
 
     /**
-     * Force HappyFiles to load on WooCommerce order screens so the media modal
-     * shows folder navigation instead of the default flat library.
+     * Allow HappyFiles inside the media modal on WooCommerce order screens.
+     *
+     * HappyFiles explicitly skips wc-orders (setup.php:120-122). We run at
+     * priority 11, after both has_media_modal() and enqueue_scripts() (priority 10),
+     * then enable the flag and trigger asset loading manually.
      */
     public function enable_happyfiles_on_orders()
     {
@@ -24,8 +29,15 @@ class MediaUploadAdmin
             return;
         }
 
-        if (class_exists(\HappyFiles\Data::class)) {
-            \HappyFiles\Data::$load_plugin = true;
+        if (!class_exists(\HappyFiles\Init::class) || !wp_script_is('media-editor', 'registered')) {
+            return;
+        }
+
+        \HappyFiles\Data::$load_plugin = true;
+
+        $hf = \HappyFiles\Init::$instance;
+        if ($hf && isset($hf->setup)) {
+            $hf->setup->enqueue_scripts();
         }
     }
 
