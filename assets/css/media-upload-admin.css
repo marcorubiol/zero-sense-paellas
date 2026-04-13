@@ -138,11 +138,6 @@
     margin-top: 20px;
 }
 
-/* HappyFiles sidebar: hide on order page, show only inside media modal.
-   We cannot use display:none or position hacks because HappyFiles Vue
-   checks offsetParent during init and skips mountToModal() if hidden.
-   Instead we let JS handle visibility after Vue has mounted (see media-upload-admin.js). */
-
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
     .zs-media-grid {

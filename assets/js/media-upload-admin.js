@@ -155,27 +155,4 @@ jQuery(document).ready(function($) {
     });
 
     initializeExistingMedia();
-
-    // HappyFiles: hide sidebar on the order page, show only inside media modal.
-    // We must wait for HappyFiles Vue to mount (needs visible DOM + offsetParent)
-    // before hiding, otherwise mountToModal() never registers its open/close hooks.
-    (function hideHappyFilesSidebar() {
-        var sidebar = document.getElementById('happyfiles-sidebar');
-        if (!sidebar) return;
-
-        // Give HappyFiles Vue time to mount and register wp.media hooks
-        setTimeout(function() {
-            sidebar.style.cssText = 'position:fixed!important;left:-9999px!important;width:0!important;overflow:hidden!important;';
-
-            // When media modal opens, restore sidebar visibility
-            if (window.wp && wp.media && wp.media.view && wp.media.view.Modal) {
-                wp.media.view.Modal.prototype.on('open', function() {
-                    sidebar.style.cssText = '';
-                });
-                wp.media.view.Modal.prototype.on('close', function() {
-                    sidebar.style.cssText = 'position:fixed!important;left:-9999px!important;width:0!important;overflow:hidden!important;';
-                });
-            }
-        }, 500);
-    })();
 });

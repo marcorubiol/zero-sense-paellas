@@ -39,6 +39,17 @@ class MediaUploadAdmin
         if ($hf && isset($hf->setup)) {
             $hf->setup->enqueue_scripts();
         }
+
+        // HappyFiles Vue checks body classes to decide page-mode vs modal-mode.
+        // It treats woocommerce_page_wc-orders as a page (sidebar in #wpbody).
+        // Remove the class before Vue mounts so it enters modal-mode instead,
+        // then restore it after HappyFiles JS has initialised.
+        wp_add_inline_script('happyfiles', implode('', [
+            'document.body.classList.remove("woocommerce_page_wc-orders");',
+            'document.addEventListener("DOMContentLoaded",function(){',
+            'setTimeout(function(){document.body.classList.add("woocommerce_page_wc-orders");},0);',
+            '});',
+        ]), 'before');
     }
 
     public function enqueue_admin_scripts()
