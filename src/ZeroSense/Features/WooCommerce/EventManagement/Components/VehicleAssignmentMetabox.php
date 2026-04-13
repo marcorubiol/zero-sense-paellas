@@ -86,6 +86,7 @@ class VehicleAssignmentMetabox
         <script>
         var zsAllVehicles = <?php echo wp_json_encode($allVehicles); ?>;
         </script>
+        <div class="zs-conflict-banner zs-conflict-vehicles" style="display:none; background:#fcf0f0; border-left:4px solid #d63638; padding:8px 12px; margin-bottom:12px;"></div>
         <div class="zs-mb-wrapper">
             <div class="zs-mb-divider">
                 <div class="zs-vehicle-section">
@@ -140,9 +141,60 @@ class VehicleAssignmentMetabox
 
             $(document).ready(function() {
 
+                var zsConflictNonce = '<?php echo wp_create_nonce('zs_check_conflicts'); ?>';
+
                 function getOrderId() {
                     return $('#post_ID').val() || $('input[name="post_ID"]').val() || $('input[name="order_id"]').val();
                 }
+
+                function getEventDate() {
+                    return $('input[name="event_date"]').val() || '';
+                }
+
+                function showVehicleConflicts(conflicts) {
+                    var $banner = $('.zs-conflict-vehicles');
+                    if (!conflicts || conflicts.length === 0) {
+                        $banner.hide().empty();
+                        return;
+                    }
+                    var html = '<strong><?php echo esc_js(__('Vehicle conflict!', 'zero-sense')); ?></strong><ul style="margin:4px 0 0 18px;list-style:disc;">';
+                    $.each(conflicts, function(i, c) {
+                        html += '<li>' + c.resource_name + ' → <a href="' + c.order_edit_url + '" target="_blank">#' + c.order_id + '</a></li>';
+                    });
+                    html += '</ul>';
+                    $banner.html(html).show();
+                }
+
+                function checkVehicleConflicts() {
+                    var orderId = getOrderId();
+                    var eventDate = getEventDate();
+                    if (!orderId || !eventDate) { showVehicleConflicts([]); return; }
+
+                    var ids = [];
+                    $('.zs-vehicle-hidden-input').each(function() {
+                        var v = $(this).val();
+                        if (v) ids.push(v);
+                    });
+                    if (ids.length === 0) { showVehicleConflicts([]); return; }
+
+                    $.post(ajaxurl, {
+                        action: 'zs_check_resource_conflicts',
+                        nonce: zsConflictNonce,
+                        order_id: orderId,
+                        event_date: eventDate,
+                        vehicle_ids: ids
+                    }, function(response) {
+                        if (response.success) {
+                            showVehicleConflicts(response.data.conflicts);
+                        }
+                    });
+                }
+
+                // Check conflicts on page load and store initial values
+                checkVehicleConflicts();
+                $('.zs-assignment-row[data-vehicle-id]').each(function() {
+                    $(this).data('prev-vehicle-id', $(this).attr('data-vehicle-id'));
+                });
 
                 function getAssignedVehicleIds(excludeRow) {
                     var ids = [];
@@ -209,7 +261,36 @@ class VehicleAssignmentMetabox
                             $display.removeClass('zs-hidden');
 
                             $btn.text('<?php echo esc_js(__('Saving...', 'zero-sense')); ?>').prop('disabled', true);
-                            saveAssignments(null).always(function() {
+                            var prevVal = $row.data('prev-vehicle-id') || '';
+                            saveAssignments(null).done(function(response) {
+                                if (response && response.success) {
+                                    $btn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
+                                    $row.data('prev-vehicle-id', val);
+                                    checkVehicleConflicts();
+                                } else {
+                                    // Conflict — revert
+                                    if (response && response.data && response.data.conflicts) {
+                                        showVehicleConflicts(response.data.conflicts);
+                                    }
+                                    $row.find('.zs-vehicle-hidden-input').val(prevVal);
+                                    if (prevVal) {
+                                        // Restore previous display
+                                        var prevPost = null;
+                                        if (typeof zsAllVehicles !== 'undefined') {
+                                            $.each(zsAllVehicles, function(i, v) {
+                                                if (String(v.id) === String(prevVal)) { prevPost = v; return false; }
+                                            });
+                                        }
+                                        if (prevPost) {
+                                            $display.find('strong').text(prevPost.name);
+                                            $display.find('.zs-assignment-info').text(prevPost.plate || '');
+                                        }
+                                    } else {
+                                        $row.remove();
+                                    }
+                                    $btn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
+                                }
+                            }).fail(function() {
                                 $btn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                             });
                         } else {
@@ -301,7 +382,7 @@ class VehicleAssignmentMetabox
 
                     saveAssignments($row).done(function(response) {
                         if (response && response.success) {
-                            $row.slideUp(300, function() { $row.remove(); });
+                            $row.slideUp(300, function() { $row.remove(); checkVehicleConflicts(); });
                         } else {
                             $row.css('opacity', '1');
                             $btn.prop('disabled', false).text('<?php echo esc_js(__('Remove', 'zero-sense')); ?>');
@@ -340,6 +421,20 @@ class VehicleAssignmentMetabox
         }
 
         $vehicleIds = array_filter($vehicleIds);
+
+        // Check for conflicts before saving
+        if (!empty($vehicleIds)) {
+            $eventDate = $order->get_meta('zs_event_date', true);
+            if ($eventDate) {
+                $conflicts = ResourceConflictValidator::findVehicleConflicts($orderId, $eventDate, $vehicleIds);
+                if (!empty($conflicts)) {
+                    wp_send_json_error([
+                        'message' => 'Vehicle conflict detected',
+                        'conflicts' => $conflicts,
+                    ]);
+                }
+            }
+        }
 
         if (empty($vehicleIds)) {
             $order->delete_meta_data(self::META_KEY);

@@ -7,6 +7,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Components\EmailContentMetabo
 use ZeroSense\Features\WooCommerce\EventManagement\Components\CustomerPreferencesMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\StaffAssignmentMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\VehicleAssignmentMetabox;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\ResourceConflictValidator;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\DataExposer;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\ServiceAreaAdminColumns;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
@@ -30,6 +31,7 @@ class Bootstrap
         (new CustomerPreferencesMetabox())->register();
         (new StaffAssignmentMetabox())->register();
         (new VehicleAssignmentMetabox())->register();
+        (new ResourceConflictValidator())->register();
         (new DataExposer())->register();
         (new ServiceAreaAdminColumns())->register();
         

@@ -88,15 +88,30 @@ class StaffAssignmentMetabox
             }
         }
         
+        // Check for conflicts before saving
+        $allStaffIds = array_unique(array_column($staffAssignments, 'staff_id'));
+        if (!empty($allStaffIds)) {
+            $eventDate = $order->get_meta('zs_event_date', true);
+            if ($eventDate) {
+                $conflicts = ResourceConflictValidator::findStaffConflicts($orderId, $eventDate, $allStaffIds);
+                if (!empty($conflicts)) {
+                    wp_send_json_error([
+                        'message' => 'Staff conflict detected',
+                        'conflicts' => $conflicts,
+                    ]);
+                }
+            }
+        }
+
         // Save to order meta
         if (empty($staffAssignments)) {
             $order->delete_meta_data(self::META_KEY);
         } else {
             $order->update_meta_data(self::META_KEY, $staffAssignments);
         }
-        
+
         $order->save();
-        
+
         wp_send_json_success(['message' => 'Staff assignment saved']);
     }
     
@@ -232,6 +247,7 @@ class StaffAssignmentMetabox
         var zsStaffByRole = <?php echo wp_json_encode($staffByRole); ?>;
         var zsRoleLabels = <?php echo wp_json_encode($roleLabels); ?>;
         </script>
+        <div class="zs-conflict-banner zs-conflict-staff" style="display:none; background:#fcf0f0; border-left:4px solid #d63638; padding:8px 12px; margin-bottom:12px;"></div>
         <div class="zs-mb-wrapper">
             <?php foreach ($roles as $roleSlug => $roleName): ?>
                 <?php
@@ -335,6 +351,61 @@ class StaffAssignmentMetabox
             'use strict';
             
             $(document).ready(function() {
+
+                var zsConflictNonce = '<?php echo wp_create_nonce('zs_check_conflicts'); ?>';
+
+                function getOrderId() {
+                    return $('#post_ID').val() || $('input[name="post_ID"]').val() || $('input[name="order_id"]').val();
+                }
+
+                function getEventDate() {
+                    return $('input[name="event_date"]').val() || '';
+                }
+
+                function showStaffConflicts(conflicts) {
+                    var $banner = $('.zs-conflict-staff');
+                    if (!conflicts || conflicts.length === 0) {
+                        $banner.hide().empty();
+                        return;
+                    }
+                    var html = '<strong><?php echo esc_js(__('Staff conflict!', 'zero-sense')); ?></strong><ul style="margin:4px 0 0 18px;list-style:disc;">';
+                    $.each(conflicts, function(i, c) {
+                        html += '<li>' + c.resource_name + ' (' + c.role + ') → <a href="' + c.order_edit_url + '" target="_blank">#' + c.order_id + '</a></li>';
+                    });
+                    html += '</ul>';
+                    $banner.html(html).show();
+                }
+
+                function checkStaffConflicts() {
+                    var orderId = getOrderId();
+                    var eventDate = getEventDate();
+                    if (!orderId || !eventDate) { showStaffConflicts([]); return; }
+
+                    var ids = [];
+                    $('.zs-staff-hidden-input').each(function() {
+                        var v = $(this).val();
+                        if (v && ids.indexOf(v) === -1) ids.push(v);
+                    });
+                    if (ids.length === 0) { showStaffConflicts([]); return; }
+
+                    $.post(ajaxurl, {
+                        action: 'zs_check_resource_conflicts',
+                        nonce: zsConflictNonce,
+                        order_id: orderId,
+                        event_date: eventDate,
+                        staff_ids: ids
+                    }, function(response) {
+                        if (response.success) {
+                            showStaffConflicts(response.data.conflicts);
+                        }
+                    });
+                }
+
+                // Check conflicts on page load and store initial values
+                checkStaffConflicts();
+                $('.zs-assignment-row[data-staff-id]').each(function() {
+                    $(this).data('prev-staff-id', $(this).attr('data-staff-id'));
+                });
 
                 function getAssignedStaffIds(excludeRow) {
                     var ids = [];
@@ -475,12 +546,32 @@ class StaffAssignmentMetabox
                                     staff_data: staffData
                                 }, function(response) {
                                     if (response.success) {
-                                        // Visual feedback
+                                        $row.data('prev-staff-id', selectedValue);
                                         $editBtn.text('<?php echo esc_js(__('Saved!', 'zero-sense')); ?>');
                                         setTimeout(function() {
                                             $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                                         }, 1500);
+                                        checkStaffConflicts();
                                     } else {
+                                        // Conflict — revert the assignment
+                                        if (response.data && response.data.conflicts) {
+                                            showStaffConflicts(response.data.conflicts);
+                                        }
+                                        var prevStaffId = $row.data('prev-staff-id') || '';
+                                        $row.find('.zs-staff-hidden-input').val(prevStaffId);
+                                        if (prevStaffId) {
+                                            // Restore previous display from zsStaffByRole
+                                            var prevName = '';
+                                            $.each(zsStaffByRole, function(role, members) {
+                                                $.each(members, function(i, s) {
+                                                    if (String(s.id) === String(prevStaffId)) { prevName = s.name; return false; }
+                                                });
+                                                if (prevName) return false;
+                                            });
+                                            $display.find('strong').text(prevName || '#' + prevStaffId);
+                                        } else {
+                                            $row.remove();
+                                        }
                                         $editBtn.text('<?php echo esc_js(__('Change', 'zero-sense')); ?>').prop('disabled', false);
                                     }
                                 }).fail(function() {
@@ -669,9 +760,9 @@ class StaffAssignmentMetabox
                             staff_data: staffData
                         }, function(response) {
                             if (response.success) {
-                                // Animate removal after save confirmation
                                 $row.slideUp(300, function() {
                                     $row.remove();
+                                    checkStaffConflicts();
                                 });
                             } else {
                                 // Restore on error
