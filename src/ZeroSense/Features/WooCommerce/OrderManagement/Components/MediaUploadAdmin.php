@@ -33,7 +33,13 @@ class MediaUploadAdmin
             return;
         }
 
+        // Force HappyFiles to load as if we're on the media library (attachment),
+        // not the current post type (shop_order). Otherwise it shows order folders
+        // instead of media folders in the modal.
+        \HappyFiles\Data::$post_type = 'attachment';
+        \HappyFiles\Data::$taxonomy  = HAPPYFILES_TAXONOMY;
         \HappyFiles\Data::$load_plugin = true;
+        \HappyFiles\Data::get_folders();
 
         $hf = \HappyFiles\Init::$instance;
         if ($hf && isset($hf->setup)) {
