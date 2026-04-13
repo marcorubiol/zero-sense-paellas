@@ -52,17 +52,19 @@ jQuery(document).ready(function($) {
     function appendPreviewItem(att) {
         var thumb = '';
         var mediaType = att.type || 'image';
+        var title = att.title || att.filename || '';
         if (mediaType === 'image') {
-            var src = (att.sizes && att.sizes.thumbnail) ? att.sizes.thumbnail.url : att.url;
-            thumb = '<img src="' + src + '" alt="' + (att.title || '') + '" data-full="' + att.url + '">';
+            var src = (att.sizes && att.sizes.medium) ? att.sizes.medium.url : ((att.sizes && att.sizes.thumbnail) ? att.sizes.thumbnail.url : att.url);
+            thumb = '<img src="' + src + '" alt="' + title + '" data-full="' + att.url + '">';
         } else if (mediaType === 'video') {
             thumb = '<video src="' + att.url + '" data-full="' + att.url + '"></video>';
         }
 
         var html = '<div class="zs-media-item" data-id="' + att.id + '">' +
             thumb +
+            '<div class="zs-media-item-title">' + $('<span>').text(title).html() + '</div>' +
             '<div class="media-actions">' +
-                '<button type="button" class="button button-small zs-media-view" data-url="' + att.url + '" data-type="' + mediaType + '">View</button>' +
+                '<button type="button" class="button button-small zs-media-view" data-url="' + att.url + '" data-type="' + mediaType + '" data-title="' + $('<span>').text(title).html() + '">View</button>' +
                 '<button type="button" class="button button-small remove-media">Remove</button>' +
             '</div>' +
         '</div>';
@@ -106,28 +108,46 @@ jQuery(document).ready(function($) {
     // Lightbox
     $(document).on('click', '.zs-media-view', function(e) {
         e.preventDefault();
+        var $item = $(this).closest('.zs-media-item');
         var url = $(this).data('url');
         var type = $(this).data('type');
-        var content = '';
+        var title = $item.find('.zs-media-item-title').text() || $(this).data('title') || '';
 
-        if (type === 'video') {
-            content = '<video src="' + url + '" controls autoplay style="max-width:90vw;max-height:80vh;"></video>';
-        } else {
-            content = '<img src="' + url + '" style="max-width:90vw;max-height:80vh;object-fit:contain;">';
+        // Fallback: use data-full from the img/video element
+        if (!url) {
+            var $media = $item.find('img[data-full], video[data-full]');
+            if ($media.length) url = $media.data('full');
         }
 
+        var content = '';
+        if (type === 'video') {
+            content = '<video src="' + url + '" controls autoplay style="max-width:90vw;max-height:70vh;"></video>';
+        } else {
+            content = '<img src="' + url + '" style="max-width:90vw;max-height:70vh;object-fit:contain;">';
+        }
+
+        var titleHtml = title ? '<div style="padding:8px 0 0;font-size:13px;color:#333;text-align:center;">' + $('<span>').text(title).html() + '</div>' : '';
+
         var overlay = '<div id="zs-lightbox" style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:40px;">' +
-            '<div style="background:#fff;border-radius:8px;padding:20px;max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:default;" onclick="event.stopPropagation();">' +
+            '<div class="zs-lightbox-inner" style="background:#fff;border-radius:8px;padding:20px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:default;">' +
                 '<span id="zs-lightbox-close" style="position:absolute;top:-12px;right:-12px;background:#333;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.3);">&times;</span>' +
                 content +
+                titleHtml +
             '</div>' +
         '</div>';
 
         $('body').append(overlay);
     });
 
-    $(document).on('click', '#zs-lightbox', function() {
-        $(this).remove();
+    $(document).on('click', '#zs-lightbox-close', function(e) {
+        e.stopPropagation();
+        $('#zs-lightbox').remove();
+    });
+
+    $(document).on('click', '#zs-lightbox', function(e) {
+        if ($(e.target).closest('.zs-lightbox-inner').length === 0) {
+            $(this).remove();
+        }
     });
 
     $(document).on('keydown', function(e) {

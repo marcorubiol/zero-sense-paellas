@@ -115,7 +115,7 @@ class MediaUploadAdmin
                             <?php endif; ?>
                             <div class="zs-media-item-title"><?php echo esc_html($media['title']); ?></div>
                             <div class="media-actions">
-                                <button type="button" class="button button-small zs-media-view" data-url="<?php echo esc_url($media['url']); ?>" data-type="<?php echo esc_attr(strpos($media['type'], 'video') !== false ? 'video' : 'image'); ?>"><?php esc_html_e('View', 'zero-sense'); ?></button>
+                                <button type="button" class="button button-small zs-media-view" data-url="<?php echo esc_url($media['url']); ?>" data-type="<?php echo esc_attr(strpos($media['type'], 'video') !== false ? 'video' : 'image'); ?>" data-title="<?php echo esc_attr($media['title']); ?>"><?php esc_html_e('View', 'zero-sense'); ?></button>
                                 <button type="button" class="button button-small remove-media"><?php esc_html_e('Remove', 'zero-sense'); ?></button>
                             </div>
                         </div>
