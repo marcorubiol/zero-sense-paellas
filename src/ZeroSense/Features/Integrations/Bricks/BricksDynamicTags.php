@@ -1698,6 +1698,10 @@ class BricksDynamicTags implements FeatureInterface
             .zs-gallery-item img, .zs-gallery-item video { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
             .zs-gallery-item a { display: block; width: 100%; height: 100%; }
             .zs-gallery-item-caption { padding: 6px 8px; font-size: 13px; line-height: 1.3; color: #333; word-break: break-word; border-top: 1px solid #eee; background: #fff; }
+            .zs-gallery-item-thumb { position: relative; }
+            .zs-video-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); pointer-events: none; transition: background 0.2s; }
+            .zs-gallery-item:hover .zs-video-play { background: rgba(0,0,0,0.15); }
+            .zs-video-play svg { width: 48px; height: 48px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
             .zs-lightbox { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
             .zs-lightbox.active { display: flex; }
             .zs-lightbox img, .zs-lightbox video { max-width: 90%; max-height: 90%; object-fit: contain; background: #000; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); position: relative; z-index: 2; }
@@ -1719,17 +1723,28 @@ class BricksDynamicTags implements FeatureInterface
                 var touchStartX = 0;
                 var touchEndX = 0;
 
+                function pauseAllVideos() {
+                    lightboxes.forEach(function(lb) {
+                        var v = lb.querySelector("video");
+                        if (v) { v.pause(); v.currentTime = 0; }
+                    });
+                }
+
                 function closeLightbox(e) {
                     if (e) { e.preventDefault(); e.stopPropagation(); }
+                    pauseAllVideos();
                     lightboxes.forEach(function(lb) { lb.classList.remove("active"); });
                 }
 
                 function showLightbox(index) {
+                    pauseAllVideos();
                     lightboxes.forEach(function(lb) { lb.classList.remove("active"); });
                     if (lightboxes[index]) {
                         lightboxes[index].classList.add("active");
                         currentIndex = index;
                         updateCounter();
+                        var v = lightboxes[index].querySelector("video");
+                        if (v) v.play();
                     }
                 }
 
@@ -1844,7 +1859,7 @@ class BricksDynamicTags implements FeatureInterface
 
             if (is_string($type) && strpos($type, 'video') !== false) {
                 $html .= '<div class="zs-gallery-item zs-gallery-video">';
-                $html .= '<div class="zs-gallery-item-thumb"><a href="#" class="zs-gallery-open"><video src="' . esc_url($url) . '" muted></video></a></div>';
+                $html .= '<div class="zs-gallery-item-thumb"><a href="#" class="zs-gallery-open"><video src="' . esc_url($url) . '" muted preload="metadata"></video><div class="zs-video-play"><svg viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg></div></a></div>';
                 $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
                 $html .= '</div>';
             } else {
