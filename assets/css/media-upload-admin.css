@@ -138,17 +138,10 @@
     margin-top: 20px;
 }
 
-/* Hide HappyFiles page-level sidebar on order screens.
-   HappyFiles mounts #happyfiles-sidebar on <body>. When the wp.media
-   modal opens it adds .modal to #happyfiles-sidebar-inner and moves
-   content inside .media-frame-menu. We visually hide the body-level
-   sidebar (not display:none to keep Vue alive) until modal mode kicks in. */
-#happyfiles-sidebar:not(:has(#happyfiles-sidebar-inner.modal)) {
-    position: fixed !important;
-    left: -9999px !important;
-    width: 0 !important;
-    overflow: hidden !important;
-}
+/* HappyFiles sidebar: hide on order page, show only inside media modal.
+   We cannot use display:none or position hacks because HappyFiles Vue
+   checks offsetParent during init and skips mountToModal() if hidden.
+   Instead we let JS handle visibility after Vue has mounted (see media-upload-admin.js). */
 
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
