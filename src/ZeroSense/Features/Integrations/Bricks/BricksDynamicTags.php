@@ -1700,7 +1700,8 @@ class BricksDynamicTags implements FeatureInterface
             .zs-gallery-item-caption { padding: 6px 8px; font-size: 13px; line-height: 1.3; color: #333; word-break: break-word; border-top: 1px solid #eee; background: #fff; }
             .zs-lightbox { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
             .zs-lightbox.active { display: flex; }
-            .zs-lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; background: #fff; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); position: relative; z-index: 2; }
+            .zs-lightbox img, .zs-lightbox video { max-width: 90%; max-height: 90%; object-fit: contain; background: #000; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); position: relative; z-index: 2; }
+            .zs-lightbox img { background: #fff; }
             .zs-lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 3; line-height: 1; }
             .zs-lightbox-close:hover { color: #ccc; }
             .zs-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 50px; font-weight: bold; cursor: pointer; z-index: 3; padding: 20px; user-select: none; }
@@ -1843,7 +1844,7 @@ class BricksDynamicTags implements FeatureInterface
 
             if (is_string($type) && strpos($type, 'video') !== false) {
                 $html .= '<div class="zs-gallery-item zs-gallery-video">';
-                $html .= '<div class="zs-gallery-item-thumb"><video src="' . esc_url($url) . '" controls></video></div>';
+                $html .= '<div class="zs-gallery-item-thumb"><a href="#" class="zs-gallery-open"><video src="' . esc_url($url) . '" muted></video></a></div>';
                 $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
                 $html .= '</div>';
             } else {
@@ -1852,17 +1853,19 @@ class BricksDynamicTags implements FeatureInterface
                 $html .= '<div class="zs-gallery-item-thumb"><a href="#" class="zs-gallery-open"><img src="' . esc_url($thumb ?: $url) . '" alt="' . esc_attr($caption) . '"></a></div>';
                 $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
                 $html .= '</div>';
-                $index++;
             }
+            $index++;
         }
         $html .= '</div>';
         
         foreach ($ids as $id) {
             $url = wp_get_attachment_url((int) $id);
             $type = get_post_mime_type((int) $id);
-            if (!$url || (is_string($type) && strpos($type, 'video') !== false)) {
+            if (!$url) {
                 continue;
             }
+
+            $isVideo = is_string($type) && strpos($type, 'video') !== false;
 
             $attachmentPost = get_post((int) $id);
             $lbAlt = '';
@@ -1875,10 +1878,14 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="zs-lightbox ' . esc_attr($galleryId) . '">';
             $html .= '<span class="zs-lightbox-close">&times;</span>';
-            $lbSrc = wp_get_attachment_image_url((int) $id, 'medium') ?: $url;
             $html .= '<div class="zs-lightbox-prev zs-lightbox-nav">&#8249;</div>';
             $html .= '<div class="zs-lightbox-next zs-lightbox-nav">&#8250;</div>';
-            $html .= '<img src="' . esc_url($lbSrc) . '" alt="' . esc_attr($lbAlt) . '">';
+            if ($isVideo) {
+                $html .= '<video src="' . esc_url($url) . '" controls style="max-width:90%;max-height:90%;background:#000;"></video>';
+            } else {
+                $lbSrc = wp_get_attachment_image_url((int) $id, 'medium') ?: $url;
+                $html .= '<img src="' . esc_url($lbSrc) . '" alt="' . esc_attr($lbAlt) . '">';
+            }
             $html .= '<div class="zs-lightbox-counter"></div>';
             $html .= '</div>';
         }
