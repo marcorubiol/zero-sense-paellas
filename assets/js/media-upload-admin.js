@@ -110,20 +110,18 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         var $item = $(this).closest('.zs-media-item');
         var url = $(this).data('url');
+        var thumb = $(this).data('thumb') || $item.find('img').attr('src') || '';
         var type = $(this).data('type');
         var title = $item.find('.zs-media-item-title').text() || $(this).data('title') || '';
 
-        // Fallback: use data-full from the img/video element
-        if (!url) {
-            var $media = $item.find('img[data-full], video[data-full]');
-            if ($media.length) url = $media.data('full');
-        }
+        // Use thumb as primary source — it always exists. Full URL often broken.
+        var displayUrl = thumb || url;
 
         var content = '';
         if (type === 'video') {
             content = '<video src="' + url + '" controls autoplay style="display:block;max-width:80vw;max-height:70vh;"></video>';
         } else {
-            content = '<img src="' + url + '" style="display:block;max-width:80vw;max-height:70vh;width:auto;height:auto;">';
+            content = '<img src="' + displayUrl + '" style="display:block;max-width:80vw;max-height:70vh;width:auto;height:auto;">';
         }
 
         var titleHtml = title ? '<div style="padding:10px 0 0;font-size:13px;color:#333;text-align:center;">' + $('<span>').text(title).html() + '</div>' : '';
