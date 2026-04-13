@@ -1693,9 +1693,11 @@ class BricksDynamicTags implements FeatureInterface
         
         $html = '<style>
             .zs-event-media-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-width: 650px; }
-            .zs-gallery-item { border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+            .zs-gallery-item { border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9; display: flex; flex-direction: column; }
+            .zs-gallery-item-thumb { aspect-ratio: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; }
             .zs-gallery-item img, .zs-gallery-item video { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
             .zs-gallery-item a { display: block; width: 100%; height: 100%; }
+            .zs-gallery-item-caption { padding: 6px 8px; font-size: 13px; line-height: 1.3; color: #333; word-break: break-word; border-top: 1px solid #eee; background: #fff; }
             .zs-lightbox { display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
             .zs-lightbox.active { display: flex; }
             .zs-lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; background: #fff; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.7); position: relative; z-index: 2; }
@@ -1820,12 +1822,32 @@ class BricksDynamicTags implements FeatureInterface
                 continue;
             }
 
+            $attachmentPost = get_post((int) $id);
+            $caption = '';
+            if ($attachmentPost) {
+                $caption = $attachmentPost->post_title;
+                if (!$caption || $caption === basename(get_attached_file((int) $id) ?: '')) {
+                    $caption = get_post_meta((int) $id, '_wp_attachment_image_alt', true) ?: '';
+                }
+                if (!$caption) {
+                    $caption = $attachmentPost->post_excerpt ?: '';
+                }
+            }
+
             if (is_string($type) && strpos($type, 'video') !== false) {
-                $html .= '<div class="zs-gallery-item zs-gallery-video"><video src="' . esc_url($url) . '" controls></video></div>';
+                $html .= '<div class="zs-gallery-item zs-gallery-video">';
+                $html .= '<div class="zs-gallery-item-thumb"><video src="' . esc_url($url) . '" controls></video></div>';
+                if ($caption) {
+                    $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
+                }
+                $html .= '</div>';
             } else {
                 $thumb = wp_get_attachment_image_url((int) $id, 'medium');
                 $html .= '<div class="zs-gallery-item zs-gallery-image">';
-                $html .= '<a href="#" class="zs-gallery-open"><img src="' . esc_url($thumb ?: $url) . '" alt=""></a>';
+                $html .= '<div class="zs-gallery-item-thumb"><a href="#" class="zs-gallery-open"><img src="' . esc_url($thumb ?: $url) . '" alt="' . esc_attr($caption) . '"></a></div>';
+                if ($caption) {
+                    $html .= '<div class="zs-gallery-item-caption">' . esc_html($caption) . '</div>';
+                }
                 $html .= '</div>';
                 $index++;
             }
@@ -1838,12 +1860,24 @@ class BricksDynamicTags implements FeatureInterface
             if (!$url || (is_string($type) && strpos($type, 'video') !== false)) {
                 continue;
             }
-            
+
+            $attachmentPost = get_post((int) $id);
+            $lbAlt = '';
+            if ($attachmentPost) {
+                $lbAlt = $attachmentPost->post_title;
+                if (!$lbAlt || $lbAlt === basename(get_attached_file((int) $id) ?: '')) {
+                    $lbAlt = get_post_meta((int) $id, '_wp_attachment_image_alt', true) ?: '';
+                }
+                if (!$lbAlt) {
+                    $lbAlt = $attachmentPost->post_excerpt ?: '';
+                }
+            }
+
             $html .= '<div class="zs-lightbox ' . esc_attr($galleryId) . '">';
             $html .= '<a href="#" class="zs-lightbox-close">&times;</a>';
             $html .= '<div class="zs-lightbox-prev zs-lightbox-nav">&#8249;</div>';
             $html .= '<div class="zs-lightbox-next zs-lightbox-nav">&#8250;</div>';
-            $html .= '<img src="' . esc_url($url) . '" alt="">';
+            $html .= '<img src="' . esc_url($url) . '" alt="' . esc_attr($lbAlt) . '">';
             $html .= '<div class="zs-lightbox-counter"></div>';
             $html .= '</div>';
         }
