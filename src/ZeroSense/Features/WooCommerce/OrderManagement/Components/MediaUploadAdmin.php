@@ -7,9 +7,26 @@ class MediaUploadAdmin
 {
     public function __construct()
     {
+        add_action('admin_enqueue_scripts', [$this, 'enable_happyfiles_on_orders'], 5);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('add_meta_boxes', [$this, 'add_media_upload_metabox']);
         add_action('woocommerce_process_shop_order_meta', [$this, 'save_media_field'], 20);
+    }
+
+    /**
+     * Force HappyFiles to load on WooCommerce order screens so the media modal
+     * shows folder navigation instead of the default flat library.
+     */
+    public function enable_happyfiles_on_orders()
+    {
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->id, ['shop_order', 'woocommerce_page_wc-orders'], true)) {
+            return;
+        }
+
+        if (class_exists(\HappyFiles\Data::class)) {
+            \HappyFiles\Data::$load_plugin = true;
+        }
     }
 
     public function enqueue_admin_scripts()
@@ -96,7 +113,7 @@ class MediaUploadAdmin
                         <?php esc_html_e('Choose Files', 'zero-sense'); ?>
                     </button>
                     <span class="description">
-                        <?php esc_html_e('JPG, PNG, GIF, MP4, MOV — Max 10MB per file', 'zero-sense'); ?>
+                        <?php esc_html_e('JPG, PNG, GIF, WEBP, MP4, MOV — Max 20MB per file', 'zero-sense'); ?>
                     </span>
                 </div>
                 <input type="hidden" id="zs_event_media" name="zs_event_media" value="<?php echo esc_attr($media_ids); ?>">

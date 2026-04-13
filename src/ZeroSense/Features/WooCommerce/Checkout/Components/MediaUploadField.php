@@ -42,7 +42,7 @@ class MediaUploadField
                 </div>
                 
                 <p class="description">
-                    <?php esc_html_e('Supported formats: JPG, PNG, GIF, MP4, MOV. Max file size: 10MB per file.', 'zero-sense'); ?>
+                    <?php esc_html_e('Supported formats: JPG, PNG, GIF, WEBP, MP4, MOV. Max file size: 20MB per file.', 'zero-sense'); ?>
                 </p>
             </div>
         </div>
@@ -131,16 +131,16 @@ class MediaUploadField
             
             if ($media_data && is_array($media_data)) {
                 foreach ($media_data as $media) {
-                    // Validate maximum file size (10MB)
-                    if (isset($media['size']) && $media['size'] > 10 * 1024 * 1024) {
-                        wc_add_notice(__('File size exceeds 10MB limit.', 'zero-sense'), 'error');
+                    // Validate maximum file size (20MB)
+                    if (isset($media['size']) && $media['size'] > 20 * 1024 * 1024) {
+                        wc_add_notice(__('File size exceeds 20MB limit.', 'zero-sense'), 'error');
                         return;
                     }
                     
                     // Validate file type
-                    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
+                    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime'];
                     if (isset($media['type']) && !in_array($media['type'], $allowed_types)) {
-                        wc_add_notice(__('File type not allowed. Supported formats: JPG, PNG, GIF, MP4, MOV.', 'zero-sense'), 'error');
+                        wc_add_notice(__('File type not allowed. Supported formats: JPG, PNG, GIF, WEBP, MP4, MOV.', 'zero-sense'), 'error');
                         return;
                     }
                     

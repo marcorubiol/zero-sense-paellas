@@ -29,8 +29,8 @@ jQuery(document).ready(function($) {
             
             attachments.forEach(function(attachment) {
                 // Validate file size
-                if (attachment.filesize && attachment.filesizeByte > 10 * 1024 * 1024) {
-                    alert('File ' + attachment.filename + ' exceeds 10MB limit');
+                if (attachment.filesize && attachment.filesizeByte > 20 * 1024 * 1024) {
+                    alert('File ' + attachment.filename + ' exceeds 20MB limit');
                     return;
                 }
                 

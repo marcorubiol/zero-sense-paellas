@@ -31,8 +31,8 @@ jQuery(document).ready(function($) {
             var attachments = mediaUploader.state().get('selection').toJSON();
 
             attachments.forEach(function(att) {
-                if (att.filesizeInBytes && att.filesizeInBytes > 10 * 1024 * 1024) {
-                    alert('File ' + att.filename + ' exceeds 10MB limit');
+                if (att.filesizeInBytes && att.filesizeInBytes > 20 * 1024 * 1024) {
+                    alert('File ' + att.filename + ' exceeds 20MB limit');
                     return;
                 }
                 var id = att.id.toString();
