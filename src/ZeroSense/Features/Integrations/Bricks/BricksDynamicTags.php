@@ -1875,8 +1875,7 @@ class BricksDynamicTags implements FeatureInterface
 
             $html .= '<div class="zs-lightbox ' . esc_attr($galleryId) . '">';
             $html .= '<span class="zs-lightbox-close">&times;</span>';
-            $lbThumb = wp_get_attachment_image_url((int) $id, 'large') ?: wp_get_attachment_image_url((int) $id, 'medium');
-            $lbSrc = $lbThumb ?: $url;
+            $lbSrc = wp_get_attachment_image_url((int) $id, 'medium') ?: $url;
             $html .= '<div class="zs-lightbox-prev zs-lightbox-nav">&#8249;</div>';
             $html .= '<div class="zs-lightbox-next zs-lightbox-nav">&#8250;</div>';
             $html .= '<img src="' . esc_url($lbSrc) . '" alt="' . esc_attr($lbAlt) . '">';
