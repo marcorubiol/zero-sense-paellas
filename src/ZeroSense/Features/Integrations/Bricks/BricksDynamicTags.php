@@ -1692,7 +1692,7 @@ class BricksDynamicTags implements FeatureInterface
         $galleryId = 'zs-gallery-' . uniqid();
         
         $html = '<style>
-            .zs-event-media-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-width: 650px; }
+            .zs-event-media-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
             .zs-gallery-item { border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #f9f9f9; display: flex; flex-direction: column; }
             .zs-gallery-item-thumb { aspect-ratio: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; }
             .zs-gallery-item img, .zs-gallery-item video { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
