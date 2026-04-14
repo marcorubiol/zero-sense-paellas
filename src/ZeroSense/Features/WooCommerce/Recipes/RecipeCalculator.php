@@ -11,6 +11,8 @@ class RecipeCalculator
     const CHILD_WEIGHT  = 0.4;
     const BABY_WEIGHT   = 0.0;
     const SAFETY_MARGIN = 1.13;
+    const PAELLA_MIN_PAX_THRESHOLD = 13;
+    const PAELLA_MIN_PAX_RECIPE    = 15;
 
     const META_EVENT_ADULTS   = 'zs_event_adults';
     const META_EVENT_CHILDREN = 'zs_event_children_5_to_8';
@@ -130,10 +132,14 @@ class RecipeCalculator
                 if ($rawMeta !== '' && $rawMeta !== false && $rawMeta !== null) {
                     $itemChildren = max(0, min((int) $rawMeta, (int) $qty));
                     $itemAdults   = max(0, (int) $qty - $itemChildren);
-                    $itemEq       = $itemAdults + $itemChildren * self::CHILD_WEIGHT;
-                    $eq           = round($itemEq * self::SAFETY_MARGIN);
+                    $rawEq        = $itemAdults + $itemChildren * self::CHILD_WEIGHT;
                 } else {
-                    $eq = round($qty * $paxRatio * self::SAFETY_MARGIN);
+                    $rawEq = $qty * $paxRatio;
+                }
+                if ($rawEq < self::PAELLA_MIN_PAX_THRESHOLD) {
+                    $eq = self::PAELLA_MIN_PAX_RECIPE;
+                } else {
+                    $eq = round($rawEq * self::SAFETY_MARGIN);
                 }
             } else {
                 $eq = $qty;
