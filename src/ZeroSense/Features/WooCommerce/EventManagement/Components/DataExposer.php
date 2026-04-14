@@ -121,6 +121,7 @@ class DataExposer
             'staff_cockteler_a' => self::getStaffByRole($order, 'cockteler-a'),
             'staff_tallador_a_de_pernil' => self::getStaffByRole($order, 'tallador-a-de-pernil'),
             'staff_all_formatted' => self::getAllStaffFormatted($order),
+            'staff_all_names' => self::getAllStaffNames($order),
             'staff_kitchen_names' => self::getKitchenStaffNames($order),
             'vehicles'            => self::getVehiclesFormatted($order),
             'event_reserved' => $order->get_meta(MetaKeys::EVENT_RESERVED, true),
@@ -231,7 +232,48 @@ class DataExposer
     }
 
     /**
-     * Get all staff formatted for display
+     * Get all staff as "Role: Name" lines (no contact info) for calendar titles
+     */
+    private static function getAllStaffNames(WC_Order $order): string
+    {
+        $staffAssignments = $order->get_meta(MetaKeys::EVENT_STAFF, true);
+        if (!is_array($staffAssignments)) {
+            return '';
+        }
+
+        $roles = [
+            'cap-de-bolo' => __('Cap de Bolo', 'zero-sense'),
+            'cuiner-a' => __('Cuiner/a', 'zero-sense'),
+            'ajudant-a-de-cuina' => __('Ajudant/a de cuina', 'zero-sense'),
+            'cambrer-a-barra' => __('Cambrer/a - Barra', 'zero-sense'),
+            'cockteler-a' => __('Cockteler/a', 'zero-sense'),
+            'tallador-a-de-pernil' => __('Tallador/a de pernil', 'zero-sense'),
+        ];
+
+        $grouped = [];
+        foreach ($staffAssignments as $assignment) {
+            if (!is_array($assignment) || !isset($assignment['role'], $assignment['staff_id'])) {
+                continue;
+            }
+            $roleSlug = $assignment['role'];
+            $staffPost = get_post((int) $assignment['staff_id']);
+            if ($staffPost && isset($roles[$roleSlug])) {
+                $grouped[$roleSlug][] = $staffPost->post_title;
+            }
+        }
+
+        $output = [];
+        foreach ($roles as $slug => $label) {
+            if (!empty($grouped[$slug])) {
+                $output[] = $label . ': ' . implode(', ', $grouped[$slug]);
+            }
+        }
+
+        return implode(' | ', $output);
+    }
+
+    /**
+     * Get all staff formatted for display (with contact info)
      */
     private static function getAllStaffFormatted(WC_Order $order): string
     {
