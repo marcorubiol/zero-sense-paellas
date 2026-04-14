@@ -958,17 +958,7 @@ class BricksDynamicTags implements FeatureInterface
             $items[] = $itemHtml;
         }
         
-        $html = '<ul class="zs-order-products">' . implode('', $items) . '</ul>';
-
-        if (isset($_GET['debug_products'])) {
-            $log = self::$_productDebugLog;
-            $html .= '<pre style="background:#111;color:#0f0;padding:20px;margin:20px;font-size:12px;white-space:pre-wrap;">';
-            $html .= "=== ZS PRODUCT DEBUG (v126) ===\n\n";
-            $html .= !empty($log) ? esc_html(implode("\n", $log)) : 'NO LOG ENTRIES — getTranslatedProductName was not called';
-            $html .= '</pre>';
-        }
-
-        return $html;
+        return '<ul class="zs-order-products">' . implode('', $items) . '</ul>';
     }
 
     private function getOrderProductsSimple($post): string
@@ -1004,66 +994,46 @@ class BricksDynamicTags implements FeatureInterface
      * Resolve the WPML-translated product name for the current language.
      * Falls back to the provided default name if no translation exists.
      */
-    private static array $_productDebugLog = [];
-
     private function getTranslatedProductName($product, string $fallbackName): string
     {
-        $debug = isset($_GET['debug_products']);
-
         if (!$product || !defined('ICL_SITEPRESS_VERSION')) {
-            if ($debug) { self::$_productDebugLog[] = "NO WPML — fallback: $fallbackName"; }
             return $fallbackName;
         }
 
         $targetLang = apply_filters('wpml_current_language', null);
         if (!$targetLang) {
-            if ($debug) { self::$_productDebugLog[] = "No target lang — fallback: $fallbackName"; }
             return $fallbackName;
         }
 
         $productId = $product->get_id();
-        $defaultLang = apply_filters('wpml_default_language', null);
-        if ($debug) { self::$_productDebugLog[] = "ID:$productId | type:" . $product->get_type() . " | target:$targetLang | default:$defaultLang | name:$fallbackName"; }
 
         if ($product->is_type('variation')) {
             $parentId = $product->get_parent_id();
             $translatedParentId = apply_filters('wpml_object_id', $parentId, 'product', false, $targetLang);
-            if ($debug) { self::$_productDebugLog[] = "  variation parent $parentId → translated: " . ($translatedParentId ?: 'NULL'); }
             if ($translatedParentId) {
                 $translatedVariationId = apply_filters('wpml_object_id', $productId, 'product_variation', false, $targetLang);
-                if ($debug) { self::$_productDebugLog[] = "  variation $productId → translated: " . ($translatedVariationId ?: 'NULL'); }
                 if ($translatedVariationId) {
                     $translatedVariation = wc_get_product($translatedVariationId);
                     if ($translatedVariation) {
-                        if ($debug) { self::$_productDebugLog[] = "  → USING: " . $translatedVariation->get_name(); }
                         return $translatedVariation->get_name();
                     }
                 }
                 $translatedParent = wc_get_product($translatedParentId);
                 if ($translatedParent) {
-                    if ($debug) { self::$_productDebugLog[] = "  → USING parent: " . $translatedParent->get_name(); }
                     return $translatedParent->get_name();
                 }
             }
         } else {
             $translatedId = apply_filters('wpml_object_id', $productId, 'product', false, $targetLang);
-            if ($debug) { self::$_productDebugLog[] = "  simple $productId → translated: " . ($translatedId ?: 'NULL'); }
             if ($translatedId) {
                 $translatedProduct = wc_get_product($translatedId);
                 if ($translatedProduct) {
-                    if ($debug) { self::$_productDebugLog[] = "  → USING: " . $translatedProduct->get_name(); }
                     return $translatedProduct->get_name();
                 }
             }
         }
 
-        if ($debug) { self::$_productDebugLog[] = "  → NO TRANSLATION, fallback: $fallbackName"; }
         return $fallbackName;
-    }
-
-    public static function getProductDebugLog(): array
-    {
-        return self::$_productDebugLog;
     }
 
     private function getOrderProductsCount($post): string
@@ -1216,7 +1186,7 @@ class BricksDynamicTags implements FeatureInterface
                         ];
                     }
                     $categorizedProducts[$term->term_id]['products'][] = [
-                        'name'     => $item->get_name(),
+                        'name'     => $this->getTranslatedProductName($product, $item->get_name()),
                         'quantity' => $item->get_quantity(),
                     ];
                 }
@@ -1229,7 +1199,7 @@ class BricksDynamicTags implements FeatureInterface
                     ];
                 }
                 $categorizedProducts[0]['products'][] = [
-                    'name'     => $item->get_name(),
+                    'name'     => $this->getTranslatedProductName($product, $item->get_name()),
                     'quantity' => $item->get_quantity(),
                 ];
             }

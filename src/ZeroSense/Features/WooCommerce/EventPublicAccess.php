@@ -169,19 +169,6 @@ class EventPublicAccess implements FeatureInterface
 
         // Allow short browser cache (5 min) to survive flaky mobile connections
         header('Cache-Control: private, max-age=300', true);
-
-        // Debug: render product translation log at bottom of page
-        if (isset($_GET['debug_products'])) {
-            add_action('wp_footer', function() {
-                $log = \ZeroSense\Features\Integrations\Bricks\BricksDynamicTags::getProductDebugLog();
-                if (!empty($log)) {
-                    echo '<pre style="background:#111;color:#0f0;padding:20px;margin:20px;font-size:12px;white-space:pre-wrap;">';
-                    echo "=== ZS PRODUCT DEBUG ===\n\n";
-                    echo esc_html(implode("\n", $log));
-                    echo '</pre>';
-                }
-            }, 999);
-        }
     }
 
     private function isValidToken(string $token): bool
