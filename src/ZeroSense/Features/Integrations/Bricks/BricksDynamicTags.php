@@ -958,7 +958,17 @@ class BricksDynamicTags implements FeatureInterface
             $items[] = $itemHtml;
         }
         
-        return '<ul class="zs-order-products">' . implode('', $items) . '</ul>';
+        $html = '<ul class="zs-order-products">' . implode('', $items) . '</ul>';
+
+        if (isset($_GET['debug_products'])) {
+            $log = self::$_productDebugLog;
+            $html .= '<pre style="background:#111;color:#0f0;padding:20px;margin:20px;font-size:12px;white-space:pre-wrap;">';
+            $html .= "=== ZS PRODUCT DEBUG (v126) ===\n\n";
+            $html .= !empty($log) ? esc_html(implode("\n", $log)) : 'NO LOG ENTRIES — getTranslatedProductName was not called';
+            $html .= '</pre>';
+        }
+
+        return $html;
     }
 
     private function getOrderProductsSimple($post): string
