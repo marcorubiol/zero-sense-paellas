@@ -994,59 +994,66 @@ class BricksDynamicTags implements FeatureInterface
      * Resolve the WPML-translated product name for the current language.
      * Falls back to the provided default name if no translation exists.
      */
+    private static array $_productDebugLog = [];
+
     private function getTranslatedProductName($product, string $fallbackName): string
     {
         $debug = isset($_GET['debug_products']);
 
         if (!$product || !defined('ICL_SITEPRESS_VERSION')) {
-            if ($debug) { error_log("[ZS-PROD-DEBUG] No product or no WPML. Fallback: $fallbackName"); }
+            if ($debug) { self::$_productDebugLog[] = "NO WPML — fallback: $fallbackName"; }
             return $fallbackName;
         }
 
         $targetLang = apply_filters('wpml_current_language', null);
         if (!$targetLang) {
-            if ($debug) { error_log("[ZS-PROD-DEBUG] No target lang. Fallback: $fallbackName"); }
+            if ($debug) { self::$_productDebugLog[] = "No target lang — fallback: $fallbackName"; }
             return $fallbackName;
         }
 
         $productId = $product->get_id();
         $defaultLang = apply_filters('wpml_default_language', null);
-        if ($debug) { error_log("[ZS-PROD-DEBUG] Product ID: $productId | Type: " . $product->get_type() . " | Target: $targetLang | Default: $defaultLang | Fallback: $fallbackName"); }
+        if ($debug) { self::$_productDebugLog[] = "ID:$productId | type:" . $product->get_type() . " | target:$targetLang | default:$defaultLang | name:$fallbackName"; }
 
         if ($product->is_type('variation')) {
             $parentId = $product->get_parent_id();
             $translatedParentId = apply_filters('wpml_object_id', $parentId, 'product', false, $targetLang);
-            if ($debug) { error_log("[ZS-PROD-DEBUG] Variation parent $parentId → translated parent: " . ($translatedParentId ?: 'NULL')); }
+            if ($debug) { self::$_productDebugLog[] = "  variation parent $parentId → translated: " . ($translatedParentId ?: 'NULL'); }
             if ($translatedParentId) {
                 $translatedVariationId = apply_filters('wpml_object_id', $productId, 'product_variation', false, $targetLang);
-                if ($debug) { error_log("[ZS-PROD-DEBUG] Variation $productId → translated: " . ($translatedVariationId ?: 'NULL')); }
+                if ($debug) { self::$_productDebugLog[] = "  variation $productId → translated: " . ($translatedVariationId ?: 'NULL'); }
                 if ($translatedVariationId) {
                     $translatedVariation = wc_get_product($translatedVariationId);
                     if ($translatedVariation) {
-                        if ($debug) { error_log("[ZS-PROD-DEBUG] → Using translated variation name: " . $translatedVariation->get_name()); }
+                        if ($debug) { self::$_productDebugLog[] = "  → USING: " . $translatedVariation->get_name(); }
                         return $translatedVariation->get_name();
                     }
                 }
                 $translatedParent = wc_get_product($translatedParentId);
                 if ($translatedParent) {
-                    if ($debug) { error_log("[ZS-PROD-DEBUG] → Using translated parent name: " . $translatedParent->get_name()); }
+                    if ($debug) { self::$_productDebugLog[] = "  → USING parent: " . $translatedParent->get_name(); }
                     return $translatedParent->get_name();
                 }
             }
         } else {
             $translatedId = apply_filters('wpml_object_id', $productId, 'product', false, $targetLang);
-            if ($debug) { error_log("[ZS-PROD-DEBUG] Simple product $productId → translated: " . ($translatedId ?: 'NULL')); }
+            if ($debug) { self::$_productDebugLog[] = "  simple $productId → translated: " . ($translatedId ?: 'NULL'); }
             if ($translatedId) {
                 $translatedProduct = wc_get_product($translatedId);
                 if ($translatedProduct) {
-                    if ($debug) { error_log("[ZS-PROD-DEBUG] → Using translated name: " . $translatedProduct->get_name()); }
+                    if ($debug) { self::$_productDebugLog[] = "  → USING: " . $translatedProduct->get_name(); }
                     return $translatedProduct->get_name();
                 }
             }
         }
 
-        if ($debug) { error_log("[ZS-PROD-DEBUG] → No translation found, using fallback: $fallbackName"); }
+        if ($debug) { self::$_productDebugLog[] = "  → NO TRANSLATION, fallback: $fallbackName"; }
         return $fallbackName;
+    }
+
+    public static function getProductDebugLog(): array
+    {
+        return self::$_productDebugLog;
     }
 
     private function getOrderProductsCount($post): string
