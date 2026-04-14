@@ -640,7 +640,7 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $raw = $order->get_meta('zs_ops_notes', true);
-        $value = is_string($raw) ? $raw : '';
+        $value = is_string($raw) ? nl2br(esc_html($raw)) : '';
 
         return $this->wrapIfRecentlyChanged($value, 'zs_ops_notes', $post);
     }
