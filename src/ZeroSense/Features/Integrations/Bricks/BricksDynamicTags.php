@@ -996,43 +996,56 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function getTranslatedProductName($product, string $fallbackName): string
     {
+        $debug = isset($_GET['debug_products']);
+
         if (!$product || !defined('ICL_SITEPRESS_VERSION')) {
+            if ($debug) { error_log("[ZS-PROD-DEBUG] No product or no WPML. Fallback: $fallbackName"); }
             return $fallbackName;
         }
 
         $targetLang = apply_filters('wpml_current_language', null);
         if (!$targetLang) {
+            if ($debug) { error_log("[ZS-PROD-DEBUG] No target lang. Fallback: $fallbackName"); }
             return $fallbackName;
         }
 
         $productId = $product->get_id();
+        $defaultLang = apply_filters('wpml_default_language', null);
+        if ($debug) { error_log("[ZS-PROD-DEBUG] Product ID: $productId | Type: " . $product->get_type() . " | Target: $targetLang | Default: $defaultLang | Fallback: $fallbackName"); }
 
         if ($product->is_type('variation')) {
             $parentId = $product->get_parent_id();
             $translatedParentId = apply_filters('wpml_object_id', $parentId, 'product', false, $targetLang);
+            if ($debug) { error_log("[ZS-PROD-DEBUG] Variation parent $parentId → translated parent: " . ($translatedParentId ?: 'NULL')); }
             if ($translatedParentId) {
                 $translatedVariationId = apply_filters('wpml_object_id', $productId, 'product_variation', false, $targetLang);
+                if ($debug) { error_log("[ZS-PROD-DEBUG] Variation $productId → translated: " . ($translatedVariationId ?: 'NULL')); }
                 if ($translatedVariationId) {
                     $translatedVariation = wc_get_product($translatedVariationId);
                     if ($translatedVariation) {
+                        if ($debug) { error_log("[ZS-PROD-DEBUG] → Using translated variation name: " . $translatedVariation->get_name()); }
                         return $translatedVariation->get_name();
                     }
                 }
                 $translatedParent = wc_get_product($translatedParentId);
                 if ($translatedParent) {
+                    if ($debug) { error_log("[ZS-PROD-DEBUG] → Using translated parent name: " . $translatedParent->get_name()); }
                     return $translatedParent->get_name();
                 }
             }
         } else {
             $translatedId = apply_filters('wpml_object_id', $productId, 'product', false, $targetLang);
+            if ($debug) { error_log("[ZS-PROD-DEBUG] Simple product $productId → translated: " . ($translatedId ?: 'NULL')); }
             if ($translatedId) {
                 $translatedProduct = wc_get_product($translatedId);
                 if ($translatedProduct) {
+                    if ($debug) { error_log("[ZS-PROD-DEBUG] → Using translated name: " . $translatedProduct->get_name()); }
                     return $translatedProduct->get_name();
                 }
             }
         }
 
+        if ($debug) { error_log("[ZS-PROD-DEBUG] → No translation found, using fallback: $fallbackName"); }
         return $fallbackName;
     }
 
