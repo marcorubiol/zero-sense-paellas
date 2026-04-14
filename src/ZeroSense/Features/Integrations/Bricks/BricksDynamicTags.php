@@ -929,8 +929,8 @@ class BricksDynamicTags implements FeatureInterface
             
             $product = $item->get_product();
             $quantity = $item->get_quantity();
-            $name = $item->get_name();
-            
+            $name = $this->getTranslatedProductName($product, $item->get_name());
+
             $itemHtml = '<li class="zs-menu-product">' . esc_html($name);
             
             if ($quantity > 1) {
@@ -976,7 +976,8 @@ class BricksDynamicTags implements FeatureInterface
         $products = [];
         
         foreach ($order->get_items() as $item) {
-            $name = $item->get_name();
+            $product = method_exists($item, 'get_product') ? $item->get_product() : null;
+            $name = $product ? $this->getTranslatedProductName($product, $item->get_name()) : $item->get_name();
             $quantity = $item->get_quantity();
             
             if ($quantity > 1) {
@@ -987,6 +988,54 @@ class BricksDynamicTags implements FeatureInterface
         }
         
         return implode(', ', $products);
+    }
+
+    /**
+     * Resolve the WPML-translated product name for the current language.
+     * Falls back to the provided default name if no translation exists.
+     */
+    private function getTranslatedProductName($product, string $fallbackName): string
+    {
+        if (!$product || !function_exists('apply_filters')) {
+            return $fallbackName;
+        }
+
+        // For variations, resolve the parent product translation first
+        $productId = $product->get_id();
+        $productType = $product->is_type('variation') ? 'product_variation' : 'product';
+
+        // If it's a variation, try the parent product for the translated name
+        if ($product->is_type('variation')) {
+            $parentId = $product->get_parent_id();
+            $translatedParentId = apply_filters('wpml_object_id', $parentId, 'product', true);
+
+            if ($translatedParentId && $translatedParentId !== $parentId) {
+                $translatedParent = wc_get_product($translatedParentId);
+                if ($translatedParent) {
+                    // Find the corresponding variation in the translated parent
+                    $translatedVariationId = apply_filters('wpml_object_id', $productId, 'product_variation', true);
+                    if ($translatedVariationId && $translatedVariationId !== $productId) {
+                        $translatedVariation = wc_get_product($translatedVariationId);
+                        if ($translatedVariation) {
+                            return $translatedVariation->get_name();
+                        }
+                    }
+                    // Fallback: use parent name if variation translation not found
+                    return $translatedParent->get_name();
+                }
+            }
+        } else {
+            // Simple/other product types
+            $translatedId = apply_filters('wpml_object_id', $productId, 'product', true);
+            if ($translatedId && $translatedId !== $productId) {
+                $translatedProduct = wc_get_product($translatedId);
+                if ($translatedProduct) {
+                    return $translatedProduct->get_name();
+                }
+            }
+        }
+
+        return $fallbackName;
     }
 
     private function getOrderProductsCount($post): string
