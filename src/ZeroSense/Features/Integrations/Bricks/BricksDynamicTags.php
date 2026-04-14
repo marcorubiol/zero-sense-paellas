@@ -996,38 +996,36 @@ class BricksDynamicTags implements FeatureInterface
      */
     private function getTranslatedProductName($product, string $fallbackName): string
     {
-        if (!$product || !function_exists('apply_filters')) {
+        if (!$product || !defined('ICL_SITEPRESS_VERSION')) {
             return $fallbackName;
         }
 
-        // For variations, resolve the parent product translation first
-        $productId = $product->get_id();
-        $productType = $product->is_type('variation') ? 'product_variation' : 'product';
+        $targetLang = apply_filters('wpml_current_language', null);
+        if (!$targetLang) {
+            return $fallbackName;
+        }
 
-        // If it's a variation, try the parent product for the translated name
+        $productId = $product->get_id();
+
         if ($product->is_type('variation')) {
             $parentId = $product->get_parent_id();
-            $translatedParentId = apply_filters('wpml_object_id', $parentId, 'product', true);
-
-            if ($translatedParentId && $translatedParentId !== $parentId) {
+            $translatedParentId = apply_filters('wpml_object_id', $parentId, 'product', false, $targetLang);
+            if ($translatedParentId) {
+                $translatedVariationId = apply_filters('wpml_object_id', $productId, 'product_variation', false, $targetLang);
+                if ($translatedVariationId) {
+                    $translatedVariation = wc_get_product($translatedVariationId);
+                    if ($translatedVariation) {
+                        return $translatedVariation->get_name();
+                    }
+                }
                 $translatedParent = wc_get_product($translatedParentId);
                 if ($translatedParent) {
-                    // Find the corresponding variation in the translated parent
-                    $translatedVariationId = apply_filters('wpml_object_id', $productId, 'product_variation', true);
-                    if ($translatedVariationId && $translatedVariationId !== $productId) {
-                        $translatedVariation = wc_get_product($translatedVariationId);
-                        if ($translatedVariation) {
-                            return $translatedVariation->get_name();
-                        }
-                    }
-                    // Fallback: use parent name if variation translation not found
                     return $translatedParent->get_name();
                 }
             }
         } else {
-            // Simple/other product types
-            $translatedId = apply_filters('wpml_object_id', $productId, 'product', true);
-            if ($translatedId && $translatedId !== $productId) {
+            $translatedId = apply_filters('wpml_object_id', $productId, 'product', false, $targetLang);
+            if ($translatedId) {
                 $translatedProduct = wc_get_product($translatedId);
                 if ($translatedProduct) {
                     return $translatedProduct->get_name();
