@@ -148,6 +148,12 @@ class EventPublicAccess implements FeatureInterface
             $this->deny();
         }
 
+        // Force FDR page to render in Catalan (team's working language)
+        if (defined('ICL_SITEPRESS_VERSION')) {
+            do_action('wpml_switch_language', 'ca');
+        }
+        switch_to_locale('ca');
+
         // Make other components (BricksDynamicTags/EventShortcodes) resolve the order.
         $_GET['order'] = (string) $orderId;
         $GLOBALS['zs_event_order_id'] = (int) $orderId;

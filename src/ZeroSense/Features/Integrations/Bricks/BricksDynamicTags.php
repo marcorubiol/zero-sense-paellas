@@ -1521,11 +1521,12 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // YYYY-MM-DD → "Dissabte, 18/04/2026" (day name always in Catalan)
+        // YYYY-MM-DD → "Dissabte, 18/04/2026" (day name localized via WP locale)
         if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m)) {
-            $catDays = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte', 'Diumenge'];
-            $dow = (int) date('N', mktime(0, 0, 0, (int) $m[2], (int) $m[3], (int) $m[1]));
-            return $catDays[$dow - 1] . ', ' . $m[3] . '/' . $m[2] . '/' . $m[1];
+            $timestamp = mktime(0, 0, 0, (int) $m[2], (int) $m[3], (int) $m[1]);
+            $dayName = wp_date('l', $timestamp);
+            $dayName = mb_strtoupper(mb_substr($dayName, 0, 1)) . mb_substr($dayName, 1);
+            return $dayName . ', ' . $m[3] . '/' . $m[2] . '/' . $m[1];
         }
 
         return $value;
