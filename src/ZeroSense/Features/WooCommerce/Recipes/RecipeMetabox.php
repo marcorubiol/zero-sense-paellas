@@ -615,12 +615,12 @@ class RecipeMetabox
         $raw = $_POST['zs_recipe_ingredients'] ?? null;
         if (!is_array($raw)) {
             delete_post_meta($postId, self::META_INGREDIENTS);
-            return;
+            $raw = null;
         }
 
-        $ids = isset($raw['ingredient']) && is_array($raw['ingredient']) ? $raw['ingredient'] : [];
-        $qtys = isset($raw['qty']) && is_array($raw['qty']) ? $raw['qty'] : [];
-        $units = isset($raw['unit']) && is_array($raw['unit']) ? $raw['unit'] : [];
+        $ids = is_array($raw) && isset($raw['ingredient']) && is_array($raw['ingredient']) ? $raw['ingredient'] : [];
+        $qtys = is_array($raw) && isset($raw['qty']) && is_array($raw['qty']) ? $raw['qty'] : [];
+        $units = is_array($raw) && isset($raw['unit']) && is_array($raw['unit']) ? $raw['unit'] : [];
 
         $allowedUnits = array_keys($this->getAllowedUnits());
         $allowedUtensilUnits = array_keys($this->getUtensilUnits());
