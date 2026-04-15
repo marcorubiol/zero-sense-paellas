@@ -566,6 +566,11 @@ class BricksDynamicTags implements FeatureInterface
         if (str_contains($content, '{zs_order_deposit_percentage}'))     { $content = str_replace('{zs_order_deposit_percentage}',     $this->getOrderDepositPercentage($post),       $content); }
         if (str_contains($content, '{zs_order_effective_recipes}'))      { $content = str_replace('{zs_order_effective_recipes}',      $this->getOrderEffectiveRecipes($post),        $content); }
         if (str_contains($content, '{zs_staff_kitchen_names}'))          { $content = str_replace('{zs_staff_kitchen_names}',          $this->getStaffKitchenNames($post),            $content); }
+        if (str_contains($content, '{zs_weather_summary}'))             { $content = str_replace('{zs_weather_summary}',             $this->getWeatherField($post, 'summary'),      $content); }
+        if (str_contains($content, '{zs_weather_icon}'))                { $content = str_replace('{zs_weather_icon}',                $this->getWeatherField($post, 'icon'),         $content); }
+        if (str_contains($content, '{zs_weather_wind}'))                { $content = str_replace('{zs_weather_wind}',                $this->getWeatherField($post, 'wind'),         $content); }
+        if (str_contains($content, '{zs_weather_sunset}'))              { $content = str_replace('{zs_weather_sunset}',              $this->getWeatherField($post, 'sunset'),       $content); }
+        if (str_contains($content, '{zs_nearby_supermarkets}'))         { $content = str_replace('{zs_nearby_supermarkets}',         $this->getNearbySupermarkets($post),           $content); }
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
