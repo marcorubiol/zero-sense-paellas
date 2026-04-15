@@ -64,12 +64,15 @@ class LocationGeocoder
 
             if ($coords !== null) {
                 // Generate and save Google Maps link
-                $mapsLink = sprintf(
+                $mapsLink = esc_url_raw(sprintf(
                     'https://www.google.com/maps/search/?api=1&query=%s,%s',
                     $coords['lat'],
                     $coords['lng']
-                );
-                $order->update_meta_data('_shipping_location_link', esc_url_raw($mapsLink));
+                ));
+                $order->update_meta_data('_shipping_location_link', $mapsLink);
+
+                // Also set in $_POST so WooCommerce core doesn't overwrite with empty
+                $_POST['_shipping_location_link'] = $mapsLink;
             }
         }
 
