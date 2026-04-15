@@ -9,6 +9,7 @@ use ZeroSense\Features\WooCommerce\EventManagement\Components\StaffAssignmentMet
 use ZeroSense\Features\WooCommerce\EventManagement\Components\VehicleAssignmentMetabox;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\ResourceConflictValidator;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\DataExposer;
+use ZeroSense\Features\WooCommerce\EventManagement\Components\LocationGeocoder;
 use ZeroSense\Features\WooCommerce\EventManagement\Components\ServiceAreaAdminColumns;
 use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 use ZeroSense\Features\WooCommerce\EventManagement\Inventory\Database\Schema;
@@ -34,6 +35,7 @@ class Bootstrap
         (new ResourceConflictValidator())->register();
         (new DataExposer())->register();
         (new ServiceAreaAdminColumns())->register();
+        (new LocationGeocoder())->register();
         
         // Inventory system
         (new InventoryMetabox())->register();

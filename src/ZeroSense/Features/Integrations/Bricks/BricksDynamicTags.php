@@ -283,6 +283,11 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_order_deposit_percentage}',    'label' => 'Order Deposit Percentage (real calculated %)',   'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_effective_recipes}',     'label' => 'Order Effective Recipes (qty × pax ratio)',       'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_staff_kitchen_names}',         'label' => 'Staff: Kitchen Team Names (Jefe, Cocineros, Ayudantes)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_weather_summary}',               'label' => 'Weather Summary (conditions + temp)',                  'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_weather_icon}',                  'label' => 'Weather Icon (☀/☁/☂)',                                'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_weather_wind}',                  'label' => 'Weather Wind (speed + direction)',                     'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_weather_sunset}',                'label' => 'Weather Sunset Time (HH:MM)',                          'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_nearby_supermarkets}',           'label' => 'Nearby Supermarkets (Google Maps URL)',                'group' => 'ZeroSense'];
 
         // Dynamic schema tags
         $schemaRegistry = SchemaRegistry::getInstance();
@@ -461,6 +466,21 @@ class BricksDynamicTags implements FeatureInterface
         }
         if ($tag === '{zs_staff_kitchen_names}') {
             return $this->getStaffKitchenNames($post);
+        }
+        if ($tag === '{zs_weather_summary}') {
+            return $this->getWeatherField($post, 'summary');
+        }
+        if ($tag === '{zs_weather_icon}') {
+            return $this->getWeatherField($post, 'icon');
+        }
+        if ($tag === '{zs_weather_wind}') {
+            return $this->getWeatherField($post, 'wind');
+        }
+        if ($tag === '{zs_weather_sunset}') {
+            return $this->getWeatherField($post, 'sunset');
+        }
+        if ($tag === '{zs_nearby_supermarkets}') {
+            return $this->getNearbySupermarkets($post);
         }
 
         // Dynamic schema tags: {zs_material_field}, {zs_workspace_list}, etc.
@@ -3803,5 +3823,190 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         return (string) ($info['deposit_percentage_display'] ?? '');
+    }
+
+    // ── Weather & Location ──────────────────────────────────────────────
+
+    private const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
+    private const WEATHER_CACHE_TTL = 7200; // 2 hours
+
+    /**
+     * WMO Weather interpretation codes → Catalan descriptions + icons.
+     */
+    private const WMO_CODES = [
+        0  => ['Cel serè',                '☀'],
+        1  => ['Majoritàriament serè',     '☀'],
+        2  => ['Parcialment ennuvolat',    '⛅'],
+        3  => ['Ennuvolat',               '☁'],
+        45 => ['Boira',                    '☁'],
+        48 => ['Boira gelada',             '☁'],
+        51 => ['Plugim lleugera',          '☂'],
+        53 => ['Plugim moderada',          '☂'],
+        55 => ['Plugim intensa',           '☂'],
+        61 => ['Pluja lleugera',           '☂'],
+        63 => ['Pluja moderada',           '☂'],
+        65 => ['Pluja intensa',            '☂'],
+        71 => ['Neu lleugera',             '❄'],
+        73 => ['Neu moderada',             '❄'],
+        75 => ['Neu intensa',              '❄'],
+        77 => ['Grans de neu',             '❄'],
+        80 => ['Ruixats lleugers',         '☂'],
+        81 => ['Ruixats moderats',         '☂'],
+        82 => ['Ruixats violents',         '☂'],
+        85 => ['Ruixats de neu lleugers',  '❄'],
+        86 => ['Ruixats de neu intensos',  '❄'],
+        95 => ['Tempesta',                 '⛈'],
+        96 => ['Tempesta amb calamarsa',   '⛈'],
+        99 => ['Tempesta amb calamarsa forta', '⛈'],
+    ];
+
+    /**
+     * Fetch and cache weather data for the event, then return a specific field.
+     */
+    private function getWeatherField($post, string $field): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return '';
+        }
+
+        $order = $this->getOrder($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $data = $this->getWeatherData($order);
+        if ($data === null) {
+            return '';
+        }
+
+        return $data[$field] ?? '';
+    }
+
+    /**
+     * Get weather data array from cache or API.
+     *
+     * @return array{summary: string, icon: string, wind: string, sunset: string}|null
+     */
+    private function getWeatherData(WC_Order $order): ?array
+    {
+        $lat = $order->get_meta('_shipping_latitude', true);
+        $lng = $order->get_meta('_shipping_longitude', true);
+        $eventDate = $order->get_meta('zs_event_date', true);
+
+        if (!is_string($lat) || $lat === '' || !is_string($lng) || $lng === '' ||
+            !is_string($eventDate) || $eventDate === '') {
+            return null;
+        }
+
+        // Check forecast range (Open-Meteo supports 16 days)
+        $today = new \DateTimeImmutable('today', new \DateTimeZone('Europe/Madrid'));
+        $event = \DateTimeImmutable::createFromFormat('Y-m-d', $eventDate, new \DateTimeZone('Europe/Madrid'));
+        if (!$event) {
+            return null;
+        }
+        $daysAhead = (int) $today->diff($event)->format('%r%a');
+        if ($daysAhead < 0) {
+            return ['icon' => '', 'summary' => 'Esdeveniment passat', 'wind' => '', 'sunset' => ''];
+        }
+        if ($daysAhead > 15) {
+            return ['icon' => '', 'summary' => 'Previsió no disponible — massa lluny', 'wind' => '', 'sunset' => ''];
+        }
+
+        // Cache key based on order + event date (not order version — weather is external)
+        $cacheKey = 'zs_weather_' . $order->get_id() . '_' . $eventDate;
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $response = wp_remote_get(
+            self::OPEN_METEO_URL . '?' . http_build_query([
+                'latitude'  => $lat,
+                'longitude' => $lng,
+                'daily'     => 'temperature_2m_max,weather_code,wind_speed_10m_max,wind_direction_10m_dominant,sunset',
+                'timezone'  => 'Europe/Madrid',
+                'start_date' => $eventDate,
+                'end_date'   => $eventDate,
+            ]),
+            ['timeout' => 5]
+        );
+
+        if (is_wp_error($response)) {
+            return null;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($body) || !isset($body['daily'])) {
+            return null;
+        }
+
+        $daily = $body['daily'];
+        $weatherCode = (int) ($daily['weather_code'][0] ?? -1);
+        $tempMax     = isset($daily['temperature_2m_max'][0]) ? round((float) $daily['temperature_2m_max'][0]) : null;
+        $windMax     = isset($daily['wind_speed_10m_max'][0]) ? round((float) $daily['wind_speed_10m_max'][0]) : null;
+        $windDir     = isset($daily['wind_direction_10m_dominant'][0]) ? (float) $daily['wind_direction_10m_dominant'][0] : null;
+        $sunset      = $daily['sunset'][0] ?? null;
+
+        $wmo = self::WMO_CODES[$weatherCode] ?? ['Desconegut', '?'];
+
+        $data = [
+            'icon'    => $wmo[1],
+            'summary' => $tempMax !== null ? $wmo[0] . ', ' . $tempMax . '°C' : $wmo[0],
+            'wind'    => $this->formatWind($windMax, $windDir),
+            'sunset'  => $sunset ? $this->formatSunsetTime($sunset) : '',
+        ];
+
+        set_transient($cacheKey, $data, self::WEATHER_CACHE_TTL);
+        return $data;
+    }
+
+    private function formatWind(?float $speed, ?float $degrees): string
+    {
+        if ($speed === null) {
+            return '';
+        }
+
+        $result = (int) $speed . ' km/h';
+
+        if ($degrees !== null) {
+            $directions = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+            $index = (int) round($degrees / 45) % 8;
+            $result .= ' ' . $directions[$index];
+        }
+
+        return $result;
+    }
+
+    private function formatSunsetTime(string $isoTime): string
+    {
+        // Open-Meteo returns ISO 8601: "2026-04-15T20:15"
+        $dt = \DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $isoTime, new \DateTimeZone('Europe/Madrid'));
+        return $dt ? $dt->format('H:i') : '';
+    }
+
+    /**
+     * Generate Google Maps URL for nearby supermarkets.
+     */
+    private function getNearbySupermarkets($post): string
+    {
+        $orderId = $this->resolveOrderId($post);
+        if (!$orderId) {
+            return '';
+        }
+
+        $order = $this->getOrder($orderId);
+        if (!$order instanceof WC_Order) {
+            return '';
+        }
+
+        $lat = $order->get_meta('_shipping_latitude', true);
+        $lng = $order->get_meta('_shipping_longitude', true);
+
+        if (!is_string($lat) || $lat === '' || !is_string($lng) || $lng === '') {
+            return '';
+        }
+
+        return 'https://www.google.com/maps/search/supermercado/@' . $lat . ',' . $lng . ',14z';
     }
 }
