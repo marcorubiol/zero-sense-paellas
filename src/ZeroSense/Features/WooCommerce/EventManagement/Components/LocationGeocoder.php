@@ -16,6 +16,7 @@ use WC_Order;
  *   1. If _shipping_location_link exists → extract lat/lng from URL
  *   2. If no link → geocode _shipping_address_1 + _shipping_city via Nominatim
  *      → generate Google Maps link → save to _shipping_location_link
+ *      → auto-fill empty shipping fields (postcode, state) from geocode response
  *   3. Store _shipping_latitude / _shipping_longitude as hidden meta
  */
 class LocationGeocoder
@@ -23,6 +24,54 @@ class LocationGeocoder
     private const META_LATITUDE  = '_shipping_latitude';
     private const META_LONGITUDE = '_shipping_longitude';
     private const NOMINATIM_URL  = 'https://nominatim.openstreetmap.org/search';
+
+    /**
+     * Map ISO 3166-2 subdivision codes to WooCommerce ES state codes.
+     * Nominatim returns ISO3166-2-lvl4 (e.g. "ES-IB"), WooCommerce uses province codes (e.g. "PM").
+     */
+    private const ISO_TO_WC_STATE = [
+        'ES-C'  => 'C',  'ES-VI' => 'VI', 'ES-AB' => 'AB', 'ES-A'  => 'A',
+        'ES-AL' => 'AL', 'ES-O'  => 'O',  'ES-AV' => 'AV', 'ES-BA' => 'BA',
+        'ES-PM' => 'PM', 'ES-IB' => 'PM', 'ES-B'  => 'B',  'ES-BU' => 'BU',
+        'ES-CC' => 'CC', 'ES-CA' => 'CA', 'ES-S'  => 'S',  'ES-CS' => 'CS',
+        'ES-CE' => 'CE', 'ES-CR' => 'CR', 'ES-CO' => 'CO', 'ES-CU' => 'CU',
+        'ES-GI' => 'GI', 'ES-GR' => 'GR', 'ES-GU' => 'GU', 'ES-SS' => 'SS',
+        'ES-H'  => 'H',  'ES-HU' => 'HU', 'ES-J'  => 'J',  'ES-LO' => 'LO',
+        'ES-GC' => 'GC', 'ES-LE' => 'LE', 'ES-L'  => 'L',  'ES-LU' => 'LU',
+        'ES-M'  => 'M',  'ES-MA' => 'MA', 'ES-ML' => 'ML', 'ES-MU' => 'MU',
+        'ES-NA' => 'NA', 'ES-OR' => 'OR', 'ES-P'  => 'P',  'ES-PO' => 'PO',
+        'ES-SA' => 'SA', 'ES-TF' => 'TF', 'ES-SG' => 'SG', 'ES-SE' => 'SE',
+        'ES-SO' => 'SO', 'ES-T'  => 'T',  'ES-TE' => 'TE', 'ES-TO' => 'TO',
+        'ES-V'  => 'V',  'ES-VA' => 'VA', 'ES-BI' => 'BI', 'ES-ZA' => 'ZA',
+        'ES-Z'  => 'Z',
+    ];
+
+    /**
+     * Fallback: map Nominatim province/state names to WooCommerce codes.
+     */
+    private const NAME_TO_WC_STATE = [
+        'a coruña'       => 'C',   'araba/álava'    => 'VI', 'álava'          => 'VI',
+        'albacete'       => 'AB',  'alicante'       => 'A',  'almería'        => 'AL',
+        'asturias'       => 'O',   'ávila'          => 'AV', 'badajoz'        => 'BA',
+        'baleares'       => 'PM',  'illes balears'  => 'PM', 'islas baleares' => 'PM',
+        'mallorca'       => 'PM',  'barcelona'      => 'B',  'burgos'         => 'BU',
+        'cáceres'        => 'CC',  'cádiz'          => 'CA', 'cantabria'      => 'S',
+        'castellón'      => 'CS',  'ceuta'          => 'CE', 'ciudad real'    => 'CR',
+        'córdoba'        => 'CO',  'cuenca'         => 'CU', 'girona'         => 'GI',
+        'granada'        => 'GR',  'guadalajara'    => 'GU', 'gipuzkoa'       => 'SS',
+        'guipúzcoa'      => 'SS',  'huelva'         => 'H',  'huesca'         => 'HU',
+        'jaén'           => 'J',   'la rioja'       => 'LO', 'las palmas'     => 'GC',
+        'león'           => 'LE',  'lleida'         => 'L',  'lugo'           => 'LU',
+        'madrid'         => 'M',   'málaga'         => 'MA', 'melilla'        => 'ML',
+        'murcia'         => 'MU',  'navarra'        => 'NA', 'ourense'        => 'OR',
+        'palencia'       => 'P',   'pontevedra'     => 'PO', 'salamanca'      => 'SA',
+        'santa cruz de tenerife' => 'TF', 'segovia' => 'SG', 'sevilla'        => 'SE',
+        'soria'          => 'SO',  'tarragona'      => 'T',  'teruel'         => 'TE',
+        'toledo'         => 'TO',  'valencia'       => 'V',  'valladolid'     => 'VA',
+        'vizcaya'        => 'BI',  'bizkaia'        => 'BI', 'zamora'         => 'ZA',
+        'zaragoza'       => 'Z',   'eivissa'        => 'PM', 'ibiza'          => 'PM',
+        'menorca'        => 'PM',
+    ];
 
     public function register(): void
     {
@@ -60,9 +109,11 @@ class LocationGeocoder
             $city    = $order->get_shipping_city();
             $country = $order->get_shipping_country();
 
-            $coords = self::geocodeAddress($address, $city, $country);
+            $geocodeResult = self::geocodeAddress($address, $city, $country);
 
-            if ($coords !== null) {
+            if ($geocodeResult !== null) {
+                $coords = ['lat' => $geocodeResult['lat'], 'lng' => $geocodeResult['lng']];
+
                 // Generate and save Google Maps link
                 $mapsLink = esc_url_raw(sprintf(
                     'https://www.google.com/maps/search/?api=1&query=%s,%s',
@@ -70,9 +121,10 @@ class LocationGeocoder
                     $coords['lng']
                 ));
                 $order->update_meta_data('_shipping_location_link', $mapsLink);
-
-                // Also set in $_POST so WooCommerce core doesn't overwrite with empty
                 $_POST['_shipping_location_link'] = $mapsLink;
+
+                // Auto-fill empty shipping fields from geocode data
+                self::autoFillShippingFields($order, $geocodeResult);
             }
         }
 
@@ -82,6 +134,70 @@ class LocationGeocoder
         }
 
         $order->save();
+    }
+
+    /**
+     * Fill empty shipping fields from Nominatim address data.
+     * Never overwrites existing values.
+     */
+    private static function autoFillShippingFields(WC_Order $order, array $geo): void
+    {
+        $addressData = $geo['address'] ?? [];
+        if (empty($addressData)) {
+            return;
+        }
+
+        // Postcode
+        if ($order->get_shipping_postcode() === '' && !empty($addressData['postcode'])) {
+            $postcode = sanitize_text_field($addressData['postcode']);
+            $order->set_shipping_postcode($postcode);
+            $_POST['_shipping_postcode'] = $postcode;
+        }
+
+        // Country
+        if ($order->get_shipping_country() === '' && !empty($addressData['country_code'])) {
+            $country = strtoupper(sanitize_text_field($addressData['country_code']));
+            $order->set_shipping_country($country);
+            $_POST['_shipping_country'] = $country;
+        }
+
+        // State — requires mapping to WooCommerce codes
+        if ($order->get_shipping_state() === '') {
+            $stateCode = self::resolveWcStateCode($addressData);
+            if ($stateCode !== null) {
+                $order->set_shipping_state($stateCode);
+                $_POST['_shipping_state'] = $stateCode;
+            }
+        }
+    }
+
+    /**
+     * Resolve a WooCommerce state code from Nominatim address data.
+     */
+    private static function resolveWcStateCode(array $addressData): ?string
+    {
+        // Try ISO 3166-2 code first (most reliable)
+        $isoCode = $addressData['ISO3166-2-lvl4'] ?? ($addressData['ISO3166-2-lvl6'] ?? '');
+        if ($isoCode !== '' && isset(self::ISO_TO_WC_STATE[$isoCode])) {
+            return self::ISO_TO_WC_STATE[$isoCode];
+        }
+
+        // Fallback: match by province/state/county name
+        $candidates = array_filter([
+            $addressData['province'] ?? '',
+            $addressData['state'] ?? '',
+            $addressData['county'] ?? '',
+            $addressData['island'] ?? '',
+        ]);
+
+        foreach ($candidates as $name) {
+            $normalized = mb_strtolower(trim($name));
+            if (isset(self::NAME_TO_WC_STATE[$normalized])) {
+                return self::NAME_TO_WC_STATE[$normalized];
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -119,8 +235,9 @@ class LocationGeocoder
 
     /**
      * Geocode a shipping address using Nominatim (OpenStreetMap).
+     * Returns coords + full address data for auto-filling fields.
      *
-     * @return array{lat: float, lng: float}|null
+     * @return array{lat: float, lng: float, address: array}|null
      */
     private static function geocodeAddress(string $address, string $city, string $country): ?array
     {
@@ -130,9 +247,10 @@ class LocationGeocoder
         }
 
         $params = [
-            'q'      => $query,
-            'format' => 'json',
-            'limit'  => 1,
+            'q'              => $query,
+            'format'         => 'json',
+            'limit'          => 1,
+            'addressdetails' => 1,
         ];
 
         if ($country !== '') {
@@ -158,14 +276,19 @@ class LocationGeocoder
             return null;
         }
 
-        $lat = isset($body[0]['lat']) ? (float) $body[0]['lat'] : null;
-        $lng = isset($body[0]['lon']) ? (float) $body[0]['lon'] : null;
+        $result = $body[0];
+        $lat = isset($result['lat']) ? (float) $result['lat'] : null;
+        $lng = isset($result['lon']) ? (float) $result['lon'] : null;
 
         if ($lat === null || $lng === null) {
             return null;
         }
 
-        return ['lat' => $lat, 'lng' => $lng];
+        return [
+            'lat'     => $lat,
+            'lng'     => $lng,
+            'address' => $result['address'] ?? [],
+        ];
     }
 
     /**
