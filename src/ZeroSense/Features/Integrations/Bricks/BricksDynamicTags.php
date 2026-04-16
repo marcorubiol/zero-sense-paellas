@@ -257,6 +257,7 @@ class BricksDynamicTags implements FeatureInterface
         $tags[] = ['name' => '{zs_order_products_simple}',       'label' => 'Order Products (Simple List)',  'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_products_count}',        'label' => 'Order Products Count',          'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_products_by_category}',  'label' => 'Order Products (Grouped by Category)', 'group' => 'ZeroSense'];
+        $tags[] = ['name' => '{zs_order_products_by_category_no_supplements}', 'label' => 'Order Products (Grouped, no Supplements)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_last_modified}',         'label' => 'Order Last Modified (Date & Time)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_last_modified_date}',    'label' => 'Order Last Modified (Date Only)', 'group' => 'ZeroSense'];
         $tags[] = ['name' => '{zs_order_last_modified_time}',    'label' => 'Order Last Modified (Time Only)', 'group' => 'ZeroSense'];
@@ -391,6 +392,9 @@ class BricksDynamicTags implements FeatureInterface
         }
         if ($tag === '{zs_order_products_by_category}') {
             return $this->getOrderProductsByCategory($post);
+        }
+        if ($tag === '{zs_order_products_by_category_no_supplements}') {
+            return $this->getOrderProductsByCategory($post, [198054]);
         }
         if ($tag === '{zs_order_last_modified}') {
             return $this->getOrderLastModified($post);
@@ -536,6 +540,7 @@ class BricksDynamicTags implements FeatureInterface
         if (str_contains($content, '{zs_event_ops_notes}'))             { $content = str_replace('{zs_event_ops_notes}',             $this->getEventOpsNotes($post),             $content); }
         if (str_contains($content, '{zs_event_media}'))                 { $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),         $content); }
         if (str_contains($content, '{zs_event_media_urls}'))            { $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),            $content); }
+        if (str_contains($content, '{zs_order_products_by_category_no_supplements}')) { $content = str_replace('{zs_order_products_by_category_no_supplements}', $this->getOrderProductsByCategory($post, [198054]), $content); }
         if (str_contains($content, '{zs_order_products_by_category}'))  { $content = str_replace('{zs_order_products_by_category}',  $this->getOrderProductsByCategory($post),   $content); }
         if (str_contains($content, '{zs_order_products_simple}'))       { $content = str_replace('{zs_order_products_simple}',       $this->getOrderProductsSimple($post),       $content); }
         if (str_contains($content, '{zs_order_products_count}'))        { $content = str_replace('{zs_order_products_count}',        $this->getOrderProductsCount($post),        $content); }
@@ -1154,7 +1159,7 @@ class BricksDynamicTags implements FeatureInterface
         return date_i18n($dateFormat . ' ' . $timeFormat, $timestamp);
     }
 
-    private function getOrderProductsByCategory($post): string
+    private function getOrderProductsByCategory($post, array $excludeCategoryIds = []): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -1166,13 +1171,18 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // Pre-populate categories in their configured order
-        $orderedTerms = get_terms([
+        $termArgs = [
             'taxonomy'   => 'product_cat',
             'hide_empty' => false,
             'orderby'    => 'term_order',
             'order'      => 'ASC',
-        ]);
+        ];
+        if ($excludeCategoryIds) {
+            $termArgs['exclude'] = $excludeCategoryIds;
+        }
+
+        // Pre-populate categories in their configured order
+        $orderedTerms = get_terms($termArgs);
 
         $categorizedProducts = [];
 
@@ -1201,6 +1211,9 @@ class BricksDynamicTags implements FeatureInterface
             if ($terms && !is_wp_error($terms)) {
                 foreach ($terms as $term) {
                     if ($term->slug === 'uncategorized') {
+                        continue;
+                    }
+                    if ($excludeCategoryIds && in_array($term->term_id, $excludeCategoryIds, true)) {
                         continue;
                     }
                     if (!isset($categorizedProducts[$term->term_id])) {
