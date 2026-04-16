@@ -394,7 +394,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderProductsByCategory($post);
         }
         if ($tag === '{zs_order_products_by_category_no_supplements}') {
-            return $this->getOrderProductsByCategory($post, [198054]);
+            return $this->getOrderProductsByCategory($post, ['suplementos']);
         }
         if ($tag === '{zs_order_last_modified}') {
             return $this->getOrderLastModified($post);
@@ -540,7 +540,7 @@ class BricksDynamicTags implements FeatureInterface
         if (str_contains($content, '{zs_event_ops_notes}'))             { $content = str_replace('{zs_event_ops_notes}',             $this->getEventOpsNotes($post),             $content); }
         if (str_contains($content, '{zs_event_media}'))                 { $content = str_replace('{zs_event_media}',                 $this->getEventMediaGallery($post),         $content); }
         if (str_contains($content, '{zs_event_media_urls}'))            { $content = str_replace('{zs_event_media_urls}',            $this->getEventMediaUrls($post),            $content); }
-        if (str_contains($content, '{zs_order_products_by_category_no_supplements}')) { $content = str_replace('{zs_order_products_by_category_no_supplements}', $this->getOrderProductsByCategory($post, [198054]), $content); }
+        if (str_contains($content, '{zs_order_products_by_category_no_supplements}')) { $content = str_replace('{zs_order_products_by_category_no_supplements}', $this->getOrderProductsByCategory($post, ['suplementos']), $content); }
         if (str_contains($content, '{zs_order_products_by_category}'))  { $content = str_replace('{zs_order_products_by_category}',  $this->getOrderProductsByCategory($post),   $content); }
         if (str_contains($content, '{zs_order_products_simple}'))       { $content = str_replace('{zs_order_products_simple}',       $this->getOrderProductsSimple($post),       $content); }
         if (str_contains($content, '{zs_order_products_count}'))        { $content = str_replace('{zs_order_products_count}',        $this->getOrderProductsCount($post),        $content); }
@@ -1159,7 +1159,7 @@ class BricksDynamicTags implements FeatureInterface
         return date_i18n($dateFormat . ' ' . $timeFormat, $timestamp);
     }
 
-    private function getOrderProductsByCategory($post, array $excludeCategoryIds = []): string
+    private function getOrderProductsByCategory($post, array $excludeSlugs = []): string
     {
         $orderId = $this->resolveOrderId($post);
         if (!$orderId) {
@@ -1171,20 +1171,31 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
-        // Expand excluded IDs to include all WPML translations
-        if ($excludeCategoryIds && defined('ICL_SITEPRESS_VERSION')) {
-            $languages = apply_filters('wpml_active_languages', null, []);
-            $expanded  = [];
-            foreach ($excludeCategoryIds as $catId) {
-                $expanded[] = $catId;
-                foreach (array_keys($languages ?: []) as $lang) {
-                    $translatedId = (int) apply_filters('wpml_object_id', $catId, 'product_cat', false, $lang);
-                    if ($translatedId && !in_array($translatedId, $expanded, true)) {
-                        $expanded[] = $translatedId;
+        // Resolve excluded slugs to all translated term_ids
+        $excludeTermIds = [];
+        if ($excludeSlugs) {
+            $defaultLang = defined('ICL_SITEPRESS_VERSION')
+                ? apply_filters('wpml_default_language', 'es')
+                : null;
+
+            foreach ($excludeSlugs as $slug) {
+                $term = get_term_by('slug', $slug, 'product_cat');
+                if (!$term) {
+                    continue;
+                }
+                $excludeTermIds[] = $term->term_id;
+
+                if ($defaultLang) {
+                    $trid = apply_filters('wpml_element_trid', null, $term->term_taxonomy_id, 'tax_product_cat');
+                    if ($trid) {
+                        $translations = apply_filters('wpml_get_element_translations', null, $trid, 'tax_product_cat');
+                        foreach ($translations ?: [] as $translation) {
+                            $excludeTermIds[] = (int) $translation->term_id;
+                        }
                     }
                 }
             }
-            $excludeCategoryIds = $expanded;
+            $excludeTermIds = array_unique($excludeTermIds);
         }
 
         $termArgs = [
@@ -1193,8 +1204,8 @@ class BricksDynamicTags implements FeatureInterface
             'orderby'    => 'term_order',
             'order'      => 'ASC',
         ];
-        if ($excludeCategoryIds) {
-            $termArgs['exclude'] = $excludeCategoryIds;
+        if ($excludeTermIds) {
+            $termArgs['exclude'] = $excludeTermIds;
         }
 
         // Pre-populate categories in their configured order
@@ -1229,7 +1240,7 @@ class BricksDynamicTags implements FeatureInterface
                     if ($term->slug === 'uncategorized') {
                         continue;
                     }
-                    if ($excludeCategoryIds && in_array($term->term_id, $excludeCategoryIds, true)) {
+                    if ($excludeTermIds && in_array($term->term_id, $excludeTermIds, true)) {
                         continue;
                     }
                     if (!isset($categorizedProducts[$term->term_id])) {
