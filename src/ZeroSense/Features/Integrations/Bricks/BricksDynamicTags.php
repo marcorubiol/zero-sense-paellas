@@ -1171,6 +1171,22 @@ class BricksDynamicTags implements FeatureInterface
             return '';
         }
 
+        // Expand excluded IDs to include all WPML translations
+        if ($excludeCategoryIds && defined('ICL_SITEPRESS_VERSION')) {
+            $languages = apply_filters('wpml_active_languages', null, []);
+            $expanded  = [];
+            foreach ($excludeCategoryIds as $catId) {
+                $expanded[] = $catId;
+                foreach (array_keys($languages ?: []) as $lang) {
+                    $translatedId = (int) apply_filters('wpml_object_id', $catId, 'product_cat', false, $lang);
+                    if ($translatedId && !in_array($translatedId, $expanded, true)) {
+                        $expanded[] = $translatedId;
+                    }
+                }
+            }
+            $excludeCategoryIds = $expanded;
+        }
+
         $termArgs = [
             'taxonomy'   => 'product_cat',
             'hide_empty' => false,
