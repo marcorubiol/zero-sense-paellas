@@ -412,7 +412,7 @@ class BricksDynamicTags implements FeatureInterface
             return $this->getOrderLanguage($post, true);
         }
         if ($tag === '{zs_event_intolerances}') {
-            return $this->getMetaBoxFieldValue('intolerances', $post);
+            return $this->getMetaBoxFieldValue('event_intolerances', $post);
         }
         if ($tag === '{zs_recipe_card}') {
             return $this->getRecipeCard($post);
@@ -550,7 +550,7 @@ class BricksDynamicTags implements FeatureInterface
         if (str_contains($content, '{zs_order_last_modified}'))         { $content = str_replace('{zs_order_last_modified}',         $this->getOrderLastModified($post),         $content); }
         if (str_contains($content, '{zs_order_language_name}'))         { $content = str_replace('{zs_order_language_name}',         $this->getOrderLanguage($post, true),       $content); }
         if (str_contains($content, '{zs_order_language}'))              { $content = str_replace('{zs_order_language}',              $this->getOrderLanguage($post),             $content); }
-        if (str_contains($content, '{zs_event_intolerances}'))          { $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('intolerances', $post), $content); }
+        if (str_contains($content, '{zs_event_intolerances}'))          { $content = str_replace('{zs_event_intolerances}',          $this->getMetaBoxFieldValue('event_intolerances', $post), $content); }
         if (str_contains($content, '{zs_recipe_full_card}'))            { $content = str_replace('{zs_recipe_full_card}',            $this->getRecipeFullCard($post),            $content); }
         if (str_contains($content, '{zs_recipe_card}'))                 { $content = str_replace('{zs_recipe_card}',                 $this->getRecipeCard($post),                $content); }
         if (str_contains($content, '{zs_recipe_simple}'))               { $content = str_replace('{zs_recipe_simple}',               $this->getRecipeSimple($post),              $content); }
