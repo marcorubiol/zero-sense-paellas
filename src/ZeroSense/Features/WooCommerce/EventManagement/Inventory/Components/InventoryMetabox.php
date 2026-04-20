@@ -397,9 +397,12 @@ class InventoryMetabox
                                         $cascadeValue = $cascadeOverrides[$materialKey] ?? null;
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
-                                        $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
+                                        // Dependent items whose final value differs from auto due to parent override
                                         $dependencyLabel = MaterialDefinitions::getDependencyLabelFor($materialKey);
                                         $isDependent = $dependencyLabel !== null;
+                                        $hasDependentOverride = !$hasOverride && $isDependent && (int) $finalValue !== (int) $autoValue;
+                                        $hasOverride = $hasOverride || $hasDependentOverride;
+                                        $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
                                         ?>
                                         <tr>
                                             <td>

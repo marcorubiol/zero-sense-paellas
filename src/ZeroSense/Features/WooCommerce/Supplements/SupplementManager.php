@@ -19,7 +19,8 @@ class SupplementManager
     private const TYPE_SERVICIO_EXCLUSIVO  = 'servicio_exclusivo';
     private const TYPE_PAELLA_ADICIONAL    = 'paella_adicional';
 
-    private const META_DISMISSED_PREFIX = '_zs_supplement_dismissed_';
+    private const META_DISMISSED_PREFIX    = '_zs_supplement_dismissed_';
+    private const META_EXPECTED_TOTAL      = '_zs_supplement_expected_total';
 
     private const PAELLA_CATEGORY_BASE_IDS   = [86, 87]; // nuestras-paellas, paellas-gourmet
     private const WORKSHOP_CATEGORY_SLUG     = 'workshop';
@@ -96,15 +97,29 @@ class SupplementManager
                 $total = $appliesMinimum ? self::MIN_SERVICIO_EXCLUSIVO : $totalGuests * $pricePerPerson;
 
                 if ($existingServicio) {
-                    $oldQty = (int) $existingServicio->get_quantity();
-                    $oldTotal = (float) $existingServicio->get_total();
-                    if ($oldQty !== $qty || abs($oldTotal - $total) >= 0.01) {
-                        $existingServicio->set_quantity($qty);
-                        $existingServicio->set_subtotal($total);
-                        $existingServicio->set_total($total);
-                        $existingServicio->save();
-                        $notes[] = sprintf('Updated "%s" — %d guests × %.2f€ = %.2f€ (was: %.2f€)', $product->get_name(), $totalGuests, $pricePerPerson, $total, $oldTotal);
-                        $changed = true;
+                    // Detect manual price override: total differs from what we last set
+                    $expectedTotal = (float) $existingServicio->get_meta(self::META_EXPECTED_TOTAL, true);
+                    $currentTotal = (float) $existingServicio->get_total();
+                    if ($expectedTotal > 0 && abs($currentTotal - $expectedTotal) >= 0.01) {
+                        // Staff manually changed the price — respect it, only update qty
+                        $oldQty = (int) $existingServicio->get_quantity();
+                        if ($oldQty !== $qty) {
+                            $existingServicio->set_quantity($qty);
+                            $existingServicio->save();
+                            $changed = true;
+                        }
+                    } else {
+                        $oldQty = (int) $existingServicio->get_quantity();
+                        $oldTotal = (float) $existingServicio->get_total();
+                        if ($oldQty !== $qty || abs($oldTotal - $total) >= 0.01) {
+                            $existingServicio->set_quantity($qty);
+                            $existingServicio->set_subtotal($total);
+                            $existingServicio->set_total($total);
+                            $existingServicio->update_meta_data(self::META_EXPECTED_TOTAL, (string) $total);
+                            $existingServicio->save();
+                            $notes[] = sprintf('Updated "%s" — %d guests × %.2f€ = %.2f€ (was: %.2f€)', $product->get_name(), $totalGuests, $pricePerPerson, $total, $oldTotal);
+                            $changed = true;
+                        }
                     }
                 } else {
                     $item = new WC_Order_Item_Product();
@@ -113,6 +128,7 @@ class SupplementManager
                     $item->set_subtotal($total);
                     $item->set_total($total);
                     $item->add_meta_data(self::META_SUPPLEMENT_TYPE, self::TYPE_SERVICIO_EXCLUSIVO, true);
+                    $item->add_meta_data(self::META_EXPECTED_TOTAL, (string) $total, true);
                     $order->add_item($item);
                     $notes[] = sprintf('Added "%s" — %d guests × %.2f€ = %.2f€', $product->get_name(), $totalGuests, $pricePerPerson, $total);
                     $changed = true;
@@ -141,11 +157,22 @@ class SupplementManager
                 $total = $neededQty * $unitPrice;
 
                 if ($existingPaella) {
+                    $expectedTotal = (float) $existingPaella->get_meta(self::META_EXPECTED_TOTAL, true);
+                    $currentTotal = (float) $existingPaella->get_total();
                     $oldQty = (int) $existingPaella->get_quantity();
-                    if ($oldQty !== $neededQty) {
+
+                    if ($expectedTotal > 0 && abs($currentTotal - $expectedTotal) >= 0.01) {
+                        // Staff manually changed the price — respect it, only update qty
+                        if ($oldQty !== $neededQty) {
+                            $existingPaella->set_quantity($neededQty);
+                            $existingPaella->save();
+                            $changed = true;
+                        }
+                    } else if ($oldQty !== $neededQty || abs($currentTotal - $total) >= 0.01) {
                         $existingPaella->set_quantity($neededQty);
                         $existingPaella->set_subtotal($total);
                         $existingPaella->set_total($total);
+                        $existingPaella->update_meta_data(self::META_EXPECTED_TOTAL, (string) $total);
                         $existingPaella->save();
                         $notes[] = sprintf('Updated "%s" × %d (%d paella types)', $product->get_name(), $neededQty, $paellaTypes);
                         $changed = true;
@@ -157,6 +184,7 @@ class SupplementManager
                     $item->set_subtotal($total);
                     $item->set_total($total);
                     $item->add_meta_data(self::META_SUPPLEMENT_TYPE, self::TYPE_PAELLA_ADICIONAL, true);
+                    $item->add_meta_data(self::META_EXPECTED_TOTAL, (string) $total, true);
                     $order->add_item($item);
                     $notes[] = sprintf('Added "%s" × %d (%d paella types)', $product->get_name(), $neededQty, $paellaTypes);
                     $changed = true;
@@ -332,7 +360,7 @@ class SupplementManager
     }
 
     /**
-     * Render "(Auto)" badge next to auto-managed supplement line items in admin.
+     * Render AUTO/MAN badge next to auto-managed supplement line items in admin.
      */
     public function renderAutoBadge(int $itemId, $item, $product): void
     {
@@ -340,9 +368,18 @@ class SupplementManager
             return;
         }
         $type = $item->get_meta(self::META_SUPPLEMENT_TYPE, true);
-        if ($type !== '') {
-            echo '<div style="margin-top:4px;"><span style="background:#f0f0f1;color:#50575e;font-size:11px;padding:1px 6px;border-radius:3px;font-weight:600;">Auto</span></div>';
+        if ($type === '') {
+            return;
         }
+
+        $expectedTotal = (float) $item->get_meta(self::META_EXPECTED_TOTAL, true);
+        $currentTotal = (float) $item->get_total();
+        $isManual = $expectedTotal > 0 && abs($currentTotal - $expectedTotal) >= 0.01;
+
+        $badgeClass = $isManual ? 'zs-badge-manual' : 'zs-badge-auto';
+        $badgeText = $isManual ? 'MAN' : 'AUTO';
+
+        echo '<div style="margin-top:4px;"><span class="' . esc_attr($badgeClass) . '" style="display:inline-block;padding:2px 4px;font-size:10px;font-weight:600;border-radius:3px;">' . esc_html($badgeText) . '</span></div>';
     }
 
     /**
