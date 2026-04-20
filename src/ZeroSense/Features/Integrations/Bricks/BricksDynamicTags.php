@@ -2977,8 +2977,8 @@ class BricksDynamicTags implements FeatureInterface
                     continue;
                 }
 
-                // Formula: ceil(eqItem / perRatio) * baseQty
-                $amount = ceil($eqItem / $perRatio) * $baseQty;
+                // Utensils use raw qty, no pax weighting
+                $amount = ceil($qty / $perRatio) * $baseQty;
                 if ($amount <= 0) {
                     continue;
                 }

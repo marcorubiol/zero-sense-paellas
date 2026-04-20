@@ -540,7 +540,7 @@ class EventDetailsMetabox
                         msg.textContent = '';
                     } else {
                         paellaContainer.style.display = 'block';
-                        msg.textContent = 'Total comensals: ' + totalGuests + ' · Total paelles: ' + totalPaellas;
+                        msg.textContent = 'Total guests (' + totalGuests + ') does not match total paellas (' + totalPaellas + ')';
                     }
                 }
 
