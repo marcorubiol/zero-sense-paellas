@@ -129,6 +129,24 @@ class EventDetailsMetabox
         $eventType = $this->getOrderMetaWithFallback($order, MetaKeys::EVENT_TYPE);
         $howFoundUs = $this->getOrderMetaWithFallback($order, MetaKeys::HOW_FOUND_US);
         $intolerances = $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
+
+        // Calculate total paella portions from line items
+        $paellaCategorySlugs = ['nuestras-paellas', 'paellas-gourmet'];
+        $totalPaellas = 0;
+        foreach ($order->get_items('line_item') as $item) {
+            if (!$item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $product = $item->get_product();
+            if (!$product instanceof \WC_Product) {
+                continue;
+            }
+            $catSlugs = wp_get_post_terms($product->get_id(), 'product_cat', ['fields' => 'slugs']);
+            if (is_array($catSlugs) && array_intersect($paellaCategorySlugs, $catSlugs)) {
+                $totalPaellas += (int) $item->get_quantity();
+            }
+        }
+
         wp_nonce_field('zs_event_details_save', 'zs_event_details_nonce');
         ?>
         
@@ -151,6 +169,9 @@ class EventDetailsMetabox
                                class="short">
                         <div id="zs-guests-validation" class="zs-guest-validation">
                             <span class="zs-guest-validation-message"></span>
+                        </div>
+                        <div id="zs-paella-validation" class="zs-paella-validation" data-total-paellas="<?php echo esc_attr((string) $totalPaellas); ?>" style="display:none;">
+                            <span class="zs-paella-validation-message"></span>
                         </div>
                     </div>
                 </div>
@@ -503,6 +524,29 @@ class EventDetailsMetabox
                 
                 // Initial validation on page load
                 updateGuestsValidation();
+
+                // Paella vs Guests validation
+                function updatePaellaValidation() {
+                    const totalGuestsInput = document.getElementById('event_total_guests');
+                    const paellaContainer = document.getElementById('zs-paella-validation');
+                    if (!totalGuestsInput || !paellaContainer) return;
+
+                    const totalGuests = parseInt(totalGuestsInput.value) || 0;
+                    const totalPaellas = parseInt(paellaContainer.dataset.totalPaellas) || 0;
+                    const msg = paellaContainer.querySelector('.zs-paella-validation-message');
+
+                    if (totalGuests === totalPaellas || totalPaellas === 0 || totalGuests === 0) {
+                        paellaContainer.style.display = 'none';
+                        msg.textContent = '';
+                    } else {
+                        paellaContainer.style.display = 'block';
+                        msg.textContent = 'Total comensals: ' + totalGuests + ' · Total paelles: ' + totalPaellas;
+                    }
+                }
+
+                document.getElementById('event_total_guests')?.addEventListener('input', updatePaellaValidation);
+                document.getElementById('event_total_guests')?.addEventListener('change', updatePaellaValidation);
+                updatePaellaValidation();
 
             });
         })();

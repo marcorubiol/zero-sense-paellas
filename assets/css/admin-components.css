@@ -1179,6 +1179,22 @@ mark.order-status.status-cancelled { background: #ffebee !important; color: #e53
     opacity: 0.9;
 }
 
+/* Paella vs Guests validation */
+.zs-paella-validation {
+    margin-top: 6px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fcf0f0;
+    border-left: 3px solid #d63638;
+    color: #8a1116;
+}
+
+.zs-paella-validation-message {
+    white-space: nowrap;
+}
+
 /* =================================================================
    FDR CARD COLUMN ALIGNMENT
    ================================================================= */
