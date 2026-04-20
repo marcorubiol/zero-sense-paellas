@@ -131,7 +131,9 @@ class EventDetailsMetabox
         $intolerances = $this->getOrderMetaWithFallback($order, MetaKeys::INTOLERANCES);
 
         // Calculate total paella portions from line items
-        $paellaCategorySlugs = ['nuestras-paellas', 'paellas-gourmet'];
+        // Base (Spanish) category IDs — resolved via WPML for translated products
+        $paellaCategoryBaseIds = [86, 87]; // nuestras-paellas, paellas-gourmet
+        $defaultLang = apply_filters('wpml_default_language', 'es');
         $totalPaellas = 0;
         foreach ($order->get_items('line_item') as $item) {
             if (!$item instanceof \WC_Order_Item_Product) {
@@ -141,9 +143,16 @@ class EventDetailsMetabox
             if (!$product instanceof \WC_Product) {
                 continue;
             }
-            $catSlugs = wp_get_post_terms($product->get_id(), 'product_cat', ['fields' => 'slugs']);
-            if (is_array($catSlugs) && array_intersect($paellaCategorySlugs, $catSlugs)) {
-                $totalPaellas += (int) $item->get_quantity();
+            $catTerms = wp_get_post_terms($product->get_id(), 'product_cat', ['fields' => 'ids']);
+            if (!is_array($catTerms)) {
+                continue;
+            }
+            foreach ($catTerms as $termId) {
+                $baseId = apply_filters('wpml_object_id', $termId, 'product_cat', true, $defaultLang);
+                if (in_array((int) $baseId, $paellaCategoryBaseIds, true)) {
+                    $totalPaellas += (int) $item->get_quantity();
+                    break;
+                }
             }
         }
 
