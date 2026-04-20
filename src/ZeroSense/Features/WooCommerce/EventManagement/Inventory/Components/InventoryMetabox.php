@@ -103,7 +103,8 @@ class InventoryMetabox
         
         // Aplicar overrides (cascada primero, luego usuario — usuario tiene prioridad)
         $final = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $overrides));
-        
+        $final = MaterialCalculator::recalculateDependents($final, array_merge($cascadeOverrides, $overrides), $totalGuests);
+
         // Calcular alertas de stock solo si el pedido está confirmado
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
         $alerts = (!empty($calculated) && in_array($order->get_status(), $allowedStatuses))
@@ -732,6 +733,19 @@ class InventoryMetabox
             $('.zs-inventory-metabox').on('input', cremadorSelectors, function() {
                 if (isLocked) return;
                 recalculateCremadorDependents();
+            });
+
+            // Recalculate teles_negres and estovalles from taules_treball
+            function recalculateTaulesDependents() {
+                var taules = parseInt($('input[name="zs_inventory[taules_treball]"]').val()) || 0;
+                updateInputAndTriggerEvent('teles_negres', taules);
+                updateInputAndTriggerEvent('estovalles', taules);
+            }
+
+            // Bind taules_treball edits to recalculate dependents
+            $('.zs-inventory-metabox').on('input', 'input[name="zs_inventory[taules_treball]"]', function() {
+                if (isLocked) return;
+                recalculateTaulesDependents();
             });
 
             // Per-field lock click: unlock a dependent field for editing

@@ -24,7 +24,7 @@ class SupplementManager
     private const PAELLA_CATEGORY_BASE_IDS   = [86, 87]; // nuestras-paellas, paellas-gourmet
     private const WORKSHOP_CATEGORY_SLUG     = 'workshop';
 
-    private const RECALCULABLE_STATUSES = ['pending', 'budget-requested', 'processing', 'on-hold'];
+    private const RECALCULABLE_STATUSES = ['pending', 'budget-requested', 'deposit-paid', 'processing', 'on-hold'];
 
     private static bool $processing = false;
 
