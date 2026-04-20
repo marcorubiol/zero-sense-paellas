@@ -91,11 +91,15 @@ class SupplementManager
             $product = $this->resolveProduct(self::PRODUCT_ID_SERVICIO_EXCLUSIVO);
             if ($product) {
                 $pricePerPerson = (float) $product->get_price();
-                $total = max($totalGuests * $pricePerPerson, self::MIN_SERVICIO_EXCLUSIVO);
+                $appliesMinimum = ($totalGuests * $pricePerPerson) < self::MIN_SERVICIO_EXCLUSIVO;
+                $qty = $appliesMinimum ? 1 : $totalGuests;
+                $total = $appliesMinimum ? self::MIN_SERVICIO_EXCLUSIVO : $totalGuests * $pricePerPerson;
 
                 if ($existingServicio) {
+                    $oldQty = (int) $existingServicio->get_quantity();
                     $oldTotal = (float) $existingServicio->get_total();
-                    if (abs($oldTotal - $total) >= 0.01) {
+                    if ($oldQty !== $qty || abs($oldTotal - $total) >= 0.01) {
+                        $existingServicio->set_quantity($qty);
                         $existingServicio->set_subtotal($total);
                         $existingServicio->set_total($total);
                         $existingServicio->save();
@@ -105,7 +109,7 @@ class SupplementManager
                 } else {
                     $item = new WC_Order_Item_Product();
                     $item->set_product($product);
-                    $item->set_quantity(1);
+                    $item->set_quantity($qty);
                     $item->set_subtotal($total);
                     $item->set_total($total);
                     $item->add_meta_data(self::META_SUPPLEMENT_TYPE, self::TYPE_SERVICIO_EXCLUSIVO, true);

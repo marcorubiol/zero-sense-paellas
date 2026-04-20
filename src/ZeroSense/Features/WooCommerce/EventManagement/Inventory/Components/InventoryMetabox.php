@@ -664,8 +664,8 @@ class InventoryMetabox
                     $container.html(autoValue > 0 ? '<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>' : '');
                     $input.removeClass('zs-inventory-override');
                 } else {
-                    $container.html('<span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>');
-                    $input.removeClass('zs-inventory-override');
+                    $container.html('<span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>');
+                    $input.addClass('zs-inventory-override');
                 }
             }
 
