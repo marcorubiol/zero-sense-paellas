@@ -1227,6 +1227,8 @@ class InventoryMetabox
         if (empty($newOverrides)) {
             if (in_array($order->get_status(), $allowedStatuses)) {
                 $final = ManualOverride::apply($calculated, $existingOverrides);
+                $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
+                $final = MaterialCalculator::recalculateDependents($final, $existingOverrides, $totalGuests);
                 ReservationManager::createOrUpdate($postId, $final);
             } else {
                 ReservationManager::deleteAll($postId);
@@ -1255,7 +1257,9 @@ class InventoryMetabox
         
         // Aplicar overrides finales
         $final = ManualOverride::apply($calculated, $actualOverrides);
-        
+        $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
+        $final = MaterialCalculator::recalculateDependents($final, $actualOverrides, $totalGuests);
+
         // Crear/actualizar reservas solo si el pedido está confirmado
         if (in_array($order->get_status(), $allowedStatuses)) {
             ReservationManager::createOrUpdate($postId, $final);
@@ -1300,7 +1304,9 @@ class InventoryMetabox
         $calculated = MaterialCalculator::calculate($order);
         $cascadeOverrides = ManualOverride::getCascade($orderId);
         $final = ManualOverride::apply($calculated, array_merge($cascadeOverrides, $inventory));
-        
+        $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
+        $final = MaterialCalculator::recalculateDependents($final, array_merge($cascadeOverrides, $inventory), $totalGuests);
+
         // Crear/actualizar reservas solo si el pedido está confirmado
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
         if (in_array($order->get_status(), $allowedStatuses)) {
@@ -1347,7 +1353,9 @@ class InventoryMetabox
         
         // Recalcular materiales finales (solo automáticos)
         $calculated = MaterialCalculator::calculate($order);
-        
+        $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
+        $calculated = MaterialCalculator::recalculateDependents($calculated, [], $totalGuests);
+
         // Actualizar reservas solo si el pedido está confirmado
         $allowedStatuses = ['deposit-paid', 'fully-paid'];
         if (in_array($order->get_status(), $allowedStatuses)) {
