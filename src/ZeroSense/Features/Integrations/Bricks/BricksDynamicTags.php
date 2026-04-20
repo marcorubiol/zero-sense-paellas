@@ -2322,6 +2322,14 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            $hasIngredients = is_array($recipeIngredients) && !empty(array_filter($recipeIngredients, fn($r) => is_array($r) && ($r['ingredient'] ?? 0) > 0 && ($r['qty'] ?? 0) > 0));
+            $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
+            $hasLiquids = is_array($recipeLiquids) && !empty(array_filter($recipeLiquids, fn($r) => is_array($r) && ($r['liquid'] ?? 0) > 0 && ($r['qty'] ?? 0) > 0));
+            if (!$hasIngredients && !$hasLiquids) {
+                continue;
+            }
+
             $isPaella = $group['is_paella'];
             $eqItem   = $isPaella
                 ? ($group['has_per_item']
@@ -2332,7 +2340,6 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<div class="brxe-div fdr-card__field-wrapper">';
             $html .= '<p class="brxe-text-basic fdr-card__field-title">' . esc_html($group['title']) . '</p>';
 
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (is_array($recipeIngredients)) {
                 foreach ($recipeIngredients as $ingRow) {
                     if (!is_array($ingRow)) continue;
@@ -2641,6 +2648,14 @@ class BricksDynamicTags implements FeatureInterface
         $html = '';
 
         foreach ($recipeGroups as $recipeId => $group) {
+            $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
+            $hasLiquids = is_array($recipeLiquids) && !empty(array_filter($recipeLiquids, fn($r) => is_array($r) && ($r['liquid'] ?? 0) > 0 && ($r['qty'] ?? 0) > 0));
+            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
+            $hasIngredients = is_array($recipeIngredients) && !empty(array_filter($recipeIngredients, fn($r) => is_array($r) && ($r['ingredient'] ?? 0) > 0 && ($r['qty'] ?? 0) > 0));
+            if (!$hasIngredients && !$hasLiquids) {
+                continue;
+            }
+
             $isPaella = $group['is_paella'];
             $eqItem   = $isPaella
                 ? ($group['has_per_item']
@@ -2654,7 +2669,6 @@ class BricksDynamicTags implements FeatureInterface
             $html .= '<p class="brxe-text-basic fdr-recipe__pax-subtitle"><span class="fdr-recipe__pax-eq">' . esc_html($this->formatNumber($eqItem)) . ' racions eq.</span></p>';
 
             // Liquids
-            $recipeLiquids = get_post_meta($recipeId, self::META_RECIPE_LIQUIDS, true);
             if (is_array($recipeLiquids)) {
                 foreach ($recipeLiquids as $liqRow) {
                     if (!is_array($liqRow)) continue;
@@ -2671,7 +2685,6 @@ class BricksDynamicTags implements FeatureInterface
             }
 
             // Ingredients
-            $recipeIngredients = get_post_meta($recipeId, self::META_RECIPE_INGREDIENTS, true);
             if (is_array($recipeIngredients)) {
                 foreach ($recipeIngredients as $ingRow) {
                     if (!is_array($ingRow)) continue;
@@ -2768,7 +2781,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2808,8 +2820,7 @@ class BricksDynamicTags implements FeatureInterface
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
 
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
+            if ($qty <= 0) {
                 continue;
             }
 
@@ -2832,8 +2843,8 @@ class BricksDynamicTags implements FeatureInterface
                     continue;
                 }
 
-                // Formula: ceil(eqItem / perRatio) * baseQty
-                $amount = ceil($eqItem / $perRatio) * $baseQty;
+                // Formula: ceil(qty / perRatio) * baseQty — utensils use raw qty, no pax weighting
+                $amount = ceil($qty / $perRatio) * $baseQty;
                 if ($amount <= 0) {
                     continue;
                 }
@@ -2904,7 +2915,6 @@ class BricksDynamicTags implements FeatureInterface
 
         $this->primeRecipeMeta($order);
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -2944,8 +2954,7 @@ class BricksDynamicTags implements FeatureInterface
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
 
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
+            if ($qty <= 0) {
                 continue;
             }
 
@@ -3031,7 +3040,6 @@ class BricksDynamicTags implements FeatureInterface
         }
 
         $orderLanguage = $this->getOrderLanguageCode($order);
-        $paxRatio = $this->getPaxRatio($order);
 
         $lineItems = $order->get_items('line_item');
         if (!$lineItems) {
@@ -3066,8 +3074,7 @@ class BricksDynamicTags implements FeatureInterface
         foreach ($eligible as $row) {
             $recipeId = (int) $row['recipe_id'];
             $qty = (float) $row['qty'];
-            $eqItem = $qty * $paxRatio;
-            if ($eqItem <= 0) {
+            if ($qty <= 0) {
                 continue;
             }
             $recipeUtensils = get_post_meta($recipeId, self::META_RECIPE_UTENSILS, true);
@@ -3085,7 +3092,8 @@ class BricksDynamicTags implements FeatureInterface
                 if ($termId <= 0 || $perRatio <= 0 || $baseQty <= 0) {
                     continue;
                 }
-                $amount = ceil($eqItem / $perRatio) * $baseQty;
+                // Utensils use raw qty, no pax weighting
+                $amount = ceil($qty / $perRatio) * $baseQty;
                 if ($amount <= 0) {
                     continue;
                 }
