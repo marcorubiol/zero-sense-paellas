@@ -397,12 +397,11 @@ class InventoryMetabox
                                         $cascadeValue = $cascadeOverrides[$materialKey] ?? null;
                                         $finalValue = $final[$materialKey] ?? 0;
                                         $hasOverride = $overrideValue !== null && $overrideValue !== '';
-                                        // Dependent items whose final value differs from auto due to parent override
                                         $dependencyLabel = MaterialDefinitions::getDependencyLabelFor($materialKey);
                                         $isDependent = $dependencyLabel !== null;
-                                        $hasDependentOverride = !$hasOverride && $isDependent && (int) $finalValue !== (int) $autoValue;
-                                        $hasOverride = $hasOverride || $hasDependentOverride;
                                         $hasCascade = !$hasOverride && $cascadeValue !== null && $cascadeValue !== '';
+                                        // Cascade from parent override → show MAN badge (value differs from auto)
+                                        $hasDependentOverride = $hasCascade && $isDependent && (int) $cascadeValue !== (int) $autoValue;
                                         ?>
                                         <tr>
                                             <td>
@@ -535,7 +534,7 @@ class InventoryMetabox
                                                     </span>
                                                     <?php endif; ?>
                                                     <span class="zs-inventory-badge-container">
-                                                        <?php if ($hasOverride): ?>
+                                                        <?php if ($hasOverride || $hasDependentOverride): ?>
                                                             <span class="zs-inventory-badge zs-inventory-badge-manual">MAN</span>
                                                         <?php elseif ($hasCascade || $autoValue > 0): ?>
                                                             <span class="zs-inventory-badge zs-inventory-badge-auto">AUTO</span>
