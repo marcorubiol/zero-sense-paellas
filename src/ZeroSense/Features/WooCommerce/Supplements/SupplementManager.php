@@ -79,7 +79,7 @@ class SupplementManager
         $existingServicio = $this->findSupplementItem($order, self::TYPE_SERVICIO_EXCLUSIVO);
         $dismissedServicio = $order->get_meta(self::META_DISMISSED_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, true) === 'yes';
 
-        if ($hasWorkshop || $totalGuests <= 0 || $dismissedServicio) {
+        if ($totalGuests <= 0 || $dismissedServicio || $hasWorkshop) {
             // Should NOT have servicio exclusivo
             if ($existingServicio) {
                 $order->remove_item($existingServicio->get_id());

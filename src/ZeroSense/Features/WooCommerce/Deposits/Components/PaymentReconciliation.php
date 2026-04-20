@@ -8,7 +8,8 @@ namespace ZeroSense\Features\WooCommerce\Deposits\Components;
  * Sends an email alert so the team can verify in Getnet and resolve manually.
  *
  * Runs hourly via WP-Cron. Only fires when stuck orders are found.
- * Uses a 24h transient per order to avoid duplicate alerts.
+ * Alerts once per payment attempt — tracks the order's date_modified at
+ * alert time so a new attempt (new date_modified) triggers a new alert.
  *
  * Only alerts on `pending` and `on-hold` orders — these are orders where
  * the initial payment (deposit or full) was sent to Redsys but never confirmed.
@@ -19,7 +20,6 @@ class PaymentReconciliation
 {
     private const HOOK = 'zs_payment_reconciliation_check';
     private const STUCK_THRESHOLD_SECONDS = 3600; // 1 hour
-    private const ALERT_COOLDOWN_SECONDS = 86400; // 24 hours
 
     public function register(): void
     {
@@ -42,18 +42,29 @@ class PaymentReconciliation
             return;
         }
 
-        // Filter out orders already alerted in the last 24h
+        // Filter out orders already alerted for this specific payment attempt
         $newAlerts = [];
         foreach ($orders as $order) {
-            $transientKey = 'zs_reconciliation_alerted_' . $order->get_id();
-            if (!get_transient($transientKey)) {
-                $newAlerts[] = $order;
-                set_transient($transientKey, '1', self::ALERT_COOLDOWN_SECONDS);
+            $lastAlerted = $order->get_meta('_zs_reconciliation_alerted_modified');
+            $currentModified = $order->get_date_modified()?->getTimestamp();
+
+            if ($lastAlerted && (int) $lastAlerted === $currentModified) {
+                continue;
             }
+
+            $newAlerts[] = $order;
         }
 
         if (!empty($newAlerts)) {
             $this->sendAlert($newAlerts);
+
+            foreach ($newAlerts as $order) {
+                $order->update_meta_data(
+                    '_zs_reconciliation_alerted_modified',
+                    $order->get_date_modified()?->getTimestamp()
+                );
+                $order->save();
+            }
         }
     }
 
