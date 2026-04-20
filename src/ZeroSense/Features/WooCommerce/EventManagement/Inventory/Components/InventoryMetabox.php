@@ -847,9 +847,13 @@ class InventoryMetabox
                     // Resetting a dependent → recalculate from current primaries
                     recalculatePaellaDependencies();
                     recalculateVitro();
+                    recalculateTaulesDependents();
                 }
                 if (cassolaKeys.indexOf(materialKey) !== -1) {
                     recalculateVitro();
+                }
+                if (materialKey === 'taules_treball') {
+                    recalculateTaulesDependents();
                 }
             });
             
