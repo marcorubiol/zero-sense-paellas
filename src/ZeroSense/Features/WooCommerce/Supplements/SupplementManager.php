@@ -20,7 +20,13 @@ class SupplementManager
     private const TYPE_PAELLA_ADICIONAL    = 'paella_adicional';
 
     private const META_DISMISSED_PREFIX    = '_zs_supplement_dismissed_';
+    private const META_LAST_SEEN_PREFIX    = '_zs_supplement_last_seen_';
     private const META_EXPECTED_TOTAL      = '_zs_supplement_expected_total';
+
+    private const TYPE_LABELS = [
+        self::TYPE_SERVICIO_EXCLUSIVO => 'Exclusive Kitchen Service',
+        self::TYPE_PAELLA_ADICIONAL   => 'Additional Paella Supplement',
+    ];
 
     private const PAELLA_CATEGORY_BASE_IDS   = [86, 87]; // nuestras-paellas, paellas-gourmet
     private const WORKSHOP_CATEGORY_SLUG     = 'workshop';
@@ -36,6 +42,7 @@ class SupplementManager
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderAutoBadge'], 10, 3);
         add_action('wp_ajax_zs_recalc_supplement', [$this, 'handleRecalcAjax']);
         add_action('admin_footer', [$this, 'printAdminScript']);
+        add_action('add_meta_boxes', [$this, 'addMetabox']);
     }
 
     public function onOrderSave($order): void
@@ -78,29 +85,34 @@ class SupplementManager
         $notes       = [];
         $changed     = false;
 
-        $debugProduct = $this->resolveProduct(self::PRODUCT_ID_SERVICIO_EXCLUSIVO);
-        $debugPrice = $debugProduct ? (float) $debugProduct->get_price() : 0.0;
-        $order->add_order_note(sprintf(
-            '[Supplement debug] adults=%d (zs_event_adults="%s" adults="%s" _event_adults="%s") total_guests="%s" servicio_price=%.2f€ min=%.2f€',
-            $adults,
-            (string) $order->get_meta('zs_event_adults', true),
-            (string) $order->get_meta('adults', true),
-            (string) $order->get_meta('_event_adults', true),
-            (string) $order->get_meta('zs_event_total_guests', true),
-            $debugPrice,
-            self::MIN_SERVICIO_EXCLUSIVO
-        ));
-
         // --- Servicio exclusivo de cocina ---
         // Syncs with adults only (not total guests) — children are not counted.
         $existingServicio = $this->findSupplementItem($order, self::TYPE_SERVICIO_EXCLUSIVO);
         $dismissedServicio = $order->get_meta(self::META_DISMISSED_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, true) === 'yes';
+
+        // Auto-dismiss detection: if staff manually removed a previously-managed line,
+        // mark it as dismissed so we don't re-add it silently on next save.
+        if (!$dismissedServicio && !$existingServicio && $adults > 0 && !$hasWorkshop) {
+            $lastSeen = $order->get_meta(self::META_LAST_SEEN_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, true) === 'yes';
+            if ($lastSeen) {
+                $order->update_meta_data(self::META_DISMISSED_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, 'yes');
+                $order->delete_meta_data(self::META_LAST_SEEN_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO);
+                $dismissedServicio = true;
+                $notes[] = 'Auto-dismissed "Exclusive Kitchen Service" (staff removed line manually)';
+                $changed = true;
+            }
+        }
 
         if ($adults <= 0 || $dismissedServicio || $hasWorkshop) {
             // Should NOT have servicio exclusivo
             if ($existingServicio) {
                 $order->remove_item($existingServicio->get_id());
                 $notes[] = sprintf('Removed "%s"%s', $existingServicio->get_name(), $hasWorkshop ? ' — workshop order' : '');
+                $changed = true;
+            }
+            // Clear last-seen marker so future re-adds don't trigger false auto-dismiss.
+            if ($order->get_meta(self::META_LAST_SEEN_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, true) !== '') {
+                $order->delete_meta_data(self::META_LAST_SEEN_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO);
                 $changed = true;
             }
         } else {
@@ -149,6 +161,11 @@ class SupplementManager
                     $notes[] = sprintf('Added "%s" — %d adults × %.2f€ = %.2f€', $product->get_name(), $adults, $pricePerPerson, $total);
                     $changed = true;
                 }
+                // Mark line as managed so we can detect manual removal next run.
+                if ($order->get_meta(self::META_LAST_SEEN_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, true) !== 'yes') {
+                    $order->update_meta_data(self::META_LAST_SEEN_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, 'yes');
+                    $changed = true;
+                }
             }
         }
 
@@ -158,11 +175,27 @@ class SupplementManager
 
         $neededQty = $paellaTypes > 1 ? $paellaTypes - 1 : 0;
 
+        // Auto-dismiss detection for paella adicional.
+        if (!$dismissedPaella && !$existingPaella && $neededQty > 0) {
+            $lastSeen = $order->get_meta(self::META_LAST_SEEN_PREFIX . self::TYPE_PAELLA_ADICIONAL, true) === 'yes';
+            if ($lastSeen) {
+                $order->update_meta_data(self::META_DISMISSED_PREFIX . self::TYPE_PAELLA_ADICIONAL, 'yes');
+                $order->delete_meta_data(self::META_LAST_SEEN_PREFIX . self::TYPE_PAELLA_ADICIONAL);
+                $dismissedPaella = true;
+                $notes[] = 'Auto-dismissed "Additional Paella Supplement" (staff removed line manually)';
+                $changed = true;
+            }
+        }
+
         if ($neededQty <= 0 || $dismissedPaella) {
             // Should NOT have paella adicional
             if ($existingPaella) {
                 $order->remove_item($existingPaella->get_id());
                 $notes[] = sprintf('Removed "%s"', $existingPaella->get_name());
+                $changed = true;
+            }
+            if ($order->get_meta(self::META_LAST_SEEN_PREFIX . self::TYPE_PAELLA_ADICIONAL, true) !== '') {
+                $order->delete_meta_data(self::META_LAST_SEEN_PREFIX . self::TYPE_PAELLA_ADICIONAL);
                 $changed = true;
             }
         } else {
@@ -205,6 +238,10 @@ class SupplementManager
                     $notes[] = sprintf('Added "%s" × %d (%d paella types)', $product->get_name(), $neededQty, $paellaTypes);
                     $changed = true;
                 }
+                if ($order->get_meta(self::META_LAST_SEEN_PREFIX . self::TYPE_PAELLA_ADICIONAL, true) !== 'yes') {
+                    $order->update_meta_data(self::META_LAST_SEEN_PREFIX . self::TYPE_PAELLA_ADICIONAL, 'yes');
+                    $changed = true;
+                }
             }
         }
 
@@ -222,6 +259,70 @@ class SupplementManager
             $order->save();
             self::$processing = false;
         }
+    }
+
+    /**
+     * Add a side metabox on order screen showing dismissed supplements with re-enable buttons.
+     */
+    public function addMetabox(): void
+    {
+        $screen = wc_get_page_screen_id('shop-order');
+        if (!$screen) {
+            return;
+        }
+        add_meta_box(
+            'zs_auto_supplements',
+            __('Auto Supplements', 'zero-sense'),
+            [$this, 'renderMetabox'],
+            $screen,
+            'side',
+            'default'
+        );
+    }
+
+    /**
+     * Render the Auto Supplements metabox.
+     */
+    public function renderMetabox($postOrOrder): void
+    {
+        $order = $postOrOrder instanceof \WP_Post ? wc_get_order($postOrOrder->ID) : $postOrOrder;
+        if (!$order instanceof WC_Order) {
+            return;
+        }
+        $orderId = $order->get_id();
+
+        echo '<div class="zs-supplement-status">';
+        foreach (self::TYPE_LABELS as $type => $label) {
+            $dismissed = $order->get_meta(self::META_DISMISSED_PREFIX . $type, true) === 'yes';
+            $item = $this->findSupplementItem($order, $type);
+            $nonce = wp_create_nonce('zs_recalc_supplement_' . $orderId);
+
+            echo '<div style="padding:8px 0;border-bottom:1px solid #f0f0f1;">';
+            echo '<strong style="display:block;margin-bottom:4px;">' . esc_html($label) . '</strong>';
+
+            if ($dismissed) {
+                echo '<div style="display:flex;gap:8px;align-items:center;">';
+                echo '<span class="zs-inventory-badge zs-inventory-badge-manual">' . esc_html__('Dismissed', 'zero-sense') . '</span>';
+                echo '<button type="button" class="button button-small zs-supplement-recalc" data-order-id="' . esc_attr((string) $orderId) . '" data-type="' . esc_attr($type) . '" data-nonce="' . esc_attr($nonce) . '">' . esc_html__('Re-enable', 'zero-sense') . '</button>';
+                echo '</div>';
+            } elseif ($item) {
+                $expectedTotal = (float) $item->get_meta(self::META_EXPECTED_TOTAL, true);
+                $currentTotal = (float) $item->get_total();
+                $isManual = $expectedTotal > 0 && abs($currentTotal - $expectedTotal) >= 0.01;
+                $badgeClass = $isManual ? 'zs-inventory-badge-manual' : 'zs-inventory-badge-auto';
+                $badgeText = $isManual ? 'MAN' : 'AUTO';
+                echo '<div style="display:flex;gap:8px;align-items:center;">';
+                echo '<span class="zs-inventory-badge ' . esc_attr($badgeClass) . '">' . esc_html($badgeText) . '</span>';
+                echo '<span style="color:#646970;">' . esc_html(wc_price($currentTotal)) . '</span>';
+                echo '</div>';
+            } else {
+                echo '<span style="color:#646970;font-style:italic;">' . esc_html__('Not applicable', 'zero-sense') . '</span>';
+            }
+
+            echo '</div>';
+        }
+        echo '</div>';
+        echo '<p style="margin:8px 0 0;color:#646970;font-size:11px;">' . esc_html__('Supplements auto-add on save. Delete a line to dismiss; use Re-enable to restore.', 'zero-sense') . '</p>';
     }
 
     /**
