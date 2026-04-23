@@ -72,7 +72,7 @@ class SupplementManager
     private function process(WC_Order $order): void
     {
         $orderId     = $order->get_id();
-        $adults      = (int) $order->get_meta('zs_event_adults', true);
+        $adults      = $this->readAdultsCount($order);
         $hasWorkshop = $this->orderHasWorkshopProduct($order);
         $paellaTypes = $this->countPaellaTypes($order);
         $notes       = [];
@@ -209,6 +209,21 @@ class SupplementManager
             $order->save();
             self::$processing = false;
         }
+    }
+
+    /**
+     * Read the adults count from the order, falling back to legacy meta keys
+     * (matches EventDetailsMetabox::getOrderMetaWithFallback behavior).
+     */
+    private function readAdultsCount(WC_Order $order): int
+    {
+        foreach (['zs_event_adults', 'adults', '_event_adults'] as $key) {
+            $val = $order->get_meta($key, true);
+            if ($val !== '' && $val !== null) {
+                return (int) $val;
+            }
+        }
+        return 0;
     }
 
     /**
@@ -384,6 +399,8 @@ class SupplementManager
 
         echo '<div style="margin-top:4px;display:inline-flex;gap:6px;align-items:center;">';
 
+        echo '<span class="zs-inventory-badge ' . esc_attr($isManual ? 'zs-inventory-badge-manual' : 'zs-inventory-badge-auto') . '">' . esc_html($badgeText) . '</span>';
+
         if ($isManual) {
             $orderId = (int) $item->get_order_id();
             if ($orderId > 0) {
@@ -391,8 +408,6 @@ class SupplementManager
                 echo '<span class="dashicons dashicons-update zs-inventory-reset-icon zs-supplement-recalc" role="button" tabindex="0" data-order-id="' . esc_attr((string) $orderId) . '" data-type="' . esc_attr($type) . '" data-nonce="' . esc_attr($nonce) . '" title="' . esc_attr__('Recalculate', 'zero-sense') . '"></span>';
             }
         }
-
-        echo '<span class="zs-inventory-badge ' . esc_attr($isManual ? 'zs-inventory-badge-manual' : 'zs-inventory-badge-auto') . '">' . esc_html($badgeText) . '</span>';
 
         echo '</div>';
     }
