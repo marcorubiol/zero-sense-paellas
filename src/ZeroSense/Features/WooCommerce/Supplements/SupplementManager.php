@@ -78,6 +78,19 @@ class SupplementManager
         $notes       = [];
         $changed     = false;
 
+        $debugProduct = $this->resolveProduct(self::PRODUCT_ID_SERVICIO_EXCLUSIVO);
+        $debugPrice = $debugProduct ? (float) $debugProduct->get_price() : 0.0;
+        $order->add_order_note(sprintf(
+            '[Supplement debug] adults=%d (zs_event_adults="%s" adults="%s" _event_adults="%s") total_guests="%s" servicio_price=%.2f€ min=%.2f€',
+            $adults,
+            (string) $order->get_meta('zs_event_adults', true),
+            (string) $order->get_meta('adults', true),
+            (string) $order->get_meta('_event_adults', true),
+            (string) $order->get_meta('zs_event_total_guests', true),
+            $debugPrice,
+            self::MIN_SERVICIO_EXCLUSIVO
+        ));
+
         // --- Servicio exclusivo de cocina ---
         // Syncs with adults only (not total guests) — children are not counted.
         $existingServicio = $this->findSupplementItem($order, self::TYPE_SERVICIO_EXCLUSIVO);
