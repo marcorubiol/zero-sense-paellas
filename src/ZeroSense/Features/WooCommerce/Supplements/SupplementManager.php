@@ -383,15 +383,16 @@ class SupplementManager
         $badgeText = $isManual ? 'MAN' : 'AUTO';
 
         echo '<div style="margin-top:4px;display:inline-flex;gap:6px;align-items:center;">';
-        echo '<span class="' . esc_attr($badgeClass) . '" style="display:inline-block;padding:2px 4px;font-size:10px;font-weight:600;border-radius:3px;">' . esc_html($badgeText) . '</span>';
 
         if ($isManual) {
             $orderId = (int) $item->get_order_id();
             if ($orderId > 0) {
                 $nonce = wp_create_nonce('zs_recalc_supplement_' . $orderId);
-                echo '<button type="button" class="zs-supplement-recalc" data-order-id="' . esc_attr((string) $orderId) . '" data-type="' . esc_attr($type) . '" data-nonce="' . esc_attr($nonce) . '" style="font-size:10px;cursor:pointer;background:none;border:0;padding:0;color:#2271b1;text-decoration:underline;">Recalculate</button>';
+                echo '<span class="dashicons dashicons-update zs-inventory-reset-icon zs-supplement-recalc" role="button" tabindex="0" data-order-id="' . esc_attr((string) $orderId) . '" data-type="' . esc_attr($type) . '" data-nonce="' . esc_attr($nonce) . '" title="' . esc_attr__('Recalculate', 'zero-sense') . '"></span>';
             }
         }
+
+        echo '<span class="zs-inventory-badge ' . esc_attr($isManual ? 'zs-inventory-badge-manual' : 'zs-inventory-badge-auto') . '">' . esc_html($badgeText) . '</span>';
 
         echo '</div>';
     }
@@ -461,13 +462,11 @@ class SupplementManager
         ?>
         <script>
         (function(){
-            document.addEventListener('click', function(e){
-                var btn = e.target.closest('.zs-supplement-recalc');
-                if (!btn || btn.disabled) return;
-                e.preventDefault();
-                btn.disabled = true;
-                var originalText = btn.textContent;
-                btn.textContent = 'Recalculating…';
+            function trigger(btn){
+                if (btn.dataset.busy === '1') return;
+                btn.dataset.busy = '1';
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
                 var body = new URLSearchParams();
                 body.append('action', 'zs_recalc_supplement');
                 body.append('order_id', btn.dataset.orderId);
@@ -481,15 +480,30 @@ class SupplementManager
                         } else {
                             var msg = (res && res.data && res.data.message) ? res.data.message : 'unknown error';
                             alert('Recalculate failed: ' + msg);
-                            btn.disabled = false;
-                            btn.textContent = originalText;
+                            btn.dataset.busy = '';
+                            btn.style.opacity = '';
+                            btn.style.pointerEvents = '';
                         }
                     })
                     .catch(function(){
                         alert('Recalculate failed: network error');
-                        btn.disabled = false;
-                        btn.textContent = originalText;
+                        btn.dataset.busy = '';
+                        btn.style.opacity = '';
+                        btn.style.pointerEvents = '';
                     });
+            }
+            document.addEventListener('click', function(e){
+                var btn = e.target.closest('.zs-supplement-recalc');
+                if (!btn) return;
+                e.preventDefault();
+                trigger(btn);
+            });
+            document.addEventListener('keydown', function(e){
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                var btn = e.target.closest('.zs-supplement-recalc');
+                if (!btn) return;
+                e.preventDefault();
+                trigger(btn);
             });
         })();
         </script>
