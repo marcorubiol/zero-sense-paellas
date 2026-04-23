@@ -6,6 +6,7 @@ namespace ZeroSense\Features\WooCommerce\Supplements;
 use WC_Order;
 use WC_Order_Item_Product;
 use WC_Product;
+use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys;
 
 if (!defined('ABSPATH')) { exit; }
 
@@ -30,6 +31,7 @@ class SupplementManager
 
     private const PAELLA_CATEGORY_BASE_IDS   = [86, 87]; // nuestras-paellas, paellas-gourmet
     private const WORKSHOP_CATEGORY_SLUG     = 'workshop';
+    private const WORKSHOP_EVENT_TYPE        = 'workshop_teambuilding';
 
     private const RECALCULABLE_STATUSES = ['pending', 'budget-requested', 'deposit-paid', 'processing', 'on-hold'];
 
@@ -80,7 +82,7 @@ class SupplementManager
     {
         $orderId     = $order->get_id();
         $adults      = $this->readAdultsCount($order);
-        $hasWorkshop = $this->orderHasWorkshopProduct($order);
+        $hasWorkshop = $this->isWorkshopOrder($order);
         $paellaTypes = $this->countPaellaTypes($order);
         $notes       = [];
         $changed     = false;
@@ -399,6 +401,19 @@ class SupplementManager
         // This is handled implicitly: if findSupplementItem returns null for a type
         // that should exist, and it's not in $existingXxx, it means staff removed it.
         // The _dismissed flag is checked at the top of each section.
+    }
+
+    /**
+     * Workshop check for servicio exclusivo: either the order has a product from the
+     * workshop category OR the event type is set to "workshop_teambuilding".
+     */
+    private function isWorkshopOrder(WC_Order $order): bool
+    {
+        $eventType = (string) $order->get_meta(MetaKeys::EVENT_TYPE, true);
+        if ($eventType === self::WORKSHOP_EVENT_TYPE) {
+            return true;
+        }
+        return $this->orderHasWorkshopProduct($order);
     }
 
     /**
