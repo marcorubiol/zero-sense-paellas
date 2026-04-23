@@ -12,7 +12,23 @@
     }
     
     const config = zsCalendarConfig;
-    
+    let isDirty = false;
+
+    function attachDirtyTracking() {
+        const metabox = document.getElementById('zs_calendar_sync');
+        if (!metabox) return;
+        const form = metabox.closest('form');
+        if (!form) return;
+
+        const markDirty = function() { isDirty = true; };
+        if (typeof jQuery !== 'undefined') {
+            jQuery(form).on('change input', markDirty);
+        } else {
+            form.addEventListener('input', markDirty);
+            form.addEventListener('change', markDirty);
+        }
+    }
+
     function attachSaveNotesListener() {
         const saveBtn = document.querySelector('.zs-save-calendar-notes-btn');
         if (!saveBtn) return;
@@ -75,13 +91,18 @@
                 e.preventDefault();
                 if (this.disabled) return;
                 
+                if (isDirty) {
+                    alert('Hay cambios sin guardar. Guarda el pedido primero — el calendario se sincronizará automáticamente al guardar.');
+                    return;
+                }
+
                 const orderId = this.getAttribute('data-order-id');
                 const labelEl = this.querySelector('.zs-calendar-btn-label');
                 const originalText = labelEl ? labelEl.textContent : '';
                 const button = this;
-                
+
                 // No confirmation here - FlowMattic class-actions.js will show its own confirmation
-                
+
                 button.disabled = true;
                 if (labelEl) {
                     labelEl.textContent = 'Processing...';
@@ -209,9 +230,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             attachButtonListeners();
             attachSaveNotesListener();
+            attachDirtyTracking();
         });
     } else {
         attachButtonListeners();
         attachSaveNotesListener();
+        attachDirtyTracking();
     }
 })();
