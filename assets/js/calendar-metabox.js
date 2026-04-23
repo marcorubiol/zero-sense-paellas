@@ -92,7 +92,7 @@
                 if (this.disabled) return;
                 
                 if (isDirty) {
-                    alert('Hay cambios sin guardar. Guarda el pedido primero — el calendario se sincronizará automáticamente al guardar.');
+                    alert('There are unsaved changes. Save the order first — the calendar will sync automatically on save.');
                     return;
                 }
 
