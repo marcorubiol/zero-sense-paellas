@@ -313,7 +313,7 @@ class SupplementManager
                 $badgeText = $isManual ? 'MAN' : 'AUTO';
                 echo '<div style="display:flex;gap:8px;align-items:center;">';
                 echo '<span class="zs-inventory-badge ' . esc_attr($badgeClass) . '">' . esc_html($badgeText) . '</span>';
-                echo '<span style="color:#646970;">' . esc_html(wc_price($currentTotal)) . '</span>';
+                echo '<span style="color:#646970;">' . wc_price($currentTotal) . '</span>';
                 echo '</div>';
             } else {
                 echo '<span style="color:#646970;font-style:italic;">' . esc_html__('Not applicable', 'zero-sense') . '</span>';
