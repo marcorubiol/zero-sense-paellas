@@ -12,21 +12,35 @@
     }
     
     const config = zsCalendarConfig;
-    let isDirty = false;
+    let formSnapshot = null;
 
-    function attachDirtyTracking() {
+    function getForm() {
         const metabox = document.getElementById('zs_calendar_sync');
-        if (!metabox) return;
-        const form = metabox.closest('form');
-        if (!form) return;
+        if (!metabox) return null;
+        return metabox.closest('form');
+    }
 
-        const markDirty = function() { isDirty = true; };
+    function snapshotForm() {
+        const form = getForm();
+        if (!form) return null;
         if (typeof jQuery !== 'undefined') {
-            jQuery(form).on('change input', markDirty);
-        } else {
-            form.addEventListener('input', markDirty);
-            form.addEventListener('change', markDirty);
+            return jQuery(form).serialize();
         }
+        return new URLSearchParams(new FormData(form)).toString();
+    }
+
+    function isFormDirty() {
+        if (formSnapshot === null) return false;
+        return snapshotForm() !== formSnapshot;
+    }
+
+    function initDirtyTracking() {
+        // Delay snapshot to let Select2, datepickers, and other WooCommerce
+        // admin JS finish initializing — they fire programmatic change events
+        // on load that would otherwise be misdetected as user edits.
+        setTimeout(function() {
+            formSnapshot = snapshotForm();
+        }, 800);
     }
 
     function attachSaveNotesListener() {
@@ -90,8 +104,14 @@
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (this.disabled) return;
-                
-                if (isDirty) {
+
+                if (isFormDirty()) {
+                    // Stop the event reaching FlowMattic's delegated click handler
+                    // on document, which would otherwise show its own confirmation.
+                    e.stopPropagation();
+                    if (typeof e.stopImmediatePropagation === 'function') {
+                        e.stopImmediatePropagation();
+                    }
                     alert('There are unsaved changes. Save the order first — the calendar will sync automatically on save.');
                     return;
                 }
@@ -230,7 +250,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             attachButtonListeners();
             attachSaveNotesListener();
-            attachDirtyTracking();
+            initDirtyTracking();
         });
     } else {
         attachButtonListeners();
