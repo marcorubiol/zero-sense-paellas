@@ -70,17 +70,18 @@ class SupplementManager
     private function process(WC_Order $order): void
     {
         $orderId     = $order->get_id();
-        $totalGuests = (int) $order->get_meta('zs_event_total_guests', true);
+        $adults      = (int) $order->get_meta('zs_event_adults', true);
         $hasWorkshop = $this->orderHasWorkshopProduct($order);
         $paellaTypes = $this->countPaellaTypes($order);
         $notes       = [];
         $changed     = false;
 
         // --- Servicio exclusivo de cocina ---
+        // Syncs with adults only (not total guests) — children are not counted.
         $existingServicio = $this->findSupplementItem($order, self::TYPE_SERVICIO_EXCLUSIVO);
         $dismissedServicio = $order->get_meta(self::META_DISMISSED_PREFIX . self::TYPE_SERVICIO_EXCLUSIVO, true) === 'yes';
 
-        if ($totalGuests <= 0 || $dismissedServicio || $hasWorkshop) {
+        if ($adults <= 0 || $dismissedServicio || $hasWorkshop) {
             // Should NOT have servicio exclusivo
             if ($existingServicio) {
                 $order->remove_item($existingServicio->get_id());
@@ -92,9 +93,9 @@ class SupplementManager
             $product = $this->resolveProduct(self::PRODUCT_ID_SERVICIO_EXCLUSIVO);
             if ($product) {
                 $pricePerPerson = (float) $product->get_price();
-                $appliesMinimum = ($totalGuests * $pricePerPerson) < self::MIN_SERVICIO_EXCLUSIVO;
-                $qty = $appliesMinimum ? 1 : $totalGuests;
-                $total = $appliesMinimum ? self::MIN_SERVICIO_EXCLUSIVO : $totalGuests * $pricePerPerson;
+                $appliesMinimum = ($adults * $pricePerPerson) < self::MIN_SERVICIO_EXCLUSIVO;
+                $qty = $appliesMinimum ? 1 : $adults;
+                $total = $appliesMinimum ? self::MIN_SERVICIO_EXCLUSIVO : $adults * $pricePerPerson;
 
                 if ($existingServicio) {
                     // Detect manual price override: total differs from what we last set
@@ -117,7 +118,7 @@ class SupplementManager
                             $existingServicio->set_total($total);
                             $existingServicio->update_meta_data(self::META_EXPECTED_TOTAL, (string) $total);
                             $existingServicio->save();
-                            $notes[] = sprintf('Updated "%s" — %d guests × %.2f€ = %.2f€ (was: %.2f€)', $product->get_name(), $totalGuests, $pricePerPerson, $total, $oldTotal);
+                            $notes[] = sprintf('Updated "%s" — %d adults × %.2f€ = %.2f€ (was: %.2f€)', $product->get_name(), $adults, $pricePerPerson, $total, $oldTotal);
                             $changed = true;
                         }
                     }
@@ -130,7 +131,7 @@ class SupplementManager
                     $item->add_meta_data(self::META_SUPPLEMENT_TYPE, self::TYPE_SERVICIO_EXCLUSIVO, true);
                     $item->add_meta_data(self::META_EXPECTED_TOTAL, (string) $total, true);
                     $order->add_item($item);
-                    $notes[] = sprintf('Added "%s" — %d guests × %.2f€ = %.2f€', $product->get_name(), $totalGuests, $pricePerPerson, $total);
+                    $notes[] = sprintf('Added "%s" — %d adults × %.2f€ = %.2f€', $product->get_name(), $adults, $pricePerPerson, $total);
                     $changed = true;
                 }
             }
