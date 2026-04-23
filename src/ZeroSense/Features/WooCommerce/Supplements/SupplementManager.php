@@ -34,6 +34,8 @@ class SupplementManager
         add_action('woocommerce_after_order_object_save', [$this, 'onOrderSave'], 25, 1);
         add_action('woocommerce_checkout_order_created', [$this, 'onOrderSave'], 25, 1);
         add_action('woocommerce_after_order_itemmeta', [$this, 'renderAutoBadge'], 10, 3);
+        add_action('wp_ajax_zs_recalc_supplement', [$this, 'handleRecalcAjax']);
+        add_action('admin_footer', [$this, 'printAdminScript']);
     }
 
     public function onOrderSave($order): void
@@ -380,7 +382,118 @@ class SupplementManager
         $badgeClass = $isManual ? 'zs-badge-manual' : 'zs-badge-auto';
         $badgeText = $isManual ? 'MAN' : 'AUTO';
 
-        echo '<div style="margin-top:4px;"><span class="' . esc_attr($badgeClass) . '" style="display:inline-block;padding:2px 4px;font-size:10px;font-weight:600;border-radius:3px;">' . esc_html($badgeText) . '</span></div>';
+        echo '<div style="margin-top:4px;display:inline-flex;gap:6px;align-items:center;">';
+        echo '<span class="' . esc_attr($badgeClass) . '" style="display:inline-block;padding:2px 4px;font-size:10px;font-weight:600;border-radius:3px;">' . esc_html($badgeText) . '</span>';
+
+        if ($isManual) {
+            $orderId = (int) $item->get_order_id();
+            if ($orderId > 0) {
+                $nonce = wp_create_nonce('zs_recalc_supplement_' . $orderId);
+                echo '<button type="button" class="zs-supplement-recalc" data-order-id="' . esc_attr((string) $orderId) . '" data-type="' . esc_attr($type) . '" data-nonce="' . esc_attr($nonce) . '" style="font-size:10px;cursor:pointer;background:none;border:0;padding:0;color:#2271b1;text-decoration:underline;">Recalculate</button>';
+            }
+        }
+
+        echo '</div>';
+    }
+
+    /**
+     * AJAX handler to force-recalculate a supplement line (clears manual override).
+     */
+    public function handleRecalcAjax(): void
+    {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => 'Not allowed'], 403);
+        }
+
+        $orderId = isset($_POST['order_id']) ? (int) $_POST['order_id'] : 0;
+        $type    = isset($_POST['type']) ? sanitize_text_field(wp_unslash($_POST['type'])) : '';
+        $nonce   = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
+
+        if (!wp_verify_nonce($nonce, 'zs_recalc_supplement_' . $orderId)) {
+            wp_send_json_error(['message' => 'Invalid nonce'], 400);
+        }
+        if ($orderId <= 0 || !in_array($type, [self::TYPE_SERVICIO_EXCLUSIVO, self::TYPE_PAELLA_ADICIONAL], true)) {
+            wp_send_json_error(['message' => 'Invalid params'], 400);
+        }
+
+        $order = wc_get_order($orderId);
+        if (!$order instanceof WC_Order) {
+            wp_send_json_error(['message' => 'Order not found'], 404);
+        }
+
+        if (!in_array($order->get_status(), self::RECALCULABLE_STATUSES, true)) {
+            wp_send_json_error(['message' => 'Order status does not allow recalculation'], 400);
+        }
+
+        // Clear the expected_total flag so process() treats the line as fresh (no manual override).
+        $item = $this->findSupplementItem($order, $type);
+        if ($item) {
+            $item->delete_meta_data(self::META_EXPECTED_TOTAL);
+            $item->save();
+        }
+
+        // Also clear dismissed flag in case staff wants the line back after dismissing.
+        $order->delete_meta_data(self::META_DISMISSED_PREFIX . $type);
+        $order->save();
+
+        // Reload order (its in-memory state may be stale after item save) and re-run the auto logic.
+        $freshOrder = wc_get_order($orderId);
+        if ($freshOrder instanceof WC_Order) {
+            $this->process($freshOrder);
+        }
+
+        wp_send_json_success();
+    }
+
+    /**
+     * Print inline JS on order edit screens to wire the Recalculate button.
+     */
+    public function printAdminScript(): void
+    {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen) {
+            return;
+        }
+        $allowed = ['shop_order', 'woocommerce_page_wc-orders'];
+        if (!in_array($screen->id, $allowed, true)) {
+            return;
+        }
+        ?>
+        <script>
+        (function(){
+            document.addEventListener('click', function(e){
+                var btn = e.target.closest('.zs-supplement-recalc');
+                if (!btn || btn.disabled) return;
+                e.preventDefault();
+                btn.disabled = true;
+                var originalText = btn.textContent;
+                btn.textContent = 'Recalculating…';
+                var body = new URLSearchParams();
+                body.append('action', 'zs_recalc_supplement');
+                body.append('order_id', btn.dataset.orderId);
+                body.append('type', btn.dataset.type);
+                body.append('_wpnonce', btn.dataset.nonce);
+                fetch(ajaxurl, { method: 'POST', credentials: 'same-origin', body: body })
+                    .then(function(r){ return r.json(); })
+                    .then(function(res){
+                        if (res && res.success) {
+                            location.reload();
+                        } else {
+                            var msg = (res && res.data && res.data.message) ? res.data.message : 'unknown error';
+                            alert('Recalculate failed: ' + msg);
+                            btn.disabled = false;
+                            btn.textContent = originalText;
+                        }
+                    })
+                    .catch(function(){
+                        alert('Recalculate failed: network error');
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    });
+            });
+        })();
+        </script>
+        <?php
     }
 
     /**
