@@ -7,6 +7,8 @@ use WC_Order;
 use ZeroSense\Core\FeatureInterface;
 use ZeroSense\Features\WooCommerce\Deposits\Support\MetaKeys as DepositMetaKeys;
 use ZeroSense\Features\WooCommerce\Deposits\Support\Utils as DepositUtils;
+use ZeroSense\Features\WooCommerce\EventManagement\Support\FieldOptions;
+use ZeroSense\Features\WooCommerce\EventManagement\Support\MetaKeys as EventMetaKeys;
 
 if (!defined('ABSPATH')) { exit; }
 
@@ -46,6 +48,7 @@ class AdminOrdersCsvExport implements FeatureInterface
         'second_payment_date'=> 'Second payment date',
         'payment_method'     => 'Payment method',
         // Other
+        'how_found_us'       => 'How did you find us?',
         'products'           => 'Products',
         'language'           => 'Language',
     ];
@@ -341,7 +344,7 @@ class AdminOrdersCsvExport implements FeatureInterface
                         ],
                         'other' => [
                             'title' => __('Other', 'zero-sense'),
-                            'columns' => ['language', 'products']
+                            'columns' => ['how_found_us', 'language', 'products']
                         ]
                     ];
                     
@@ -704,6 +707,10 @@ class AdminOrdersCsvExport implements FeatureInterface
             $secondPaymentDateFormatted = date('d/m/Y H:i', strtotime($balancePaymentDate));
         }
 
+        $howFoundUsKey = (string) $order->get_meta(EventMetaKeys::HOW_FOUND_US, true);
+        $howFoundUsOptions = FieldOptions::getHowFoundUsOptions();
+        $howFoundUsLabel = $howFoundUsKey !== '' ? ($howFoundUsOptions[$howFoundUsKey] ?? $howFoundUsKey) : '';
+
         $all = [
             'order_id'            => $order->get_id(),
             'date'                => $createdDate ? $createdDate->date('d/m/Y H:i') : '',
@@ -727,6 +734,7 @@ class AdminOrdersCsvExport implements FeatureInterface
             'second_payment_date' => $secondPaymentDateFormatted,
             'total_paid'          => $totalPaid,
             'payment_method'      => $order->get_payment_method_title(),
+            'how_found_us'        => $howFoundUsLabel,
             'language'            => (string) $order->get_meta('wpml_language', true),
             'products'            => $this->getProductsSummary($order),
         ];
