@@ -43,8 +43,8 @@ class FieldOptions
     public static function getHowFoundUsOptions(): array
     {
         return apply_filters('zs_event_how_found_us_options', [
-            'google' => __('Google', 'zero-sense'),
             'instagram' => __('Instagram', 'zero-sense'),
+            'google' => __('Google', 'zero-sense'),
             'facebook' => __('Facebook', 'zero-sense'),
             'previous_customer' => __('Previous customer', 'zero-sense'),
             'friend_recommendation' => __('Friend recommendation', 'zero-sense'),
