@@ -29,7 +29,7 @@ class ShoppingList implements FeatureInterface
     private const META_ADULTS           = 'zs_event_adults';
     private const META_CHILDREN         = 'zs_event_children_5_to_8';
     private const META_BABIES           = 'zs_event_children_0_to_4';
-    private const ALLOWED_STATUSES      = ['wc-deposit-paid', 'wc-fully-paid', 'deposit-paid', 'fully-paid'];
+    private const ALLOWED_STATUSES      = ['wc-pending', 'wc-deposit-paid', 'wc-fully-paid', 'pending', 'deposit-paid', 'fully-paid'];
 
     public function getName(): string        { return __('Shopping List', 'zero-sense'); }
     public function getDescription(): string { return __('Token-protected public page aggregating ingredients across orders by date range and location.', 'zero-sense'); }

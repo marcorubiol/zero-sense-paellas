@@ -47,7 +47,7 @@ class AdminOrderShoppingListLink implements FeatureInterface
 
     private function outputLink(WC_Order $order): void
     {
-        $allowedStatuses = ['deposit-paid', 'fully-paid', 'wc-deposit-paid', 'wc-fully-paid'];
+        $allowedStatuses = ['pending', 'deposit-paid', 'fully-paid', 'wc-pending', 'wc-deposit-paid', 'wc-fully-paid'];
         if (!in_array($order->get_status(), $allowedStatuses, true)) {
             return;
         }
