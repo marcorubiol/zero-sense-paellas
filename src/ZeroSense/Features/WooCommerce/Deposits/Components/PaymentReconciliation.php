@@ -8,8 +8,12 @@ namespace ZeroSense\Features\WooCommerce\Deposits\Components;
  * Sends an email alert so the team can verify in Getnet and resolve manually.
  *
  * Runs hourly via WP-Cron. Only fires when stuck orders are found.
- * Alerts once per payment attempt — tracks the order's date_modified at
- * alert time so a new attempt (new date_modified) triggers a new alert.
+ * Dedupe is two-layered:
+ *   1. Per payment attempt: tracks date_modified at alert time so a real new
+ *      attempt (new date_modified after a Redsys re-try) can trigger a new alert.
+ *   2. Hard cooldown: even if date_modified changes for unrelated reasons
+ *      (cron-driven saves, supplement recalcs, etc.), never re-alert within
+ *      ALERT_COOLDOWN_SECONDS of the previous alert for the same order.
  *
  * Only alerts on `pending` and `on-hold` orders — these are orders where
  * the initial payment (deposit or full) was sent to Redsys but never confirmed.
@@ -20,6 +24,7 @@ class PaymentReconciliation
 {
     private const HOOK = 'zs_payment_reconciliation_check';
     private const STUCK_THRESHOLD_SECONDS = 3600; // 1 hour
+    private const ALERT_COOLDOWN_SECONDS  = 7 * DAY_IN_SECONDS;
 
     public function register(): void
     {
@@ -42,13 +47,18 @@ class PaymentReconciliation
             return;
         }
 
-        // Filter out orders already alerted for this specific payment attempt
+        // Two-layer dedupe: per-attempt (date_modified) + hard cooldown (alerted_at)
         $newAlerts = [];
         foreach ($orders as $order) {
-            $lastAlerted = $order->get_meta('_zs_reconciliation_alerted_modified');
+            $lastAlerted     = (int) $order->get_meta('_zs_reconciliation_alerted_modified');
+            $alertedAt       = (int) $order->get_meta('_zs_reconciliation_alerted_at');
             $currentModified = $order->get_date_modified()?->getTimestamp();
 
-            if ($lastAlerted && (int) $lastAlerted === $currentModified) {
+            if ($lastAlerted && $lastAlerted === $currentModified) {
+                continue;
+            }
+
+            if ($alertedAt && (time() - $alertedAt) < self::ALERT_COOLDOWN_SECONDS) {
                 continue;
             }
 
@@ -63,6 +73,7 @@ class PaymentReconciliation
                     '_zs_reconciliation_alerted_modified',
                     $order->get_date_modified()?->getTimestamp()
                 );
+                $order->update_meta_data('_zs_reconciliation_alerted_at', time());
                 $order->save();
             }
         }
