@@ -74,7 +74,7 @@ class FieldChangeTracker
 
         $eventTimestamp = strtotime($eventDate . ' 23:59:59');
         $changeTimestamp = strtotime($fieldChangeTime);
-        $weekBeforeEvent = strtotime($eventDate . ' 00:00:00') - (7 * 24 * 60 * 60);
+        $weekBeforeEvent = strtotime($eventDate . ' 00:00:00') - (6 * 24 * 60 * 60);
 
         return $changeTimestamp >= $weekBeforeEvent && $changeTimestamp <= $eventTimestamp;
     }
