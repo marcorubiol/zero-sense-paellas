@@ -68,15 +68,43 @@ class PaymentReconciliation
         if (!empty($newAlerts)) {
             $this->sendAlert($newAlerts);
 
+            // Persist dedupe metas without bumping date_modified.
+            // $order->save() (and save_meta_data()) update wp_wc_orders.date_updated_gmt
+            // under HPOS, which would re-trigger the per-attempt dedupe path on the next
+            // cron cycle and cause a recurring nightly self-touch loop.
             foreach ($newAlerts as $order) {
-                $order->update_meta_data(
-                    '_zs_reconciliation_alerted_modified',
-                    $order->get_date_modified()?->getTimestamp()
-                );
-                $order->update_meta_data('_zs_reconciliation_alerted_at', time());
-                $order->save();
+                $modified = $order->get_date_modified()?->getTimestamp();
+                $this->writeMetaDirect($order->get_id(), '_zs_reconciliation_alerted_modified', (string) $modified);
+                $this->writeMetaDirect($order->get_id(), '_zs_reconciliation_alerted_at', (string) time());
             }
         }
+    }
+
+    /**
+     * Direct upsert into wp_wc_orders_meta so date_updated_gmt is not bumped.
+     */
+    private function writeMetaDirect(int $orderId, string $key, string $value): void
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_orders_meta';
+
+        $existingId = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$table} WHERE order_id = %d AND meta_key = %s LIMIT 1",
+            $orderId,
+            $key
+        ));
+
+        if ($existingId) {
+            $wpdb->update($table, ['meta_value' => $value], ['id' => (int) $existingId]);
+        } else {
+            $wpdb->insert($table, [
+                'order_id'   => $orderId,
+                'meta_key'   => $key,
+                'meta_value' => $value,
+            ]);
+        }
+
+        wp_cache_delete($orderId, 'orders');
     }
 
     /**

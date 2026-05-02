@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **PaymentReconciliation self-touch loop (3.4.9.124)**: After sending an alert, `run()` called `$order->save()` to persist the dedupe metas, which bumped `wp_wc_orders.date_updated_gmt` under HPOS. The per-attempt dedupe stored the *pre-save* `date_modified`, so the post-save value never matched on the next cycle — the alert re-fired the next time the cron tick caught the order, and the bump propagated one cycle per cron tick (visible as a daily 03:31 Madrid touch on order #20534, Mirna). Replaced `$order->save()` with a direct `wp_wc_orders_meta` upsert that does not touch the parent row.
 - **Balance payment not processed when S2S callback fails**: When Redsys S2S notification timed out, the browser return handler was skipping the balance payment because the order was already in `deposit-paid` status. The fast-path now checks for Redsys GET parameters before assuming the order is fully handled — if params are present on a deposit-paid order, the normal processing path runs and applies the balance payment.
 - **Budget visibility after full payment**: Fully-paid orders on the order-pay page were always redirected to the thank-you page, preventing clients from viewing their budget. Now fully-paid orders stay on order-pay (same behavior as deposit-paid), while Redsys returns still redirect correctly.
 
